@@ -22,9 +22,8 @@ CMountPropertyPage::CMountPropertyPage()
 
 CMountPropertyPage::~CMountPropertyPage()
 {
-	HIMAGELIST himl = m_imageList.m_hImageList;
+	HIMAGELIST himl = m_imageList.Detach();
 	if (himl) {
-		m_imageList.Detach();
 		ImageList_Destroy(himl);
 	}
 }
