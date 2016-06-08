@@ -37,7 +37,7 @@ Build Requirements
 Use
 -------
 
-cppcryptfs needs to run as administrator.  It needs this to aquire the SE_NAME privilege in Windows for it to work.
+cppcryptfs needs to run as administrator.  It needs this to acquire the SE_NAME privilege in Windows for it to work.
 
 cppcryptfs.exe requests administrator privileges automatically which 
 pops up the UAC dialog.
@@ -53,14 +53,17 @@ You need to find or create (you can create a directory in the directory selector
 
 Then you need to choose a (hopefully strong) password and repeat it.
 
-When you click on "Create", a gocyrptfs.conf file will be created in the directory, as will a gocryptfs.diriv.  Be sure to backup these files in case they get lost or corrupted.  You won't be able to access any of your data if something happens to gocryptfs.conf.  gocryptfs.conf will never change for the life of your filesystem.
+When you click on the "Create" button, a gocyrptfs.conf file will be created in the directory, as will a gocryptfs.diriv.  Be sure to backup these files in case they get lost or corrupted.  You won't be able to access any of your data if something happens to gocryptfs.conf.  gocryptfs.conf will never change for the life of your filesystem.
 
 Then go to the "Mount" tab and select a drive letter and select the folder you
-just created the filesystem in.  Then enter the password and click on "Mount".
+just created the filesystem in.  Then enter the password and click on the "Mount" button.
 
-Your will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is actually saved
-in files in the folder you specified.
+Your will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is encrypted and saved in files in the folder you specified.
 
 The files are encrypted using AES256-GCM, and the filenames are encrypted using
 AES256-EME (by default).  When you create a filesystem, you can choose to use plain text filenames or AES256-CBC encryption for filenames if you wish.
 
+
+When you are finished using the drive letter, then go to the "Mount" tab and click on "Dismount" or "Dismount All".  The drive letter(s) will be unmounted, and the encryption keys will be erased from memory. 
+
+cppcryptfs uses VirtualLock() to prevent encryption keys from ending up in the paging file.  If you never hibernate your computer, then you don't have to worry about the keys being written to the disk.
