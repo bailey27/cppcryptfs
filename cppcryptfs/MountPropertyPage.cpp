@@ -22,6 +22,11 @@ CMountPropertyPage::CMountPropertyPage()
 
 CMountPropertyPage::~CMountPropertyPage()
 {
+	HIMAGELIST himl = m_imageList.m_hImageList;
+	if (himl) {
+		m_imageList.Detach();
+		ImageList_Destroy(himl);
+	}
 }
 
 void CMountPropertyPage::DefaultAction()
@@ -239,8 +244,6 @@ BOOL CMountPropertyPage::OnInitDialog()
 			if (drives & (1 << bit))
 				continue;
 
-
-
 			dl[0] = 'A' + bit;
 			dl[1] = ':';
 			dl[2] = 0;
@@ -266,10 +269,15 @@ BOOL CMountPropertyPage::OnInitDialog()
 			HICON hicon = (HICON)LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_DRIVE), IMAGE_ICON, 16, 16, 0);
 			if (hicon) {
 				imageIndex = ImageList_AddIcon(himlIcons, hicon);
-				m_imageList.Attach(himlIcons);
+				if (imageIndex >= 0) {
+					if (!m_imageList.Attach(himlIcons)) {
+						imageIndex = -1;
+					}
+				}
+			} else {
+				ImageList_Destroy(himlIcons);
 			}
 		}
-
 	}
 
 	pList->SetImageList(&m_imageList, LVSIL_SMALL);
