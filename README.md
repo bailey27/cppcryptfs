@@ -1,7 +1,7 @@
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 ==============
 
-This software is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs) an encrypted overlay filesystem written in Go.
+This software is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs), an encrypted overlay filesystem written in Go.
 
 cppcryptfs is an implementation of gocryptfs in C++ for Windows.
 
@@ -25,12 +25,12 @@ Build Requirements
 -------
 	
 	Microsoft Visual Studio 15 Community Edition
-	[openssl](https://github.com/openssl/openssl) (static build recommended)
-	[dokany](https://github.com/dokan-dev/dokany)
-	[rapidjson]https://github.com/miloyip/rapidjson	
+	openssl - https://github.com/openssl/openssl (static build recommended)
+	rapidjson - https://github.com/miloyip/rapidjson (for parsing gocryptfs.conf)
+	dokany - https://github.com/dokan-dev/dokany
 
 	For Dokany, you probably want to get the binary distribution and install it from here:
-		[https://github.com/dokan-dev/dokany/releases]https://github.com/dokan-dev/dokany/releases
+		https://github.com/dokan-dev/dokany/releases
 
 	The version currently used with cppcryptfs is Dokany 1.0.0-RC3
 
@@ -48,7 +48,7 @@ Visual Studio as administrator.
 
 To make a new encrypted virtual fileystem, first click the "Create" tab.
 
-You need to find or create (you can create a directory in thedirectory selector in the UI) an empty directory to be the root of your filesystem.
+You need to find or create (you can create a directory in the directory selector in the UI) an empty directory to be the root of your filesystem.
 
 
 Then you need to choose a (hopefully strong) password and repeat it.
@@ -61,6 +61,6 @@ just created the filesystem in.  Then enter the password and click on "Mount".
 Your will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is actually saved
 in files in the folder you specified.
 
-The files are encrypted with AES256-GCM, and the filenames are encrypted using
-AES246-EME (by default).  When you create a filesystem, you can choose to use plaintext filenames or AES256-CBC encryption for filenames if you wish.
+The files are encrypted using AES256-GCM, and the filenames are encrypted using
+AES246-EME (by default).  When you create a filesystem, you can choose to use plain text filenames or AES256-CBC encryption for filenames if you wish.
 
