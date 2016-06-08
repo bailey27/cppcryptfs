@@ -17,14 +17,14 @@ cppcryptfs is best described as currently pre-alpha, or more accurately: EXPERIM
 Testing
 -------
 
-It seems to work.  It passesss 169/171 of the tests in [winfstest](https://github.com/dimov-cz/winfstest).
+cppcryptfs seems to work.  It passesss 169/171 of the tests in [winfstest](https://github.com/dimov-cz/winfstest).
 
-The two failures are due to file sharing issues.  Due to the nature of how gocryptfs is implemented (namely, that it is impossible to write to a file unless you are able to also read from it), it is probably impossible to pass these two tests.  And it is the opinion of the developer that these failures probably don't matter.
+The two failures are due to file sharing issues.  Due to the nature of how gocryptfs is designed (namely, that it is impossible to write to a file unless you are able to also read from it), it is probably impossible to pass these two tests.  And it is the opinion of the developer that these failures probably don't matter.
 
 Build Requirements
 -------
 	
-	Microsoft Visual Studio 15 Community Edition
+	Microsoft Visual Studio 2015 Community Edition
 	openssl - https://github.com/openssl/openssl (static build recommended)
 	rapidjson - https://github.com/miloyip/rapidjson (for parsing gocryptfs.conf)
 	dokany - https://github.com/dokan-dev/dokany
@@ -42,7 +42,7 @@ cppcryptfs needs to run as administrator.  It needs this to aquire the SE_NAME p
 cppcryptfs.exe requests administrator privileges automatically which 
 pops up the UAC dialog.
 
-This is specified in the manifest file.  A consequence of this is that
+Admin privilege is specified in the manifest.  A consequence of this is that
 in order to debug or even run it from Visual Studio, you need to run
 Visual Studio as administrator.
 
@@ -53,7 +53,7 @@ You need to find or create (you can create a directory in the directory selector
 
 Then you need to choose a (hopefully strong) password and repeat it.
 
-When you click on "Create", a gocyrptfs.conf file will be created in the directory, as will a gocryptfs.diriv.  Be sure to backup these files in case they get lost or corrupted.  You won't be able to access any of your data if something happens to gocryptfs.conf.  It will never change for the life of your filesystem.
+When you click on "Create", a gocyrptfs.conf file will be created in the directory, as will a gocryptfs.diriv.  Be sure to backup these files in case they get lost or corrupted.  You won't be able to access any of your data if something happens to gocryptfs.conf.  gocryptfs.conf will never change for the life of your filesystem.
 
 Then go to the "Mount" tab and select a drive letter and select the folder you
 just created the filesystem in.  Then enter the password and click on "Mount".
@@ -62,5 +62,5 @@ Your will then have a new drive letter, and you can use it like a normal drive l
 in files in the folder you specified.
 
 The files are encrypted using AES256-GCM, and the filenames are encrypted using
-AES246-EME (by default).  When you create a filesystem, you can choose to use plain text filenames or AES256-CBC encryption for filenames if you wish.
+AES256-EME (by default).  When you create a filesystem, you can choose to use plain text filenames or AES256-CBC encryption for filenames if you wish.
 
