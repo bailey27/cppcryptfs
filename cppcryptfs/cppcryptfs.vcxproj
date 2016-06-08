@@ -117,13 +117,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\openssl-64\include;C:\Program Files\Dokan\Dokan Library-1.0.0\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\git\rapidjson\include;C:\Program Files\OpenSSL\include;C:\Program Files\Dokan\Dokan Library-1.0.0\include</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>C:\Program Files\Dokan\Dokan Library-1.0.0\lib\dokan1.lib;Shlwapi.lib;C:\openssl-64\lib\libeay32.lib;crypt32.lib</AdditionalDependencies>
+      <AdditionalDependencies>C:\Program Files\OpenSSL\lib\libcrypto.lib;C:\Program Files\Dokan\Dokan Library-1.0.0\lib\dokan1.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
@@ -174,14 +174,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\openssl-64\include;C:\Program Files\Dokan\Dokan Library-1.0.0\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\git\rapidjson\include;C:\Program Files\OpenSSL\include;C:\Program Files\Dokan\Dokan Library-1.0.0\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>C:\Program Files\Dokan\Dokan Library-1.0.0\lib\dokan1.lib;Shlwapi.lib;C:\openssl-64\lib\libeay32.lib;crypt32.lib</AdditionalDependencies>
+      <AdditionalDependencies>C:\Program Files\OpenSSL\lib\libcrypto.lib;C:\Program Files\Dokan\Dokan Library-1.0.0\lib\dokan1.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
