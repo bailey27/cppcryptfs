@@ -68,3 +68,5 @@ AES256-EME (by default).  When you create a filesystem, you can choose to use pl
 When you are finished using the drive letter, then go to the "Mount" tab and click on "Dismount" or "Dismount All".  The drive letter(s) will be unmounted, and the encryption keys will be erased from memory. 
 
 cppcryptfs uses VirtualLock() to prevent encryption keys from ending up in the paging file.  If you never hibernate your computer, then you don't have to worry about the keys being written to the disk.
+
+If you minimize cppcryptfs, then it will hide itself in the system tray.
