@@ -1,0 +1,7 @@
+cppcryptfs.opensdf
+cppcryptfs.sdf
+cppcryptfs/cppcryptfs.vcxproj.user
+.vs/
+ipch/
+cppcryptfs/x64/
+x64/

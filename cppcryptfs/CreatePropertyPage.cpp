@@ -1,0 +1,278 @@
+// CreatePropertyPage.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "cppcryptfs.h"
+#include "CreatePropertyPage.h"
+#include "afxdialogex.h"
+#include "FolderDialog.h"
+#include "fileutil.h"
+#include "cryptconfig.h"
+#include "RecentItems.h"
+
+
+static const WCHAR *filename_encryption_types[] = {
+	L"AES256-EME",
+	L"AES256-CBC",
+	L"Plain text"
+};
+
+#define NUM_ENC_TYPES (sizeof(filename_encryption_types)/sizeof(filename_encryption_types[0]))
+
+
+// CCreatePropertyPage dialog
+
+IMPLEMENT_DYNAMIC(CCreatePropertyPage, CCryptPropertyPage)
+
+CCreatePropertyPage::CCreatePropertyPage()
+	: CCryptPropertyPage(IDD_CREATE)
+{
+
+}
+
+CCreatePropertyPage::~CCreatePropertyPage()
+{
+}
+
+void CCreatePropertyPage::DoDataExchange(CDataExchange* pDX)
+{
+	CPropertyPage::DoDataExchange(pDX);
+}
+
+
+BEGIN_MESSAGE_MAP(CCreatePropertyPage, CPropertyPage)
+	ON_BN_CLICKED(IDC_SELECT, &CCreatePropertyPage::OnClickedSelect)
+	ON_BN_CLICKED(IDC_CREATE, &CCreatePropertyPage::OnClickedCreate)
+	ON_LBN_SELCHANGE(IDC_FILENAME_ENCRYPTION, &CCreatePropertyPage::OnLbnSelchangeFilenameEncryption)
+	ON_CBN_SELCHANGE(IDC_PATH, &CCreatePropertyPage::OnCbnSelchangePath)
+END_MESSAGE_MAP()
+
+void CCreatePropertyPage::DefaultAction()
+{
+	CreateCryptfs();
+}
+
+void CCreatePropertyPage::CreateCryptfs()
+{
+	CWnd *pWnd = GetDlgItem(IDC_PATH);
+	if (!pWnd)
+		return;
+
+	CString cpath;
+
+	pWnd->GetWindowTextW(cpath);
+
+	if (cpath.GetLength() < 1)
+		return;
+
+	if (!PathFileExists(cpath)) {
+		CString mes;
+		mes += cpath;
+		mes += L" does not exist.  Do you want to create it?";
+		if (MessageBox(mes, L"cppcryptfs", MB_YESNO | MB_ICONINFORMATION) == IDYES) {
+				if (!CreateDirectory(cpath, NULL)) {
+					mes = L"Could not create ";
+					mes += cpath;
+					MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONERROR);
+					return;
+				}
+		} else {
+			return;
+		}
+	}
+
+	WCHAR password[256];
+	WCHAR password2[256];
+
+	password[0] = '\0';
+	password2[0] = '\0';
+
+	pWnd = GetDlgItem(IDC_PASSWORD);
+
+	if (!pWnd)
+		return;
+
+	pWnd->GetWindowText(password, sizeof(password) / sizeof(password[0]) - 1);
+
+	if (!password[0])
+		return;
+
+	pWnd = GetDlgItem(IDC_PASSWORD2);
+
+	if (!pWnd)
+		return;
+
+	pWnd->GetWindowText(password2, sizeof(password2) / sizeof(password2[0]) - 1);
+
+	if (!password2[0])
+		return;
+
+	if (wcscmp(password, password2)) {
+		MessageBox(L"passwords do not match", L"cppcryptfs", MB_OK | MB_ICONHAND);
+		return;
+	}
+
+	SecureZeroMemory(password2, sizeof(password2));
+
+	GetDlgItem(IDC_PASSWORD)->SetWindowTextW(L"");
+	GetDlgItem(IDC_PASSWORD2)->SetWindowTextW(L"");
+
+	CryptConfig config;
+
+	std::wstring error_mes;
+
+	CComboBox *pBox = (CComboBox *)GetDlgItem(IDC_FILENAME_ENCRYPTION);
+
+	int nsel = pBox->GetCurSel();
+
+	bool eme = false;
+	bool plaintext = false;
+	bool longfilenames = false;
+
+	CString cfenc;
+
+	if (nsel >= 0 && nsel < NUM_ENC_TYPES)
+		cfenc = filename_encryption_types[nsel];
+
+	if (cfenc == L"AES256-EME")
+		eme = true;
+	else if (cfenc == "Plain text")
+		plaintext = true;
+
+	if (!plaintext) {
+		longfilenames = IsDlgButtonChecked(IDC_LONG_FILE_NAMES) != 0;
+	}
+
+	CString volume_name;
+	GetDlgItemText(IDC_VOLUME_NAME, volume_name);
+
+	theApp.DoWaitCursor(1);
+	bool bResult = config.create(cpath, password, eme, plaintext, longfilenames, volume_name, error_mes);
+	theApp.DoWaitCursor(-1);
+
+	SecureZeroMemory(password, sizeof(password));
+
+	if (!bResult) {
+		MessageBox(&error_mes[0], L"cppcryptfs", MB_OK | MB_ICONERROR);
+		return;
+	}
+
+	CString mes;
+
+	mes = L"Created encrypted filesystem in ";
+
+	mes.Append(cpath);
+
+	MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
+
+	CString clfns = IsDlgButtonChecked(IDC_LONG_FILE_NAMES) ? L"1" : L"0";
+
+	theApp.WriteProfileStringW(L"createoptions", L"LongFileNames", clfns);
+
+	CComboBox* pLbox = (CComboBox*)GetDlgItem(IDC_FILENAME_ENCRYPTION);
+	if (!pLbox)
+		return;
+
+	int nenc = pLbox->GetCurSel();
+
+	if (nenc < 0 || nenc >= NUM_ENC_TYPES)
+		return;
+
+	RecentItems ritems(TEXT("Folders"), TEXT("LastDir"), m_numLastDirs);
+	ritems.Add(cpath);
+
+	theApp.WriteProfileStringW(L"createoptions", L"FilenameEncryption", filename_encryption_types[nenc]);
+}
+
+// CCreatePropertyPage message handlers
+
+
+void CCreatePropertyPage::OnClickedSelect()
+{
+	// TODO: Add your control notification handler code here
+
+	CFolderDialog fdlg;
+
+	if (fdlg.DoModal() == IDCANCEL)
+		return;
+
+	CString cpath = fdlg.GetPathName();
+
+	if (cpath.GetLength() < 1)
+		return;
+
+	if (!can_delete_directory(cpath, TRUE)) {
+		MessageBox(L"directory must be empty", L"cppcryptfs", MB_OK | MB_ICONHAND);
+		return;
+	}
+
+	CWnd *pWnd = GetDlgItem(IDC_PATH);
+	if (pWnd)
+		pWnd->SetWindowTextW(cpath);
+	
+}
+
+
+void CCreatePropertyPage::OnClickedCreate()
+{
+	// TODO: Add your control notification handler code here
+
+	CreateCryptfs();
+}
+
+
+BOOL CCreatePropertyPage::OnInitDialog()
+{
+	CPropertyPage::OnInitDialog();
+
+	// TODO:  Add extra initialization here
+
+	CString clfns = theApp.GetProfileStringW(L"createoptions", L"LongFileNames", L"1");
+
+	CString cfnenc = theApp.GetProfileStringW(L"createoptions", L"FilenameEncryption", L"AES256-EME");
+
+	CheckDlgButton(IDC_LONG_FILE_NAMES, clfns == L"1");
+
+	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_PATH);
+
+	int i;
+
+	if (pBox) {
+		for (i = 0; i < m_numLastDirs; i++) {
+			if (m_lastDirs[i].GetLength())
+				pBox->InsertString(i, m_lastDirs[i]);
+		}
+	}
+
+	CComboBox *pLbox = (CComboBox*)GetDlgItem(IDC_FILENAME_ENCRYPTION);
+
+	if (!pLbox)
+		return FALSE;
+
+	for (i = 0; i < NUM_ENC_TYPES; i++) {
+		pLbox->InsertString(i, filename_encryption_types[i]);
+		if (cfnenc == filename_encryption_types[i]) {
+			pLbox->SelectString(-1, cfnenc);
+		}
+	}
+
+
+	
+
+
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+				  // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+
+void CCreatePropertyPage::OnLbnSelchangeFilenameEncryption()
+{
+	// TODO: Add your control notification handler code here
+}
+
+
+void CCreatePropertyPage::OnCbnSelchangePath()
+{
+	// TODO: Add your control notification handler code here
+}
