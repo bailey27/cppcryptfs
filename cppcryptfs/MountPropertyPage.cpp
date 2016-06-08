@@ -256,9 +256,6 @@ BOOL CMountPropertyPage::OnInitDialog()
 		}
 	}
 
-
-	i = 0;
-
 	int imageIndex = -1;
 
 	if (m_imageList.m_hImageList == NULL) {
@@ -280,6 +277,8 @@ BOOL CMountPropertyPage::OnInitDialog()
 	}
 
 	pList->SetImageList(&m_imageList, LVSIL_SMALL);
+
+	i = 0;
 
 	for (bit = 0; bit < 26; bit++) {
 		if (drives & (1 << bit))
