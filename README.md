@@ -32,37 +32,38 @@ Build Requirements
 	[dokany](https://github.com/dokan-dev/dokany)
 	[rapidjson]https://github.com/miloyip/rapidjson	
 
-	For Dokany, you probably want to get the binary distribution and install it from here (https://github.com/dokan-dev/dokany/releases)
+	For Dokany, you probably want to get the binary distribution and install it from here:
+		[https://github.com/dokan-dev/dokany/releases]https://github.com/dokan-dev/dokany/releases
 
 	The version currently used with cppcryptfs is Dokany 1.0.0-RC3
 
 Use
 -------
 
-cppcryptfs needs to run as administrator.  It needs this to aquire the SE_NAME_PRIVILIGE in windows for it to work.
+cppcryptfs needs to run as administrator.  It needs this to aquire the SE_NAME privilege in Windows for it to work.
 
-cppcryptfs.exe requests administrator privileges automatically (which 
+cppcryptfs.exe requests administrator privileges automatically which 
 pops up the UAC dialog.
 
-This is specicifed in the manifest file.  A consequence of this is that
+This is specified in the manifest file.  A consequence of this is that
 in order to debug or even run it from Visual Studio, you need to run
 Visual Studio as administrator.
 
-To use cppcryptfs, you need to find or create (in the UI) an empty directory.
+To make a new encrypted virtual fileystem, first click the "Create" tab.
 
-Click the "Create" tab to do this.
+You need to find or create (you can create a directory in thedirectory selector in the UI) an empty directory to be the root of your filesystem.
+
 
 Then you need to choose a (hopefully strong) password and repeat it.
 
 When you click on "Create", a gocyrptfs.conf file will be created in the directory, as will a gocryptfs.diriv.  Be sure to backup these files in case they get lost or corrupted.  You won't be able to access any of your data if something happens to gocryptfs.conf.  It will never change for the life of your filesystem.
 
-Then go to the "Mount" tab and select a drive letter and select tye folder you
+Then go to the "Mount" tab and select a drive letter and select the folder you
 just created the filesystem in.  Then enter the password and click on "Mount".
 
-Your will then have a new drive letter, and you can store your sensitive information there an use it like a normal drive lettere.  The data is actually saved
+Your will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is actually saved
 in files in the folder you specified.
 
 The files are encrypted with AES256-GCM, and the filenames are encrypted using
-AES246-EME (by default).  You can choose to use plaintext filenames or 
-AES256-CBC if you wish.
+AES246-EME (by default).  When you create a filesystem, you can choose to use plaintext filenames or AES256-CBC encryption for filenames if you wish.
 
