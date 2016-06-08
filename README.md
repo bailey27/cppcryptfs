@@ -50,6 +50,7 @@ To make a new encrypted virtual fileystem, first click the "Create" tab.
 
 You need to find or create (you can create a directory in the directory selector in the UI) an empty directory to be the root of your filesystem.
 
+It is strongly recommended that this directory reside on an NTFS filesystem.
 
 Then you need to choose a (hopefully strong) password and repeat it.
 
