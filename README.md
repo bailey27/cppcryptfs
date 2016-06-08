@@ -8,20 +8,19 @@ An encrypted overlay filesystem written in Go.
 
 cppcryptfs is an implementation of gocryptfs in C++ for Windows.
 
-It uses the the Dokany driver and library to provide a virtual fileystem in user mode under Windows.
-[dokany](https://github.com/dokan-dev/dokany)
+It uses the the [Dokany](https://github.com/dokan-dev/dokany) driver and library to provide a virtual fileystem in user mode under Windows.
+
 
 Current Status
 --------------
 
-cppcryptfs is best described as currentyl pre-alpha, or more accurately, as experimental.
+cppcryptfs is best described as currently pre-alpha, or more accurately: EXPERIMENTAL.
 
 
 Testing
 -------
 
-It seems to work.  It passesss 169/171 of the tests in winfstest.
-[winfstest](https://github.com/dimov-cz/winfstest)
+It seems to work.  It passesss 169/171 of the tests in [winfstest](https://github.com/dimov-cz/winfstest).
 
 The two failures are due to file sharing issues.  Due to the nature of how gocryptfs is implemented (namely, that it is impossible to write to a file unless you are able to also read from it), it is probably impossible to pass these two tests.  And it is the opinion of the developer that these failures probably don't matter.
 
@@ -29,7 +28,7 @@ Build Requirements
 -------
 	
 	Microsoft Visual Studio 15 Community Edition
-	[openssl](https://github.com/openssl/openssl)
+	[openssl](https://github.com/openssl/openssl) (static build recommended)
 	[dokany](https://github.com/dokan-dev/dokany)
 	[rapidjson]https://github.com/miloyip/rapidjson	
 
@@ -40,7 +39,16 @@ Build Requirements
 Use
 -------
 
-To use it, you need to find or create (in the UI) an empty directory.
+cppcryptfs needs to run as administrator.  It needs this to aquire the SE_NAME_PRIVILIGE in windows for it to work.
+
+cppcryptfs.exe requests administrator privileges automatically (which 
+pops up the UAC dialog.
+
+This is specicifed in the manifest file.  A consequence of this is that
+in order to debug or even run it from Visual Studio, you need to run
+Visual Studio as administrator.
+
+To use cppcryptfs, you need to find or create (in the UI) an empty directory.
 
 Click the "Create" tab to do this.
 
@@ -55,6 +63,6 @@ Your will then have a new drive letter, and you can store your sensitive informa
 in files in the folder you specified.
 
 The files are encrypted with AES256-GCM, and the filenames are encrypted using
-AES246-EME (by default).  You can choose to use plaintext filenames or even
+AES246-EME (by default).  You can choose to use plaintext filenames or 
 AES256-CBC if you wish.
 
