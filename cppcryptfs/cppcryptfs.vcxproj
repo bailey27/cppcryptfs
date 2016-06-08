@@ -278,8 +278,13 @@
     <None Include="res\cppcryptfs.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\aluport_extreme_drive.ico" />
     <Image Include="res\cppcryptfs.ico" />
+    <Image Include="res\drive.ico" />
+    <Image Include="res\drive.png" />
     <Image Include="res\icon1.ico" />
+    <Image Include="res\icon2.ico" />
+    <Image Include="res\icon3.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

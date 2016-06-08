@@ -17,6 +17,7 @@ public:
 
 	CString m_lastDirs[10];
 	const int m_numLastDirs = 10;
+	CImageList m_imageList;
 
 	virtual void DefaultAction();
 

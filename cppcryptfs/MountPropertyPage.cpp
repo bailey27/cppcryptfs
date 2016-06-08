@@ -161,6 +161,31 @@ BEGIN_MESSAGE_MAP(CMountPropertyPage, CPropertyPage)
 END_MESSAGE_MAP()
 
 
+#include <atlbase.h>
+
+struct ICONDIRENTRY
+{
+	UCHAR nWidth;
+	UCHAR nHeight;
+	UCHAR nNumColorsInPalette; // 0 if no palette
+	UCHAR nReserved; // should be 0
+	WORD nNumColorPlanes; // 0 or 1
+	WORD nBitsPerPixel;
+	ULONG nDataLength; // length in bytes
+	ULONG nOffset; // offset of BMP or PNG data from beginning of file
+};
+
+// Helper class to release GDI object handle when scope ends:
+class CGdiHandle
+{
+public:
+	CGdiHandle(HGDIOBJ handle) : m_handle(handle) {};
+	~CGdiHandle() { DeleteObject(m_handle); };
+private:
+	HGDIOBJ m_handle;
+};
+
+
 // CMountPropertyPage message handlers
 
 
@@ -208,10 +233,13 @@ BOOL CMountPropertyPage::OnInitDialog()
 
 	WCHAR dl[3];
 
+
 	if (lastLetter.GetLength() > 0) {
 		for (bit = 0; bit < 26; bit++) {
 			if (drives & (1 << bit))
 				continue;
+
+
 
 			dl[0] = 'A' + bit;
 			dl[1] = ':';
@@ -220,13 +248,31 @@ BOOL CMountPropertyPage::OnInitDialog()
 			if (*(const WCHAR *)lastLetter == dl[0]) {
 				lastIndex = i;
 				break;
-			} 
+			}
 
 			i++;
 		}
 	}
 
+
 	i = 0;
+
+	int imageIndex = -1;
+
+	if (m_imageList.m_hImageList == NULL) {
+		HIMAGELIST himlIcons = ImageList_Create(16, 16, ILC_MASK | ILC_COLOR32 | ILC_HIGHQUALITYSCALE, 1, 1);
+		if (himlIcons) {
+			// Load the icon resources, and add the icons to the image list. 
+			HICON hicon = (HICON)LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_DRIVE), IMAGE_ICON, 16, 16, 0);
+			if (hicon) {
+				imageIndex = ImageList_AddIcon(himlIcons, hicon);
+				m_imageList.Attach(himlIcons);
+			}
+		}
+
+	}
+
+	pList->SetImageList(&m_imageList, LVSIL_SMALL);
 
 	for (bit = 0; bit < 26; bit++) {
 		if (drives & (1 << bit))
@@ -244,8 +290,8 @@ BOOL CMountPropertyPage::OnInitDialog()
 			isSelected = bFirst;
 		}
 
-		pList->InsertItem(LVIF_TEXT | LVIF_STATE, i++, dl,
-			isSelected ? LVIS_SELECTED : 0, LVIS_SELECTED, 0, 0);
+		pList->InsertItem(LVIF_TEXT | (imageIndex >= 0 ? LVIF_IMAGE : 0) | LVIF_STATE, i++, dl,
+			isSelected ? LVIS_SELECTED : 0, LVIS_SELECTED, imageIndex >= 0 ? imageIndex : 0, 0);
 
 		bFirst = false;
 	}
