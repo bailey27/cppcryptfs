@@ -1,10 +1,7 @@
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 ==============
 
-This software is based on the design of gocryptfs.
-
-[gocryptfs](https://github.com/rfjakob/gocryptfs)
-An encrypted overlay filesystem written in Go.
+This software is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs) an encrypted overlay filesystem written in Go.
 
 cppcryptfs is an implementation of gocryptfs in C++ for Windows.
 
