@@ -32,7 +32,7 @@ Build Requirements
 	rapidjson - https://github.com/miloyip/rapidjson (for parsing gocryptfs.conf)
 	dokany - https://github.com/dokan-dev/dokany
 
-	For Dokany, you probably want to get the binary distribution and install it from here:
+	For Dokany, you probably want to use the binary distribution from here:
 		https://github.com/dokan-dev/dokany/releases
 
 	The version currently used with cppcryptfs is Dokany 1.0.0-RC3
@@ -51,6 +51,8 @@ Visual Studio as administrator.
 
 To make a new encrypted virtual fileystem, first click the "Create" tab.
 
+![Alt text](/screenshots/screenshot_create.png?raw=true "Create tab")
+
 You need to find or create (you can create a directory in the directory selector in the UI) an empty directory to be the root of your filesystem.
 
 It is strongly recommended that this directory reside on an NTFS filesystem.
@@ -61,6 +63,8 @@ When you click on the "Create" button, a gocyrptfs.conf file will be created in 
 
 Then go to the "Mount" tab and select a drive letter and select the folder you
 just created the filesystem in.  Then enter the password and click on the "Mount" button.
+
+![Alt text](/screenshots/screenshot_mount.png?raw=true "Mount tab")
 
 Your will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is encrypted and saved in files in the folder you specified.
 
