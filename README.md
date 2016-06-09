@@ -71,7 +71,7 @@ Your will then have a new drive letter, and you can use it like a normal drive l
 The files are encrypted using AES256-GCM, and the file names are encrypted using
 AES256-EME (by default).  When you create a filesystem, you can choose to use plain text file names or AES256-CBC encryption for file names if you wish.
 
-For technical details of the cryptographic design of gocryptfs please visit
+For technical details of the cryptographic design of gocryptfs, please visit
 the [gocryptfs project page](https://github.com/rfjakob/gocryptfs).
 
 
