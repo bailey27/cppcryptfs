@@ -51,7 +51,7 @@ Visual Studio as administrator.
 
 To make a new encrypted virtual fileystem, first click the "Create" tab.
 
-![Alt text](/screenshots/screenshot_create.png?raw=true "Create tab")
+![Alt text](/screenshots/screenshot_create.jpg?raw=true "Create tab")
 
 You need to find or create (you can create a directory in the directory selector in the UI) an empty directory to be the root of your filesystem.
 
@@ -64,7 +64,7 @@ When you click on the "Create" button, a gocyrptfs.conf file will be created in 
 Then go to the "Mount" tab and select a drive letter and select the folder you
 just created the filesystem in.  Then enter the password and click on the "Mount" button.
 
-![Alt text](/screenshots/screenshot_mount.png?raw=true "Mount tab")
+![Alt text](/screenshots/screenshot_mount.jpg?raw=true "Mount tab")
 
 Your will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is encrypted and saved in files in the folder you specified.
 
