@@ -72,7 +72,7 @@ The files are encrypted using AES256-GCM, and the file names are encrypted using
 AES256-EME (by default).  When you create a filesystem, you can choose to use plain text file names or AES256-CBC encryption for file names if you wish.
 
 For technical details of the cryptographic design of gocryptfs please visit
-[the gocryptfs project page](/https://github.com/rfjakob/gocryptfs).
+the [gocryptfs project page](https://github.com/rfjakob/gocryptfs).
 
 
 When you are finished using the drive letter, then go to the "Mount" tab and click on "Dismount" or "Dismount All".  The drive letter(s) will be unmounted, and the encryption keys will be erased from memory. 
