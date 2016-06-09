@@ -103,4 +103,4 @@ It is therefore strongly recommended to use NTFS whenever possible.
 Compatibility with gocryptfs
 ------
 
-cppcryptfs strives to be compatible with gocryptfs.  Currently, it is compatible with version 2 of the gocryptfs filesystem.  The only restriction is that only the 128bit GCM iv length is supported (GCMIV128 in gocrypts.conf).  The legacy  96bit iv length is not supported.
+cppcryptfs strives to be compatible with gocryptfs.  Currently, it is compatible with version 2 of the gocryptfs filesystem.  The only restriction is that only the 128-bit GCM iv length is supported (GCMIV128 in gocrypts.conf).  The legacy  96-bit iv length is not supported.
