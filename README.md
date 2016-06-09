@@ -89,15 +89,15 @@ File name and path length limits
 
 If "Long file names" (the default) is specfied when creating the fileystem, or if plain text file names are used, and if the filesystem is located on NTFS, then a file or directory name can be up to 255 characters long, and a full path can be up to 32,000 characters long.
 
-If "Long file names" is not specified, and plain text file names aren't used, then the maximum length of a file or directory name is 160 characters.  But the full path limit is still 32,000 characters (assuming NTFS).
+If "Long file names" is not specified and plain text file names aren't used, then the maximum length of a file or directory name is 160 characters.  But the full path limit is still 32,000 characters (assuming NTFS).
 
-When a file name is encrypted, it is converted from UNICODE-16 to UTF-8 which, depending the language, might cause the number of characters to increase.  Then it is encrypted (which causes it to be padded up to 16 bytes), and then it is base64 encoded, which typically results in 33% increase in length.  This means that the encrypted file names, which must be stored on the underlying filesystem, can be signifcantly longer than the unencrypted names.
+When a file name is encrypted, it is converted from UNICODE-16 to UTF-8 which, depending the language, might cause the number of characters to increase.  Then it is encrypted (which causes it to be padded up to 16 bytes), and then it is base64 encoded, which typically results in a 33% increase in length.  This means that the encrypted file names can be signifcantly longer than the unencrypted names.
 
-Also, the path to the directory in which the encrypted fileystem resides must be pre-pended to the path of encrypted file names.
+Also, the path to the directory in which the encrypted fileystem resides must be pre-pended to the path of the encrypted file names.
 
 Older filesystems, such as FAT32, will limit the total path length to 260 characters.
 
-It is therefore strongly advised to always create filesystems on NTFS.
+It is therefore strongly recommended to use NTFS whenever possible.
 
 
 Compatibility with gocryptfs
