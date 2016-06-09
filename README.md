@@ -69,11 +69,33 @@ just created the filesystem in.  Then enter the password and click on the "Mount
 Your will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is encrypted and saved in files in the folder you specified.
 
 The files are encrypted using AES256-GCM, and the filenames are encrypted using
-AES256-EME (by default).  When you create a filesystem, you can choose to use plain text filenames or AES256-CBC encryption for filenames if you wish.
+AES256-EME (by default).  When you create a filesystem, you can choose to use plain text file names or AES256-CBC encryption for file names if you wish.
+
+For technical details of the cryptographic design of gocryptfs please visit
+[the gocryptfs project page](/https://github.com/rfjakob/gocryptfs).
 
 
 When you are finished using the drive letter, then go to the "Mount" tab and click on "Dismount" or "Dismount All".  The drive letter(s) will be unmounted, and the encryption keys will be erased from memory. 
 
+You can mount as many gocryptfs filesystems as you have unused drive letters available.
+
 cppcryptfs uses VirtualLock() to prevent encryption keys from ending up in the paging file.  If you never hibernate your computer, then you don't have to worry about the keys being written to the disk.
 
 If you minimize cppcryptfs, then it will hide itself in the system tray.
+
+
+File name and path length limits
+------
+
+If "Long file names" (the default) is specfied when creating the fileystem, or if plain text file names are used, and if the filesystem is located on NTTFS, then a file or directory name can be up to 255 characters long, and a full path can be up to 4000 characters long.
+
+If "Long file names" is not specified, then the maximum length of a file or directory name is 160 characters.  But the full path limit is still 4000 characters (assuming NTFS).
+
+Filesystems such as FAT32 will limit the path length to 260 characters.
+
+It is therefore strongly advised to always create filesystems on NTFS.
+
+Compatibility with gocryptfs
+------
+
+cppcryptfs strives to be compatible with gocryptfs.  Currently, it is compatible with version 2 of the gocryptfs filesystem.  The only restriction is that only the 128bit GCM iv size is supported (GCMIV128 in gocrypts.conf).  The legacy  96bit iv size is not supported.
