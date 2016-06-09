@@ -1,17 +1,7 @@
+
+cppcryptfs - Copyright (c) 2016 Bailey Brown
+
 The MIT License (MIT)
-
-For c++ implementation of gocryptfs and the user interace:
-
-Copyright (c) 2016 Bailey Brown
-
-For overall design of the cryptographic filesystem (gocryptfs):
-
-Copyright (c) 2015 github.com/rfjakob
-
-For Dokany filesystem interface:
-
-Copyright (C) 2015 - 2016 Adrien J. <liryna.stark@gmail.com> and Maxime C. <maxime@islog.com>
-Copyright (C) 2007 - 2011 Hiroki Asakawa <info@dokan-dev.net>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
