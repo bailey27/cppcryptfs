@@ -1191,7 +1191,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
 
   wcscpy_s(VolumeNameBuffer, VolumeNameSize, config->m_VolumeName.size() > 0 ? &config->m_VolumeName[0] : L"");
   *VolumeSerialNumber = 0xb2a1d417;
-  *MaximumComponentLength = (config->m_PlaintextNames || config->m_LongNames) ? 255 : 176;
+  *MaximumComponentLength = (config->m_PlaintextNames || config->m_LongNames) ? 255 : 160;
   *FileSystemFlags = FILE_CASE_SENSITIVE_SEARCH | FILE_CASE_PRESERVED_NAMES |
                      FILE_SUPPORTS_REMOTE_STORAGE | FILE_UNICODE_ON_DISK |
                      FILE_PERSISTENT_ACLS;
