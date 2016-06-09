@@ -102,7 +102,7 @@ void CCreatePropertyPage::CreateCryptfs()
 				if (!CreateDirectory(cpath, NULL)) {
 					mes = L"Could not create ";
 					mes += cpath;
-					MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONERROR);
+					MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 					return;
 				}
 		} else {
