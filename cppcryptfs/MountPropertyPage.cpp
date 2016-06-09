@@ -133,7 +133,7 @@ void CMountPropertyPage::Mount()
 	SecureZeroMemory(password, sizeof(password));
 
 	if (result != 0) {
-		MessageBox(&error_mes[0], L"cppcryptfs", MB_OK | MB_ICONERROR);
+		MessageBoxW(&error_mes[0], L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
 	}
 
