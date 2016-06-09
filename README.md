@@ -87,15 +87,20 @@ If you minimize cppcryptfs, then it will hide itself in the system tray.
 File name and path length limits
 ------
 
-If "Long file names" (the default) is specfied when creating the fileystem, or if plain text file names are used, and if the filesystem is located on NTTFS, then a file or directory name can be up to 255 characters long, and a full path can be up to 4000 characters long.
+If "Long file names" (the default) is specfied when creating the fileystem, or if plain text file names are used, and if the filesystem is located on NTFS, then a file or directory name can be up to 255 characters long, and a full path can be up to 32,000 characters long.
 
-If "Long file names" is not specified, then the maximum length of a file or directory name is 160 characters.  But the full path limit is still 4000 characters (assuming NTFS).
+If "Long file names" is not specified, and plain text filnames aren't used, then the maximum length of a file or directory name is 160 characters.  But the full path limit is still 32,000 characters (assuming NTFS).
 
-Filesystems such as FAT32 will limit the path length to 260 characters.
+When a file name is encrypted, it is converted from UNICODE-16 to UTF-8 which, depending the language, might cause the number of characters to increase.  Then it is encrypted (which causes it to be padded up to 16 bytes), and then it is base64 encoded, which typically results in 33% increase in length.  This means that the encrypted filenames, which must be stored on the underlying filesystem, can be signifcantly longer than the unencrypted names.
+
+Also, the path to the directory in which the encrypted fileystem resides must be pre-pended to the path of encrypted filenames.
+
+Older filesystems, such as FAT32, will limit the total path length to 260 characters.
 
 It is therefore strongly advised to always create filesystems on NTFS.
+
 
 Compatibility with gocryptfs
 ------
 
-cppcryptfs strives to be compatible with gocryptfs.  Currently, it is compatible with version 2 of the gocryptfs filesystem.  The only restriction is that only the 128bit GCM iv size is supported (GCMIV128 in gocrypts.conf).  The legacy  96bit iv size is not supported.
+cppcryptfs strives to be compatible with gocryptfs.  Currently, it is compatible with version 2 of the gocryptfs filesystem.  The only restriction is that only the 128bit GCM iv length is supported (GCMIV128 in gocrypts.conf).  The legacy  96bit iv length is not supported.
