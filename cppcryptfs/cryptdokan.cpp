@@ -105,7 +105,7 @@ typedef struct struct_CryptThreadData CryptThreadData;
 HANDLE g_DriveThreadHandles[26];
 CryptThreadData *g_ThreadDatas[26];
 
-#define CRYPT_MAX_PATH 4000
+
 
 
 void DbgPrint(LPCWSTR format, ...) {
@@ -138,26 +138,78 @@ void DbgPrint(LPCWSTR format, ...) {
 
 
 
-static BOOL GetFilePath(CryptContext *con, PWCHAR filePath, ULONG numberOfElements,
-                        LPCWSTR FileName, std::string *actual_encrypted = NULL) {
+
+
+static const WCHAR* GetFilePath(CryptContext *con, std::wstring& filePath,
+	LPCWSTR FileName, std::string *actual_encrypted = NULL) {
 
 	DbgPrint(L"Converting filename : %s\n", FileName);
-	std::wstring storage;
-	
-	const WCHAR *encpath = encrypt_path(con, FileName, storage, actual_encrypted);
-	size_t enc_len = 0;
-	if (encpath)
-		enc_len = wcslen(encpath);
-	if (encpath && enc_len < numberOfElements) {
-		wcsncpy_s(filePath, numberOfElements, encpath, wcslen(encpath));
-		return TRUE;
-	} else {
-		DbgPrint(L"path too long to convert: %s", FileName);
-		if (filePath && numberOfElements > 0)
-			*filePath = '\0';
-		return FALSE;
+
+	const WCHAR *encpath = NULL;
+
+	try {
+
+		encpath = encrypt_path(con, FileName, filePath, actual_encrypted);
+
 	}
+	catch (...) {
+		encpath = NULL;
+	}
+
+	if (encpath)
+		DbgPrint(L"Converted to %s\n", encpath);
+	else
+		DbgPrint(L"Convert filename failed\n");
+
+	return encpath;
+
 }
+
+
+class FileNameEnc {
+private:
+	std::wstring m_enc_str;
+	std::string *m_actual;
+	const WCHAR *m_fname;
+	CryptContext *m_con;
+	bool m_tried;
+
+public:
+	operator const WCHAR *()
+	{
+		const WCHAR *ret = NULL;
+		if (m_tried) {
+			ret = &m_enc_str[0];
+		} else {
+			try {
+				if (!GetFilePath(m_con, m_enc_str, m_fname, m_actual))
+					m_enc_str = L"";
+				ret = &m_enc_str[0];
+			} catch (...) {
+				ret = NULL;
+			}
+			m_tried = true;
+		}
+		return (ret && *ret ? ret : NULL);
+	};
+	FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual = NULL);
+	virtual ~FileNameEnc();
+};
+
+FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual)
+{
+	m_con = con;
+	m_fname = fname;
+	m_actual = actual;
+	m_tried = false;
+}
+
+FileNameEnc::~FileNameEnc()
+{
+
+}
+
+
 
 static void PrintUserName(PDOKAN_FILE_INFO DokanFileInfo) {
 
@@ -303,7 +355,8 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
                  ACCESS_MASK DesiredAccess, ULONG FileAttributes,
                  ULONG ShareAccess, ULONG CreateDisposition,
                  ULONG CreateOptions, PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
+  std::string actual_encrypted;
+  FileNameEnc filePath(GetContext(), FileName, !GetContext()->GetConfig()->m_PlaintextNames && GetContext()->GetConfig()->m_LongNames ? &actual_encrypted : NULL);
   HANDLE handle = NULL;
   DWORD fileAttr;
   NTSTATUS status = STATUS_SUCCESS;
@@ -323,12 +376,9 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
       FileAttributes, CreateOptions, CreateDisposition, &fileAttributesAndFlags,
       &creationDisposition);
 
-  std::string actual_encrypted;
 
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName, !GetContext()->GetConfig()->m_PlaintextNames && GetContext()->GetConfig()->m_LongNames ? &actual_encrypted : NULL))
-	  return STATUS_OBJECT_PATH_NOT_FOUND;
 
-  DbgPrint(L"CreateFile : %s\n", filePath);
+  DbgPrint(L"CreateFile : %s\n", FileName);
 
   PrintUserName(DokanFileInfo);
 
@@ -573,26 +623,25 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
 static void DOKAN_CALLBACK CryptCloseFile(LPCWSTR FileName,
                                            PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
-  GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName);
+   FileNameEnc filePath(GetContext(), FileName);
 
   if (DokanFileInfo->Context) {
-    DbgPrint(L"CloseFile: %s, %x\n", filePath, (DWORD)DokanFileInfo->Context);
+    DbgPrint(L"CloseFile: %s, %x\n", FileName, (DWORD)DokanFileInfo->Context);
     DbgPrint(L"\terror : not cleanuped file\n\n");
     CloseHandle((HANDLE)DokanFileInfo->Context);
     DokanFileInfo->Context = 0;
   } else {
-    DbgPrint(L"Close (no handle): %s\n\n", filePath);
+    DbgPrint(L"Close (no handle): %s\n\n", FileName);
   }
 }
 
 static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
                                          PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
-  GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName);
+	FileNameEnc filePath(GetContext(), FileName);
+ 
 
   if (DokanFileInfo->Context) {
-    DbgPrint(L"Cleanup: %s, %x\n\n", filePath, (DWORD)DokanFileInfo->Context);
+    DbgPrint(L"Cleanup: %s, %x\n\n", FileName, (DWORD)DokanFileInfo->Context);
     CloseHandle((HANDLE)DokanFileInfo->Context);
     DokanFileInfo->Context = 0;
 
@@ -616,7 +665,7 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
     }
 
   } else {
-    DbgPrint(L"Cleanup: %s\n\tinvalid handle\n\n", filePath);
+    DbgPrint(L"Cleanup: %s\n\tinvalid handle\n\n", FileName);
   }
 }
 
@@ -625,16 +674,14 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 	LPDWORD ReadLength,
 	LONGLONG Offset,
 	PDOKAN_FILE_INFO DokanFileInfo) {
-	WCHAR filePath[CRYPT_MAX_PATH];
+	FileNameEnc filePath(GetContext(), FileName);
 	HANDLE handle = (HANDLE)DokanFileInfo->Context;
 	ULONG offset = (ULONG)Offset;
 	BOOL opened = FALSE;
 	NTSTATUS ret_status = STATUS_SUCCESS;
 
-	if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-		return STATUS_OBJECT_NAME_NOT_FOUND;
 
-	DbgPrint(L"ReadFile : %s, %I64u\n", filePath, (ULONGLONG)handle);
+	DbgPrint(L"ReadFile : %s, %I64u\n", FileName, (ULONGLONG)handle);
 
 	if (!handle || handle == INVALID_HANDLE_VALUE) {
 		DbgPrint(L"\tinvalid handle, cleanuped?\n");
@@ -673,16 +720,15 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
                                                LPDWORD NumberOfBytesWritten,
                                                LONGLONG Offset,
                                                PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
+  FileNameEnc filePath(GetContext(), FileName);
   HANDLE handle = (HANDLE)DokanFileInfo->Context;
   ULONG offset = (ULONG)Offset;
   BOOL opened = FALSE;
   NTSTATUS ret_status = STATUS_SUCCESS;
 
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
 
-  DbgPrint(L"WriteFile : %s, offset %I64d, length %d\n", filePath, Offset,
+
+  DbgPrint(L"WriteFile : %s, offset %I64d, length %d\n", FileName, Offset,
            NumberOfBytesToWrite);
 
   // reopen the file
@@ -722,13 +768,11 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
 
 static NTSTATUS DOKAN_CALLBACK
 CryptFlushFileBuffers(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
+  FileNameEnc filePath(GetContext(), FileName);
   HANDLE handle = (HANDLE)DokanFileInfo->Context;
 
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
 
-  DbgPrint(L"FlushFileBuffers : %s\n", filePath);
+  DbgPrint(L"FlushFileBuffers : %s\n", FileName);
 
   if (!handle || handle == INVALID_HANDLE_VALUE) {
     DbgPrint(L"\tinvalid handle\n\n");
@@ -747,14 +791,12 @@ CryptFlushFileBuffers(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
 static NTSTATUS DOKAN_CALLBACK CryptGetFileInformation(
     LPCWSTR FileName, LPBY_HANDLE_FILE_INFORMATION HandleFileInformation,
     PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
+	FileNameEnc filePath(GetContext(), FileName);
   HANDLE handle = (HANDLE)DokanFileInfo->Context;
   BOOL opened = FALSE;
 
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
 
-  DbgPrint(L"GetFileInfo : %s\n", filePath);
+  DbgPrint(L"GetFileInfo : %s\n", FileName);
 
   if (get_file_information(filePath, handle, HandleFileInformation) != 0) {
 	  DWORD error = GetLastError();
@@ -764,7 +806,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileInformation(
 	  LARGE_INTEGER l;
 	  l.LowPart = HandleFileInformation->nFileSizeLow;
 	  l.HighPart = HandleFileInformation->nFileSizeHigh;
-	  DbgPrint(L"GetFileInformation %s, filesize = %I64d\n", filePath, l.QuadPart);
+	  DbgPrint(L"GetFileInformation %s, filesize = %I64d\n", FileName, l.QuadPart);
 	  return STATUS_SUCCESS;
   }
 
@@ -774,17 +816,14 @@ static NTSTATUS DOKAN_CALLBACK
 CryptFindFiles(LPCWSTR FileName,
                 PFillFindData FillFindData, // function pointer
                 PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
+  FileNameEnc filePath(GetContext(), FileName);
   size_t fileLen = 0;
   HANDLE hFind = NULL;
   WIN32_FIND_DATAW findData;
   DWORD error;
   long long count = 0;
 
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
-
-  DbgPrint(L"FindFiles :%s\n", filePath);
+  DbgPrint(L"FindFiles :%s\n", FileName);
 
   std::vector<WIN32_FIND_DATAW> file_data;
 
@@ -803,7 +842,7 @@ CryptFindFiles(LPCWSTR FileName,
 	  FillFindData(&findData, DokanFileInfo);
   }
 
-  DbgPrint(L"\tFindFiles return %d entries in %s\n\n", count, filePath);
+  DbgPrint(L"\tFindFiles return %d entries in %s\n\n", count, FileName);
 
   return STATUS_SUCCESS;
 }
@@ -812,13 +851,10 @@ static NTSTATUS DOKAN_CALLBACK
 CryptDeleteFile(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
   UNREFERENCED_PARAMETER(DokanFileInfo);
 
-  WCHAR filePath[CRYPT_MAX_PATH];
+  FileNameEnc filePath(GetContext(), FileName);
   // HANDLE	handle = (HANDLE)DokanFileInfo->Context;
 
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
-
-  DbgPrint(L"DeleteFile %s\n", filePath);
+  DbgPrint(L"DeleteFile %s\n", FileName);
 
   if (can_delete_file(filePath)) {
 
@@ -842,13 +878,9 @@ static NTSTATUS DOKAN_CALLBACK
 CryptDeleteDirectory(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
   UNREFERENCED_PARAMETER(DokanFileInfo);
 
-  WCHAR filePath[CRYPT_MAX_PATH];
+  FileNameEnc filePath(GetContext(), FileName);
 
-  ZeroMemory(filePath, sizeof(filePath));
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
-
-  DbgPrint(L"DeleteDirectory %s\n", filePath);
+  DbgPrint(L"DeleteDirectory %s\n", FileName);
 
   if (can_delete_directory(filePath)) {
 	  return STATUS_SUCCESS;
@@ -864,17 +896,14 @@ static NTSTATUS DOKAN_CALLBACK
 CryptMoveFile(LPCWSTR FileName, // existing file name
                LPCWSTR NewFileName, BOOL ReplaceIfExisting,
                PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
-  WCHAR newFilePath[CRYPT_MAX_PATH];
-  BOOL status;
 
   std::string actual_encrypted;
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
-  if (!GetFilePath(GetContext(), newFilePath, CRYPT_MAX_PATH, NewFileName, &actual_encrypted))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
+  FileNameEnc filePath(GetContext(), FileName);
+  FileNameEnc newFilePath(GetContext(), NewFileName, &actual_encrypted);
+  BOOL status;
 
-  DbgPrint(L"MoveFile %s -> %s\n\n", filePath, newFilePath);
+
+  DbgPrint(L"MoveFile %s -> %s\n\n", FileName, newFilePath);
 
   if (DokanFileInfo->Context) {
     // should close? or rename at closing?
@@ -914,14 +943,10 @@ static NTSTATUS DOKAN_CALLBACK CryptLockFile(LPCWSTR FileName,
                                               LONGLONG ByteOffset,
                                               LONGLONG Length,
                                               PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
+  FileNameEnc filePath(GetContext(), FileName);
   HANDLE handle;
- 
 
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
-
-  DbgPrint(L"LockFile %s\n", filePath);
+  DbgPrint(L"LockFile %s\n", FileName);
 
   handle = (HANDLE)DokanFileInfo->Context;
   if (!handle || handle == INVALID_HANDLE_VALUE) {
@@ -948,13 +973,11 @@ static NTSTATUS DOKAN_CALLBACK CryptLockFile(LPCWSTR FileName,
 
 static NTSTATUS DOKAN_CALLBACK CryptSetEndOfFile(
     LPCWSTR FileName, LONGLONG ByteOffset, PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
+	FileNameEnc filePath(GetContext(), FileName);
   HANDLE handle;
 
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
 
-  DbgPrint(L"SetEndOfFile %s, %I64d\n", filePath, ByteOffset);
+  DbgPrint(L"SetEndOfFile %s, %I64d\n", FileName, ByteOffset);
 
   handle = (HANDLE)DokanFileInfo->Context;
   if (!handle || handle == INVALID_HANDLE_VALUE) {
@@ -978,14 +1001,11 @@ static NTSTATUS DOKAN_CALLBACK CryptSetEndOfFile(
 
 static NTSTATUS DOKAN_CALLBACK CryptSetAllocationSize(
     LPCWSTR FileName, LONGLONG AllocSize, PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
+	FileNameEnc filePath(GetContext(), FileName);
   HANDLE handle;
   LARGE_INTEGER fileSize;
 
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
-
-  DbgPrint(L"SetAllocationSize %s, %I64d\n", filePath, AllocSize);
+  DbgPrint(L"SetAllocationSize %s, %I64d\n", FileName, AllocSize);
 
   handle = (HANDLE)DokanFileInfo->Context;
   if (!handle || handle == INVALID_HANDLE_VALUE) {
@@ -1028,12 +1048,10 @@ static NTSTATUS DOKAN_CALLBACK CryptSetFileAttributes(
     LPCWSTR FileName, DWORD FileAttributes, PDOKAN_FILE_INFO DokanFileInfo) {
   UNREFERENCED_PARAMETER(DokanFileInfo);
 
-  WCHAR filePath[CRYPT_MAX_PATH];
+  FileNameEnc filePath(GetContext(), FileName);
 
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
 
-  DbgPrint(L"SetFileAttributes %s, %x\n", filePath, FileAttributes);
+  DbgPrint(L"SetFileAttributes %s, %x\n", FileName, FileAttributes);
 
   if (!SetFileAttributes(filePath, FileAttributes)) {
     DWORD error = GetLastError();
@@ -1049,17 +1067,13 @@ static NTSTATUS DOKAN_CALLBACK
 CryptSetFileTime(LPCWSTR FileName, CONST FILETIME *CreationTime,
                   CONST FILETIME *LastAccessTime, CONST FILETIME *LastWriteTime,
                   PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
+	FileNameEnc filePath(GetContext(), FileName);
   HANDLE handle;
-
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
-
   
 
   handle = (HANDLE)DokanFileInfo->Context;
 
-  DbgPrint(L"SetFileTime %s, handle = %I64x\n", filePath, (ULONGLONG)handle);
+  DbgPrint(L"SetFileTime %s, handle = %I64x\n", FileName, (ULONGLONG)handle);
 
   if (!handle || handle == INVALID_HANDLE_VALUE) {
     DbgPrint(L"\tinvalid handle\n\n");
@@ -1079,14 +1093,11 @@ CryptSetFileTime(LPCWSTR FileName, CONST FILETIME *CreationTime,
 static NTSTATUS DOKAN_CALLBACK
 CryptUnlockFile(LPCWSTR FileName, LONGLONG ByteOffset, LONGLONG Length,
                  PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
+  FileNameEnc filePath(GetContext(), FileName);
   HANDLE handle;
   
 
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
-
-  DbgPrint(L"UnlockFile %s\n", filePath);
+  DbgPrint(L"UnlockFile %s\n", FileName);
 
   handle = (HANDLE)DokanFileInfo->Context;
   if (!handle || handle == INVALID_HANDLE_VALUE) {
@@ -1115,14 +1126,10 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
     LPCWSTR FileName, PSECURITY_INFORMATION SecurityInformation,
     PSECURITY_DESCRIPTOR SecurityDescriptor, ULONG BufferLength,
     PULONG LengthNeeded, PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
+  FileNameEnc filePath(GetContext(), FileName);
 
-  UNREFERENCED_PARAMETER(DokanFileInfo);
 
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
-
-  DbgPrint(L"GetFileSecurity %s\n", filePath);
+  DbgPrint(L"GetFileSecurity %s\n", FileName);
 
   CryptCheckFlag(*SecurityInformation, FILE_SHARE_READ);
   CryptCheckFlag(*SecurityInformation, OWNER_SECURITY_INFORMATION);
@@ -1182,14 +1189,12 @@ static NTSTATUS DOKAN_CALLBACK CryptSetFileSecurity(
     PSECURITY_DESCRIPTOR SecurityDescriptor, ULONG SecurityDescriptorLength,
     PDOKAN_FILE_INFO DokanFileInfo) {
   HANDLE handle;
-  WCHAR filePath[CRYPT_MAX_PATH];
+  FileNameEnc filePath(GetContext(), FileName);
 
   UNREFERENCED_PARAMETER(SecurityDescriptorLength);
 
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
 
-  DbgPrint(L"SetFileSecurity %s\n", filePath);
+  DbgPrint(L"SetFileSecurity %s\n", FileName);
 
   handle = (HANDLE)DokanFileInfo->Context;
   if (!handle || handle == INVALID_HANDLE_VALUE) {
@@ -1261,16 +1266,14 @@ NTSYSCALLAPI NTSTATUS NTAPI NtQueryInformationFile(
 NTSTATUS DOKAN_CALLBACK
 CryptFindStreams(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
                   PDOKAN_FILE_INFO DokanFileInfo) {
-  WCHAR filePath[CRYPT_MAX_PATH];
+  FileNameEnc filePath(GetContext(), FileName);
   HANDLE hFind;
   WIN32_FIND_STREAM_DATA findData;
   DWORD error;
   int count = 0;
 
-  if (!GetFilePath(GetContext(), filePath, CRYPT_MAX_PATH, FileName))
-	  return STATUS_OBJECT_NAME_NOT_FOUND;
 
-  DbgPrint(L"FindStreams :%s\n", filePath);
+  DbgPrint(L"FindStreams :%s\n", FileName);
 
   hFind = FindFirstStreamW(filePath, FindStreamInfoStandard, &findData, 0);
 
@@ -1296,7 +1299,7 @@ CryptFindStreams(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
     return ToNtStatus(error);
   }
 
-  DbgPrint(L"\tFindStreams return %d entries in %s\n\n", count, filePath);
+  DbgPrint(L"\tFindStreams return %d entries in %s\n\n", count, FileName);
 
   return STATUS_SUCCESS;
 }
