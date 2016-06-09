@@ -46,7 +46,7 @@ CryptFile::Associate(CryptContext *con, HANDLE hfile)
 	}
 
 	// read header in one go to reduce number of reads
-	unsigned char header[18];
+	unsigned char header[FILE_HEADER_LEN];
 
 	DWORD nread;
 
@@ -183,20 +183,19 @@ BOOL CryptFile::WriteVersionAndFileId()
 
 	unsigned short version = MakeBigEndian(m_version);
 
+	BYTE header[FILE_HEADER_LEN];
+
+	memcpy(header, &version, sizeof(version));
+
+	memcpy(header + sizeof(version), m_fileid, sizeof(m_fileid));
+
 	DWORD nWritten = 0;
 
-	if (!WriteFile(m_handle, &version, sizeof(version), &nWritten, NULL)) {
+	if (!WriteFile(m_handle, header, sizeof(header), &nWritten, NULL)) {
 		return FALSE;
 	}
 
-	if (nWritten != sizeof(version))
-		return FALSE;
-
-	if (!WriteFile(m_handle, m_fileid, FILE_ID_LEN, &nWritten, NULL)) {
-		return FALSE;
-	}
-
-	return nWritten == FILE_ID_LEN;
+	return nWritten == sizeof(header);
 }
 
 
