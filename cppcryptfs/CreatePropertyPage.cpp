@@ -137,7 +137,7 @@ void CCreatePropertyPage::CreateCryptfs()
 		return;
 
 	if (wcscmp(password, password2)) {
-		MessageBox(L"passwords do not match", L"cppcryptfs", MB_OK | MB_ICONHAND);
+		MessageBox(L"passwords do not match", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
 	}
 
@@ -231,7 +231,7 @@ void CCreatePropertyPage::OnClickedSelect()
 		return;
 
 	if (!can_delete_directory(cpath, TRUE)) {
-		MessageBox(L"directory must be empty", L"cppcryptfs", MB_OK | MB_ICONHAND);
+		MessageBox(L"directory must be empty", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
 	}
 
