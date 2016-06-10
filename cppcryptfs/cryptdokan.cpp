@@ -1586,7 +1586,7 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 
 			con->m_serial = *(DWORD*)sum;
 		} else {
-			con->m_serial = 0xb57ae431;
+			con->m_serial = 0xb2a1d417;
 		}
 	}
 
