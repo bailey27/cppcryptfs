@@ -61,6 +61,10 @@ Then you need to choose a (hopefully strong) password and repeat it.
 
 When you click on the "Create" button, a gocyrptfs.conf file will be created in the directory, as will a gocryptfs.diriv.  Be sure to backup these files in case they get lost or corrupted.  You won't be able to access any of your data if something happens to gocryptfs.conf.  gocryptfs.conf will never change for the life of your filesystem.
 
+If you choose to give the volume a label, then the label will be encrypted in gocryptfs.conf.  The maximum volume label length is 32 characters.
+
+You can right click on the mounted drive letter in explorer and change the volume lable.  However, doing so will cause cppcryptfs to re-write gocryptfs.conf when the drive is dismounted. This does entail some risk to your gocryptfs.conf.  Again, it's a good a idea to backup your gocryptfs.conf file somewhere.
+
 Then go to the "Mount" tab and select a drive letter and select the folder you
 just created the filesystem in.  Then enter the password and click on the "Mount" button.
 
