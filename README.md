@@ -91,7 +91,7 @@ If "Long file names" (the default) is specfied when creating the fileystem, or i
 
 If "Long file names" is not specified and plain text file names aren't used, then the maximum length of a file or directory name is 160 characters.  But the full path limit is still 32,000 characters (assuming NTFS).
 
-When a file name is encrypted, it is converted from UNICODE-16 to UTF-8 which, depending the language, might cause the number of characters to increase.  Then it is encrypted (which causes it to be padded up to 16 bytes), and then it is base64 encoded, which typically results in a 33% increase in length.  The encrypted file names can therefore be signifcantly longer than the unencrypted names.
+When a file name is encrypted, it is converted from UNICODE-16 to UTF-8 which, depending the language, might cause the number of characters to increase.  Then it is encrypted, which causes it to be padded by up to 16 bytes. Then it is base64 encoded, which typically results in an 33% increase in length.  The encrypted file names can therefore be signifcantly longer than the unencrypted names.
 
 Also, the path to the directory in which the encrypted fileystem resides must be pre-pended to the path of the encrypted file names.
 
