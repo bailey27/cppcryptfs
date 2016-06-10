@@ -148,7 +148,7 @@ void DbgPrint(LPCWSTR format, ...) {
 // A note on actual_encrypted:
 //
 // When creating a new file or directory, if a file or directory with a long name is being created,
-// then the actual encrypted name must be written to the special long name gocryptfs.longname.XXXXX.name file.
+// then the actual encrypted name must be written to the special gocryptfs.longname.XXXXX.name file.
 // actual_encrypted will contain this data in that case.
 
 
