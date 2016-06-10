@@ -665,3 +665,5 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 	return bret;
 }
+
+

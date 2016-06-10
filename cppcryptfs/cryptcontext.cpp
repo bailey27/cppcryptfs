@@ -35,6 +35,7 @@ void CryptContext::InitEme(BYTE *key)
 	m_eme.lc = NULL;
 	m_lc.init(&m_eme);
 	m_eme.lc = &m_lc;
+	m_serial = 0xb2a1d417;
 }
 
 CryptContext::CryptContext()

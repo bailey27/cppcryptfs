@@ -44,6 +44,8 @@ public:
 
 	BOOL m_mounted;
 
+	DWORD m_serial;
+
 	void InitEme(BYTE *key);
 
 	CryptContext();
