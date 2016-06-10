@@ -56,7 +56,9 @@ bool is_long_name(const WCHAR *filename)
 
 bool is_long_name_file(const WCHAR *filename)
 {
-	return wcslen(filename) > (LONGNAME_PREFIX_LEN + LONGNAME_SUFFIX_LEN) && !wcsncmp(filename, LONGNAME_PREFIX_W, LONGNAME_PREFIX_LEN) && !wcscmp(filename + wcslen(filename) - LONGNAME_SUFFIX_LEN, LONGNAME_SUFFIX_W);
+	size_t len = wcslen(filename);
+
+	return len > (LONGNAME_PREFIX_LEN + LONGNAME_SUFFIX_LEN) && !wcsncmp(filename, LONGNAME_PREFIX_W, LONGNAME_PREFIX_LEN) && !wcscmp(filename + len - LONGNAME_SUFFIX_LEN, LONGNAME_SUFFIX_W);
 }
 
 
