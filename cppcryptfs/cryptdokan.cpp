@@ -1212,17 +1212,47 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
 
   CryptConfig *config = con->GetConfig();
 
+  const WCHAR *p = &config->m_basedir[0];
+
+  while (*p && *p != ':')
+	  p++;
+
+  BOOL bGotVI = FALSE;
+
+  DWORD max_component = 255;
+  DWORD fs_flags;
+  WCHAR fs_name[256];
+  fs_name[0] = '\0';
+
+  if (p > &config->m_basedir[0]) {
+
+	  WCHAR rbuf[4];
+	  rbuf[0] = *(p - 1);
+	  rbuf[1] = ':';
+	  rbuf[2] = '\\';
+	  rbuf[3] = '\0';
+
+	  bGotVI = GetVolumeInformationW(rbuf, NULL, 0, NULL, &max_component, &fs_flags, fs_name, sizeof(fs_name) / sizeof(fs_name[0]) - 1);
+  }
+  if (bGotVI) {
+	  DbgPrint(L"max compent length of underlying filey system is %d\n", max_component);
+  } else {
+	  DbgPrint(L"GetVolumeInformation failed, err = %u\n", GetLastError());
+  }
+
   wcscpy_s(VolumeNameBuffer, VolumeNameSize, config->m_VolumeName.size() > 0 ? &config->m_VolumeName[0] : L"");
   *VolumeSerialNumber = 0xb2a1d417;
   *MaximumComponentLength = (config->m_PlaintextNames || config->m_LongNames) ? 255 : 160;
-  *FileSystemFlags = FILE_CASE_SENSITIVE_SEARCH | FILE_CASE_PRESERVED_NAMES |
-                     FILE_SUPPORTS_REMOTE_STORAGE | FILE_UNICODE_ON_DISK |
-                     FILE_PERSISTENT_ACLS;
+  DWORD defFlags = (FILE_CASE_SENSITIVE_SEARCH | FILE_CASE_PRESERVED_NAMES |
+	  FILE_SUPPORTS_REMOTE_STORAGE | FILE_UNICODE_ON_DISK |
+	  FILE_PERSISTENT_ACLS);
+
+  *FileSystemFlags = defFlags & (bGotVI ? fs_flags : 0xffffffff);
 
   // File system name could be anything up to 10 characters.
   // But Windows check few feature availability based on file system name.
   // For this, it is recommended to set NTFS or FAT here.
-  wcscpy_s(FileSystemNameBuffer, FileSystemNameSize, L"NTFS");
+  wcscpy_s(FileSystemNameBuffer, FileSystemNameSize, bGotVI ? fs_name : L"NTFS");
 
   return STATUS_SUCCESS;
 }
