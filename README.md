@@ -74,6 +74,8 @@ just created the filesystem in.  Then enter the password and click on the "Mount
 
 Your will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is encrypted and saved in files in the folder you specified.
 
+The file data is encrypted using AES256-GCM.
+
 For technical details of the cryptographic design of gocryptfs, please visit
 the [gocryptfs project page](https://github.com/rfjakob/gocryptfs).
 
