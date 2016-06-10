@@ -59,6 +59,8 @@ It is strongly recommended that this directory reside on an NTFS filesystem.
 
 Then you need to choose a (hopefully strong) password and repeat it.
 
+You can choose to have your filenames encryped using AES256-EME (the default), AES256-CBC, or not to encrypt the filenames (plain text).
+
 When you click on the "Create" button, a gocyrptfs.conf file will be created in the directory.  Unless you choose to use plain text file names, a gocryptfs.diriv will also be created there.  Be sure to backup these files in case they get lost or corrupted.  You won't be able to access any of your data if something happens to gocryptfs.conf.  gocryptfs.conf will never change for the life of your filesystem unless you change the volume label (see bellow).
 
 If you choose to give the volume a label, then the label will be encrypted in gocryptfs.conf.  The maximum volume label length is 32 characters.
@@ -71,9 +73,6 @@ just created the filesystem in.  Then enter the password and click on the "Mount
 ![Alt text](/screenshots/screenshot_mount.png?raw=true "Mount tab")
 
 Your will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is encrypted and saved in files in the folder you specified.
-
-The files are encrypted using AES256-GCM, and the file names are encrypted using
-AES256-EME (by default).  When you create a filesystem, you can choose to use plain text file names or AES256-CBC encryption for file names if you wish.
 
 For technical details of the cryptographic design of gocryptfs, please visit
 the [gocryptfs project page](https://github.com/rfjakob/gocryptfs).
