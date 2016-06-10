@@ -63,6 +63,7 @@ BOOL CCryptPropertySheet::CanClose()
 			int i;
 			for (i = 0; i < 26; i++) {
 				if (theApp.m_mountedDrives & (1<<i)) {
+					write_volume_name_if_changed(i + 'A');
 					unmount_crypt_fs(i + 'A', false);
 				}
 			}

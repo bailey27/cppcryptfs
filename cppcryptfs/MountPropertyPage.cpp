@@ -396,6 +396,9 @@ void CMountPropertyPage::OnClickedDismount()
 	if (cpath.GetLength() < 1)
 		return;
 
+	if (!write_volume_name_if_changed(*(const WCHAR *)cdl))
+		MessageBox(L"unable to update volume label", L"cppcryptfs", MB_OK | MB_ICONERROR);
+
 	theApp.DoWaitCursor(1);
 	BOOL bresult = unmount_crypt_fs(*(const WCHAR *)cdl, true);
 	theApp.DoWaitCursor(-1);
@@ -410,6 +413,7 @@ void CMountPropertyPage::OnClickedDismount()
 	theApp.m_mountedDrives &= ~(1 << (*(const WCHAR *)cdl - 'A'));
 
 	pList->SetItemText(nItem, PATH_INDEX, L"");
+
 }
 
 
@@ -429,6 +433,8 @@ void CMountPropertyPage::OnClickedDismountAll()
 	bool hadSuccess = false;
 	bool hadFailure = false;
 
+	bool volnameFailure = false;
+
 	for (i = 0; i < count; i++) {
 		CString cdl;
 		CString cpath;
@@ -439,6 +445,8 @@ void CMountPropertyPage::OnClickedDismountAll()
 				hadFailure = true;
 				continue;
 			}
+			if (!write_volume_name_if_changed(*(const WCHAR *)cdl))
+				volnameFailure = true;
 			if (unmount_crypt_fs(*(const WCHAR *)cdl, false)) {
 				theApp.m_mountedDrives &= ~(1 << (*(const WCHAR *)cdl - 'A'));
 				hadSuccess = true;
@@ -460,6 +468,9 @@ void CMountPropertyPage::OnClickedDismountAll()
 			MessageBox(L"Unable to dismount", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		}
 	}
+
+	if (volnameFailure)
+		MessageBox(L"unable to update one or more volume labels", L"cppcryptfs", MB_OK | MB_ICONERROR);
 }
 
 

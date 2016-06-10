@@ -28,12 +28,19 @@ THE SOFTWARE.
 
 
 #include "stdafx.h"
+
+#include <iostream>
+#include <fstream>
+
 #include "cryptconfig.h"
 
 
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
+#include "rapidjson/filewritestream.h"
+#include "rapidjson/prettywriter.h"
+#include <cstdio>
 
 #include "util.h"
 #include "cryptdefs.h"
@@ -202,6 +209,132 @@ CryptConfig::read()
 				else if (!strcmp(itr->GetString(), "LongNames")) {
 					m_LongNames = true;
 				}
+			}
+		}
+	}
+
+	write_volume_name();
+
+	return true;
+}
+
+bool CryptConfig::write_volume_name()
+{
+	std::wstring vol = m_VolumeName;
+
+	std::string volume_name_utf8_enc;
+
+	if (vol.size() > MAX_VOLUME_NAME_LENGTH)
+		vol.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
+	if (!encrypt_string_gcm(vol, m_key, volume_name_utf8_enc)) {
+		return false;
+	}
+
+	if (m_basedir.size() < 1)
+		return false;
+
+	std::wstring config_path;
+
+	config_path = m_basedir;
+
+	if (config_path[config_path.size() - 1] != '\\')
+		config_path.push_back('\\');
+
+	config_path += CONFIG_NAME;
+
+	const WCHAR *path = &config_path[0];
+
+	FILE *fl = NULL;
+
+	if (_wfopen_s(&fl, path, L"rb"))
+		return false;
+
+	if (fseek(fl, 0, SEEK_END))
+		return false;
+
+	long filesize = ftell(fl);
+
+	if (fseek(fl, 0, SEEK_SET))
+		return false;
+
+	char *buf = new char[filesize + 1];
+
+	if (!buf)
+		return false;
+
+	size_t len = fread(buf, 1, filesize, fl);
+
+	fclose(fl);
+
+	if (len < 0)
+		return false;
+
+	buf[len] = '\0';
+
+	rapidjson::Document d;
+
+	d.Parse(buf);
+
+	delete[] buf;
+
+	FILE *fp = NULL;
+
+	rapidjson::Value vname(volume_name_utf8_enc.c_str(), d.GetAllocator());
+
+	if (d.HasMember("VolumeName")) {
+		d["VolumeName"] = vname;
+	} else {
+		d.AddMember("VolumeName", vname, d.GetAllocator());
+	}
+	std::wstring tmp_path = config_path;
+	tmp_path += L".tmp";
+	if (_wfopen_s(&fp, &tmp_path[0], L"wb"))
+		return false;
+	char writeBuffer[65536];
+	rapidjson::FileWriteStream os(fp, writeBuffer, sizeof(writeBuffer));
+	rapidjson::PrettyWriter<rapidjson::FileWriteStream> writer(os);
+	d.Accept(writer);
+	fclose(fp);
+
+	DWORD dwAttr = GetFileAttributes(&config_path[0]);
+
+	if (dwAttr == INVALID_FILE_ATTRIBUTES) {
+		DeleteFile(&tmp_path[0]);
+		return false;
+	}
+
+	bool bWasReadOnly = false;
+
+	if (dwAttr & FILE_ATTRIBUTE_READONLY) {
+
+		bool bWasReadOnly = true;
+		
+		dwAttr &= ~FILE_ATTRIBUTE_READONLY;
+
+		if (!SetFileAttributes(&config_path[0], dwAttr)) {
+			DeleteFile(&tmp_path[0]);
+			return false;
+		}
+	}
+
+	DWORD dwFlags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH;
+	if (!MoveFileEx(&tmp_path[0], &config_path[0], dwFlags)) {
+		DeleteFile(&tmp_path[0]);
+		return false;
+	}
+
+	if (bWasReadOnly) {
+		dwAttr = GetFileAttributes(&config_path[0]);
+
+		if (dwAttr == INVALID_FILE_ATTRIBUTES) {
+			return false;
+		}
+
+		if (!(dwAttr & FILE_ATTRIBUTE_READONLY)) {
+			dwAttr |= FILE_ATTRIBUTE_READONLY;
+
+			if (!SetFileAttributes(&config_path[0], dwAttr)) {
+				return false;
 			}
 		}
 	}

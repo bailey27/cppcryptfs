@@ -72,6 +72,8 @@ public:
 
 	bool check_config(std::wstring& mes);
 
+	bool write_volume_name();
+
 	virtual ~CryptConfig();
 };
 

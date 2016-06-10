@@ -35,6 +35,7 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 
 BOOL unmount_crypt_fs(WCHAR driveletter, bool wait);
 
-
 BOOL wait_for_all_unmounted();
+
+BOOL write_volume_name_if_changed(WCHAR dl);
 

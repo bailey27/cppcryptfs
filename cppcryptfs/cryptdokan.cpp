@@ -1224,7 +1224,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
   WCHAR fs_name[256];
   fs_name[0] = '\0';
 
-  if (p > &config->m_basedir[0]) {
+  if (p > &config->m_basedir[0] && *p == ':') {
 
 	  WCHAR rbuf[4];
 	  rbuf[0] = *(p - 1);
@@ -1668,3 +1668,40 @@ BOOL wait_for_all_unmounted()
 	}
 }
 
+BOOL write_volume_name_if_changed(WCHAR dl)
+{
+	CryptThreadData *tdata = g_ThreadDatas[dl - 'A'];
+
+	if (!tdata)
+		return FALSE;
+
+	if (!tdata->options)
+		return FALSE;
+
+	CryptContext *con = (CryptContext*)tdata->options->GlobalContext;
+
+	if (!con)
+		return false;
+
+	std::wstring fs_root;
+
+	fs_root.push_back(dl);
+	fs_root.push_back(':');
+	fs_root.push_back('\\');
+	
+
+	WCHAR volbuf[256];
+
+	if (!GetVolumeInformationW(&fs_root[0], volbuf, sizeof(volbuf) / sizeof(volbuf[0]) - 1, NULL, NULL, NULL, NULL, 0)) {
+		DWORD error = GetLastError();
+		DbgPrint(L"update volume name error = %u\n", error);
+		return FALSE;
+	}
+
+	if (con->GetConfig()->m_VolumeName != volbuf) {
+		con->GetConfig()->m_VolumeName = volbuf;
+		return con->GetConfig()->write_volume_name();
+	}
+
+	return TRUE;
+}
