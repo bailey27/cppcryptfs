@@ -59,7 +59,7 @@ It is strongly recommended that this directory reside on an NTFS filesystem.
 
 Then you need to choose a (hopefully strong) password and repeat it.
 
-You can choose to have your filenames encryped using AES256-EME (the default), AES256-CBC, or not to encrypt the filenames (plain text).
+You can choose to have your file names encryped using AES256-EME (the default), AES256-CBC, or not to encrypt the file names (plain text).
 
 When you click on the "Create" button, a gocyrptfs.conf file will be created in the directory.  Unless you choose to use plain text file names, a gocryptfs.diriv will also be created there.  Be sure to backup these files in case they get lost or corrupted.  You won't be able to access any of your data if something happens to gocryptfs.conf.  gocryptfs.conf will never change for the life of your filesystem unless you change the volume label (see bellow).
 
