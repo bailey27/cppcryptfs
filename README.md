@@ -79,7 +79,7 @@ When you are finished using the drive letter, then go to the "Mount" tab and cli
 
 You can mount as many gocryptfs filesystems as you have unused drive letters available.
 
-cppcryptfs uses VirtualLock() to prevent encryption keys from ending up in the paging file.  If you never hibernate your computer, then you don't have to worry about your keys ever being written to the disk.
+cppcryptfs uses VirtualLock() to prevent encryption keys from ending up in the paging file.  If you never hibernate your computer, then you don't have to worry about your keys ever being written to the hard drive.
 
 If you minimize cppcryptfs, then it will hide itself in the system tray.
 
