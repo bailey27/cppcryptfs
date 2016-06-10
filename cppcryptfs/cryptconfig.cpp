@@ -298,6 +298,18 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 		if (ptlen != MASTER_KEY_LEN)
 			throw (-1);
 
+		if (m_VolumeName.size() > 0) {
+			std::string vol;
+			if (unicode_to_utf8(&m_VolumeName[0], vol)) {
+				if (!decrypt_string_gcm(vol, m_key, m_VolumeName))
+					m_VolumeName = L"";
+				if (m_VolumeName.size() > MAX_VOLUME_NAME_LENGTH)
+					m_VolumeName.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
+			} else {
+				m_VolumeName = L"";
+			}
+		}
+
 	} catch (...) {
 		bret = false;
 	}
@@ -346,14 +358,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 			throw(-1);
 		}
 
-		std::string volume_name_utf8;
-
-		if (volume_name && wcslen(volume_name)) {
-			if (!unicode_to_utf8(volume_name, volume_name_utf8)) {
-				error_mes = L"cannot convert volume name to uf8\n";
-				throw(-1);
-			}
-		}
+		
 
 		std::wstring config_path;
 
@@ -409,6 +414,18 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		if (!get_sys_random_bytes(masterkey, m_KeyLen))
 			throw(-1);
+
+		std::string volume_name_utf8;
+
+		if (volume_name && wcslen(volume_name)) {
+			std::wstring vol = volume_name;
+			if (vol.size() > MAX_VOLUME_NAME_LENGTH)
+				vol.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
+			if (!encrypt_string_gcm(vol, masterkey, volume_name_utf8)) {
+				error_mes = L"cannot encrypt volume name\n";
+				throw(-1);
+			}
+		}
 
 		context = get_crypt_context(MASTER_IV_LEN, AES_MODE_GCM);
 

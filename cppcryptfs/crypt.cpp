@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include <openssl/evp.h>
 
 #include "cryptdefs.h"
+#include "util.h"
 
 #include <string>
 
@@ -246,4 +247,93 @@ bool sha256(const std::string& str, BYTE *sum)
 
 	return ret;
 
+}
+
+
+bool encrypt_string_gcm(const std::wstring& str, const BYTE *key, std::string& base64_out)
+{
+	BYTE iv[BLOCK_IV_LEN];
+
+	bool rval = true;
+
+	BYTE *encrypted = NULL;
+
+	if (!get_sys_random_bytes(iv, sizeof(iv)))
+		return false;
+
+	void *context = get_crypt_context(DIR_IV_LEN, AES_MODE_GCM);
+
+	if (!context)
+		return false;
+
+	try {
+		std::string utf8;
+		if (!unicode_to_utf8(&str[0], utf8))
+			throw(-1);
+
+		BYTE aad[8];
+		memset(aad, 0, sizeof(aad));
+
+		encrypted = new BYTE[utf8.size() + BLOCK_IV_LEN + BLOCK_TAG_LEN];
+
+		memcpy(encrypted, iv, sizeof(iv));
+
+		int ctlen = encrypt((const BYTE*)&utf8[0], (int)utf8.size(), aad, (int)sizeof(aad), key, iv, encrypted + (int)sizeof(iv), encrypted + (int)sizeof(iv) + (int)utf8.size(), context);
+
+		if (ctlen != utf8.size())
+			throw(-1);
+
+		if (!base64_encode(encrypted, ctlen + sizeof(iv) + BLOCK_TAG_LEN, base64_out))
+			throw(-1);
+
+	} catch (...) {
+		rval = false;
+	}
+
+	if (context)
+		free_crypt_context(context);
+
+	if (encrypted)
+		delete[] encrypted;
+
+	return rval;
+}
+
+bool decrypt_string_gcm(const std::string& base64_in, const BYTE *key, std::wstring& str)
+{
+	bool rval = true;
+
+	void *context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+
+	if (!context)
+		return false;
+
+	try {
+		std::vector<BYTE> v;
+
+		BYTE adata[8];
+		memset(adata, 0, sizeof(adata));
+
+		if (!base64_decode(&base64_in[0], v, false))
+			throw(-1);
+
+		char *plaintext = new char[v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN + 1];
+		int ptlen = decrypt((const BYTE*)(&v[0] + BLOCK_IV_LEN), (int)v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN, adata, sizeof(adata), &v[0] + v.size() - BLOCK_TAG_LEN, key, &v[0], (BYTE*)plaintext, context);
+
+		if (ptlen != v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN)
+			throw(-1);
+
+		plaintext[ptlen] = '\0';
+
+		if (!utf8_to_unicode(plaintext, str))
+			throw(-1);
+
+	} catch (...) {
+			rval = false;
+	}
+
+	if (context)
+		free_crypt_context(context);
+
+	return rval;
 }

@@ -49,3 +49,7 @@ int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *
 	unsigned char *plaintext, void *context);
 
 bool sha256(const std::string& str, BYTE *sum);  // sum is a 32-byte buffer
+
+bool encrypt_string_gcm(const std::wstring& str, const BYTE *key, std::string& base64_out);
+
+bool decrypt_string_gcm(const std::string& base64_in, const BYTE *key, std::wstring& str);
