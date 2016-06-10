@@ -1568,7 +1568,9 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 
 		con->m_serial = *(DWORD*)diriv;
 
-	} else {
+	}
+
+	if (!con->m_serial) {
 
 		std::wstring str = L"XjyG7KDokdqpxtjUh6oCVJ92FmPFJ1Fg"; // salt
 
