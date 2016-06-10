@@ -135,73 +135,63 @@ void DbgPrint(LPCWSTR format, ...) {
 }
 
 
-
-
-
-
-
-static const WCHAR* GetFilePath(CryptContext *con, std::wstring& filePath,
-	LPCWSTR FileName, std::string *actual_encrypted = NULL) {
-
-	DbgPrint(L"Converting filename : %s\n", FileName);
-
-	const WCHAR *encpath = NULL;
-
-	try {
-
-		encpath = encrypt_path(con, FileName, filePath, actual_encrypted);
-
-	}
-	catch (...) {
-		encpath = NULL;
-	}
-
-	if (encpath)
-		DbgPrint(L"Converted to %s\n", encpath);
-	else
-		DbgPrint(L"Convert filename failed\n");
-
-	return encpath;
-
-}
+// The FileNameEnc class has a contstructor that takes the necessary inputs
+// for doing the filename encryption.  It saves them for later, at almost zero cost.
+// 
+// If the encrypted filename is actually needed, then the instance of FileNameEnc
+// is passed to one of various functions that take a const WCHAR * for the encrypted path 
+// (and possibly an actual_encrypted parameter).  
+//
+// When the overloaded cast to const WCHAR * is performed, the filename will be encrypted, and
+// the actual_encrypted data (if any) will be retrieved.
+//
+// A note on actual_encrypted:
+//
+// When creating a new file or directory, if a file or directory with a long name is being created,
+// then the actual encrypted name must be written to the special long name gocryptfs.longname.XXXXX.name file.
+// actual_encrypted will contain this data in that case.
 
 
 class FileNameEnc {
 private:
-	std::wstring m_enc_str;
-	std::string *m_actual;
-	const WCHAR *m_fname;
+	std::wstring m_enc_path;
+	std::string *m_actual_encrypted;
+	const WCHAR *m_plain_path;
 	CryptContext *m_con;
-	bool m_tried;
+	const WCHAR *m_ret;
+	
 
 public:
 	operator const WCHAR *()
 	{
-		const WCHAR *ret = NULL;
-		if (m_tried) {
-			ret = &m_enc_str[0];
-		} else {
+	
+		if (!m_ret) {
 			try {
-				if (!GetFilePath(m_con, m_enc_str, m_fname, m_actual))
-					m_enc_str = L"";
-				ret = &m_enc_str[0];
+				if (!encrypt_path(m_con, m_plain_path, m_enc_path, m_actual_encrypted))
+					m_enc_path = L"";
+				m_ret = &m_enc_path[0];
 			} catch (...) {
-				ret = NULL;
+				m_ret = L"";
 			}
-			m_tried = true;
 		}
-		return (ret && *ret ? ret : NULL);
+		const WCHAR *rs = m_ret && *m_ret ? m_ret : NULL;
+		if (rs) {
+			DbgPrint(L"\tconverted filename %s => %s\n", m_plain_path, rs);
+		} else {
+			DbgPrint(L"\terror converting filenaem %s\n", m_plain_path);
+		}
+		return rs;
 	};
 	FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual = NULL);
 	virtual ~FileNameEnc();
 };
 
-FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual)
+FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted)
 {
 	m_con = con;
-	m_fname = fname;
-	m_actual = actual;
-	m_tried = false;
+	m_plain_path = fname;
+	m_actual_encrypted = actual_encrypted;
+	m_ret = NULL;
 }
 
 FileNameEnc::~FileNameEnc()
@@ -356,7 +346,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
                  ULONG ShareAccess, ULONG CreateDisposition,
                  ULONG CreateOptions, PDOKAN_FILE_INFO DokanFileInfo) {
   std::string actual_encrypted;
-  FileNameEnc filePath(GetContext(), FileName, !GetContext()->GetConfig()->m_PlaintextNames && GetContext()->GetConfig()->m_LongNames ? &actual_encrypted : NULL);
+  FileNameEnc filePath(GetContext(), FileName, &actual_encrypted);
   HANDLE handle = NULL;
   DWORD fileAttr;
   NTSTATUS status = STATUS_SUCCESS;
@@ -498,14 +488,14 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
 		  if (!create_dir_iv(GetContext(), filePath)) {
 				error = GetLastError();
-				DbgPrint(L"\terror code = %d\n\n", error);
+				DbgPrint(L"\tcreate dir iv error code = %d\n\n", error);
 				status = ToNtStatus(error);
 		  }
 		  
-		  if (actual_encrypted.size() > 0 && !GetContext()->GetConfig()->m_PlaintextNames && GetContext()->GetConfig()->m_LongNames && is_long_name(filePath)) {
+		  if (actual_encrypted.size() > 0) {
 			  if (!write_encrypted_long_name(filePath, actual_encrypted)) {
 				  error = GetLastError();
-				  DbgPrint(L"\terror code = %d\n\n", error);
+				  DbgPrint(L"\twrite long error code = %d\n\n", error);
 				  status = ToNtStatus(error);
 				  RemoveDirectory(filePath);
 			  }
@@ -525,14 +515,14 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 		 
 		  if (!create_dir_iv(GetContext(), filePath)) {
 				error = GetLastError();
-				DbgPrint(L"\terror code = %d\n\n", error);
+				DbgPrint(L"\tcreate dir iv error code = %d\n\n", error);
 				status = ToNtStatus(error);
 		  }
 		  
-		  if (actual_encrypted.size() > 0 && !GetContext()->GetConfig()->m_PlaintextNames && GetContext()->GetConfig()->m_LongNames && is_long_name(filePath)) {
+		  if (actual_encrypted.size() > 0) {
 			  if (!write_encrypted_long_name(filePath, actual_encrypted)) {
 				  error = GetLastError();
-				  DbgPrint(L"\terror code = %d\n\n", error);
+				  DbgPrint(L"\twrite long name error code = %d\n\n", error);
 				  status = ToNtStatus(error);
 				  RemoveDirectory(filePath);
 			  }
@@ -552,7 +542,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
         status = ToNtStatus(error);
       } else {
-		  if (actual_encrypted.size() > 0 && !GetContext()->GetConfig()->m_PlaintextNames && GetContext()->GetConfig()->m_LongNames && is_long_name(filePath)) {
+		  if (actual_encrypted.size() > 0) {
 			  if (!write_encrypted_long_name(filePath, actual_encrypted)) {
 				  error = GetLastError();
 				  DbgPrint(L"\terror code = %d\n\n", error);
@@ -592,10 +582,10 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
       status = ToNtStatus(error);
     } else {
 
-		if (actual_encrypted.size() > 0 && !GetContext()->GetConfig()->m_PlaintextNames && GetContext()->GetConfig()->m_LongNames && is_long_name(filePath)) {
+		if (actual_encrypted.size() > 0) {
 			if (!write_encrypted_long_name(filePath, actual_encrypted)) {
 				error = GetLastError();
-				DbgPrint(L"\terror code = %d\n\n", error);
+				DbgPrint(L"\twrite long name error code = %d\n\n", error);
 				status = ToNtStatus(error);
 				RemoveDirectory(filePath);
 			}
@@ -928,7 +918,7 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 		  return ToNtStatus(error);
 	  }
 
-	  if (actual_encrypted.size() > 1 && !GetContext()->GetConfig()->m_PlaintextNames && GetContext()->GetConfig()->m_LongNames) {
+	  if (actual_encrypted.size() > 0) {
 		  if (!write_encrypted_long_name(newFilePath, actual_encrypted)) {
 			  DWORD error = GetLastError();
 			  DbgPrint(L"\tMoveFile failed2 code = %d\n", error);
