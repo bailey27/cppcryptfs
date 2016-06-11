@@ -51,6 +51,8 @@ THE SOFTWARE.
 
 #define DIR_IV_NAME (L"gocryptfs.diriv")
 
+#define MAX_PASSWORD_LEN 255
+
 #define MAX_VOLUME_NAME_LENGTH 32
 #define MAX_FAT_VOLUME_NAME_LENGTH 11
 

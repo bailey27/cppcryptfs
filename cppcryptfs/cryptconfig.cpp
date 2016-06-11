@@ -47,7 +47,7 @@ THE SOFTWARE.
 #include "scrypt.h"
 #include "crypt.h"
 #include "fileutil.h"
-#include "PasswordBuffer.h"
+#include "LockZeroBuffer.h"
 
 CryptConfig::CryptConfig()
 {
@@ -415,7 +415,6 @@ bool CryptConfig::check_config(std::wstring& mes)
 
 bool CryptConfig::decrypt_key(LPCTSTR password)
 {
-	unsigned char *pwkey = NULL;
 
 	bool bret = true;
 
@@ -425,23 +424,23 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 		if (m_encrypted_key.size() == 0 || m_encrypted_key_salt.size() == 0 || m_KeyLen == 0)
 			return false;
 
-		PasswordBufferUtf8 pass_buf;
+		LockZeroBuffer<char> pass_buf(4*MAX_PASSWORD_LEN+1);
 
-		const char *pass = unicode_to_utf8(password, pass_buf.m_buf, sizeof(pass_buf.m_buf)-1);
+		if (!pass_buf.IsLocked())
+			throw (-1);
+
+		const char *pass = unicode_to_utf8(password, pass_buf.m_buf, pass_buf.m_len-1);
 
 		if (!pass) {
 			throw (-1);
 		}
 
-		pwkey = new unsigned char[m_KeyLen];
+		LockZeroBuffer<unsigned char> pwkey(m_KeyLen);
 
-		if (!VirtualLock(pwkey, m_KeyLen)) {
-			delete[] pwkey;
-			pwkey = NULL;
+		if (!pwkey.IsLocked())
 			throw(-1);
-		}
 
-		int result = EVP_PBE_scrypt(pass, strlen(pass), &(m_encrypted_key_salt)[0], m_encrypted_key_salt.size(), m_N, m_R, m_P, 96 * 1024 * 1024, pwkey,
+		int result = EVP_PBE_scrypt(pass, strlen(pass), &(m_encrypted_key_salt)[0], m_encrypted_key_salt.size(), m_N, m_R, m_P, 96 * 1024 * 1024, pwkey.m_buf,
 			m_KeyLen);
 
 		if (result != 1)
@@ -476,7 +475,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 		if (!VirtualLock(m_key, MASTER_KEY_LEN))
 			throw(-1);
 
-		int ptlen = decrypt(ciphertext, ciphertext_len, adata, adata_len, tag, pwkey, iv, m_key, context);
+		int ptlen = decrypt(ciphertext, ciphertext_len, adata, adata_len, tag, pwkey.m_buf, iv, m_key, context);
 
 		if (ptlen != MASTER_KEY_LEN)
 			throw (-1);
@@ -499,12 +498,6 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 
 	if (context)
 		free_crypt_context(context);
-
-	if (pwkey) {
-		SecureZeroMemory(pwkey, m_KeyLen);
-		VirtualUnlock(pwkey, m_KeyLen);
-		delete[] pwkey;
-	}
 
 	return bret;
 }

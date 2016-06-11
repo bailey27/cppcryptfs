@@ -36,7 +36,8 @@ THE SOFTWARE.
 #include "FolderDialog.h"
 #include "cryptdokan.h"
 #include "RecentItems.h"
-#include "PasswordBuffer.h"
+#include "LockZeroBuffer.h"
+#include "cryptdefs.h"
 
 
 // CMountPropertyPage dialog
@@ -71,9 +72,13 @@ void CMountPropertyPage::Mount()
 	if (!pWnd)
 		return;
 
-	PasswordBuffer password;
+	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN+1);
 
-	pWnd->GetWindowText(password.m_buf, sizeof(password.m_buf) / sizeof(password.m_buf[0]) - 1);
+	if (!password.IsLocked()) {
+		MessageBox(L"unable to lock password buffer", L"cppcryptfs", MB_OK | MB_ICONERROR);
+	}
+
+	pWnd->GetWindowText(password.m_buf, password.m_len - 1);
 
 	if (!password.m_buf[0])
 		return;
@@ -155,7 +160,7 @@ void CMountPropertyPage::Mount()
 	if (!pWnd)
 		return;
 
-	pWnd->GetWindowText(password.m_buf, sizeof(password.m_buf) / sizeof(password.m_buf[0]) - 1);
+	pWnd->GetWindowText(password.m_buf, password.m_len - 1);
 
 	if (!password.m_buf[0])
 		return;
