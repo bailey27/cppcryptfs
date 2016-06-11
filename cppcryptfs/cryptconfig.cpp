@@ -82,19 +82,27 @@ CryptConfig::~CryptConfig()
 
 
 bool
-CryptConfig::read()
+CryptConfig::read(const WCHAR *configfile)
 {
-	if (m_basedir.size() < 1)
-		return false;
+
 
 	std::wstring config_path;
 
-	config_path = m_basedir;
+	if (configfile) {
+		config_path = configfile;
+	} else {
 
-	if (config_path[config_path.size() - 1] != '\\')
-		config_path.push_back('\\');
+		if (m_basedir.size() < 1)
+			return false;
 
-	config_path += CONFIG_NAME;
+		config_path = m_basedir;
+
+		if (config_path[config_path.size() - 1] != '\\')
+			config_path.push_back('\\');
+
+		config_path += CONFIG_NAME;
+
+	}
 
 	const WCHAR *path = &config_path[0];
 
@@ -131,215 +139,238 @@ CryptConfig::read()
 
 	delete[] buf;
 
-	if (d["EncryptedKey"].IsNull())
-		return false;
+	bool bret = true;
 
-	rapidjson::Value& v = d["EncryptedKey"];
+	try {
 
-	if (!base64_decode(v.GetString(), m_encrypted_key, false))
-		return false;
+		if (!d.HasMember("EncryptedKey") || !d["EncryptedKey"].IsString())
+			return false;
 
-	if (!d.HasMember("ScryptObject") || d["ScryptObject"].IsNull())
-		return false;
+		rapidjson::Value& v = d["EncryptedKey"];
 
-	rapidjson::Value& scryptobject = d["ScryptObject"];
+		if (!base64_decode(v.GetString(), m_encrypted_key, false))
+			return false;
+
+		if (!d.HasMember("ScryptObject") || !d["ScryptObject"].IsObject())
+			return false;
+
+		rapidjson::Value& scryptobject = d["ScryptObject"];
 
 
-	if (!base64_decode(scryptobject["Salt"].GetString(), m_encrypted_key_salt, false))
-		return false;
+		if (!base64_decode(scryptobject["Salt"].GetString(), m_encrypted_key_salt, false))
+			return false;
 
-	const char *sstuff[] = { "N", "R", "P", "KeyLen" };
+		const char *sstuff[] = { "N", "R", "P", "KeyLen" };
 
-	int i;
+		int i;
 
-	for (i = 0; i < sizeof(sstuff) / sizeof(sstuff[0]); i++) {
-		if (scryptobject[sstuff[i]].IsNull() || !scryptobject[sstuff[i]].IsInt()) {
+		for (i = 0; i < sizeof(sstuff) / sizeof(sstuff[0]); i++) {
+			if (scryptobject[sstuff[i]].IsNull() || !scryptobject[sstuff[i]].IsInt()) {
+				return false;
+			}
+		}
+
+		m_N = scryptobject["N"].GetInt();
+		m_R = scryptobject["R"].GetInt();
+		m_P = scryptobject["P"].GetInt();
+		m_KeyLen = scryptobject["KeyLen"].GetInt();
+
+		if (d["Version"].IsNull() || !d["Version"].IsInt()) {
 			return false;
 		}
-	}
+		rapidjson::Value& version = d["Version"];
 
-	m_N = scryptobject["N"].GetInt();
-	m_R = scryptobject["R"].GetInt();
-	m_P = scryptobject["P"].GetInt();
-	m_KeyLen = scryptobject["KeyLen"].GetInt();
+		m_Version = version.GetInt();
 
-	if (d["Version"].IsNull() || !d["Version"].IsInt()) {
-		return false;
-	}
-	rapidjson::Value& version = d["Version"];
+		if (d.HasMember("VolumeName") && !d["VolumeName"].IsNull() && d["VolumeName"].IsString()) {
+			rapidjson::Value& volume_name = d["VolumeName"];
+			std::string utf8name;
+			utf8name = volume_name.GetString();
+			std::wstring storage;
+			const WCHAR *vname = utf8_to_unicode(&utf8name[0], storage);
+			if (vname)
+				m_VolumeName = vname;
+		}
 
-	m_Version = version.GetInt();
+		if (d.HasMember("FeatureFlags") && !d["FeatureFlags"].IsNull() && d["FeatureFlags"].IsArray()) {
+			rapidjson::Value& flags = d["FeatureFlags"];
 
-	if (d.HasMember("VolumeName") && !d["VolumeName"].IsNull() && d["VolumeName"].IsString()) {
-		rapidjson::Value& volume_name = d["VolumeName"];
-		std::string utf8name;
-		utf8name = volume_name.GetString();
-		std::wstring storage;
-		const WCHAR *vname = utf8_to_unicode(&utf8name[0], storage);
-		if (vname)
-			m_VolumeName = vname;
-	}
+			/*
 
-	if (d.HasMember("FeatureFlags") && !d["FeatureFlags"].IsNull() && d["FeatureFlags"].IsArray()) {
-		rapidjson::Value& flags = d["FeatureFlags"];
+			bool m_PlaintextNames;
+			bool m_DirIV;
+			bool m_EMENames;
+			bool m_GCMIV128;
+			bool m_LongNames;
+			*/
 
-		/*
-
-		bool m_PlaintextNames;
-		bool m_DirIV;
-		bool m_EMENames;
-		bool m_GCMIV128;
-		bool m_LongNames;
-		*/
-
-		for (rapidjson::Value::ConstValueIterator itr = flags.Begin(); itr != flags.End(); ++itr) {
-			if (itr->IsString()) {
-				if (!strcmp(itr->GetString(), "PlaintextNames")) {
-					m_PlaintextNames = true;
-				}
-				else if (!strcmp(itr->GetString(), "DirIV")) {
-					m_DirIV = true;
-				}
-				else if (!strcmp(itr->GetString(), "EMENames")) {
-					m_EMENames = true;
-				}
-				else if (!strcmp(itr->GetString(), "GCMIV128")) {
-					m_GCMIV128 = true;
-				}
-				else if (!strcmp(itr->GetString(), "LongNames")) {
-					m_LongNames = true;
+			for (rapidjson::Value::ConstValueIterator itr = flags.Begin(); itr != flags.End(); ++itr) {
+				if (itr->IsString()) {
+					if (!strcmp(itr->GetString(), "PlaintextNames")) {
+						m_PlaintextNames = true;
+					}
+					else if (!strcmp(itr->GetString(), "DirIV")) {
+						m_DirIV = true;
+					}
+					else if (!strcmp(itr->GetString(), "EMENames")) {
+						m_EMENames = true;
+					}
+					else if (!strcmp(itr->GetString(), "GCMIV128")) {
+						m_GCMIV128 = true;
+					}
+					else if (!strcmp(itr->GetString(), "LongNames")) {
+						m_LongNames = true;
+					}
 				}
 			}
 		}
+	} catch (...) {
+		bret = false;
 	}
 
-	write_volume_name();
-
-	return true;
+	return bret;
 }
 
 bool CryptConfig::write_volume_name()
 {
-	std::wstring vol = m_VolumeName;
+	bool bret = true;
 
-	std::string volume_name_utf8_enc;
+	try {
+		std::wstring vol = m_VolumeName;
 
-	if (vol.size() > MAX_VOLUME_NAME_LENGTH)
-		vol.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
-	if (!encrypt_string_gcm(vol, m_key, volume_name_utf8_enc)) {
-		return false;
-	}
+		std::string volume_name_utf8_enc;
 
-	if (m_basedir.size() < 1)
-		return false;
+		if (vol.size() > MAX_VOLUME_NAME_LENGTH)
+			vol.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
+		if (!encrypt_string_gcm(vol, m_key, volume_name_utf8_enc)) {
+			return false;
+		}
 
-	std::wstring config_path;
+		if (m_basedir.size() < 1)
+			return false;
 
-	config_path = m_basedir;
+		std::wstring config_path;
 
-	if (config_path[config_path.size() - 1] != '\\')
-		config_path.push_back('\\');
+		config_path = m_basedir;
 
-	config_path += CONFIG_NAME;
+		if (config_path[config_path.size() - 1] != '\\')
+			config_path.push_back('\\');
 
-	const WCHAR *path = &config_path[0];
+		config_path += CONFIG_NAME;
 
-	FILE *fl = NULL;
+		const WCHAR *path = &config_path[0];
 
-	if (_wfopen_s(&fl, path, L"rb"))
-		return false;
+		FILE *fl = NULL;
 
-	if (fseek(fl, 0, SEEK_END))
-		return false;
+		if (_wfopen_s(&fl, path, L"rb"))
+			return false;
 
-	long filesize = ftell(fl);
+		if (fseek(fl, 0, SEEK_END))
+			return false;
 
-	if (fseek(fl, 0, SEEK_SET))
-		return false;
+		long filesize = ftell(fl);
 
-	char *buf = new char[filesize + 1];
+		if (fseek(fl, 0, SEEK_SET))
+			return false;
 
-	if (!buf)
-		return false;
+		char *buf = new char[filesize + 1];
 
-	size_t len = fread(buf, 1, filesize, fl);
+		if (!buf)
+			return false;
 
-	fclose(fl);
+		size_t len = fread(buf, 1, filesize, fl);
 
-	if (len < 0)
-		return false;
+		fclose(fl);
 
-	buf[len] = '\0';
+		if (len < 0)
+			return false;
 
-	rapidjson::Document d;
+		buf[len] = '\0';
 
-	d.Parse(buf);
+		rapidjson::Document d;
 
-	delete[] buf;
+		d.Parse(buf);
 
-	FILE *fp = NULL;
+		delete[] buf;
 
-	rapidjson::Value vname(volume_name_utf8_enc.c_str(), d.GetAllocator());
+		FILE *fp = NULL;
 
-	if (d.HasMember("VolumeName")) {
-		d["VolumeName"] = vname;
-	} else {
-		d.AddMember("VolumeName", vname, d.GetAllocator());
-	}
-	std::wstring tmp_path = config_path;
-	tmp_path += L".tmp";
-	if (_wfopen_s(&fp, &tmp_path[0], L"wb"))
-		return false;
-	char writeBuffer[65536];
-	rapidjson::FileWriteStream os(fp, writeBuffer, sizeof(writeBuffer));
-	rapidjson::PrettyWriter<rapidjson::FileWriteStream> writer(os);
-	d.Accept(writer);
-	fclose(fp);
+		rapidjson::Value vname(volume_name_utf8_enc.c_str(), d.GetAllocator());
 
-	DWORD dwAttr = GetFileAttributes(&config_path[0]);
+		if (d.HasMember("VolumeName")) {
+			d["VolumeName"] = vname;
+		}
+		else {
+			d.AddMember("VolumeName", vname, d.GetAllocator());
+		}
+		std::wstring tmp_path = config_path;
+		tmp_path += L".tmp";
+		if (_wfopen_s(&fp, &tmp_path[0], L"wb"))
+			return false;
+		char writeBuffer[65536];
+		rapidjson::FileWriteStream os(fp, writeBuffer, sizeof(writeBuffer));
+		rapidjson::PrettyWriter<rapidjson::FileWriteStream> writer(os);
+		d.Accept(writer);
+		fclose(fp);
 
-	if (dwAttr == INVALID_FILE_ATTRIBUTES) {
-		DeleteFile(&tmp_path[0]);
-		return false;
-	}
+		CryptConfig test_cfg;
 
-	bool bWasReadOnly = false;
-
-	if (dwAttr & FILE_ATTRIBUTE_READONLY) {
-
-		bool bWasReadOnly = true;
-		
-		dwAttr &= ~FILE_ATTRIBUTE_READONLY;
-
-		if (!SetFileAttributes(&config_path[0], dwAttr)) {
+		try {
+			if (!test_cfg.read(&tmp_path[0])) {
+				throw(-1);
+			}
+		} catch (...) {
 			DeleteFile(&tmp_path[0]);
 			return false;
 		}
-	}
 
-	DWORD dwFlags = MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH;
-	if (!MoveFileEx(&tmp_path[0], &config_path[0], dwFlags)) {
-		DeleteFile(&tmp_path[0]);
-		return false;
-	}
-
-	if (bWasReadOnly) {
-		dwAttr = GetFileAttributes(&config_path[0]);
+		DWORD dwAttr = GetFileAttributes(&config_path[0]);
 
 		if (dwAttr == INVALID_FILE_ATTRIBUTES) {
+			DeleteFile(&tmp_path[0]);
 			return false;
 		}
 
-		if (!(dwAttr & FILE_ATTRIBUTE_READONLY)) {
-			dwAttr |= FILE_ATTRIBUTE_READONLY;
+		bool bWasReadOnly = false;
+
+		if (dwAttr & FILE_ATTRIBUTE_READONLY) {
+
+			bool bWasReadOnly = true;
+
+			dwAttr &= ~FILE_ATTRIBUTE_READONLY;
 
 			if (!SetFileAttributes(&config_path[0], dwAttr)) {
+				DeleteFile(&tmp_path[0]);
 				return false;
 			}
 		}
+
+		DWORD dwFlags = MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH;
+		if (!MoveFileEx(&tmp_path[0], &config_path[0], dwFlags)) {
+			DeleteFile(&tmp_path[0]);
+			return false;
+		}
+
+		if (bWasReadOnly) {
+			dwAttr = GetFileAttributes(&config_path[0]);
+
+			if (dwAttr == INVALID_FILE_ATTRIBUTES) {
+				return false;
+			}
+
+			if (!(dwAttr & FILE_ATTRIBUTE_READONLY)) {
+				dwAttr |= FILE_ATTRIBUTE_READONLY;
+
+				if (!SetFileAttributes(&config_path[0], dwAttr)) {
+					return false;
+				}
+			}
+		}
+	} catch (...) {
+		bret = false;
 	}
 
-	return true;
+	return bret;
 }
 
 WCHAR CryptConfig::get_base_drive_letter()
