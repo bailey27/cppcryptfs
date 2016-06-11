@@ -1212,10 +1212,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
 
   CryptConfig *config = con->GetConfig();
 
-  const WCHAR *p = &config->m_basedir[0];
-
-  while (*p && *p != ':')
-	  p++;
+  WCHAR dl = config->get_base_drive_letter();
 
   BOOL bGotVI = FALSE;
 
@@ -1224,10 +1221,10 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
   WCHAR fs_name[256];
   fs_name[0] = '\0';
 
-  if (p > &config->m_basedir[0] && *p == ':') {
+  if (dl) {
 
 	  WCHAR rbuf[4];
-	  rbuf[0] = *(p - 1);
+	  rbuf[0] = dl;
 	  rbuf[1] = ':';
 	  rbuf[2] = '\\';
 	  rbuf[3] = '\0';
@@ -1235,12 +1232,13 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
 	  bGotVI = GetVolumeInformationW(rbuf, NULL, 0, NULL, &max_component, &fs_flags, fs_name, sizeof(fs_name) / sizeof(fs_name[0]) - 1);
   }
   if (bGotVI) {
-	  DbgPrint(L"max compent length of underlying filey system is %d\n", max_component);
+	  DbgPrint(L"max compent length of underlying file system is %d\n", max_component);
   } else {
 	  DbgPrint(L"GetVolumeInformation failed, err = %u\n", GetLastError());
   }
 
-  wcscpy_s(VolumeNameBuffer, VolumeNameSize, config->m_VolumeName.size() > 0 ? &config->m_VolumeName[0] : L"");
+ 
+  wcscpy_s(VolumeNameBuffer, VolumeNameSize, &config->m_VolumeName[0]);
   *VolumeSerialNumber = con->m_serial;
   *MaximumComponentLength = (config->m_PlaintextNames || config->m_LongNames) ? 255 : 160;
   DWORD defFlags = (FILE_CASE_SENSITIVE_SEARCH | FILE_CASE_PRESERVED_NAMES |
@@ -1590,6 +1588,24 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 		}
 	}
 
+	WCHAR fs_name[256];
+
+	WCHAR rbuf[4];
+	rbuf[0] = config->get_base_drive_letter();
+	rbuf[1] = ':';
+	rbuf[2] = '\\';
+	rbuf[3] = '\0';
+
+	BOOL bGotVI = GetVolumeInformationW(rbuf, NULL, 0, NULL, NULL, NULL, fs_name, sizeof(fs_name) / sizeof(fs_name[0]) - 1);
+
+	if (bGotVI) {
+		size_t maxlength = (bGotVI && !wcscmp(fs_name, L"NTFS") ? MAX_VOLUME_NAME_LENGTH : MAX_FAT_VOLUME_NAME_LENGTH);
+
+		if (config->m_VolumeName.size() > maxlength)
+			config->m_VolumeName.erase(maxlength, std::wstring::npos);
+	}
+
+
 	dokanOptions->GlobalContext = (ULONG64)con;
 	dokanOptions->Options |= DOKAN_OPTION_ALT_STREAM;
 
@@ -1733,3 +1749,4 @@ BOOL write_volume_name_if_changed(WCHAR dl)
 
 	return TRUE;
 }
+

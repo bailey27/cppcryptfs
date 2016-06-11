@@ -342,6 +342,21 @@ bool CryptConfig::write_volume_name()
 	return true;
 }
 
+WCHAR CryptConfig::get_base_drive_letter()
+{
+	const WCHAR *p = &this->m_basedir[0];
+
+	while (*p && *p != ':')
+		p++;
+
+	if (p > &this->m_basedir[0] && *p == ':') {
+		return *(p - 1);
+	}
+	else {
+		return 0;
+	}
+}
+
 bool CryptConfig::check_config(std::wstring& mes)
 {
 	mes = L"";

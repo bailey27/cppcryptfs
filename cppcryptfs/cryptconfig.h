@@ -74,6 +74,8 @@ public:
 
 	bool write_volume_name();
 
+	WCHAR get_base_drive_letter();
+
 	virtual ~CryptConfig();
 };
 
