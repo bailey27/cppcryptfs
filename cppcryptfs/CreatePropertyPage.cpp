@@ -39,6 +39,7 @@ THE SOFTWARE.
 #include "cryptconfig.h"
 #include "RecentItems.h"
 #include "cryptdefs.h"
+#include "LockZeroBuffer.h"
 
 
 static const WCHAR *filename_encryption_types[] = {
@@ -111,20 +112,15 @@ void CCreatePropertyPage::CreateCryptfs()
 		}
 	}
 
-	WCHAR password[256];
-	WCHAR password2[256];
-
-	password[0] = '\0';
-	password2[0] = '\0';
-
+	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1);
+	LockZeroBuffer<WCHAR> password2(MAX_PASSWORD_LEN + 1);
+	
 	pWnd = GetDlgItem(IDC_PASSWORD);
 
 	if (!pWnd)
 		return;
 
-	pWnd->GetWindowText(password, sizeof(password) / sizeof(password[0]) - 1);
-
-	if (!password[0])
+	if (pWnd->GetWindowText(password.m_buf, password.m_len - 1) < 1)
 		return;
 
 	pWnd = GetDlgItem(IDC_PASSWORD2);
@@ -132,17 +128,13 @@ void CCreatePropertyPage::CreateCryptfs()
 	if (!pWnd)
 		return;
 
-	pWnd->GetWindowText(password2, sizeof(password2) / sizeof(password2[0]) - 1);
-
-	if (!password2[0])
+	if (pWnd->GetWindowText(password2.m_buf, password2.m_len - 1) < 1)
 		return;
 
-	if (wcscmp(password, password2)) {
+	if (wcscmp(password.m_buf, password2.m_buf)) {
 		MessageBox(L"passwords do not match", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
 	}
-
-	SecureZeroMemory(password2, sizeof(password2));
 
 	GetDlgItem(IDC_PASSWORD)->SetWindowTextW(L"");
 	GetDlgItem(IDC_PASSWORD2)->SetWindowTextW(L"");
@@ -177,10 +169,8 @@ void CCreatePropertyPage::CreateCryptfs()
 	GetDlgItemText(IDC_VOLUME_NAME, volume_name);
 
 	theApp.DoWaitCursor(1);
-	bool bResult = config.create(cpath, password, eme, plaintext, longfilenames, volume_name, error_mes);
+	bool bResult = config.create(cpath, password.m_buf, eme, plaintext, longfilenames, volume_name, error_mes);
 	theApp.DoWaitCursor(-1);
-
-	SecureZeroMemory(password, sizeof(password));
 
 	if (!bResult) {
 		MessageBox(&error_mes[0], L"cppcryptfs", MB_OK | MB_ICONERROR);
