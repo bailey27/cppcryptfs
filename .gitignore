@@ -5,3 +5,7 @@ cppcryptfs/cppcryptfs.vcxproj.user
 ipch/
 cppcryptfs/x64/
 x64/
+Debug/
+Release/
+cppcryptfs/Debug/
+cppcryptfs/Release/
