@@ -78,9 +78,7 @@ void CMountPropertyPage::Mount()
 		MessageBox(L"unable to lock password buffer", L"cppcryptfs", MB_OK | MB_ICONERROR);
 	}
 
-	pWnd->GetWindowText(password.m_buf, password.m_len - 1);
-
-	if (!password.m_buf[0])
+	if (pWnd->GetWindowTextW(password.m_buf, password.m_len - 1) < 1)
 		return;
 
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
@@ -160,9 +158,7 @@ void CMountPropertyPage::Mount()
 	if (!pWnd)
 		return;
 
-	pWnd->GetWindowText(password.m_buf, password.m_len - 1);
-
-	if (!password.m_buf[0])
+	if (pWnd->GetWindowText(password.m_buf, password.m_len - 1) < 1)
 		return;
 
 	pWnd->SetWindowTextW(L"");
