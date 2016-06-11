@@ -345,8 +345,7 @@ bool CryptConfig::write_volume_name()
 			}
 		}
 
-		DWORD dwFlags = MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH;
-		if (!MoveFileEx(&tmp_path[0], &config_path[0], dwFlags)) {
+		if (!MoveFileEx(&tmp_path[0], &config_path[0], MOVEFILE_REPLACE_EXISTING)) {
 			DeleteFile(&tmp_path[0]);
 			return false;
 		}
