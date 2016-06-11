@@ -79,7 +79,7 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 		L"of this software and associated documentation files (the \"Software\"), to deal "
 		L"in the Software without restriction, including without limitation the rights "
 		L"to use, copy, modify, merge, publish, distribute, sublicense, and/or sell "
-		L"copies of the Software, and to permit persons to whom the Software is"
+		L"copies of the Software, and to permit persons to whom the Software is "
 		L"furnished to do so, subject to the following conditions:"
 		L"\r\n\r\n"
 		L"The above copyright notice and this permission notice shall be included in "
