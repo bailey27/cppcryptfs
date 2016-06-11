@@ -36,6 +36,7 @@ THE SOFTWARE.
 #include "FolderDialog.h"
 #include "cryptdokan.h"
 #include "RecentItems.h"
+#include "PasswordBuffer.h"
 
 
 // CMountPropertyPage dialog
@@ -70,14 +71,12 @@ void CMountPropertyPage::Mount()
 	if (!pWnd)
 		return;
 
-	WCHAR password[256];
+	PasswordBuffer password;
 
-	pWnd->GetWindowText(password, sizeof(password) / sizeof(password[0]) - 1);
+	pWnd->GetWindowText(password.m_buf, sizeof(password.m_buf) / sizeof(password.m_buf[0]) - 1);
 
-	if (!password[0])
+	if (!password.m_buf[0])
 		return;
-
-	SecureZeroMemory(password, sizeof(password));
 
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
@@ -156,9 +155,9 @@ void CMountPropertyPage::Mount()
 	if (!pWnd)
 		return;
 
-	pWnd->GetWindowText(password, sizeof(password) / sizeof(password[0]) - 1);
+	pWnd->GetWindowText(password.m_buf, sizeof(password.m_buf) / sizeof(password.m_buf[0]) - 1);
 
-	if (!password[0])
+	if (!password.m_buf[0])
 		return;
 
 	pWnd->SetWindowTextW(L"");
@@ -167,10 +166,8 @@ void CMountPropertyPage::Mount()
 
 	
 	theApp.DoWaitCursor(1);
-	int result = mount_crypt_fs(*(const WCHAR *)cdl, (const WCHAR *)cpath, password, error_mes);
+	int result = mount_crypt_fs(*(const WCHAR *)cdl, (const WCHAR *)cpath, password.m_buf, error_mes);
 	theApp.DoWaitCursor(-1);
-
-	SecureZeroMemory(password, sizeof(password));
 
 	if (result != 0) {
 		MessageBoxW(&error_mes[0], L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
@@ -238,6 +235,11 @@ BOOL CMountPropertyPage::OnInitDialog()
 	CPropertyPage::OnInitDialog();
 
 	// TODO:  Add extra initialization here
+
+	CEdit *pEdit = (CEdit*)GetDlgItem(IDC_PASSWORD);
+
+	if (pEdit)
+		pEdit->SetLimitText(MAX_PASSWORD_LEN);
 
 	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_PATH);
 

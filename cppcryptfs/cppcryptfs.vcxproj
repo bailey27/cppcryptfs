@@ -224,6 +224,7 @@
     <ClInclude Include="MountPropertyPage.h" />
     <ClInclude Include="numbers.h" />
     <ClInclude Include="pad16.h" />
+    <ClInclude Include="PasswordBuffer.h" />
     <ClInclude Include="randombytes.h" />
     <ClInclude Include="RecentItems.h" />
     <ClInclude Include="Resource.h" />
@@ -258,6 +259,7 @@
     </ClCompile>
     <ClCompile Include="MountPropertyPage.cpp" />
     <ClCompile Include="pad16.cpp" />
+    <ClCompile Include="PasswordBuffer.cpp" />
     <ClCompile Include="randombytes.cpp" />
     <ClCompile Include="RecentItems.cpp" />
     <ClCompile Include="scrypt.c">

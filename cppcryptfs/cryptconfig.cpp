@@ -47,6 +47,7 @@ THE SOFTWARE.
 #include "scrypt.h"
 #include "crypt.h"
 #include "fileutil.h"
+#include "PasswordBuffer.h"
 
 CryptConfig::CryptConfig()
 {
@@ -424,9 +425,9 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 		if (m_encrypted_key.size() == 0 || m_encrypted_key_salt.size() == 0 || m_KeyLen == 0)
 			return false;
 
-		char pass_buf[256];
+		PasswordBufferUtf8 pass_buf;
 
-		const char *pass = unicode_to_utf8(password, pass_buf, sizeof(pass_buf)-1);
+		const char *pass = unicode_to_utf8(password, pass_buf.m_buf, sizeof(pass_buf.m_buf)-1);
 
 		if (!pass) {
 			throw (-1);
@@ -434,10 +435,14 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 
 		pwkey = new unsigned char[m_KeyLen];
 
+		if (!VirtualLock(pwkey, m_KeyLen)) {
+			delete[] pwkey;
+			pwkey = NULL;
+			throw(-1);
+		}
+
 		int result = EVP_PBE_scrypt(pass, strlen(pass), &(m_encrypted_key_salt)[0], m_encrypted_key_salt.size(), m_N, m_R, m_P, 96 * 1024 * 1024, pwkey,
 			m_KeyLen);
-
-		SecureZeroMemory(pass_buf, sizeof(pass_buf));
 
 		if (result != 1)
 			throw (-1);
@@ -497,6 +502,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 
 	if (pwkey) {
 		SecureZeroMemory(pwkey, m_KeyLen);
+		VirtualUnlock(pwkey, m_KeyLen);
 		delete[] pwkey;
 	}
 
