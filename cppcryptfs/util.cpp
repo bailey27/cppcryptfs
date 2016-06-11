@@ -231,7 +231,7 @@ base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTra
 
 		if (urlTransform) {
 			size_t len = strlen(base64str);
-			int i;
+			size_t i;
 			for (i = 0; i < len; i++) {
 				if (base64str[i] == '+')
 					base64str[i] = '-';
