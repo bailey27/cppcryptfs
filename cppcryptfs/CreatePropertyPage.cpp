@@ -38,6 +38,7 @@ THE SOFTWARE.
 #include "fileutil.h"
 #include "cryptconfig.h"
 #include "RecentItems.h"
+#include "cryptdefs.h"
 
 
 static const WCHAR *filename_encryption_types[] = {
@@ -286,7 +287,10 @@ BOOL CCreatePropertyPage::OnInitDialog()
 	}
 
 
-	
+	CEdit *pEdit = (CEdit*)GetDlgItem(IDC_VOLUME_NAME);
+
+	if (pEdit)
+		pEdit->SetLimitText(MAX_VOLUME_NAME_LENGTH);
 
 
 
