@@ -839,7 +839,7 @@ CryptFindFiles(LPCWSTR FileName,
 
 static NTSTATUS DOKAN_CALLBACK
 CryptDeleteFile(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
-  UNREFERENCED_PARAMETER(DokanFileInfo);
+  
 
   FileNameEnc filePath(GetContext(), FileName);
   // HANDLE	handle = (HANDLE)DokanFileInfo->Context;
@@ -866,7 +866,7 @@ CryptDeleteFile(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
 
 static NTSTATUS DOKAN_CALLBACK
 CryptDeleteDirectory(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
-  UNREFERENCED_PARAMETER(DokanFileInfo);
+ 
 
   FileNameEnc filePath(GetContext(), FileName);
 
@@ -1036,7 +1036,7 @@ static NTSTATUS DOKAN_CALLBACK CryptSetAllocationSize(
 
 static NTSTATUS DOKAN_CALLBACK CryptSetFileAttributes(
     LPCWSTR FileName, DWORD FileAttributes, PDOKAN_FILE_INFO DokanFileInfo) {
-  UNREFERENCED_PARAMETER(DokanFileInfo);
+  
 
   FileNameEnc filePath(GetContext(), FileName);
 
@@ -1206,7 +1206,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
     LPDWORD MaximumComponentLength, LPDWORD FileSystemFlags,
     LPWSTR FileSystemNameBuffer, DWORD FileSystemNameSize,
     PDOKAN_FILE_INFO DokanFileInfo) {
-  UNREFERENCED_PARAMETER(DokanFileInfo);
+  
 
   CryptContext *con = GetContext();
 
@@ -1351,7 +1351,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetDiskFreeSpace(PULONGLONG FreeBytesAvailab
 	PULONGLONG TotalNumberOfFreeBytes,
 	PDOKAN_FILE_INFO DokanFileInfo) {
 
-	UNREFERENCED_PARAMETER(DokanFileInfo);
+	
 
 	DbgPrint(L"GetDiskFreeSpace\n");
 
