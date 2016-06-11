@@ -65,6 +65,20 @@ void CMountPropertyPage::Mount()
 {
 	POSITION pos = NULL;
 
+	CWnd *pWnd = GetDlgItem(IDC_PASSWORD);
+
+	if (!pWnd)
+		return;
+
+	WCHAR password[256];
+
+	pWnd->GetWindowText(password, sizeof(password) / sizeof(password[0]) - 1);
+
+	if (!password[0])
+		return;
+
+	SecureZeroMemory(password, sizeof(password));
+
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
 	if (!pList)
@@ -102,7 +116,7 @@ void CMountPropertyPage::Mount()
 		return;
 	}
 
-	CWnd *pWnd = GetDlgItem(IDC_PATH);
+	pWnd = GetDlgItem(IDC_PATH);
 
 	if (!pWnd)
 		return;
@@ -136,8 +150,6 @@ void CMountPropertyPage::Mount()
 		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
 	}
-
-	WCHAR password[256];
 
 	pWnd = GetDlgItem(IDC_PASSWORD);
 
@@ -243,13 +255,13 @@ BOOL CMountPropertyPage::OnInitDialog()
 	if (!pList)
 		return FALSE;
 
-	LRESULT dwStyle = ::SendMessage(pList->m_hWnd, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
-	dwStyle |= LVS_EX_FULLROWSELECT;
-	::SendMessage(pList->m_hWnd, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
+	LRESULT Style = ::SendMessage(pList->m_hWnd, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
+	Style |= LVS_EX_FULLROWSELECT;
+	::SendMessage(pList->m_hWnd, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, Style);
 
 	pList->InsertColumn(DL_INDEX, L"Drive", LVCFMT_LEFT, 48);
 
-	pList->InsertColumn(PATH_INDEX, L"Path", LVCFMT_LEFT, 380);
+	pList->InsertColumn(PATH_INDEX, L"Path", LVCFMT_LEFT, 393);
 
 	CString lastLetter = theApp.GetProfileString(L"MountPoints", L"LastMountPoint", L"");
 
