@@ -122,7 +122,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	if (!pPass)
 		return;
 
-	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN, pPass->m_strRealText))
+	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN+1, pPass->m_strRealText))
 		return;
 
 	if (wcslen(password.m_buf) < 1)
@@ -133,7 +133,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	if (!pPass2)
 		return;
 
-	if (wcscpy_s(password2.m_buf, MAX_PASSWORD_LEN, pPass2->m_strRealText))
+	if (wcscpy_s(password2.m_buf, MAX_PASSWORD_LEN+1, pPass2->m_strRealText))
 		return;
 
 	if (wcslen(password2.m_buf) < 1)
