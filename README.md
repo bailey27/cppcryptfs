@@ -35,7 +35,7 @@ Build Requirements
 	For Dokany, you probably want to use the binary distribution from here:
 		https://github.com/dokan-dev/dokany/releases
 
-	The version currently used with cppcryptfs is Dokany 1.0.0-RC3
+	The version currently used by cppcryptfs is Dokany 1.0.0-RC3
 
 Use
 -------
