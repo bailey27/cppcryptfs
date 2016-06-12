@@ -10,7 +10,10 @@
 
 // You can change this character to any you want.
 // But remember this character mustn't be entered by the user.
-#define SE_PASSWORD_CHAR _T('×') // 0xd7
+#define SE_PASSWORD_CHAR ((WCHAR)0xd7) // high-ascii char that looks like 'x'
+
+// cppcryptfs uses ES_PASSWORD style on edit control so you see the default windows 
+// password char, but the window text is stored as SE_PASSWOR_CHAR
 
 #include "LockZeroBuffer.h"
 
@@ -22,16 +25,16 @@ public:
 	CSecureEdit();
 	virtual ~CSecureEdit();
 
-	void SetRealText(const TCHAR *pszNewString);
-	TCHAR * m_strRealText;
+	void SetRealText(const WCHAR *pszNewString);
+	WCHAR * m_strRealText;
 
 	//{{AFX_VIRTUAL(CSecureEdit)
 	//}}AFX_VIRTUAL
 
 private:
-	TCHAR * m_strOldText;
-	LockZeroBuffer<TCHAR> *m_pBuf;
-	LockZeroBuffer<TCHAR> *m_pBufOld;
+	WCHAR * m_strOldText;
+	LockZeroBuffer<WCHAR> *m_pBuf;
+	LockZeroBuffer<WCHAR> *m_pBufOld;
 	int m_nOldLen;
 
 protected:
