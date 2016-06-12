@@ -144,4 +144,10 @@ void CSecureEdit::SetRealText(const WCHAR *pszNewString)
 	strDots[i] = '\0';
 
 	SetWindowText(strDots);
+
+	if (wcslen(pszNewString) < 1) {
+		m_pBuf->Clear();
+		m_pBufOld->Clear();
+	}
 }
+
