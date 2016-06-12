@@ -179,7 +179,7 @@ public:
 		if (rs) {
 			DbgPrint(L"\tconverted filename %s => %s\n", m_plain_path, rs);
 		} else {
-			DbgPrint(L"\terror converting filenaem %s\n", m_plain_path);
+			DbgPrint(L"\terror converting filename %s\n", m_plain_path);
 		}
 		return rs;
 	};
@@ -372,6 +372,9 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   DbgPrint(L"CreateFile : %s\n", FileName);
 
   PrintUserName(DokanFileInfo);
+
+  // the block of code below was also commented out in the mirror.c sample
+  // cppcryptfs modifies the flags after all the CheckFlag() stuff
 
   /*
   if (ShareMode == 0 && AccessMode & FILE_WRITE_DATA)
