@@ -85,23 +85,12 @@ void CSecureEdit::OnUpdate()
 	if(iDiff < 0) // User has deleted one or more characters
 	{
 		iDiff = -iDiff; // Make positive, so we can handle indexes
-#if 0
-		strNew = m_strRealText.Left(dwPos) +
-			m_strRealText.Right(m_nOldLen - dwPos - iDiff);
-		m_strRealText = strNew; // This is the new secret text
-#else
-		wcsncpy_s(strNew, MAX_PASSWORD_LEN, m_strRealText, dwPos);
-		wcsncat_s(strNew, MAX_PASSWORD_LEN, m_strRealText + wcslen(m_strRealText)-(m_nOldLen - dwPos - iDiff), _TRUNCATE);
-		wcscpy_s(m_strRealText, MAX_PASSWORD_LEN, strNew);
-#endif
 
-#if 0
-		strNew.Empty(); // Fill strNew with password-chars
-		for(i = 0; i < m_strRealText.GetLength(); i++) strNew += SE_PASSWORD_CHAR;
-#else
+		wcsncpy_s(strNew, MAX_PASSWORD_LEN+1, m_strRealText, dwPos);
+		wcsncat_s(strNew, MAX_PASSWORD_LEN+1, m_strRealText + wcslen(m_strRealText)-(m_nOldLen - dwPos - iDiff), _TRUNCATE);
+		wcscpy_s(m_strRealText, MAX_PASSWORD_LEN+1, strNew);
 
 		for (i = 0; i < lstrlen(m_strRealText); i++) strDots[i] = SE_PASSWORD_CHAR;
-#endif
 
 		if(bHasChanged == FALSE) // If the encrypted buffer has not changed
 		{ // execute this code only if no new code has been pasted (clipboard)
@@ -118,23 +107,16 @@ void CSecureEdit::OnUpdate()
 	nLeft = inxLeft;
 	nRight = iWndLen - 1 - inxRight;
 
-#if 0
-	// Get the new string part (extract from password-char-string)
-	strNew = strWnd.Mid(inxLeft, inxRight - nLeft + 1);
-#else
-	wcsncpy_s(strNew, MAX_PASSWORD_LEN+1, strWnd + inxLeft, inxRight - nLeft + 1);
-#endif
-	// Insert to old string
-#if 0
-	strWnd = m_strRealText.Left(nLeft) + strNew + m_strRealText.Right(nRight);
-	m_strRealText = strWnd;
 
-#else
+	wcsncpy_s(strNew, MAX_PASSWORD_LEN+1, strWnd + inxLeft, inxRight - nLeft + 1);
+
+	// Insert to old string
+
 	wcsncpy_s(strWnd, MAX_PASSWORD_LEN+1, m_strRealText, nLeft);
 	wcsncat_s(strWnd, MAX_PASSWORD_LEN+1, strNew, _TRUNCATE);
 	wcsncat_s(strWnd, MAX_PASSWORD_LEN+1, m_strRealText + wcslen(m_strRealText)-nRight , _TRUNCATE);
 	wcscpy_s(m_strRealText, MAX_PASSWORD_LEN+1, strWnd);
-#endif
+
 	wcscpy_s(m_strOldText, MAX_PASSWORD_LEN+1, strWnd); // Save the new secret text
 
 	for(i = 0; i < iWndLen; i++) strDots[i] = SE_PASSWORD_CHAR;
