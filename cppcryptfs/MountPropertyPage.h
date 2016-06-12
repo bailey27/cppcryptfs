@@ -29,6 +29,7 @@ THE SOFTWARE.
 #pragma once
 
 #include "CryptPropertyPage.h"
+#include "SecureEdit.h"
 
 #define DL_INDEX 0
 #define PATH_INDEX 1
@@ -67,4 +68,5 @@ public:
 	afx_msg void OnClickedDismount();
 	afx_msg void OnClickedDismountAll();
 	virtual BOOL OnSetActive();
+	CSecureEdit m_password;
 };

@@ -67,9 +67,9 @@ void CMountPropertyPage::Mount()
 {
 	POSITION pos = NULL;
 
-	CWnd *pWnd = GetDlgItem(IDC_PASSWORD);
+	CSecureEdit *pPass = (CSecureEdit*)GetDlgItem(IDC_PASSWORD);
 
-	if (!pWnd)
+	if (!pPass)
 		return;
 
 	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN+1);
@@ -78,7 +78,10 @@ void CMountPropertyPage::Mount()
 		MessageBox(L"unable to lock password buffer", L"cppcryptfs", MB_OK | MB_ICONERROR);
 	}
 
-	if (pWnd->GetWindowTextW(password.m_buf, password.m_len - 1) < 1)
+	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN, pPass->m_strRealText))
+		return;
+
+	if (wcslen(password.m_buf) < 1)
 		return;
 
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
@@ -118,7 +121,7 @@ void CMountPropertyPage::Mount()
 		return;
 	}
 
-	pWnd = GetDlgItem(IDC_PATH);
+	CWnd *pWnd = GetDlgItem(IDC_PATH);
 
 	if (!pWnd)
 		return;
@@ -153,15 +156,7 @@ void CMountPropertyPage::Mount()
 		return;
 	}
 
-	pWnd = GetDlgItem(IDC_PASSWORD);
-
-	if (!pWnd)
-		return;
-
-	if (pWnd->GetWindowText(password.m_buf, password.m_len - 1) < 1)
-		return;
-
-	pWnd->SetWindowTextW(L"");
+	pPass->SetRealText(L"");
 
 	std::wstring error_mes;
 
@@ -192,6 +187,7 @@ void CMountPropertyPage::Mount()
 void CMountPropertyPage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_PASSWORD, m_password);
 }
 
 

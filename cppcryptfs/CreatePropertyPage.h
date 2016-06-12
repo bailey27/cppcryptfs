@@ -30,6 +30,7 @@ THE SOFTWARE.
 #pragma once
 
 #include "CryptPropertyPage.h"
+#include "SecureEdit.h"
 
 
 // CCreatePropertyPage dialog
@@ -64,4 +65,6 @@ public:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnLbnSelchangeFilenameEncryption();
 	afx_msg void OnCbnSelchangePath();
+	CSecureEdit m_password;
+	CSecureEdit m_password2;
 };

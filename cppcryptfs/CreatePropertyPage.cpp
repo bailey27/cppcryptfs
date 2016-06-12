@@ -68,6 +68,8 @@ CCreatePropertyPage::~CCreatePropertyPage()
 void CCreatePropertyPage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_PASSWORD, m_password);
+	DDX_Control(pDX, IDC_PASSWORD2, m_password2);
 }
 
 
@@ -115,20 +117,26 @@ void CCreatePropertyPage::CreateCryptfs()
 	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1);
 	LockZeroBuffer<WCHAR> password2(MAX_PASSWORD_LEN + 1);
 	
-	pWnd = GetDlgItem(IDC_PASSWORD);
+	CSecureEdit *pPass = (CSecureEdit*)GetDlgItem(IDC_PASSWORD);
 
-	if (!pWnd)
+	if (!pPass)
 		return;
 
-	if (pWnd->GetWindowText(password.m_buf, password.m_len - 1) < 1)
+	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN, pPass->m_strRealText))
 		return;
 
-	pWnd = GetDlgItem(IDC_PASSWORD2);
-
-	if (!pWnd)
+	if (wcslen(password.m_buf) < 1)
 		return;
 
-	if (pWnd->GetWindowText(password2.m_buf, password2.m_len - 1) < 1)
+	CSecureEdit *pPass2 = (CSecureEdit*)GetDlgItem(IDC_PASSWORD2);
+
+	if (!pPass2)
+		return;
+
+	if (wcscpy_s(password2.m_buf, MAX_PASSWORD_LEN, pPass2->m_strRealText))
+		return;
+
+	if (wcslen(password2.m_buf) < 1)
 		return;
 
 	if (wcscmp(password.m_buf, password2.m_buf)) {
@@ -136,8 +144,8 @@ void CCreatePropertyPage::CreateCryptfs()
 		return;
 	}
 
-	GetDlgItem(IDC_PASSWORD)->SetWindowTextW(L"");
-	GetDlgItem(IDC_PASSWORD2)->SetWindowTextW(L"");
+	pPass->SetRealText(L"");
+	pPass2->SetRealText(L"");
 
 	CryptConfig config;
 
