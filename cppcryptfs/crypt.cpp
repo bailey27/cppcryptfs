@@ -261,7 +261,7 @@ bool encrypt_string_gcm(const std::wstring& str, const BYTE *key, std::string& b
 	if (!get_sys_random_bytes(iv, sizeof(iv)))
 		return false;
 
-	void *context = get_crypt_context(DIR_IV_LEN, AES_MODE_GCM);
+	void *context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 
 	if (!context)
 		return false;
