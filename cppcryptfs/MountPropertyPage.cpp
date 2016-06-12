@@ -78,7 +78,7 @@ void CMountPropertyPage::Mount()
 		MessageBox(L"unable to lock password buffer", L"cppcryptfs", MB_OK | MB_ICONERROR);
 	}
 
-	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN, pPass->m_strRealText))
+	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN+1, pPass->m_strRealText))
 		return;
 
 	if (wcslen(password.m_buf) < 1)
