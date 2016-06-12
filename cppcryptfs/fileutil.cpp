@@ -169,7 +169,7 @@ get_dir_iv(CryptContext *con, const TCHAR *path, unsigned char *diriv)
 }
 
 static bool
-convert_fdata(CryptContext *con, const WCHAR *path, WIN32_FIND_DATAW& fdata)
+convert_fdata(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, WIN32_FIND_DATAW& fdata)
 {
 
 	if (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))
@@ -187,17 +187,20 @@ convert_fdata(CryptContext *con, const WCHAR *path, WIN32_FIND_DATAW& fdata)
 		fdata.nFileSizeLow = l.LowPart;
 	}
 
-	std::wstring storage;
-	const WCHAR *dname = decrypt_filename(con, path, fdata.cFileName, storage);
+	if (wcscmp(fdata.cFileName, L".") && wcscmp(fdata.cFileName, L"..")) {
+		std::wstring storage;
+		const WCHAR *dname = decrypt_filename(con, dir_iv, path, fdata.cFileName, storage);
 
-	if (!dname)
-		return false;
-
-	if (wcslen(dname) < MAX_PATH) {
-		if (wcscpy_s(fdata.cFileName, MAX_PATH, dname))
+		if (!dname)
 			return false;
-	} else {
-		return false;
+
+		if (wcslen(dname) < MAX_PATH) {
+			if (wcscpy_s(fdata.cFileName, MAX_PATH, dname))
+				return false;
+		}
+		else {
+			return false;
+		}
 	}
 #if 0 // GetShortPathNameW() seems to return a short name based on the encrypted name (how?)
 	GetShortPathNameW(dname, fdata.cAlternateFileName, sizeof(fdata.cAlternateFileName) / sizeof(WCHAR));
@@ -207,6 +210,19 @@ convert_fdata(CryptContext *con, const WCHAR *path, WIN32_FIND_DATAW& fdata)
 	return true;
 }
 
+static bool is_interesting_name(BOOL isRoot, const WIN32_FIND_DATAW& fdata)
+{
+	if (isRoot && (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))) {
+		return false;
+	} else if (!wcscmp(fdata.cFileName, CONFIG_NAME) || !wcscmp(fdata.cFileName, DIR_IV_NAME)) {
+		return false;
+	} else if (is_long_name_file(fdata.cFileName)) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
 DWORD
 find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, std::vector<WIN32_FIND_DATAW>& files)
 {
@@ -214,38 +230,43 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, std::vect
 	HANDLE hfind = INVALID_HANDLE_VALUE;
 	try {
 
-		std::wstring enc_path = path;
+		std::wstring enc_path_search = path;
 
 		WIN32_FIND_DATAW fdata;		
 
-		if (enc_path[enc_path.size()-1] != '\\')
-			enc_path.push_back('\\');
+		if (enc_path_search[enc_path_search.size()-1] != '\\')
+			enc_path_search.push_back('\\');
 
-		enc_path.push_back('*');
+		enc_path_search.push_back('*');
 
-		hfind = FindFirstFile(&enc_path[0], &fdata);
+		hfind = FindFirstFile(&enc_path_search[0], &fdata);
 
 		if (hfind == INVALID_HANDLE_VALUE)
 			throw((int)GetLastError());
 
-		if (wcscmp(fdata.cFileName, CONFIG_NAME) && wcscmp(fdata.cFileName, DIR_IV_NAME)) {
+		BYTE dir_iv[DIR_IV_LEN];
 
-			if (!convert_fdata(con, path, fdata))
+		if (!get_dir_iv(con, path, dir_iv)) {
+			DWORD error = GetLastError();
+			if (error == 0)
+				error = ERROR_PATH_NOT_FOUND;
+			throw((int)error);
+		}
+
+		bool isRoot = !wcscmp(pt_path, L"\\");
+
+		if (is_interesting_name(isRoot, fdata)) {
+			if (!convert_fdata(con, dir_iv, path, fdata))
 				throw((int)ERROR_PATH_NOT_FOUND);
 
 			files.push_back(fdata);
 		}
 
-		bool isRoot = !wcscmp(pt_path, L"\\");
 
 		while (FindNextFile(hfind, &fdata)) {
-			if (isRoot && (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L"..")))
+			if (!is_interesting_name(isRoot, fdata))
 				continue;
-			if (!wcscmp(fdata.cFileName, CONFIG_NAME) || !wcscmp(fdata.cFileName, DIR_IV_NAME))
-				continue;
-			if (is_long_name_file(fdata.cFileName))
-				continue;
-			if (!convert_fdata(con, path, fdata))
+			if (!convert_fdata(con, dir_iv, path, fdata))
 				continue;
 			files.push_back(fdata);
 		}

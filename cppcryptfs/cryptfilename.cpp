@@ -151,7 +151,7 @@ encrypt_filename(CryptContext *con, const unsigned char *dir_iv, const WCHAR *fi
 }
 
 const WCHAR * // returns UNICODE plaintext filename
-decrypt_filename(CryptContext *con, const WCHAR *path, const char *filename, std::wstring& storage)
+decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const char *filename, std::wstring& storage)
 {
 	if (con->GetConfig()->m_PlaintextNames) {
 		if (!utf8_to_unicode(filename, storage)) {
@@ -159,11 +159,6 @@ decrypt_filename(CryptContext *con, const WCHAR *path, const char *filename, std
 		}
 		return &storage[0];
 	}
-
-	BYTE dir_iv[DIR_IV_LEN];
-
-	if (!get_dir_iv(con, path, dir_iv))
-		return NULL;
 
 	unsigned char ptbuf[4096];
 
@@ -255,7 +250,7 @@ decrypt_filename(CryptContext *con, const WCHAR *path, const char *filename, std
 }
 
 const WCHAR * // returns UNICODE plaintext filename
-decrypt_filename(CryptContext *con, const WCHAR *path, const WCHAR *filename, std::wstring& storage)
+decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, std::wstring& storage)
 {
 	if (con->GetConfig()->m_PlaintextNames) {
 		storage = filename;
@@ -268,7 +263,7 @@ decrypt_filename(CryptContext *con, const WCHAR *path, const WCHAR *filename, st
 	if (!fname)
 		return NULL;
 
-	return decrypt_filename(con, path, fname, storage);
+	return decrypt_filename(con, dir_iv, path, fname, storage);
 }
 
 const WCHAR * // get encrypted path
