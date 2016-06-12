@@ -57,7 +57,7 @@ You need to find or create (you can create a directory in the directory selector
 
 It is strongly recommended that this directory reside on an NTFS filesystem.
 
-Then you need to choose a (hopefully strong) password and repeat it.
+Then you need to choose a (hopefully strong) password and repeat it.  The dialog box will accept at most 255 characters for the password.
 
 You can choose to have your file names encryped using AES256-EME (the default), AES256-CBC, or not to encrypt the file names (plain text).
 
@@ -65,7 +65,7 @@ When you click on the "Create" button, a gocyrptfs.conf file will be created in 
 
 If you choose to give the volume a label, then the label will be encrypted in gocryptfs.conf.  The maximum volume label length is 32 characters.
 
-You can right click on the mounted drive letter in explorer and change the volume label.  However, doing so will cause cppcryptfs to re-write gocryptfs.conf when the drive is dismounted. This does entail some risk to your gocryptfs.conf.  Again, it's a good a idea to backup your gocryptfs.conf file somewhere.
+You can right click on the mounted drive letter in explorer and change the volume label.  However, doing so will cause cppcryptfs to re-write gocryptfs.conf when the drive is dismounted. This does entail some risk to your gocryptfs.conf.  Again, it's a good a idea to backup your gocryptfs.conf file somewhere.  
 
 Then go to the "Mount" tab and select a drive letter and select the folder you
 just created the filesystem in.  Then enter the password and click on the "Mount" button.
