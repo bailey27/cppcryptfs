@@ -10,7 +10,9 @@
 
 // You can change this character to any you want.
 // But remember this character mustn't be entered by the user.
-#define SE_PASSWORD_CHAR _T('×')
+#define SE_PASSWORD_CHAR _T('×') // 0xd7
+
+#include "LockZeroBuffer.h"
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -21,13 +23,15 @@ public:
 	virtual ~CSecureEdit();
 
 	void SetRealText(const TCHAR *pszNewString);
-	CString m_strRealText;
+	TCHAR * m_strRealText;
 
 	//{{AFX_VIRTUAL(CSecureEdit)
 	//}}AFX_VIRTUAL
 
 private:
-	CString m_strOldText;
+	TCHAR * m_strOldText;
+	LockZeroBuffer<TCHAR> *m_pBuf;
+	LockZeroBuffer<TCHAR> *m_pBufOld;
 	int m_nOldLen;
 
 protected:

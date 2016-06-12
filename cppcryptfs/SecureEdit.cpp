@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "SecureEdit.h"
+#include "cryptdefs.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -19,10 +20,19 @@ static char THIS_FILE[] = __FILE__;
 
 CSecureEdit::CSecureEdit()
 {
+	m_pBuf = new LockZeroBuffer<TCHAR>(MAX_PASSWORD_LEN + 1);
+	m_strRealText = m_pBuf->m_buf;
+
+	m_pBufOld = new LockZeroBuffer<TCHAR>(MAX_PASSWORD_LEN + 1);
+	m_strOldText = m_pBufOld->m_buf;
 }
 
 CSecureEdit::~CSecureEdit()
 {
+	if (m_pBuf)
+		delete m_pBuf;
+	if (m_pBufOld)
+		delete m_pBufOld;
 }
 
 BEGIN_MESSAGE_MAP(CSecureEdit, CEdit)
@@ -35,24 +45,28 @@ END_MESSAGE_MAP()
 
 void CSecureEdit::OnUpdate() 
 {
-	CString strWnd;
+	LockZeroBuffer<TCHAR> wndBuf(MAX_PASSWORD_LEN + 1);
+	TCHAR *strWnd = wndBuf.m_buf;
 	LPTSTR lpWnd = NULL;
 	int iWndLen = 0, iDiff = 0;
 	int i = 0;
 	int inxLeft = -1, inxRight = -1;
 	int nLeft = -1, nRight = -1;
 	DWORD dwPos = 0;
-	CString strNew;
+	LockZeroBuffer<TCHAR> newBuf(MAX_PASSWORD_LEN + 1);
+	TCHAR* strNew = newBuf.m_buf;
 	BOOL bHasChanged = FALSE;
+	LockZeroBuffer<TCHAR> dotsBuf(MAX_PASSWORD_LEN + 1);
+	TCHAR * strDots = dotsBuf.m_buf;
 
 	// Get information about the new contents of the edit control
-	GetWindowText(strWnd); // The current window text (Windows has updated it already)
+	GetWindowText(strWnd, wndBuf.m_len-1); // The current window text (Windows has updated it already)
 	dwPos = GetSel() & 0xFFFF; // The current cursor position
-	iWndLen = strWnd.GetLength(); // The length of the hidden buffer
+	iWndLen = lstrlen(strWnd); // The length of the hidden buffer
 	iDiff = iWndLen - m_nOldLen; // The difference between the new and the old
 
 	// Scan buffer for non-password-chars (fast scan, using LockBuffer)
-	lpWnd = strWnd.GetBuffer(strWnd.GetLength());
+	lpWnd = strWnd;
 	for(i = 0; i < iWndLen; i++)
 	{
 		if(lpWnd[i] != SE_PASSWORD_CHAR) // This is a new character!
@@ -66,23 +80,34 @@ void CSecureEdit::OnUpdate()
 		if((lpWnd[i] == SE_PASSWORD_CHAR) && (bHasChanged == TRUE))
 			if(inxRight == -1) inxRight = i - 1; // Change only once
 	}
-	strWnd.ReleaseBuffer();
+	
 
 	if(iDiff < 0) // User has deleted one or more characters
 	{
 		iDiff = -iDiff; // Make positive, so we can handle indexes
+#if 0
 		strNew = m_strRealText.Left(dwPos) +
 			m_strRealText.Right(m_nOldLen - dwPos - iDiff);
 		m_strRealText = strNew; // This is the new secret text
+#else
+		wcsncpy_s(strNew, MAX_PASSWORD_LEN, m_strRealText, dwPos);
+		wcsncat_s(strNew, MAX_PASSWORD_LEN, m_strRealText + wcslen(m_strRealText)-(m_nOldLen - dwPos - iDiff), _TRUNCATE);
+		wcscpy_s(m_strRealText, MAX_PASSWORD_LEN, strNew);
+#endif
 
+#if 0
 		strNew.Empty(); // Fill strNew with password-chars
 		for(i = 0; i < m_strRealText.GetLength(); i++) strNew += SE_PASSWORD_CHAR;
+#else
+
+		for (i = 0; i < lstrlen(m_strRealText); i++) strDots[i] = SE_PASSWORD_CHAR;
+#endif
 
 		if(bHasChanged == FALSE) // If the encrypted buffer has not changed
 		{ // execute this code only if no new code has been pasted (clipboard)
-			m_strOldText = strNew;
-			m_nOldLen = strNew.GetLength();
-			SetWindowText(strNew);
+			wcscpy_s(m_strOldText, MAX_PASSWORD_LEN+1, strNew);
+			m_nOldLen = (int)wcslen(strDots);
+			SetWindowText(strDots);
 			SetSel(dwPos, dwPos, FALSE);
 		}
 	}
@@ -93,36 +118,48 @@ void CSecureEdit::OnUpdate()
 	nLeft = inxLeft;
 	nRight = iWndLen - 1 - inxRight;
 
+#if 0
 	// Get the new string part (extract from password-char-string)
 	strNew = strWnd.Mid(inxLeft, inxRight - nLeft + 1);
-
+#else
+	wcsncpy_s(strNew, MAX_PASSWORD_LEN+1, strWnd + inxLeft, inxRight - nLeft + 1);
+#endif
 	// Insert to old string
+#if 0
 	strWnd = m_strRealText.Left(nLeft) + strNew + m_strRealText.Right(nRight);
 	m_strRealText = strWnd;
-	m_strOldText = strWnd; // Save the new secret text
 
-	strNew.Empty(); // Build password-char string with correct length
-	for(i = 0; i < iWndLen; i++) strNew += SE_PASSWORD_CHAR;
+#else
+	wcsncpy_s(strWnd, MAX_PASSWORD_LEN+1, m_strRealText, nLeft);
+	wcsncat_s(strWnd, MAX_PASSWORD_LEN+1, strNew, _TRUNCATE);
+	wcsncat_s(strWnd, MAX_PASSWORD_LEN+1, m_strRealText + wcslen(m_strRealText)-nRight , _TRUNCATE);
+	wcscpy_s(m_strRealText, MAX_PASSWORD_LEN+1, strWnd);
+#endif
+	wcscpy_s(m_strOldText, MAX_PASSWORD_LEN+1, strWnd); // Save the new secret text
+
+	for(i = 0; i < iWndLen; i++) strDots[i] = SE_PASSWORD_CHAR;
+	strDots[i] = '\0';
 
 	// Set the correct data again, just in case something went wrong with sim
 	m_nOldLen = iWndLen; // m_strOld is already set a few lines before
-	SetWindowText(strNew);
+	SetWindowText(strDots);
 	SetSel(dwPos, dwPos, FALSE); // Just to not confuse the user ;-)
 }
 
 void CSecureEdit::SetRealText(const TCHAR *pszNewString)
 {
-	CString strWnd;
+	LockZeroBuffer<TCHAR> dotsBuf(MAX_PASSWORD_LEN+1);
+	TCHAR * strDots = dotsBuf.m_buf;
 	int i = 0;
 
 	if(pszNewString == NULL) return;
 
-	m_strRealText = pszNewString;
-	m_strOldText = pszNewString;
-	m_nOldLen = m_strRealText.GetLength();
+	wcscpy_s(m_strRealText, MAX_PASSWORD_LEN+1, pszNewString);
+	wcscpy_s(m_strOldText, MAX_PASSWORD_LEN+1, pszNewString);
+	m_nOldLen = (int)wcslen(m_strRealText);
 
-	strWnd.Empty(); // Build password-char string with correct length
-	for(i = 0; i < m_nOldLen; i++) strWnd += SE_PASSWORD_CHAR;
+	for(i = 0; i < m_nOldLen; i++) strDots[i] = SE_PASSWORD_CHAR;
+	strDots[i] = '\0';
 
-	SetWindowText(strWnd);
+	SetWindowText(strDots);
 }
