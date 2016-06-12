@@ -117,10 +117,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1);
 	LockZeroBuffer<WCHAR> password2(MAX_PASSWORD_LEN + 1);
 	
-	CSecureEdit *pPass = (CSecureEdit*)GetDlgItem(IDC_PASSWORD);
-
-	if (!pPass)
-		return;
+	CSecureEdit *pPass = &m_password;
 
 	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN+1, pPass->m_strRealText))
 		return;
@@ -128,10 +125,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	if (wcslen(password.m_buf) < 1)
 		return;
 
-	CSecureEdit *pPass2 = (CSecureEdit*)GetDlgItem(IDC_PASSWORD2);
-
-	if (!pPass2)
-		return;
+	CSecureEdit *pPass2 = &m_password2;
 
 	if (wcscpy_s(password2.m_buf, MAX_PASSWORD_LEN+1, pPass2->m_strRealText))
 		return;

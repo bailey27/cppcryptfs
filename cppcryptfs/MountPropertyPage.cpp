@@ -67,10 +67,7 @@ void CMountPropertyPage::Mount()
 {
 	POSITION pos = NULL;
 
-	CSecureEdit *pPass = (CSecureEdit*)GetDlgItem(IDC_PASSWORD);
-
-	if (!pPass)
-		return;
+	CSecureEdit *pPass = &m_password;
 
 	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN+1);
 
