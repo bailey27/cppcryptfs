@@ -13,7 +13,7 @@ public:
 		m_len = len;
 		m_buf = new T[m_len];
 		m_IsLocked = VirtualLock(m_buf, sizeof(T)*m_len);
-		m_buf[0] = 0;
+		memset(m_buf, 0, sizeof(T)*m_len);
 	}
 
 	virtual ~LockZeroBuffer()
