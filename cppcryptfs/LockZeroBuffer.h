@@ -8,6 +8,12 @@ public:
 	T *m_buf;
 	unsigned int m_len;
 
+	void Clear() 
+	{
+		if (m_buf)
+			SecureZeroMemory(m_buf, sizeof(T)*m_len);
+	}
+
 	LockZeroBuffer(unsigned int len)
 	{
 		m_len = len;
@@ -19,7 +25,7 @@ public:
 	virtual ~LockZeroBuffer()
 	{
 		if (m_buf) {
-			SecureZeroMemory(m_buf, sizeof(T)*m_len);
+			Clear();
 			if (m_IsLocked)
 				VirtualUnlock(m_buf, sizeof(T)*m_len);
 			delete[] m_buf;
