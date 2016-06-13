@@ -230,11 +230,6 @@ BOOL CMountPropertyPage::OnInitDialog()
 
 	// TODO:  Add extra initialization here
 
-	CEdit *pEdit = (CEdit*)GetDlgItem(IDC_PASSWORD);
-
-	if (pEdit)
-		pEdit->SetLimitText(MAX_PASSWORD_LEN);
-
 	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_PATH);
 
 	int i;
@@ -341,6 +336,14 @@ BOOL CMountPropertyPage::OnInitDialog()
 	
 	if (lastIndex >= 0)
 		pList->EnsureVisible(lastIndex, FALSE);
+
+	// limit input lengths
+
+	m_password.SetLimitText(MAX_PASSWORD_LEN);
+
+	CComboBox *pCombo = (CComboBox*)GetDlgItem(IDC_PATH);
+	if (pCombo)
+		pCombo->LimitText(MAX_PATH);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE

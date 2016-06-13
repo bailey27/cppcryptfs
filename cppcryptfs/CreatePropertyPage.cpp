@@ -279,12 +279,19 @@ BOOL CCreatePropertyPage::OnInitDialog()
 	}
 
 
-	CEdit *pEdit = (CEdit*)GetDlgItem(IDC_VOLUME_NAME);
+	// limit input lengths
 
+	m_password.SetLimitText(MAX_PASSWORD_LEN);
+
+	m_password2.SetLimitText(MAX_PASSWORD_LEN);
+
+	CEdit *pEdit = (CEdit*)GetDlgItem(IDC_VOLUME_NAME);
 	if (pEdit)
 		pEdit->SetLimitText(MAX_VOLUME_NAME_LENGTH);
 
-
+	CComboBox *pCombo = (CComboBox*)GetDlgItem(IDC_PATH);
+	if (pCombo)
+		pCombo->LimitText(MAX_PATH);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
