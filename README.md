@@ -88,7 +88,7 @@ You can mount as many gocryptfs filesystems as you have unused drive letters ava
 
 cppcryptfs uses VirtualLock() to prevent encryption keys from ending up in the paging file.  If you never hibernate your computer, then you don't have to worry about your keys ever being written to the hard drive.
 
-If you minimize cppcryptfs, then it will hide itself in the system tray.
+If you close the cppcryptfs window, then it will hide itself in the system tray.To exit cppcryptfs, use the context menu of the system tray icon.
 
 
 File name and path length limits
