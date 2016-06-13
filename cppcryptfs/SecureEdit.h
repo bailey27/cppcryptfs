@@ -15,6 +15,8 @@
 // cppcryptfs uses ES_PASSWORD style on edit control so you see the default windows 
 // password char, but the window text is stored as SE_PASSWOR_CHAR
 
+
+// Use LockZeroBuffers instead of CStrings for enhanced security for cppcryptfs
 #include "LockZeroBuffer.h"
 
 /////////////////////////////////////////////////////////////////////////////
