@@ -283,7 +283,7 @@ bool encrypt_string_gcm(const std::wstring& str, const BYTE *key, std::string& b
 		if (ctlen != utf8.size())
 			throw(-1);
 
-		if (!base64_encode(encrypted, ctlen + sizeof(iv) + BLOCK_TAG_LEN, base64_out))
+		if (!base64_encode(encrypted, ctlen + sizeof(iv) + BLOCK_TAG_LEN, base64_out, false))
 			throw(-1);
 
 	} catch (...) {
