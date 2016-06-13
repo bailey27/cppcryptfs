@@ -65,7 +65,7 @@ When you click on the "Create" button, a gocyrptfs.conf file will be created in 
 
 If you choose to give the volume a label, then the label will be encrypted in gocryptfs.conf.  The maximum volume label length is 32 characters. 
 
-The volume label feature is the only cryptographic addition to cppcryptfs that is not part of the cryptographic design of gocryptfs.  If you do not trust that it was implemented correctly, then don't use it.
+The volume label feature is the only cryptographic addition to cppcryptfs that is not part of the cryptographic design of gocryptfs.  If you do not trust that it was designed correctly, then don't use it.
 
 You can right click on the mounted drive letter in explorer and change the volume label.  However, doing so will cause cppcryptfs to re-write gocryptfs.conf when the drive is dismounted. This does entail some risk to your gocryptfs.conf.  Again, it's a good a idea to backup your gocryptfs.conf file somewhere.  
 
