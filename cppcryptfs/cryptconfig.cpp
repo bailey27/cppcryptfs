@@ -236,15 +236,22 @@ bool CryptConfig::write_volume_name()
 {
 	bool bret = true;
 
+	char *writeBuffer = NULL;
+
+	FILE *fl = NULL;
+
+
 	try {
 		std::wstring vol = m_VolumeName;
 
 		std::string volume_name_utf8_enc;
 
-		if (vol.size() > MAX_VOLUME_NAME_LENGTH)
-			vol.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
-		if (!encrypt_string_gcm(vol, m_key, volume_name_utf8_enc)) {
-			return false;
+		if (vol.size() > 0) {
+			if (vol.size() > MAX_VOLUME_NAME_LENGTH)
+				vol.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
+			if (!encrypt_string_gcm(vol, m_key, volume_name_utf8_enc)) {
+				return false;
+			}
 		}
 
 		if (m_basedir.size() < 1)
@@ -261,7 +268,7 @@ bool CryptConfig::write_volume_name()
 
 		const WCHAR *path = &config_path[0];
 
-		FILE *fl = NULL;
+		fl = NULL;
 
 		if (_wfopen_s(&fl, path, L"rb"))
 			return false;
@@ -282,6 +289,7 @@ bool CryptConfig::write_volume_name()
 		size_t len = fread(buf, 1, filesize, fl);
 
 		fclose(fl);
+		fl = NULL;
 
 		if (len < 0)
 			return false;
@@ -294,8 +302,6 @@ bool CryptConfig::write_volume_name()
 
 		delete[] buf;
 
-		FILE *fp = NULL;
-
 		rapidjson::Value vname(volume_name_utf8_enc.c_str(), d.GetAllocator());
 
 		if (d.HasMember("VolumeName")) {
@@ -306,13 +312,17 @@ bool CryptConfig::write_volume_name()
 		}
 		std::wstring tmp_path = config_path;
 		tmp_path += L".tmp";
-		if (_wfopen_s(&fp, &tmp_path[0], L"wb"))
-			return false;
-		char writeBuffer[65536];
-		rapidjson::FileWriteStream os(fp, writeBuffer, sizeof(writeBuffer));
+		if (_wfopen_s(&fl, &tmp_path[0], L"wb"))
+			throw (-1);
+		const size_t writeBuffer_len = 128 * 1024;
+		writeBuffer = new char[writeBuffer_len];
+		rapidjson::FileWriteStream os(fl, writeBuffer, writeBuffer_len);
 		rapidjson::PrettyWriter<rapidjson::FileWriteStream> writer(os);
 		d.Accept(writer);
-		fclose(fp);
+		fclose(fl);
+		fl = NULL;
+		delete[] writeBuffer;
+		writeBuffer = NULL;
 
 		CryptConfig test_cfg;
 
@@ -322,14 +332,14 @@ bool CryptConfig::write_volume_name()
 			}
 		} catch (...) {
 			DeleteFile(&tmp_path[0]);
-			return false;
+			throw (-1);
 		}
 
 		DWORD dwAttr = GetFileAttributes(&config_path[0]);
 
 		if (dwAttr == INVALID_FILE_ATTRIBUTES) {
 			DeleteFile(&tmp_path[0]);
-			return false;
+			throw (-1);
 		}
 
 		bool bWasReadOnly = false;
@@ -342,33 +352,40 @@ bool CryptConfig::write_volume_name()
 
 			if (!SetFileAttributes(&config_path[0], dwAttr)) {
 				DeleteFile(&tmp_path[0]);
-				return false;
+				throw (-1);
 			}
 		}
 
 		if (!MoveFileEx(&tmp_path[0], &config_path[0], MOVEFILE_REPLACE_EXISTING)) {
 			DeleteFile(&tmp_path[0]);
-			return false;
+			throw (-1);
 		}
 
 		if (bWasReadOnly) {
 			dwAttr = GetFileAttributes(&config_path[0]);
 
 			if (dwAttr == INVALID_FILE_ATTRIBUTES) {
-				return false;
+				throw (-1);
 			}
 
 			if (!(dwAttr & FILE_ATTRIBUTE_READONLY)) {
 				dwAttr |= FILE_ATTRIBUTE_READONLY;
 
 				if (!SetFileAttributes(&config_path[0], dwAttr)) {
-					return false;
+					throw (-1);
 				}
 			}
 		}
 	} catch (...) {
 		bret = false;
 	}
+
+	if (writeBuffer) {
+		delete[] writeBuffer;
+	}
+
+	if (fl)
+		fclose(fl);
 
 	return bret;
 }
@@ -450,7 +467,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 
 		const int adata_len = sizeof(adata);
 
-		ZeroMemory(adata, adata_len);
+		memset(adata, 0, adata_len);
 
 		int ivlen = MASTER_IV_LEN;
 
@@ -585,7 +602,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		const int adata_len = sizeof(adata);
 
-		ZeroMemory(adata, adata_len);
+		memset(adata, 0, adata_len);
 
 		masterkey = new unsigned char[m_KeyLen];
 
