@@ -13,7 +13,7 @@
 #define SE_PASSWORD_CHAR ((WCHAR)0xd7) // high-ascii char that looks like 'x'
 
 // cppcryptfs uses ES_PASSWORD style on edit control so you see the default windows 
-// password char, but the window text is stored as SE_PASSWOR_CHAR
+// password char, but the window text is stored as SE_PASSWORD_CHAR
 
 
 // Use LockZeroBuffers instead of CStrings for enhanced security for cppcryptfs
