@@ -175,7 +175,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	theApp.DoWaitCursor(-1);
 
 	if (!bResult) {
-		MessageBox(&error_mes[0], L"cppcryptfs", MB_OK | MB_ICONERROR);
+		MessageBox(&error_mes[0], L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
 	}
 
