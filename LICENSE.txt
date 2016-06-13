@@ -1,5 +1,5 @@
 
-cppcryptfs - Copyright (c) 2016 Bailey Brown
+cppcryptfs - Copyright (c) 2016 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
