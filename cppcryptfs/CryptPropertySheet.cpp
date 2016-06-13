@@ -157,10 +157,8 @@ void CCryptPropertySheet::OnSysCommand(UINT nID, LPARAM lParam)
 	// TODO: Add your message handler code here and/or call default
 	switch (nID & 0xFFF0) {
 	case SC_CLOSE:
-		if (CanClose()) 
-			CPropertySheet::OnSysCommand(nID, lParam); 
+		if (lParam) ShowWindow(SW_HIDE); else SetForegroundWindow(); return;
 		break;
-	case SC_MINIMIZE:  if (lParam) ShowWindow(SW_HIDE); else SetForegroundWindow(); return;
 	//case IDM_ABOUTBOX: CAboutDlg().DoModal();    return; // This line is only for a Dialog Application with an About Box.
 	default: CPropertySheet::OnSysCommand(nID, lParam); return;
 
