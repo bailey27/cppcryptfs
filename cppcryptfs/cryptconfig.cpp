@@ -548,7 +548,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 	try {
 		if (!can_delete_directory(&m_basedir[0], TRUE)) {
-			error_mes = L"root dir is not empty\n";
+			error_mes = L"the directory is not empty\n";
 			throw(-1);
 		}
 
@@ -691,7 +691,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		if (m_DirIV) {
 			if (!create_dir_iv(NULL, &m_basedir[0])) {
-				error_mes = L"cannot create diriv file in root dir\n";
+				error_mes = L"cannot create diriv file\n";
 				throw(-1);
 			}
 		}
