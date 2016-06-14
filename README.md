@@ -40,7 +40,7 @@ Build Requirements
 Use
 -------
 
-cppcryptfs needs to run as administrator.  It needs this to acquire the SE_NAME privilege in Windows for it to work.
+cppcryptfs needs to run as administrator.  It needs this to acquire the SE_SECURITY_NAME privilege in Windows for it to work.
 
 cppcryptfs.exe requests administrator privileges automatically which 
 pops up the UAC dialog.
