@@ -46,7 +46,7 @@ public:
 
 	DWORD m_serial;
 
-	void InitEme(BYTE *key);
+	void InitEme(const BYTE *key);
 
 	CryptContext();
 

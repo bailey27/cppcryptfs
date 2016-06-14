@@ -1553,7 +1553,7 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 	}
 
 	if (config->m_EMENames)
-		con->InitEme(config->m_key);
+		con->InitEme(config->GetKey());
 
 	CryptThreadData *tdata = (CryptThreadData*)malloc(sizeof(CryptThreadData));
 

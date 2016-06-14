@@ -31,6 +31,8 @@ THE SOFTWARE.
 #include <windows.h>
 #include <vector>
 
+#include "LockZeroBuffer.h"
+
 
 class CryptConfig
 {
@@ -38,10 +40,10 @@ public:
 	int m_N;
 	int m_R;
 	int m_P;
-	int m_KeyLen;
 
 	bool m_PlaintextNames;
 private:
+	LockZeroBuffer<unsigned char> *m_pKeyBuf;
 	bool m_DirIV;
 public:
 	bool DirIV() { return m_DirIV; };
@@ -54,14 +56,15 @@ public:
 
 	std::vector<unsigned char> m_encrypted_key_salt;
 	std::vector<unsigned char> m_encrypted_key;
-	unsigned char * m_key;
+
 
 	std::wstring m_basedir;
 
 	char m_driveletter;
 
-	const unsigned char *GetKey() { return m_key; };
-	WCHAR GetDriveLetter() { return m_driveletter; };
+	const unsigned char *GetKey() { return m_pKeyBuf ? m_pKeyBuf->m_buf : NULL; }
+	int GetKeyLength() { return m_pKeyBuf ? m_pKeyBuf->m_len : 0; }
+	WCHAR GetDriveLetter() { return m_driveletter; }
 	const WCHAR *GetBaseDir() { return &m_basedir[0]; }
 
 	CryptConfig();

@@ -37,7 +37,7 @@ THE SOFTWARE.
 class lCacheContainer;
 
 struct struct_EmeCryptContext {
-	BYTE *key;
+	const BYTE *key;
 	lCacheContainer *lc;
 };
 

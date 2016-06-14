@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include "stdafx.h"
 #include "cryptcontext.h"
 
-void CryptContext::InitEme(BYTE *key)
+void CryptContext::InitEme(const BYTE *key)
 {
 	m_eme.key = key;
 	m_eme.lc = NULL;

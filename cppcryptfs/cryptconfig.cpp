@@ -54,7 +54,7 @@ CryptConfig::CryptConfig()
 	m_N = 0;
 	m_R = 0;
 	m_P = 0;
-	m_KeyLen = 0;
+	
 
 	m_PlaintextNames = false;
 	m_DirIV = false;
@@ -62,7 +62,8 @@ CryptConfig::CryptConfig()
 	m_GCMIV128 = false;
 	m_LongNames = false;
 
-	m_key = NULL;
+	
+	m_pKeyBuf = NULL;
 
 	m_Version = 0;
 
@@ -71,13 +72,8 @@ CryptConfig::CryptConfig()
 
 CryptConfig::~CryptConfig()
 {
-	if (m_key && m_KeyLen > 0) {
-		DbgPrint(L"deleting %c:\n", m_driveletter);
-		SecureZeroMemory(m_key, m_KeyLen);
-		VirtualUnlock(m_key, m_KeyLen);
-	}
-	if (m_key) {
-		delete[] m_key;
+	if (m_pKeyBuf) {
+		delete m_pKeyBuf;
 	}
 }
 
@@ -145,21 +141,21 @@ CryptConfig::read(const WCHAR *configfile)
 	try {
 
 		if (!d.HasMember("EncryptedKey") || !d["EncryptedKey"].IsString())
-			return false;
+			throw (-1);
 
 		rapidjson::Value& v = d["EncryptedKey"];
 
 		if (!base64_decode(v.GetString(), m_encrypted_key, false))
-			return false;
+			throw (-1);
 
 		if (!d.HasMember("ScryptObject") || !d["ScryptObject"].IsObject())
-			return false;
+			throw (-1);
 
 		rapidjson::Value& scryptobject = d["ScryptObject"];
 
 
 		if (!base64_decode(scryptobject["Salt"].GetString(), m_encrypted_key_salt, false))
-			return false;
+			throw (-1);
 
 		const char *sstuff[] = { "N", "R", "P", "KeyLen" };
 
@@ -167,17 +163,25 @@ CryptConfig::read(const WCHAR *configfile)
 
 		for (i = 0; i < sizeof(sstuff) / sizeof(sstuff[0]); i++) {
 			if (scryptobject[sstuff[i]].IsNull() || !scryptobject[sstuff[i]].IsInt()) {
-				return false;
+				throw (-1);
 			}
 		}
 
 		m_N = scryptobject["N"].GetInt();
 		m_R = scryptobject["R"].GetInt();
 		m_P = scryptobject["P"].GetInt();
-		m_KeyLen = scryptobject["KeyLen"].GetInt();
+		int keyLen = scryptobject["KeyLen"].GetInt();
+
+		if (keyLen != 32)
+			throw(-1);
+
+		m_pKeyBuf = new LockZeroBuffer<unsigned char>(keyLen);
+
+		if (!m_pKeyBuf->IsLocked())
+			throw(-1);
 
 		if (d["Version"].IsNull() || !d["Version"].IsInt()) {
-			return false;
+			throw (-1);
 		}
 		rapidjson::Value& version = d["Version"];
 
@@ -249,7 +253,7 @@ bool CryptConfig::write_volume_name()
 		if (vol.size() > 0) {
 			if (vol.size() > MAX_VOLUME_NAME_LENGTH)
 				vol.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
-			if (!encrypt_string_gcm(vol, m_key, volume_name_utf8_enc)) {
+			if (!encrypt_string_gcm(vol, GetKey(), volume_name_utf8_enc)) {
 				return false;
 			}
 		}
@@ -438,7 +442,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 	void *context = NULL;
 
 	try {
-		if (m_encrypted_key.size() == 0 || m_encrypted_key_salt.size() == 0 || m_KeyLen == 0)
+		if (m_encrypted_key.size() == 0 || m_encrypted_key_salt.size() == 0 || GetKeyLength() == 0)
 			return false;
 
 		LockZeroBuffer<char> pass_buf(4*MAX_PASSWORD_LEN+1);
@@ -452,13 +456,13 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 			throw (-1);
 		}
 
-		LockZeroBuffer<unsigned char> pwkey(m_KeyLen);
+		LockZeroBuffer<unsigned char> pwkey(GetKeyLength());
 
 		if (!pwkey.IsLocked())
 			throw(-1);
 
 		int result = EVP_PBE_scrypt(pass, strlen(pass), &(m_encrypted_key_salt)[0], m_encrypted_key_salt.size(), m_N, m_R, m_P, 96 * 1024 * 1024, pwkey.m_buf,
-			m_KeyLen);
+			GetKeyLength());
 
 		if (result != 1)
 			throw (-1);
@@ -487,12 +491,8 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 		if (!context)
 			throw(-1);
 
-		m_key = new unsigned char[MASTER_KEY_LEN];
 
-		if (!VirtualLock(m_key, MASTER_KEY_LEN))
-			throw(-1);
-
-		int ptlen = decrypt(ciphertext, ciphertext_len, adata, adata_len, tag, pwkey.m_buf, iv, m_key, context);
+		int ptlen = decrypt(ciphertext, ciphertext_len, adata, adata_len, tag, pwkey.m_buf, iv, m_pKeyBuf->m_buf, context);
 
 		if (ptlen != MASTER_KEY_LEN)
 			throw (-1);
@@ -500,7 +500,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 		if (m_VolumeName.size() > 0) {
 			std::string vol;
 			if (unicode_to_utf8(&m_VolumeName[0], vol)) {
-				if (!decrypt_string_gcm(vol, m_key, m_VolumeName))
+				if (!decrypt_string_gcm(vol, GetKey(), m_VolumeName))
 					m_VolumeName = L"";
 				if (m_VolumeName.size() > MAX_VOLUME_NAME_LENGTH)
 					m_VolumeName.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
@@ -522,7 +522,9 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, const WCHAR *volume_name, std::wstring& error_mes)
 {
 
-	char utf8pass[256];
+	LockZeroBuffer<char> utf8pass(256);
+	if (!utf8pass.IsLocked())
+		return false;
 
 	m_basedir = path;
 
@@ -530,9 +532,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 	FILE *fl = NULL;
 
-	unsigned char *pwkey = NULL;
-
-	unsigned char *masterkey = NULL;
+	LockZeroBuffer<unsigned char> *pwkey = NULL;
 
 	void *context = NULL;
 
@@ -577,18 +577,23 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 		m_N = 65536;
 		m_R = 8;
 		m_P = 1;
-		m_KeyLen = 32;
+
+		m_pKeyBuf = new LockZeroBuffer<unsigned char>(32);
+
+		if (!m_pKeyBuf->IsLocked())
+			throw(-1);
+		
 		m_Version = 2;
 		m_DirIV = !m_PlaintextNames;
 		
-		if (!unicode_to_utf8(password, utf8pass, sizeof(utf8pass) - 1)) 
+		if (!unicode_to_utf8(password, utf8pass.m_buf, utf8pass.m_len - 1)) 
 			throw(-1);
 		
 
-		pwkey  = new unsigned char[m_KeyLen];
+		pwkey = new LockZeroBuffer<unsigned char>(GetKeyLength());
 
-		int result = EVP_PBE_scrypt(utf8pass, strlen(utf8pass), &(m_encrypted_key_salt)[0], m_encrypted_key_salt.size(), m_N, m_R, m_P, 96 * 1024 * 1024, pwkey,
-			m_KeyLen);
+		int result = EVP_PBE_scrypt(utf8pass.m_buf, strlen(utf8pass.m_buf), &(m_encrypted_key_salt)[0], m_encrypted_key_salt.size(), m_N, m_R, m_P, 96 * 1024 * 1024, pwkey->m_buf,
+			GetKeyLength());
 
 		if (result != 1)
 			throw(-1);
@@ -604,9 +609,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		memset(adata, 0, adata_len);
 
-		masterkey = new unsigned char[m_KeyLen];
-
-		if (!get_sys_random_bytes(masterkey, m_KeyLen))
+		if (!get_sys_random_bytes(m_pKeyBuf->m_buf, GetKeyLength()))
 			throw(-1);
 
 		std::string volume_name_utf8;
@@ -615,7 +618,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 			std::wstring vol = volume_name;
 			if (vol.size() > MAX_VOLUME_NAME_LENGTH)
 				vol.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
-			if (!encrypt_string_gcm(vol, masterkey, volume_name_utf8)) {
+			if (!encrypt_string_gcm(vol, GetKey(), volume_name_utf8)) {
 				error_mes = L"cannot encrypt volume name\n";
 				throw(-1);
 			}
@@ -626,18 +629,18 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 		if (!context)
 			throw(-1);
 
-		encrypted_key = new unsigned char[m_KeyLen + MASTER_IV_LEN + BLOCK_TAG_LEN];
+		encrypted_key = new unsigned char[GetKeyLength() + MASTER_IV_LEN + BLOCK_TAG_LEN];
 
 		memcpy(encrypted_key, iv, sizeof(iv));
 
-		int ctlen = encrypt(masterkey, m_KeyLen, adata, sizeof(adata), pwkey, iv, (encrypted_key + sizeof(iv)), encrypted_key + sizeof(iv) + m_KeyLen, context);
+		int ctlen = encrypt(m_pKeyBuf->m_buf, GetKeyLength(), adata, sizeof(adata), pwkey->m_buf, iv, (encrypted_key + sizeof(iv)), encrypted_key + sizeof(iv) + GetKeyLength(), context);
 
 		if (ctlen < 1)
 			throw(-1);
 
 		std::string storage;
 
-		const char *base64_key = base64_encode(encrypted_key, m_KeyLen + MASTER_IV_LEN + BLOCK_TAG_LEN, storage, false);
+		const char *base64_key = base64_encode(encrypted_key, GetKeyLength() + MASTER_IV_LEN + BLOCK_TAG_LEN, storage, false);
 
 		if (!base64_key)
 			throw(-1);
@@ -663,7 +666,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 		fprintf(fl, "\t\t\"N\": %d,\n", m_N);
 		fprintf(fl, "\t\t\"R\": %d,\n", m_R);
 		fprintf(fl, "\t\t\"P\": %d,\n", m_P);
-		fprintf(fl, "\t\t\"KeyLen\": %d\n", m_KeyLen);
+		fprintf(fl, "\t\t\"KeyLen\": %d\n", GetKeyLength());
 		fprintf(fl, "\t},\n");
 		fprintf(fl, "\t\"Version\": %d,\n", m_Version);
 		fprintf(fl, "\t\"VolumeName\": \"%s\",\n", &volume_name_utf8[0]);
@@ -700,18 +703,10 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		bret = false;
 	}
-
-
-	SecureZeroMemory(utf8pass, sizeof(utf8pass));
 	
 
 	if (pwkey) {
-		SecureZeroMemory(pwkey, m_KeyLen);
 		delete[] pwkey;
-	}
-	if (masterkey) {
-		SecureZeroMemory(masterkey, m_KeyLen);
-		delete[] masterkey;
 	}
 
 	if (encrypted_key) {
