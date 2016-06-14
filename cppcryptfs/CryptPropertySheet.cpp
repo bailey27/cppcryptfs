@@ -112,7 +112,7 @@ BOOL CCryptPropertySheet::OnInitDialog()
 
 
 	if (have_security_name_privilege())
-		SetTitle(L"cppcryptfs - (Administrator)");
+		SetTitle(L"cppcryptfs - SE_SECURITY_NAME");
 
 	return bResult;
 }
