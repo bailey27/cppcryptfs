@@ -52,6 +52,7 @@ public:
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnIdrShowcppcryptfs();
 	afx_msg void OnIdrExitcppcryptfs();
+	virtual INT_PTR DoModal();
 };
 
 

@@ -110,9 +110,10 @@ BOOL CCryptPropertySheet::OnInitDialog()
 	if (pWnd)
 		pWnd->ShowWindow(SW_HIDE);
 
-
-	if (have_security_name_privilege())
-		SetTitle(L"cppcryptfs - SE_SECURITY_NAME");
+	if (!have_security_name_privilege()) {
+		MessageBox(L"cppcryptfs needs the SE_SECURITY_NAME privilege to work properly.  You should be running it as Adminisrator.", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		SetTitle(L"cppcryptfs - no SE_SECURITY_NAME");
+	}
 
 	return bResult;
 }
@@ -174,6 +175,7 @@ void CCryptPropertySheet::OnIdrShowcppcryptfs()
 	// TODO: Add your command handler code here
 
 	theApp.m_pMainWnd->ShowWindow(SW_SHOW);
+
 }
 
 
@@ -186,3 +188,12 @@ void CCryptPropertySheet::OnIdrExitcppcryptfs()
 }
 
 
+
+
+INT_PTR CCryptPropertySheet::DoModal()
+{
+	// TODO: Add your specialized code here and/or call the base class
+	
+	return CPropertySheet::DoModal();
+	
+}
