@@ -93,7 +93,7 @@ When a file name is encrypted, it is converted from UNICODE-16 to UTF-8 which, d
 
 Also, the path to the directory in which the encrypted fileystem resides must be pre-pended to the path of the encrypted file names.
 
-Older filesystems, such as FAT32, will limit the total path length to 260 characters.
+Older filesystems, such as FAT32, will limit the total path length to 259 characters.
 
 It is therefore strongly recommended to use NTFS whenever possible.
 
