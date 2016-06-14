@@ -45,6 +45,7 @@ cppcryptfs needs to run as administrator. It needs this to acquire the SE_SECURI
 cppcryptfs.exe requests administrator privileges automatically which pops up the UAC dialog.
 
 Admin privilege is specified in the manifest. A consequence of this is that in order to debug or even run it from Visual Studio, you need to run Visual Studio as administrator.
+
 To make a new encrypted virtual fileystem, first click the "Create" tab.
 
 ![Alt text](/screenshots/screenshot_create.png?raw=true "Create tab")
