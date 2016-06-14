@@ -1128,7 +1128,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
   FileNameEnc filePath(GetContext(), FileName);
 
 
-  DbgPrint(L"GetFileSecurity %s\n", FileName);
+  DbgPrint(L"GetFileSecurity %s, context handle = %I64x\n", FileName, DokanFileInfo->Context);
 
   CryptCheckFlag(*SecurityInformation, FILE_SHARE_READ);
   CryptCheckFlag(*SecurityInformation, OWNER_SECURITY_INFORMATION);
@@ -1193,7 +1193,7 @@ static NTSTATUS DOKAN_CALLBACK CryptSetFileSecurity(
   UNREFERENCED_PARAMETER(SecurityDescriptorLength);
 
 
-  DbgPrint(L"SetFileSecurity %s\n", FileName);
+  DbgPrint(L"SetFileSecurity %s, context handle = %I64x\n", FileName, DokanFileInfo->Context);
 
   handle = (HANDLE)DokanFileInfo->Context;
   if (!handle || handle == INVALID_HANDLE_VALUE) {
