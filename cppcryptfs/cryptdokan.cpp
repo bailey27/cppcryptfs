@@ -73,6 +73,7 @@ THE SOFTWARE.
 #include "cryptfile.h"
 #include "cryptdefs.h"
 #include "util.h"
+#include "cryptdokan.h"
 
 
 #include <vector>
@@ -88,6 +89,7 @@ THE SOFTWARE.
 #include <winbase.h>
 #include <stdarg.h>
 #include <varargs.h>
+
 
 
 #define UNMOUNT_TIMEOUT 30000
@@ -276,6 +278,7 @@ NTSTATUS ToNtStatus(DWORD dwError) {
 }
 
 static BOOL AddSeSecurityNamePrivilege() {
+
   HANDLE token = 0;
   DbgPrint(
       L"## Attempting to add SE_SECURITY_NAME privilege to process token ##\n");
@@ -332,6 +335,7 @@ static BOOL AddSeSecurityNamePrivilege() {
     CloseHandle(token);
   return TRUE;
 }
+
 
 #define CryptCheckFlag(val, flag)                                             \
   if (val & flag) {                                                            \
@@ -1116,6 +1120,7 @@ CryptUnlockFile(LPCWSTR FileName, LONGLONG ByteOffset, LONGLONG Length,
   return STATUS_SUCCESS;
 }
 
+
 static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
     LPCWSTR FileName, PSECURITY_INFORMATION SecurityInformation,
     PSECURITY_DESCRIPTOR SecurityDescriptor, ULONG BufferLength,
@@ -1205,6 +1210,7 @@ static NTSTATUS DOKAN_CALLBACK CryptSetFileSecurity(
   return STATUS_SUCCESS;
 }
 
+
 static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
     LPWSTR VolumeNameBuffer, DWORD VolumeNameSize, LPDWORD VolumeSerialNumber,
     LPDWORD MaximumComponentLength, LPDWORD FileSystemFlags,
@@ -1258,6 +1264,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
 
   return STATUS_SUCCESS;
 }
+
 
 /**
  * Avoid #include <winternl.h> which as conflict with FILE_INFORMATION_CLASS
@@ -1405,7 +1412,6 @@ static void cleanup_tdata(CryptThreadData *tdata)
 	free(tdata);
 }
 
-static bool bAddedSecurityNamePrivilege = false;
 
 int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes) 
 {
@@ -1414,16 +1420,6 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 		mes = L"Invalid drive letter\n";
 		return -1;
 	}
-	// Add security name privilege. Required here to handle GetFileSecurity
-	// properly.
-	if (!bAddedSecurityNamePrivilege) {
-		if (!AddSeSecurityNamePrivilege()) {
-			mes = L"Failed to add security name privilege to process.  Try running as administrator.\n";
-			return -1;
-		}
-	}
-
-	bAddedSecurityNamePrivilege = true;
 
 	PDOKAN_OPERATIONS dokanOperations =
 		(PDOKAN_OPERATIONS)malloc(sizeof(DOKAN_OPERATIONS));
@@ -1452,8 +1448,13 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 	dokanOperations->SetAllocationSize = CryptSetAllocationSize;
 	dokanOperations->LockFile = CryptLockFile;
 	dokanOperations->UnlockFile = CryptUnlockFile;
-	dokanOperations->GetFileSecurity = CryptGetFileSecurity;
-	dokanOperations->SetFileSecurity = CryptSetFileSecurity;
+	if (have_security_name_privilege()) {
+		dokanOperations->GetFileSecurity = CryptGetFileSecurity;
+		dokanOperations->SetFileSecurity = CryptSetFileSecurity;
+	} else {
+		dokanOperations->GetFileSecurity = NULL;
+		dokanOperations->SetFileSecurity = NULL;
+	}
 	dokanOperations->GetDiskFreeSpace = CryptGetDiskFreeSpace;
 	dokanOperations->GetVolumeInformation = CryptGetVolumeInformation;
 	dokanOperations->Unmounted = CryptUnmounted;
@@ -1754,3 +1755,16 @@ BOOL write_volume_name_if_changed(WCHAR dl)
 	return TRUE;
 }
 
+
+BOOL have_security_name_privilege()
+{
+	static BOOL bHaveName = FALSE;
+	static BOOL bCheckedName = FALSE;
+
+	if (!bCheckedName) {
+		bHaveName = AddSeSecurityNamePrivilege();
+		bCheckedName = TRUE;
+	}
+
+	return bHaveName;
+}

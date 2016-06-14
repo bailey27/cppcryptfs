@@ -39,5 +39,5 @@ BOOL wait_for_all_unmounted();
 
 BOOL write_volume_name_if_changed(WCHAR dl);
 
-
+BOOL have_security_name_privilege();
 

@@ -111,6 +111,9 @@ BOOL CCryptPropertySheet::OnInitDialog()
 		pWnd->ShowWindow(SW_HIDE);
 
 
+	if (have_security_name_privilege())
+		SetTitle(L"cppcryptfs - (Administrator)");
+
 	return bResult;
 }
 

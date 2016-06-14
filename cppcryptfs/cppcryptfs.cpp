@@ -40,6 +40,7 @@ THE SOFTWARE.
 #include "CryptAboutPropertyPage.h"
 #include "RecentItems.h"
 #include "TrayIcon.h"
+#include "cryptdokan.h"
 
 
 #ifdef _DEBUG
@@ -80,8 +81,12 @@ CcppcryptfsApp theApp;
 BOOL CcppcryptfsApp::InitInstance()
 {
 
-	const WCHAR szUniqueNamedMutex[] = L"cppcryptfs-AkNG5vg9Oiij6cHpRs1UG5PFViZ840jC";
-	HANDLE hAppMutex = CreateMutex(NULL, TRUE, szUniqueNamedMutex);
+	CString UniqueNamedMutex = L"cppcryptfs-A7DDB0CF-A856-4E8A-A4E9-722473FB5E49";
+
+	if (have_security_name_privilege())
+		UniqueNamedMutex += L"-admin";
+
+	HANDLE hAppMutex = CreateMutex(NULL, TRUE, UniqueNamedMutex);
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
 		// Program already running somewhere
