@@ -83,9 +83,6 @@ BOOL CcppcryptfsApp::InitInstance()
 
 	CString UniqueNamedMutex = L"cppcryptfs-A7DDB0CF-A856-4E8A-A4E9-722473FB5E49";
 
-	if (have_security_name_privilege())
-		UniqueNamedMutex += L"-admin";
-
 	HANDLE hAppMutex = CreateMutex(NULL, TRUE, UniqueNamedMutex);
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
