@@ -100,6 +100,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>C:\Program Files (X86)\OpenSSL\lib\libcrypto.lib;C:\Program Files\Dokan\Dokan Library-1.0.0\x86\lib\dokan1.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -157,6 +158,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>C:\Program Files (X86)\OpenSSL\lib\libcrypto.lib;C:\Program Files\Dokan\Dokan Library-1.0.0\x86\lib\dokan1.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
