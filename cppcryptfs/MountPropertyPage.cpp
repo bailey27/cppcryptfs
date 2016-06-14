@@ -345,6 +345,9 @@ BOOL CMountPropertyPage::OnInitDialog()
 	if (pCombo)
 		pCombo->LimitText(MAX_PATH);
 
+	if (!m_password.ArePasswordBuffersLocked())
+		MessageBox(L"unable to lock password buffer", L"cppcryptfs", MB_OK | MB_ICONERROR);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }

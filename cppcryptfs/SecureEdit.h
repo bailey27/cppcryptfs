@@ -30,6 +30,8 @@ public:
 	void SetRealText(const WCHAR *pszNewString);
 	WCHAR * m_strRealText;
 
+	BOOL ArePasswordBuffersLocked() { return m_pBuf && m_pBufOld ? m_pBuf->IsLocked() && m_pBufOld->IsLocked() : FALSE; };
+
 	//{{AFX_VIRTUAL(CSecureEdit)
 	//}}AFX_VIRTUAL
 

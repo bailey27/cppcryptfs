@@ -187,6 +187,8 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
 
+	SetDlgItemText(IDC_VOLUME_NAME, L"");
+
 	CString clfns = IsDlgButtonChecked(IDC_LONG_FILE_NAMES) ? L"1" : L"0";
 
 	theApp.WriteProfileStringW(L"createoptions", L"LongFileNames", clfns);
@@ -278,6 +280,10 @@ BOOL CCreatePropertyPage::OnInitDialog()
 		}
 	}
 
+
+	if (!m_password.ArePasswordBuffersLocked() || !m_password2.ArePasswordBuffersLocked()) {
+		MessageBox(L"unable to lock password buffers", L"cppcryptfs", MB_OK | MB_ICONERROR);
+	}
 
 	// limit input lengths
 
