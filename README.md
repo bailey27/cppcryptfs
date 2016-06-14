@@ -97,6 +97,8 @@ Older filesystems, such as FAT32, will limit the total path length to 260 charac
 
 It is therefore strongly recommended to use NTFS whenever possible.
 
+A lot of Windows software, including File Explorer that comes with Windows, has problems with long paths.  If you use encrypted file names, then you might need to use a third-party file manager that handles long file paths if you want to move the root of your encrypted filesystem.  It's a good idea to copy and then delete after rather than move in case your file manager has problems.
+
 
 Compatibility with gocryptfs
 ------
