@@ -1455,7 +1455,7 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 	// So it seems better to do as much Get/SetFileSecurity() as we can regardless of whether we
 	// we can get SE_SECURITY_NAME (getting it implies running as administrator).
 	//
-	// Dokany suggested setting the Get/Set callbacks  to NULL if we don't have the privilege, but that keeps us from
+	// Dokany suggested setting the Get/Set callbacks to NULL if we don't have the privilege, but that keeps us from
 	// being able to copy files out of the encrypted fs, or even copy a file within it to a new file within it.
 	// So, whatever type of GetFileSecurity() that can work even without having SE_SECURITY_NAME
 	// seems to be required for copying files.
