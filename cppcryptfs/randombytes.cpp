@@ -40,7 +40,7 @@ RandomBytes::RandomBytes()
 	if (!m_pRandBuf->IsLocked()) {
 		delete m_pRandBuf;
 		m_pRandBuf = NULL;
-		::MessageBox(NULL, L"cannot lock random buffer", L"cppcryptfs", MB_OK | MB_ICONERROR);
+		::MessageBox(NULL, L"cannot lock random pool", L"cppcryptfs", MB_OK | MB_ICONERROR);
 		std::bad_alloc exception;
 		throw exception;
 	}
