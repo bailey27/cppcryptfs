@@ -1612,13 +1612,14 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 
 		if (unicode_to_utf8(&str[0], utf8)) {
 
-			sha256(utf8, sum);
-
-			con->m_serial = *(DWORD*)sum;
-		} else {
-			con->m_serial = 0xb2a1d417;
-		}
+			if (sha256(utf8, sum))
+				con->m_serial = *(DWORD*)sum;
+		} 
 	}
+
+	if (!con->m_serial) // ultimate fall-back
+		con->m_serial = 0xb2a1d417;
+
 
 	WCHAR fs_name[256];
 

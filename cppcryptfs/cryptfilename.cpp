@@ -123,7 +123,8 @@ encrypt_filename(CryptContext *con, const unsigned char *dir_iv, const WCHAR *fi
 		if (actual_encrypted)
 			*actual_encrypted = storage;
 		BYTE sum[32];
-		sha256(storage, sum);
+		if (!sha256(storage, sum))
+			return NULL;
 		std::string base64_sum;
 		if (!base64_encode(sum, sizeof(sum), base64_sum))
 			return NULL;
