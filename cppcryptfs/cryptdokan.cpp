@@ -1429,6 +1429,8 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 		return -1;
 	}
 
+	init_security_name_privilege();  // make sure AddSecurityNamePrivilege() has been called, whether or not we can get it
+
 	ZeroMemory(dokanOperations, sizeof(DOKAN_OPERATIONS));
 	dokanOperations->ZwCreateFile = CryptCreateFile;
 	dokanOperations->Cleanup = CryptCleanup;
@@ -1448,7 +1450,16 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 	dokanOperations->SetAllocationSize = CryptSetAllocationSize;
 	dokanOperations->LockFile = CryptLockFile;
 	dokanOperations->UnlockFile = CryptUnlockFile;
-	if (have_security_name_privilege()) {
+	// We seem to work better if we export Get/SetFileSecurity even if we don't have SE_SECURITY_NAME privilege.
+	// It seems that GetFileSecurity() will work without that privilege, at least in the common cases.
+	// So it seems better to do as much Get/SetFileSecurity() as we can regardless of whether we
+	// we can get SE_SECURITY_NAME (getting it implies running as administrator).
+	//
+	// Dokany suggested setting the Get/Set callbacks  to NULL if we don't have the privilege, but that keeps us from
+	// being able to copy files out of the encrypted fs, or even copy a file within it to a new file within it.
+	// So, whatever type of GetFileSecurity() that can work even without having SE_SECURITY_NAME
+	// seems to be required for copying files.
+	if (1 || have_security_name_privilege()) {
 		dokanOperations->GetFileSecurity = CryptGetFileSecurity;
 		dokanOperations->SetFileSecurity = CryptSetFileSecurity;
 	} else {
@@ -1755,7 +1766,6 @@ BOOL write_volume_name_if_changed(WCHAR dl)
 	return TRUE;
 }
 
-
 BOOL have_security_name_privilege()
 {
 	static BOOL bHaveName = FALSE;
@@ -1767,4 +1777,9 @@ BOOL have_security_name_privilege()
 	}
 
 	return bHaveName;
+}
+
+void init_security_name_privilege()
+{
+	have_security_name_privilege();
 }
