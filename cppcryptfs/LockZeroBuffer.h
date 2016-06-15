@@ -1,4 +1,7 @@
 #pragma once
+
+#include <string>
+
 template<typename T>
 class LockZeroBuffer
 {
@@ -14,12 +17,16 @@ public:
 			SecureZeroMemory(m_buf, sizeof(T)*m_len);
 	}
 
-	LockZeroBuffer(unsigned int len)
+	LockZeroBuffer(unsigned int len, bool throw_if_not_locked = false)
 	{
 		m_len = len;
 		m_buf = new T[m_len];
 		m_IsLocked = VirtualLock(m_buf, sizeof(T)*m_len);
 		memset(m_buf, 0, sizeof(T)*m_len);
+		if (!m_IsLocked && throw_if_not_locked) {
+			std::bad_alloc exception;
+			throw exception;
+		}
 	}
 
 	virtual ~LockZeroBuffer()
