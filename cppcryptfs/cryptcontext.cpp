@@ -35,13 +35,13 @@ void CryptContext::InitEme(const BYTE *key)
 	m_eme.lc = NULL;
 	m_lc.init(&m_eme);
 	m_eme.lc = &m_lc;
-	m_serial = 0;
 }
 
 CryptContext::CryptContext()
 {
 	m_mounted = FALSE;
 	m_config = new CryptConfig;
+	m_serial = 0;
 }
 
 CryptContext::~CryptContext()
