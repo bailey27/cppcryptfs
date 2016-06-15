@@ -57,7 +57,7 @@ static void panic(const WCHAR *mes)
 	
 
 	// multByTwo - GF multiplication as specified in the EME-32 draft
-static void multByTwo(BYTE *out, BYTE *in, int len) {
+static void multByTwo(BYTE *out, const BYTE *in, int len) {
 	if (len != 16) {
 		panic(L"len must be 16");
 	}
@@ -78,14 +78,14 @@ static void multByTwo(BYTE *out, BYTE *in, int len) {
 		 out[i] = tmp[i];
 }
 
-static void xorBlocks(BYTE* out, BYTE* in1, BYTE* in2, int len) {
+static void xorBlocks(BYTE* out,  const BYTE* in1,  const BYTE* in2, int len) {
 
 	for (int i = 0; i < len; i++) {
 		out[i] = in1[i] ^ in2[i];
 	}
 }
 
-static void AesEncrypt(BYTE* dst, BYTE* src, int len, EmeCryptContext *eme_context)
+static void AesEncrypt(BYTE* dst, const BYTE* src, int len, const EmeCryptContext *eme_context)
 {
 	int numBlocks = len / 16;
 
@@ -94,7 +94,7 @@ static void AesEncrypt(BYTE* dst, BYTE* src, int len, EmeCryptContext *eme_conte
 	}
 }
 
-static void AesDecrypt(BYTE* dst, BYTE* src, int len, EmeCryptContext *eme_context)
+static void AesDecrypt(BYTE* dst, const BYTE* src, int len, const EmeCryptContext *eme_context)
 {
 	int numBlocks = len / 16;
 	
@@ -105,7 +105,7 @@ static void AesDecrypt(BYTE* dst, BYTE* src, int len, EmeCryptContext *eme_conte
 
 // aesTransform - encrypt or decrypt (according to "direction") using block
 // cipher "bc" (typically AES)
-static void aesTransform(BYTE* dst, BYTE* src, bool direction, int len, EmeCryptContext *eme_context) {
+static void aesTransform(BYTE* dst, const BYTE* src, bool direction, int len, const EmeCryptContext *eme_context) {
 	if (direction == DirectionEncrypt) {
 		AesEncrypt(dst, src, len, eme_context);
 		return;
@@ -120,7 +120,7 @@ static void aesTransform(BYTE* dst, BYTE* src, bool direction, int len, EmeCrypt
 }
 
 // tabulateL - calculate L_i for messages up to a length of m cipher blocks
-static BYTE** tabulateL(EmeCryptContext *eme_context, int m){
+static BYTE** tabulateL(const EmeCryptContext *eme_context, int m){
 
 	/* set L0 = 2*AESenc(K; 0) */
 	BYTE eZero[16];
@@ -164,6 +164,7 @@ void lCacheContainer::init(EmeCryptContext *eme_context)
 	LTable = tabulateL(eme_context, 16 * 8);
 	enabled = true;
 }
+
 lCacheContainer::~lCacheContainer() 
 {
 	if (LTable) {
@@ -184,13 +185,13 @@ lCacheContainer::~lCacheContainer()
 // (defined in the constants directionEncrypt and directionDecrypt).
 // The data in "P" is en- or decrypted with the block ciper "bc" under tweak "T".
 // The result is returned in a freshly allocated slice.
-BYTE* EmeTransform(EmeCryptContext *eme_context, BYTE *T, BYTE *P, int len, bool direction)  {
+BYTE* EmeTransform(const EmeCryptContext *eme_context, const BYTE *T, const BYTE *P, int len, bool direction)  {
 
 	BYTE *C = NULL;
 
 	bool error = false;
 
-	lCacheContainer* pLCache = eme_context->lc;
+	const lCacheContainer* pLCache = eme_context->lc;
 
 	try {
 		if (len % 16 != 0) {

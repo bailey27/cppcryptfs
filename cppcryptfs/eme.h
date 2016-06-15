@@ -56,6 +56,6 @@ public:
 	virtual ~lCacheContainer();
 };
 
-extern "C" {
-	BYTE* EmeTransform(EmeCryptContext *eme_context, BYTE *T, BYTE *P, int len, bool direction);
-};
+
+BYTE* EmeTransform(const EmeCryptContext *eme_context, const BYTE *T, const BYTE *P, int len, bool direction);
+
