@@ -1571,8 +1571,17 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 		return EXIT_FAILURE;
 	}
 
-	if (config->m_EMENames)
-		con->InitEme(config->GetKey());
+	if (config->m_EMENames) {
+		try {
+			con->InitEme(config->GetKey());
+		} catch (...) {
+			mes = L"unable initialize eme context";
+			free(dokanOperations);
+			free(dokanOperations);
+			delete con;
+			return EXIT_FAILURE;
+		}
+	}
 
 	CryptThreadData *tdata = (CryptThreadData*)malloc(sizeof(CryptThreadData));
 
