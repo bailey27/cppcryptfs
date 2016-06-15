@@ -202,7 +202,7 @@ BYTE* EmeTransform(const EmeCryptContext *eme_context, const BYTE *T, const BYTE
 			panic(L"EME operates on 1-128 block-cipher blocks");
 		}
 
-		C = new BYTE[len+1]; // so caller can add a null terminator if necessary without any trouble
+		C = new BYTE[len+1]; // +1 so caller can add a null terminator if necessary without any trouble
 
 		BYTE **LTable = pLCache->LTable;
 
