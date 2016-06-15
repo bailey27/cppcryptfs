@@ -34,6 +34,8 @@ THE SOFTWARE.
 
 #include "openssl/aes.h"
 
+#include "LockZeroBuffer.h"
+
 class lCacheContainer;
 
 struct struct_EmeCryptContext {
@@ -44,12 +46,17 @@ struct struct_EmeCryptContext {
 typedef struct struct_EmeCryptContext EmeCryptContext;
 
 class lCacheContainer {
+private:
+	void tabulateL(const EmeCryptContext *eme_context, int m);
 public:
-	AES_KEY encryption_key;
-	AES_KEY decryption_key;
 
+	const AES_KEY *get_encryption_key() { return pEncKeyBuf ? pEncKeyBuf->m_buf : NULL; }
+	const AES_KEY *get_decryption_key() { return pDecKeyBuf ? pDecKeyBuf->m_buf : NULL; }
+
+	LockZeroBuffer<AES_KEY> *pEncKeyBuf;
+	LockZeroBuffer<AES_KEY> *pDecKeyBuf;
+	LockZeroBuffer<BYTE> *pLTableBuf;
 	LPBYTE *LTable;
-	bool enabled;
 
 	void init(EmeCryptContext *eme_context);
 	lCacheContainer();

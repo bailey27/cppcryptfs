@@ -90,7 +90,7 @@ static void AesEncrypt(BYTE* dst, const BYTE* src, int len, const EmeCryptContex
 	int numBlocks = len / 16;
 
 	for (int i = 0; i < numBlocks; i++) {
-		AES_encrypt(src + i * 16, dst + i * 16, &eme_context->lc->encryption_key);
+		AES_encrypt(src + i * 16, dst + i * 16, eme_context->lc->get_encryption_key());
 	}
 }
 
@@ -99,7 +99,7 @@ static void AesDecrypt(BYTE* dst, const BYTE* src, int len, const EmeCryptContex
 	int numBlocks = len / 16;
 	
 	for (int i = 0; i < numBlocks; i++) {
-		AES_decrypt(src + i * 16, dst + i * 16, &eme_context->lc->decryption_key);
+		AES_decrypt(src + i * 16, dst + i * 16, eme_context->lc->get_decryption_key());
 	}
 }
 
@@ -120,63 +120,73 @@ static void aesTransform(BYTE* dst, const BYTE* src, bool direction, int len, co
 }
 
 // tabulateL - calculate L_i for messages up to a length of m cipher blocks
-static BYTE** tabulateL(const EmeCryptContext *eme_context, int m){
+void lCacheContainer::tabulateL(const EmeCryptContext *eme_context, int m){
 
-	/* set L0 = 2*AESenc(K; 0) */
+	/* set L0 = 2*AESenc(K; 0) */::
 	BYTE eZero[16];
 	memset(eZero, 0, sizeof(eZero));
 
 	BYTE Li[16];
 	AesEncrypt(Li, eZero, 16, eme_context);
 
-	BYTE **LTable = new LPBYTE[m];
+	LTable = new LPBYTE[m];
 
 	// Allocate pool once and slice into m pieces in the loop
 
-	BYTE *pool = new BYTE[m * 16];
+	pLTableBuf = new LockZeroBuffer<BYTE>(m * 16, true);
+
+	BYTE *pool = pLTableBuf->m_buf;
+
 	for (int i = 0; i < m; i++) {
 		multByTwo(Li, Li, 16);
 		LTable[i] = pool + i * 16;
 		memcpy(LTable[i], Li, 16);
 	}
-	return LTable;
+	
 }
 
 
 
 lCacheContainer::lCacheContainer() 
 {
-	LTable = NULL;
-	enabled = false;
 
+	LTable = NULL;
+
+	pEncKeyBuf = NULL;
+	pDecKeyBuf = NULL;
+	pLTableBuf = NULL;
 }
 
 void lCacheContainer::init(EmeCryptContext *eme_context)
 {
-	VirtualLock(&encryption_key, sizeof(encryption_key));
-	VirtualLock(&decryption_key, sizeof(decryption_key));
+	pEncKeyBuf = new LockZeroBuffer<AES_KEY>(1, true);
+	pDecKeyBuf = new LockZeroBuffer<AES_KEY>(1, true);
 
-	AES_set_encrypt_key(eme_context->key, 256, &encryption_key);
-	AES_set_decrypt_key(eme_context->key, 256, &decryption_key);
+	AES_set_encrypt_key(eme_context->key, 256, pEncKeyBuf->m_buf);
+	AES_set_decrypt_key(eme_context->key, 256, pDecKeyBuf->m_buf);
 
 	eme_context->lc = this;
 
-	LTable = tabulateL(eme_context, 16 * 8);
-	enabled = true;
+	tabulateL(eme_context, 16 * 8);
+
 }
 
 lCacheContainer::~lCacheContainer() 
 {
+
 	if (LTable) {
-		delete[] LTable[0];
 		delete[] LTable;
 	}
 
-	SecureZeroMemory(&encryption_key, sizeof(encryption_key));
-	SecureZeroMemory(&decryption_key, sizeof(decryption_key));
+	if (pLTableBuf)
+		delete pLTableBuf;
 
-	VirtualUnlock(&encryption_key, sizeof(encryption_key));
-	VirtualUnlock(&decryption_key, sizeof(decryption_key));
+	if (pEncKeyBuf)
+		delete pEncKeyBuf;
+
+	if (pDecKeyBuf)
+		delete pDecKeyBuf;
+
 }
 
 
