@@ -22,11 +22,12 @@ public:
 		m_len = len;
 		m_buf = new T[m_len];
 		m_IsLocked = VirtualLock(m_buf, sizeof(T)*m_len);
-		memset(m_buf, 0, sizeof(T)*m_len);
 		if (!m_IsLocked && throw_if_not_locked) {
+			delete[] m_buf;
 			std::bad_alloc exception;
 			throw exception;
 		}
+		memset(m_buf, 0, sizeof(T)*m_len);
 	}
 
 	virtual ~LockZeroBuffer()
