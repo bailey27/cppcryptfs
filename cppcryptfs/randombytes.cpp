@@ -34,7 +34,18 @@ THE SOFTWARE.
 
 RandomBytes::RandomBytes()
 {
-	VirtualLock(m_randbuf, sizeof(m_randbuf));
+
+	m_pRandBuf = new LockZeroBuffer<BYTE>(RANDOM_POOL_SIZE);
+
+	if (!m_pRandBuf->IsLocked()) {
+		delete m_pRandBuf;
+		m_pRandBuf = NULL;
+		::MessageBox(NULL, L"cannot lock random buffer", L"cppcryptfs", MB_OK | MB_ICONERROR);
+		std::bad_alloc exception;
+		throw exception;
+	}
+
+	m_randbuf = m_pRandBuf->m_buf;
 
 	m_bufpos = RANDOM_POOL_SIZE;
 
@@ -43,11 +54,9 @@ RandomBytes::RandomBytes()
 
 RandomBytes::~RandomBytes()
 {
-	SecureZeroMemory(m_randbuf, sizeof(m_randbuf));
-
-	VirtualUnlock(m_randbuf, sizeof(m_randbuf));
-
-	m_bufpos = 0;
+	// do not free m_randbuf.  It points to m_pRandBuf->m_buf
+	if (m_pRandBuf)
+		delete m_pRandBuf;
 }
 
 bool RandomBytes::GetRandomBytes(unsigned char *buf, DWORD len)

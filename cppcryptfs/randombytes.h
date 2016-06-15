@@ -30,11 +30,16 @@ THE SOFTWARE.
 
 #include <windows.h>
 
+#include "LockZeroBuffer.h"
+
 #define RANDOM_POOL_SIZE 4096
 
 class RandomBytes {
 private:
-	unsigned char m_randbuf[RANDOM_POOL_SIZE];
+
+	LockZeroBuffer<BYTE> *m_pRandBuf;
+
+	unsigned char *m_randbuf; // do not free this. it points to m_pRandBuf->m_buf;
 
 	DWORD m_bufpos;
 
