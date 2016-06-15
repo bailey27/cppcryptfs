@@ -40,11 +40,19 @@ Build Requirements
 Use
 -------
 
-cppcryptfs needs to run as administrator. It needs this to acquire the SE_SECURITY_NAME privilege in Windows for it to work.
+Most of the testing up to this point has been done while running cppcryptfs as
+administrator.  It is currently being tested while not running as administrator.
 
-cppcryptfs.exe requests administrator privileges automatically which pops up the UAC dialog.
+For now, it is probably better to run cppcrypfs as administrator.
 
-Admin privilege is specified in the manifest. A consequence of this is that in order to debug or even run it from Visual Studio, you need to run Visual Studio as administrator.
+Until recently, it was thought that the SE_SECURITY_NAME privilege was needed
+for cppcryptfs to work properly. The program needs to be running as administrator in order to acquire this privilege. 
+
+cppcryptfs doesn't require administrator to run, but it will warn you
+that you should be running it as administrator, and it will let you 
+know in the window title that it doesn't have SE_SECURITY_NAME and
+therefore doesn't have full access for getting or setting the
+security attributes of the files in the enrypted filesystem.
 
 To make a new encrypted virtual fileystem, first click the "Create" tab.
 
