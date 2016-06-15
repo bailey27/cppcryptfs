@@ -154,38 +154,44 @@ void DbgPrint(LPCWSTR format, ...) {
 // then the actual encrypted name must be written to the special gocryptfs.longname.XXXXX.name file.
 // actual_encrypted will contain this data in that case.
 
-
 class FileNameEnc {
 private:
 	std::wstring m_enc_path;
 	std::string *m_actual_encrypted;
 	const WCHAR *m_plain_path;
 	CryptContext *m_con;
-	const WCHAR *m_ret;
+	bool m_tried;
+	bool m_failed;
 	
 
 public:
 	operator const WCHAR *()
 	{
 	
-		if (!m_ret) {
+		if (!m_tried) {
+
+			m_tried = true;
+
 			try {
 				if (!encrypt_path(m_con, m_plain_path, m_enc_path, m_actual_encrypted))
-					m_enc_path = L"";
-				m_ret = &m_enc_path[0];
-			} catch (...) {
-				m_ret = L"";
+					throw(-1);
+			} 
+			catch (...) {
+				m_failed = true;
 			}
 		}
-		const WCHAR *rs = m_ret && *m_ret ? m_ret : NULL;
+
+		const WCHAR *rs = !m_failed ? &m_enc_path[0] : NULL;
+
 		if (rs) {
 			DbgPrint(L"\tconverted filename %s => %s\n", m_plain_path, rs);
 		} else {
 			DbgPrint(L"\terror converting filename %s\n", m_plain_path);
 		}
+
 		return rs;
 	};
-	FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual = NULL);
+	FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted = NULL);
 	virtual ~FileNameEnc();
 };
 
@@ -194,7 +200,8 @@ FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *act
 	m_con = con;
 	m_plain_path = fname;
 	m_actual_encrypted = actual_encrypted;
-	m_ret = NULL;
+	m_tried = false;
+	m_failed = false;
 }
 
 FileNameEnc::~FileNameEnc()
