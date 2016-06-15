@@ -87,7 +87,7 @@ For technical details of the cryptographic design of gocryptfs, please visit
 the [gocryptfs project page](https://github.com/rfjakob/gocryptfs).
 
 
-When you are finished using the drive letter, go to the "Mount" tab and select your drive letter and click on "Dismount" or click "Dismount All".  The drive letter(s) will be dismounted, and the encryption keys will be erased from memory. 
+When you are finished using the drive letter, go to the "Mount" tab and select the drive letter and click on "Dismount" or click "Dismount All".  The drive letter(s) will be dismounted, and the encryption keys will be erased from memory. 
 
 You can mount as many gocryptfs filesystems as you have unused drive letters available.
 
