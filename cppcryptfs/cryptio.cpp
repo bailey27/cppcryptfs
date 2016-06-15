@@ -37,7 +37,7 @@ THE SOFTWARE.
 
 
 int
-read_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigned long long block, unsigned char *ptbuf, void *crypt_context)
+read_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigned long long block, unsigned char *ptbuf, void *openssl_crypt_context)
 {
 	long long offset = FILE_HEADER_LEN + block*CIPHER_BS;
 
@@ -70,7 +70,7 @@ read_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigne
 		return 0;
 
 	int ptlen = decrypt(buf + BLOCK_IV_LEN, nread - BLOCK_IV_LEN - BLOCK_TAG_LEN, auth_data, sizeof(auth_data), 
-		buf + nread - BLOCK_TAG_LEN, con->GetConfig()->GetKey(), buf, ptbuf, crypt_context);
+		buf + nread - BLOCK_TAG_LEN, con->GetConfig()->GetKey(), buf, ptbuf, openssl_crypt_context);
 
 	if (ptlen < 0) {  // return all zeros for un-authenticated blocks (might exist if file was resized without writing)
 
@@ -84,7 +84,7 @@ read_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigne
 }
 
 int
-write_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigned long long block, const unsigned char *ptbuf, int ptlen, void *crypt_context)
+write_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigned long long block, const unsigned char *ptbuf, int ptlen, void *openssl_crypt_context)
 {
 
 	long long offset = FILE_HEADER_LEN + block*CIPHER_BS;
@@ -113,7 +113,7 @@ write_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsign
 	if (!get_random_bytes(buf, BLOCK_IV_LEN))
 		return -1;
 
-	int ctlen = encrypt(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetKey(), buf, buf + BLOCK_IV_LEN, tag, crypt_context);
+	int ctlen = encrypt(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetKey(), buf, buf + BLOCK_IV_LEN, tag, openssl_crypt_context);
 
 	if (ctlen < 0 || ctlen > PLAIN_BS)
 		return -1;
