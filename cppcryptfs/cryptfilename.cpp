@@ -279,11 +279,13 @@ encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, 
 
 
 	try {
-		if (wcslen(path) >= 2 && (path[0] == config->GetDriveLetter() || path[0] == tolower(config->GetDriveLetter())) && path[1] == ':') {
-			path += 2;
-		}
+		
+		storage = config->GetBaseDir();
 
-		storage += config->GetBaseDir();
+		if (config->m_PlaintextNames) {
+			storage += path;
+			return &storage[0];
+		}
 
 		if (*path && path[0] == '\\') {
 			storage.push_back('\\');
