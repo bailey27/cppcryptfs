@@ -33,16 +33,18 @@ class CryptContext;
 
 class CryptFile
 {
+
 public:
-	HANDLE m_handle;
 
 	unsigned char m_fileid[16];
-
-	long long m_real_file_size; // Associate() saves this so we don't need to get it again.
 
 	unsigned short m_version;
 
 	bool m_is_empty;
+
+	HANDLE m_handle;
+
+	long long m_real_file_size; // Associate() saves this so we don't need to get it again.
 
 	CryptContext *m_con;
 
