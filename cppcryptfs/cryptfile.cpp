@@ -40,6 +40,7 @@ CryptFile::CryptFile()
 	m_version = 0;
 	m_is_empty = false;
 	m_con = NULL;
+	m_real_file_size = (long long)-1;
 	memset(m_fileid, 0, sizeof(m_fileid));
 }
 
@@ -56,6 +57,8 @@ CryptFile::Associate(CryptContext *con, HANDLE hfile)
 		DbgPrint(L"ASSOCIATE: failed to get size of file\n");
 		return FALSE;
 	}
+
+	m_real_file_size = l.QuadPart;
 
 	if (l.QuadPart == 0) {
 		m_version = CRYPT_VERSION;
@@ -118,7 +121,8 @@ CryptFile::~CryptFile()
 BOOL CryptFile::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset)
 {
 
-
+	if (m_real_file_size == (long long)-1)
+		return FALSE;
 
 	if (!pNread || !buf)
 		return FALSE;
@@ -198,6 +202,9 @@ BOOL CryptFile::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG 
 
 BOOL CryptFile::WriteVersionAndFileId()
 {
+	if (m_real_file_size == (long long)-1)
+		return FALSE;
+
 	LARGE_INTEGER l;
 	l.QuadPart = 0;
 
@@ -230,12 +237,14 @@ BOOL CryptFile::WriteVersionAndFileId()
 BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile, BOOL bPagingIo)
 {
 
+	if (m_real_file_size == (long long)-1)
+		return FALSE;
+
 	BOOL bRet = TRUE;
 
 	if (bWriteToEndOfFile) {
 		LARGE_INTEGER l;
-		if (!GetFileSizeEx(m_handle, &l)) 
-			return FALSE;
+		l.QuadPart = m_real_file_size;
 		if (!adjust_file_size_down(l))
 			return FALSE;
 		offset = l.QuadPart;
@@ -244,8 +253,7 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 		if (bPagingIo)
 		{
 			LARGE_INTEGER l;
-			if (!GetFileSizeEx(m_handle, &l))
-				return FALSE;
+			l.QuadPart = m_real_file_size;
 			if (!adjust_file_size_down(l))
 				return FALSE;
 
@@ -358,6 +366,9 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 BOOL
 CryptFile::LockFile(LONGLONG ByteOffset, LONGLONG Length)
 {
+	if (m_real_file_size == (long long)-1)
+		return FALSE;
+
 	long long start_block = ByteOffset / PLAIN_BS;
 
 	long long end_block = (ByteOffset + Length + PLAIN_BS - 1) / PLAIN_BS;
@@ -381,6 +392,9 @@ CryptFile::LockFile(LONGLONG ByteOffset, LONGLONG Length)
 BOOL
 CryptFile::UnlockFile(LONGLONG ByteOffset, LONGLONG Length)
 {
+	if (m_real_file_size == (long long)-1)
+		return FALSE;
+
 	long long start_block = ByteOffset / PLAIN_BS;
 
 	long long end_block = (ByteOffset + Length + PLAIN_BS - 1) / PLAIN_BS;
@@ -405,15 +419,17 @@ BOOL
 CryptFile::SetEndOfFile(LONGLONG offset)
 {
 
+	if (m_real_file_size == (long long)-1)
+		return FALSE;
+
 	LARGE_INTEGER fileSize;
 
 
 	if (m_handle == NULL || m_handle == INVALID_HANDLE_VALUE)
 		return FALSE;
 
-	if (!GetFileSizeEx(m_handle, &fileSize)) {
-		return FALSE;
-	}
+	fileSize.QuadPart = m_real_file_size;
+
 
 	if (m_is_empty && offset != 0) {
 		if (!WriteVersionAndFileId())
