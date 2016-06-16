@@ -63,7 +63,7 @@ bool is_long_name_file(const WCHAR *filename)
 
 
 const char * // returns base64-encoded, encrypted filename
-encrypt_filename(CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::string& storage, void *context, std::string *actual_encrypted)
+encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::string& storage, void *context, std::string *actual_encrypted)
 {
 	std::string utf8_str;
 
@@ -137,7 +137,7 @@ encrypt_filename(CryptContext *con, const unsigned char *dir_iv, const WCHAR *fi
 }
 
 const WCHAR * // returns base64-encoded, encrypted filename
-encrypt_filename(CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::wstring& storage, void *context, std::string *actual_encrypted)
+encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::wstring& storage, void *context, std::string *actual_encrypted)
 {
 	if (con->GetConfig()->m_PlaintextNames) {
 		storage = filename;
@@ -152,7 +152,7 @@ encrypt_filename(CryptContext *con, const unsigned char *dir_iv, const WCHAR *fi
 }
 
 const WCHAR * // returns UNICODE plaintext filename
-decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const char *filename, std::wstring& storage)
+decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const char *filename, std::wstring& storage)
 {
 	if (con->GetConfig()->m_PlaintextNames) {
 		if (!utf8_to_unicode(filename, storage)) {
@@ -251,7 +251,7 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 }
 
 const WCHAR * // returns UNICODE plaintext filename
-decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, std::wstring& storage)
+decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, std::wstring& storage)
 {
 	if (con->GetConfig()->m_PlaintextNames) {
 		storage = filename;
@@ -268,7 +268,7 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 }
 
 const WCHAR * // get encrypted path
-encrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage, std::string *actual_encrypted)
+encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, std::string *actual_encrypted)
 {
 
 	const TCHAR *rval = NULL;

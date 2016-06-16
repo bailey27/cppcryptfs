@@ -143,7 +143,7 @@ read_dir_iv(const TCHAR *path, unsigned char *diriv)
 }
 
 bool
-get_dir_iv(CryptContext *con, const TCHAR *path, unsigned char *diriv)
+get_dir_iv(const CryptContext *con, const TCHAR *path, unsigned char *diriv)
 {
 
 	if (con && !con->GetConfig()->DirIV()) {
@@ -169,7 +169,7 @@ get_dir_iv(CryptContext *con, const TCHAR *path, unsigned char *diriv)
 }
 
 static bool
-convert_fdata(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, WIN32_FIND_DATAW& fdata)
+convert_fdata(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, WIN32_FIND_DATAW& fdata)
 {
 
 	if (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))
@@ -224,7 +224,7 @@ static bool is_interesting_name(BOOL isRoot, const WIN32_FIND_DATAW& fdata)
 }
 
 DWORD
-find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, std::vector<WIN32_FIND_DATAW>& files)
+find_files(const CryptContext *con, const WCHAR *pt_path, const WCHAR *path, std::vector<WIN32_FIND_DATAW>& files)
 {
 	DWORD ret = 0;
 	HANDLE hfind = INVALID_HANDLE_VALUE;
@@ -379,7 +379,7 @@ get_file_information(LPCWSTR FileName, HANDLE handle, LPBY_HANDLE_FILE_INFORMATI
 }
 
 bool
-create_dir_iv(CryptContext *con, LPCWSTR path)
+create_dir_iv(const CryptContext *con, LPCWSTR path)
 {
 
 	if (con && !con->GetConfig()->DirIV())
@@ -518,7 +518,7 @@ bool can_delete_file(LPCWSTR path)
 }
 
 bool
-delete_directory(CryptContext *con, LPCWSTR path)
+delete_directory(const CryptContext *con, LPCWSTR path)
 {
 	bool bret = true;
 
@@ -579,7 +579,7 @@ delete_directory(CryptContext *con, LPCWSTR path)
 	return bret;
 }
 
-bool delete_file(CryptContext *con, const WCHAR *filename)
+bool delete_file(const CryptContext *con, const WCHAR *filename)
 {
 	if (PathFileExists(filename)) {
 		if (!DeleteFile(filename))

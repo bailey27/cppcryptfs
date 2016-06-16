@@ -53,18 +53,18 @@ bool is_long_name(const WCHAR *filename);
 bool is_long_name_file(const WCHAR *filename);
 
 const WCHAR * // returns UNICODE plaintext filename
-decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, std::wstring& storage);
+decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, std::wstring& storage);
 
 const WCHAR * // returns UNICODE plaintext filename
-decrypt_filename(CryptContext *con, const BYTE* dir_iv, const WCHAR* path, const char *filename, std::wstring& storage);
+decrypt_filename(const CryptContext *con, const BYTE* dir_iv, const WCHAR* path, const char *filename, std::wstring& storage);
 
 const char * // returns base64-encoded, encrypted filename
-encrypt_filename(CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::string& storage, void *context, std::string *actual_encrypted = NULL);
+encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::string& storage, void *context, std::string *actual_encrypted = NULL);
 
 const WCHAR * // returns base64-encoded, encrypted filename
-encrypt_filename(CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::wstring& storage, void *context, std::string *actual_encrypted = NULL);
+encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::wstring& storage, void *context, std::string *actual_encrypted = NULL);
 
 const WCHAR * // get encrypted path
-encrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage, std::string *actual_encrypted = NULL);
+encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, std::string *actual_encrypted = NULL);
 
 bool write_encrypted_long_name(const WCHAR *filePath, const std::string& enc_data);
