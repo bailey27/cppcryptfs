@@ -283,55 +283,57 @@ encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, 
 		storage = config->GetBaseDir();
 
 		if (config->m_PlaintextNames) {
+
 			storage += path;
-			return &storage[0];
-		}
 
-		if (*path && path[0] == '\\') {
-			storage.push_back('\\');
-			path++;
-		}
+		} else {
 
-		const TCHAR *p = path;
-
-
-		unsigned char dir_iv[DIR_IV_LEN];
-
-		
-		if (!get_dir_iv(con, &(storage[0]), dir_iv))
-			throw(-1);
-		
-
-		if (!con->GetConfig()->m_EMENames) {
-			context = get_crypt_context(DIR_IV_LEN, AES_MODE_CBC);
-			if (!context)
-				throw(-1);
-		}
-
-		while (*p) {
-
-			std::wstring s;
-
-			while (*p && *p != '\\') {
-				s.push_back(*p++);
+			if (*path && path[0] == '\\') {
+				storage.push_back('\\');
+				path++;
 			}
 
-			std::wstring uni_crypt_elem;
-			if (actual_encrypted)
-				actual_encrypted->clear();
-			if (!encrypt_filename(con, dir_iv, &(s[0]), uni_crypt_elem, context, actual_encrypted))
+			const TCHAR *p = path;
+
+
+			unsigned char dir_iv[DIR_IV_LEN];
+
+
+			if (!get_dir_iv(con, &(storage[0]), dir_iv))
 				throw(-1);
 
-			storage.append(uni_crypt_elem);
 
-			if (*p) {
-				storage.push_back(*p++); // append slash
-	
-				if (!get_dir_iv(con, &(storage[0]), dir_iv))
+			if (!con->GetConfig()->m_EMENames) {
+				context = get_crypt_context(DIR_IV_LEN, AES_MODE_CBC);
+				if (!context)
 					throw(-1);
-				
 			}
 
+			while (*p) {
+
+				std::wstring s;
+
+				while (*p && *p != '\\') {
+					s.push_back(*p++);
+				}
+
+				std::wstring uni_crypt_elem;
+				if (actual_encrypted)
+					actual_encrypted->clear();
+				if (!encrypt_filename(con, dir_iv, &(s[0]), uni_crypt_elem, context, actual_encrypted))
+					throw(-1);
+
+				storage.append(uni_crypt_elem);
+
+				if (*p) {
+					storage.push_back(*p++); // append slash
+
+					if (!get_dir_iv(con, &(storage[0]), dir_iv))
+						throw(-1);
+
+				}
+
+			}
 		}
 
 		rval = &(storage[0]);
