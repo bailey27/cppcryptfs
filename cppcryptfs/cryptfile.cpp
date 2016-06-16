@@ -37,16 +37,18 @@ THE SOFTWARE.
 CryptFile::CryptFile()
 {
 	m_handle = INVALID_HANDLE_VALUE;
-	m_version = 0;
 	m_is_empty = false;
 	m_con = NULL;
 	m_real_file_size = (long long)-1;
-	memset(m_fileid, 0, sizeof(m_fileid));
+	memset(&m_header, 0, sizeof(m_header));
 }
 
 BOOL
 CryptFile::Associate(CryptContext *con, HANDLE hfile)
 {
+
+	static_assert(sizeof(m_header) == FILE_HEADER_LEN, "sizeof(m_header) != FILE_HEADER_LEN");
+
 	m_handle = hfile;
 
 	m_con = con;
@@ -61,7 +63,7 @@ CryptFile::Associate(CryptContext *con, HANDLE hfile)
 	m_real_file_size = l.QuadPart;
 
 	if (l.QuadPart == 0) {
-		m_version = CRYPT_VERSION;
+		m_header.version = CRYPT_VERSION;
 		m_is_empty = true;
 		return TRUE;
 	} else if (l.QuadPart < FILE_HEADER_LEN) {
@@ -76,35 +78,29 @@ CryptFile::Associate(CryptContext *con, HANDLE hfile)
 		return FALSE;
 	}
 
-	// read header in one go to reduce number of reads
-	unsigned char header[FILE_HEADER_LEN];
 
 	DWORD nread;
 
-	if (!ReadFile(hfile, header, sizeof(header), &nread, NULL)) {
+	if (!ReadFile(hfile, &m_header, sizeof(m_header), &nread, NULL)) {
 		DbgPrint(L"ASSOCIATE: failed to read header\n");
 		return FALSE;
 	}
 
-	if (nread != sizeof(header)) {
-		DbgPrint(L"ASSOCIATE: too few bytes read when reading header\n");
+	if (nread != FILE_HEADER_LEN) {
+		DbgPrint(L"ASSOCIATE: wrong number of bytes read when reading file header\n");
 		return FALSE;
 	}
 
-	memcpy(&m_version, header, sizeof(m_version));
+	m_header.version = MakeBigEndianNative(m_header.version);
 
-	m_version = MakeBigEndianNative(m_version);
-
-	if (m_version != CRYPT_VERSION) {
+	if (m_header.version != CRYPT_VERSION) {
 		DbgPrint(L"ASSOCIATE: file version mismatch\n");
 		return FALSE;
 	}
 
-	memcpy(m_fileid, header + sizeof(m_version), sizeof(m_fileid));
+	static BYTE zerobytes[FILE_ID_LEN] = { 0 };
 
-	static BYTE zerobytes[16] = { 0 };
-
-	if (!memcmp(m_fileid, zerobytes, sizeof(m_fileid))) {
+	if (!memcmp(m_header.fileid, zerobytes, sizeof(m_header.fileid))) {
 		DbgPrint(L"ASSOCIATE: fileid is all zeroes\n");
 		return FALSE;
 	}
@@ -151,7 +147,7 @@ BOOL CryptFile::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG 
 
 			if (blockoff == 0 && bytesleft >= PLAIN_BS) {
 
-				advance = read_block(m_con, m_handle, m_fileid, blockno, p, context);
+				advance = read_block(m_con, m_handle, m_header.fileid, blockno, p, context);
 
 				if (advance < 0)
 					throw(-1);
@@ -164,7 +160,7 @@ BOOL CryptFile::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG 
 
 				unsigned char blockbuf[PLAIN_BS];
 
-				int blockbytes = read_block(m_con, m_handle, m_fileid, blockno, blockbuf, context);
+				int blockbytes = read_block(m_con, m_handle, m_header.fileid, blockno, blockbuf, context);
 
 				if (blockbytes < 0)
 					throw(-1);
@@ -211,26 +207,23 @@ BOOL CryptFile::WriteVersionAndFileId()
 	if (!SetFilePointerEx(m_handle, l, NULL, FILE_BEGIN))
 		return FALSE;
 
-	if (!get_random_bytes(m_fileid, FILE_ID_LEN))
+	if (!get_random_bytes(m_header.fileid, FILE_ID_LEN))
 		return FALSE;
 
-	m_version = CRYPT_VERSION;
+	unsigned short version = CRYPT_VERSION;
 
-	unsigned short version = MakeBigEndian(m_version);
-
-	BYTE header[FILE_HEADER_LEN];
-
-	memcpy(header, &version, sizeof(version));
-
-	memcpy(header + sizeof(version), m_fileid, sizeof(m_fileid));
+	m_header.version = MakeBigEndian(version);
 
 	DWORD nWritten = 0;
 
-	if (!WriteFile(m_handle, header, sizeof(header), &nWritten, NULL)) {
+	if (!WriteFile(m_handle, &m_header, sizeof(m_header), &nWritten, NULL)) {
+		m_header.version = CRYPT_VERSION;
 		return FALSE;
 	}
+	
+	m_header.version = CRYPT_VERSION;
 
-	return nWritten == sizeof(header);
+	return nWritten == FILE_HEADER_LEN;
 }
 
 
@@ -307,7 +300,7 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 
 			if (blockoff == 0 && bytesleft >= PLAIN_BS) { // overwriting whole blocks
 
-				advance = write_block(m_con, m_handle, m_fileid, blockno, p, PLAIN_BS, context);
+				advance = write_block(m_con, m_handle, m_header.fileid, blockno, p, PLAIN_BS, context);
 
 				if (advance != PLAIN_BS)
 					throw(-1);
@@ -319,7 +312,7 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 
 				memset(blockbuf, 0, sizeof(blockbuf));
 
-				int blockbytes = read_block(m_con, m_handle, m_fileid, blockno, blockbuf, context);
+				int blockbytes = read_block(m_con, m_handle, m_header.fileid, blockno, blockbuf, context);
 
 				if (blockbytes < 0) {
 					bRet = FALSE;
@@ -335,7 +328,7 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 
 				int blockwrite = max(blockoff + blockcpy, blockbytes);
 
-				int nWritten = write_block(m_con, m_handle, m_fileid, blockno, blockbuf, blockwrite, context);
+				int nWritten = write_block(m_con, m_handle, m_header.fileid, blockno, blockbuf, blockwrite, context);
 
 				advance = blockcpy;
 
@@ -472,7 +465,7 @@ CryptFile::SetEndOfFile(LONGLONG offset)
 	if (!context)
 		return FALSE;
 
-	int nread = read_block(m_con, m_handle, m_fileid, last_block, buf, context);
+	int nread = read_block(m_con, m_handle, m_header.fileid, last_block, buf, context);
 
 	if (nread < 0) {
 		free_crypt_context(context);
@@ -487,7 +480,7 @@ CryptFile::SetEndOfFile(LONGLONG offset)
 		return ::SetEndOfFile(m_handle);
 	}
 
-	int nwritten = write_block(m_con, m_handle, m_fileid, last_block, buf, last_off, context);
+	int nwritten = write_block(m_con, m_handle, m_header.fileid, last_block, buf, last_off, context);
 
 	free_crypt_context(context);
 

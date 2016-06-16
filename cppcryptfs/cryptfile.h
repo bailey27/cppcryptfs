@@ -31,14 +31,17 @@ THE SOFTWARE.
 #include <windows.h>
 class CryptContext;
 
+typedef struct struct_FileHeader {
+	unsigned short version;
+	unsigned char fileid[FILE_ID_LEN];
+} FileHeader;
+
 class CryptFile
 {
 
 public:
 
-	unsigned char m_fileid[16];
-
-	unsigned short m_version;
+	FileHeader m_header;
 
 	bool m_is_empty;
 
