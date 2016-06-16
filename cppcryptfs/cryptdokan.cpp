@@ -1530,6 +1530,10 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 
 	config->m_basedir = path;
 
+	// strip any trailing backslashes
+	while (config->m_basedir.size() > 0 && config->m_basedir[config->m_basedir.size() - 1] == '\\')
+		config->m_basedir.erase(config->m_basedir.size() - 1);
+
 	std::wstring holder = config->m_basedir;
 
 	config->m_basedir = L"\\\\?\\";  // this prefix enables up to 32K long file paths on NTFS

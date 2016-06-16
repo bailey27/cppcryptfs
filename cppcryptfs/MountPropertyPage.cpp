@@ -157,9 +157,16 @@ void CMountPropertyPage::Mount()
 
 	std::wstring error_mes;
 
+	std::wstring basedir = (const WCHAR *)cpath;
+
+	// strip any trailing backslashes
+	while (basedir.size() > 0 && basedir[basedir.size() - 1] == '\\')
+		basedir.erase(basedir.size() - 1);
+
+	cpath = &basedir[0];
 	
 	theApp.DoWaitCursor(1);
-	int result = mount_crypt_fs(*(const WCHAR *)cdl, (const WCHAR *)cpath, password.m_buf, error_mes);
+	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes);
 	theApp.DoWaitCursor(-1);
 
 	if (result != 0) {
