@@ -48,7 +48,7 @@ public:
 
 	BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset);
 
-	BOOL Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile);
+	BOOL Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile, BOOL bPagingIo);
 
 	BOOL SetEndOfFile(LONGLONG offset);
 

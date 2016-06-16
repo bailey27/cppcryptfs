@@ -686,7 +686,7 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 	NTSTATUS ret_status = STATUS_SUCCESS;
 
 
-	DbgPrint(L"ReadFile : %s, %I64u\n", FileName, (ULONGLONG)handle);
+	DbgPrint(L"ReadFile : %s, %I64u, paging io = %u\n", FileName, (ULONGLONG)handle, DokanFileInfo->PagingIo);
 
 	if (!handle || handle == INVALID_HANDLE_VALUE) {
 		DbgPrint(L"\tinvalid handle, cleanuped?\n");
@@ -733,8 +733,19 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
 
 
 
-  DbgPrint(L"WriteFile : %s, offset %I64d, length %d\n", FileName, Offset,
-           NumberOfBytesToWrite);
+  DbgPrint(L"WriteFile : %s, offset %I64d, length %d - paging io %u\n", FileName, Offset,
+           NumberOfBytesToWrite, DokanFileInfo->PagingIo);
+
+  if (DokanFileInfo->WriteToEndOfFile)
+  {
+	  if (DokanFileInfo->PagingIo)
+	  {
+		  DbgPrint(L"paging io to end of file. doing nothing\n");
+		  *NumberOfBytesWritten = 0;
+		  return STATUS_SUCCESS;
+	  }
+	  
+  }
 
   // reopen the file
   if (!handle || handle == INVALID_HANDLE_VALUE) {
@@ -751,7 +762,7 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
 
   CryptFile file;
   if (file.Associate(GetContext(), handle)) {
-	  if (!file.Write((const unsigned char *)Buffer, NumberOfBytesToWrite, NumberOfBytesWritten, offset, DokanFileInfo->WriteToEndOfFile)) {
+	  if (!file.Write((const unsigned char *)Buffer, NumberOfBytesToWrite, NumberOfBytesWritten, offset, DokanFileInfo->WriteToEndOfFile, DokanFileInfo->PagingIo)) {
 		  DWORD error = GetLastError();
 		  DbgPrint(L"\twrite error = %u, buffer length = %d, write length = %d\n",
 			  error, NumberOfBytesToWrite, *NumberOfBytesWritten);

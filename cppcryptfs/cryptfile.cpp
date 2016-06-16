@@ -227,7 +227,7 @@ BOOL CryptFile::WriteVersionAndFileId()
 }
 
 
-BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile)
+BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile, BOOL bPagingIo)
 {
 
 	BOOL bRet = TRUE;
@@ -239,6 +239,29 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 		if (!adjust_file_size_down(l))
 			return FALSE;
 		offset = l.QuadPart;
+	} else {
+	
+		if (bPagingIo)
+		{
+			LARGE_INTEGER l;
+			if (!GetFileSizeEx(m_handle, &l))
+				return FALSE;
+			if (!adjust_file_size_down(l))
+				return FALSE;
+
+			if (offset >= l.QuadPart)
+			{
+				DbgPrint(L"CryptFile paging io past end of file, return\n");
+				*pNwritten = 0;
+				return true;
+			}
+
+			if ((offset + buflen) > l.QuadPart)
+			{
+				DbgPrint(L"CryptFile addjusting write length due to paging io\n");
+				buflen = (DWORD)(l.QuadPart - offset);
+			}
+		}
 	}
 
 	if (!pNwritten || !buf)
