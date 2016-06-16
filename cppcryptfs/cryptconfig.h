@@ -33,6 +33,9 @@ THE SOFTWARE.
 
 #include "LockZeroBuffer.h"
 
+#define DEFAULT_VOLUME_SERIAL_NUMBER 0xb2a1d417
+
+class CryptContext;
 
 class CryptConfig
 {
@@ -58,7 +61,9 @@ public:
 	std::vector<unsigned char> m_encrypted_key;
 
 
-	std::wstring m_basedir;
+	std::wstring m_basedir;  // the real root of the fs
+
+	DWORD m_serial; // windows volume serial number - derived from root diriv or from hash of root dir
 
 	char m_driveletter;
 
@@ -76,6 +81,8 @@ public:
 	bool check_config(std::wstring& mes);
 
 	bool write_volume_name();
+
+	bool init_serial(const CryptContext *con);
 
 	WCHAR get_base_drive_letter();
 

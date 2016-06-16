@@ -1256,7 +1256,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
 
  
   wcscpy_s(VolumeNameBuffer, VolumeNameSize, &config->m_VolumeName[0]);
-  *VolumeSerialNumber = con->m_serial;
+  *VolumeSerialNumber = con->GetConfig()->m_serial;
   *MaximumComponentLength = (config->m_PlaintextNames || config->m_LongNames) ? 255 : 160;
   DWORD defFlags = (FILE_CASE_SENSITIVE_SEARCH | FILE_CASE_PRESERVED_NAMES |
 	  FILE_SUPPORTS_REMOTE_STORAGE | FILE_UNICODE_ON_DISK |
@@ -1592,34 +1592,7 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 		return EXIT_FAILURE;
 	}
 
-	BYTE diriv[DIR_IV_LEN];
-
-	if (config->DirIV() && get_dir_iv(con, &config->m_basedir[0], diriv)) {
-
-		con->m_serial = *(DWORD*)diriv;
-
-	}
-
-	if (!con->m_serial) {
-
-		std::wstring str = L"XjyG7KDokdqpxtjUh6oCVJ92FmPFJ1Fg"; // salt
-
-		str += config->m_basedir;
-
-		BYTE sum[32];
-
-		std::string utf8;
-
-		if (unicode_to_utf8(&str[0], utf8)) {
-
-			if (sha256(utf8, sum))
-				con->m_serial = *(DWORD*)sum;
-		} 
-	}
-
-	if (!con->m_serial) // ultimate fall-back
-		con->m_serial = 0xb2a1d417;
-
+	config->init_serial(con);
 
 	WCHAR fs_name[256];
 

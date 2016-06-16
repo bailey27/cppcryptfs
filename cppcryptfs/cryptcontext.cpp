@@ -41,7 +41,6 @@ CryptContext::CryptContext()
 {
 	m_mounted = FALSE;
 	m_config = new CryptConfig;
-	m_serial = 0;
 }
 
 CryptContext::~CryptContext()

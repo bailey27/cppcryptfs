@@ -67,6 +67,10 @@ CryptConfig::CryptConfig()
 
 	m_Version = 0;
 
+	m_serial = DEFAULT_VOLUME_SERIAL_NUMBER;
+
+	m_driveletter = '\0';
+
 }
 
 
@@ -229,11 +233,49 @@ CryptConfig::read(const WCHAR *configfile)
 				}
 			}
 		}
+
+		
+
 	} catch (...) {
 		bret = false;
 	}
 
 	return bret;
+}
+
+bool CryptConfig::init_serial(const CryptContext *con)
+{
+	BYTE diriv[DIR_IV_LEN];
+
+	this->m_serial = 0;
+
+	if (this->DirIV() && get_dir_iv(con, &this->m_basedir[0], diriv)) {
+
+		this->m_serial = *(DWORD*)diriv;
+
+	}
+
+	if (!this->m_serial) {
+
+		std::wstring str = L"XjyG7KDokdqpxtjUh6oCVJ92FmPFJ1Fg"; // salt
+
+		str += this->m_basedir;
+
+		BYTE sum[32];
+
+		std::string utf8;
+
+		if (unicode_to_utf8(&str[0], utf8)) {
+
+			if (sha256(utf8, sum))
+				this->m_serial = *(DWORD*)sum;
+		}
+	}
+
+	if (!this->m_serial) // ultimate fall-back
+		this->m_serial = DEFAULT_VOLUME_SERIAL_NUMBER;
+
+	return true;
 }
 
 bool CryptConfig::write_volume_name()

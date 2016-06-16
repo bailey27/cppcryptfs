@@ -44,13 +44,11 @@ public:
 
 	BOOL m_mounted;
 
-	DWORD m_serial;
-
 	void InitEme(const BYTE *key);
 
 	CryptContext();
 
-	CryptConfig *GetConfig() { return m_config; };
+	CryptConfig *GetConfig() const { return m_config; };
 
 	virtual ~CryptContext();
 };
