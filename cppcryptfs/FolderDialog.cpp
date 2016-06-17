@@ -2,6 +2,8 @@
 //	$Copyright ©  1998 Kenneth M. Reed, ALL RIGHTS RESERVED. $
 //	$Header: FolderDialog.cpp  Revision:1.11  Tue Jun 23 18:00:44 1998  KenReed $
 
+// from http://www.codeguru.com/cpp/w-d/dislog/dialogforselectingfolders/article.php/c1941/MFC-Wrapper-for-SHBrowseForFolder.htm
+
 #include "stdafx.h"
 #include "FolderDialog.h"
 
@@ -45,8 +47,8 @@ CFolderDialog::CFolderDialog(LPCTSTR lpszFolderName, DWORD dwFlags, CWnd* pParen
 	// Fill in the rest of the structure
 	m_bi.pidlRoot = NULL;
 	m_bi.pszDisplayName = m_szDisplayName;
-	m_bi.lpszTitle = _T("Current Selection");
-	m_bi.ulFlags = dwFlags | BIF_STATUSTEXT;
+	m_bi.lpszTitle = _T("");
+	m_bi.ulFlags = dwFlags | BIF_NEWDIALOGSTYLE;
 	m_bi.lpfn = BrowseDirectoryCallback;
 	m_bi.lParam = (LPARAM)this;
 
@@ -82,10 +84,10 @@ int CFolderDialog::DoModal()
 	// initialize the result to the starting folder value
 	m_strFinalFolderName = m_strInitialFolderName;
 
-	ITEMIDLIST* piid = NULL;
+	ITEMIDLIST*  __unaligned piid = NULL;
 
 	// call the shell function
-	piid = ::SHBrowseForFolder(&m_bi);
+	piid = (ITEMIDLIST*  __unaligned)::SHBrowseForFolder(&m_bi);
 
 	// process the result
 	if (piid && ::SHGetPathFromIDList(piid, m_szPath))

@@ -2,6 +2,9 @@
 //	$Copyright ©  1998 Kenneth M. Reed, ALL RIGHTS RESERVED. $
 //	$Header: FolderDialog.h  Revision:1.11  Mon Apr 06 12:04:50 1998  KenReed $
 
+// from http://www.codeguru.com/cpp/w-d/dislog/dialogforselectingfolders/article.php/c1941/MFC-Wrapper-for-SHBrowseForFolder.htm
+
+
 #ifndef _CFolderDialog_
 #define _CFolderDialog_
 
