@@ -1,0 +1,99 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage Express 2.0">
+<title>Folder Browsing Dialog</title>
+</head>
+
+<body>
+
+<h1>Folder Browsing Dialog</h1>
+
+<p><cite>Copyright © 1998-1999, Kenneth M. Reed, All rights
+reserved.</cite></p>
+
+<h2>Description</h2>
+
+<p><code>CFolderDialog</code> is an MFC based class that
+encapsulates the Windows Shell function for browsing folders, <code>::ShBrowseForFolder</code>.</p>
+
+<p>To use it, you create an instance of <code>CFolderDialog</code>
+and call the <code>DoModal</code> method. Upon return, the method
+<code>GetPathName</code> can be used to retrieve the path to the
+user selected folder.</p>
+
+<p>The constructor allows you to specify an optional initial
+folder, flags specific to the shell function (see the description
+of the <code>ulFlags</code> field of the <code>BROWSEINFO </code>structure
+in the help for Visual Studio or the Windows Shell API) and a
+pointer to the parent window&#146;s <code>CWnd</code>. All of
+these arguments are optional.</p>
+
+<p>You may override the two virtual methods <code>OnInitDialog</code>
+and <code>OnSelChanged</code> in a derived class to customize
+their behavior. The default behavior of <code>OnInitDialog</code>
+is to call <code>SetSelection</code> and <code>SetStatusText</code>
+with the folder name provided in the constructor. The default
+version of <code>OnSelChanged</code> places the new path into the
+status text area of the dialog.</p>
+
+<p>The class provides utility functions for 1) enabling or
+disabling the OK button (<code>EnableOK</code>), 2) setting the
+status text that appears above the folder list box in the browser
+folder dialog box (<code>SetStatusText</code>) and 3) setting the
+current selection (<code>SetSelection</code>). The file <code>MyFolderDialog.h</code>,
+included in the zip file, shows an example of a derived class
+which uses <code>SetStatusText</code>.</p>
+
+<p>For advanced users, the <code>BROWSEINFO</code> structure is
+available via the <code>m_bi</code> member variable. This
+structure is initialized by the constructor and any changes
+should be made before the call to DoModal. See the help for
+Visual Studio or the Windows Shell API for more information on
+the <code>BROWSEINFO</code> structure. </p>
+
+<p>The zip file also contains the source for CMyFolderDialog, a
+class derived from CFolderDialog to show how to take advantage of
+some of the advanced features.</p>
+
+<h2>Revisions</h2>
+
+<dl>
+    <dt><strong>December 29, 1998</strong></dt>
+    <dd>Added the CMyFolderDialog source code the version
+        available on the codeguru site.</dd>
+    <dt>&nbsp;</dt>
+    <dt><strong>June 23, 1998</strong></dt>
+    <dd>Fixed a problem in EnableOK. The documenation for the
+        SHBrowseForFolder call back incorrectly states that it is
+        the wParam on the BFFM_ENABLEOK message which controls
+        the enabling/disabling of the OK button. However, It is
+        actually the lParam.<br>
+        Thanks to Langis Pitre for finding this one.</dd>
+    <dt>&nbsp;</dt>
+    <dt><strong>April 5, 1998</strong></dt>
+    <dd>Changed the way status text is handled: <ul>
+            <li>The constructor now forces the <code>BIF_STATUSTEXT</code>
+                flag to be set</li>
+            <li>Changed the base <code>OnInitDialog</code> method
+                to display the initial folder in the status text.</li>
+            <li>Changed the base <code>OnSelChanged</code> method
+                to update the contents of m_strFinalFolderName
+                and display the new folder in the status text
+                area.</li>
+            <li>Removed the <code>MyFolderDialog.h</code> file
+                from the zip.</li>
+        </ul>
+    </dd>
+</dl>
+
+<h2>Bugs and Suggestions</h2>
+
+<p>Please send suggestions and/or bugs to <a
+href="mailto:reedk@daneel.mv.com">reedk@daneel.mv.com</a>.</p>
+
+<p>Ken Reed</p>
+</body>
+</html>
