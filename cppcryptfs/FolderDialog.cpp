@@ -47,7 +47,7 @@ CFolderDialog::CFolderDialog(LPCTSTR lpszFolderName, DWORD dwFlags, CWnd* pParen
 	// Fill in the rest of the structure
 	m_bi.pidlRoot = NULL;
 	m_bi.pszDisplayName = m_szDisplayName;
-	m_bi.lpszTitle = _T("");
+	m_bi.lpszTitle = _T("Select a directory");
 	m_bi.ulFlags = dwFlags | BIF_NEWDIALOGSTYLE;
 	m_bi.lpfn = BrowseDirectoryCallback;
 	m_bi.lParam = (LPARAM)this;
