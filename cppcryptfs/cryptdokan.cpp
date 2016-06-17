@@ -473,7 +473,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   CryptCheckFlag(fileAttributesAndFlags, SECURITY_SQOS_PRESENT);
 
   if (fileAttributesAndFlags & FILE_FLAG_NO_BUFFERING) {
-	  // we cannot guarantee sector-aligned read or writes
+	  // we cannot guarantee sector-aligned reads or writes
 	  DbgPrint(L"\tremoving FILE_FLAG_NO_BUFFERING\n");
 	  fileAttributesAndFlags &= ~FILE_FLAG_NO_BUFFERING;
   }
