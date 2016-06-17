@@ -1,6 +1,6 @@
 // FolderDialog.cpp: implementation of the CFolderDialog class.
 //	$Copyright ©  1998 Kenneth M. Reed, ALL RIGHTS RESERVED. $
-//	$Header: /usr/local/cvsroot/tnview/FolderDialog.cpp,v 1.1 2001/02/16 17:32:37 bailey Exp $
+//	$Header: FolderDialog.cpp  Revision:1.11  Tue Jun 23 18:00:44 1998  KenReed $
 
 #include "stdafx.h"
 #include "FolderDialog.h"
@@ -46,7 +46,7 @@ CFolderDialog::CFolderDialog(LPCTSTR lpszFolderName, DWORD dwFlags, CWnd* pParen
 	m_bi.pidlRoot = NULL;
 	m_bi.pszDisplayName = m_szDisplayName;
 	m_bi.lpszTitle = _T("Current Selection");
-	m_bi.ulFlags = dwFlags | BIF_NEWDIALOGSTYLE;
+	m_bi.ulFlags = dwFlags | BIF_STATUSTEXT;
 	m_bi.lpfn = BrowseDirectoryCallback;
 	m_bi.lParam = (LPARAM)this;
 
@@ -82,10 +82,10 @@ int CFolderDialog::DoModal()
 	// initialize the result to the starting folder value
 	m_strFinalFolderName = m_strInitialFolderName;
 
-	ITEMIDLIST* __unaligned piid = NULL;
+	ITEMIDLIST* piid = NULL;
 
 	// call the shell function
-	piid = (ITEMIDLIST* __unaligned)::SHBrowseForFolder(&m_bi);
+	piid = ::SHBrowseForFolder(&m_bi);
 
 	// process the result
 	if (piid && ::SHGetPathFromIDList(piid, m_szPath))
