@@ -202,11 +202,10 @@ convert_fdata(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, WI
 			return false;
 		}
 	}
-#if 0 // GetShortPathNameW() seems to return a short name based on the encrypted name (how?)
-	GetShortPathNameW(dname, fdata.cAlternateFileName, sizeof(fdata.cAlternateFileName) / sizeof(WCHAR));
-#else
+
+	// short name - not really needed
 	fdata.cAlternateFileName[0] = '\0';
-#endif
+
 	return true;
 }
 
