@@ -1236,6 +1236,8 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
     PDOKAN_FILE_INFO DokanFileInfo) {
   
 
+  DbgPrint(L"GetVolumeInformation\n");
+
   CryptContext *con = GetContext();
 
   CryptConfig *config = con->GetConfig();
@@ -1260,7 +1262,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
 	  bGotVI = GetVolumeInformationW(rbuf, NULL, 0, NULL, &max_component, &fs_flags, fs_name, sizeof(fs_name) / sizeof(fs_name[0]) - 1);
   }
   if (bGotVI) {
-	  DbgPrint(L"max compent length of underlying file system is %d\n", max_component);
+	  DbgPrint(L"max component length of underlying file system is %d\n", max_component);
   } else {
 	  DbgPrint(L"GetVolumeInformation failed, err = %u\n", GetLastError());
   }
