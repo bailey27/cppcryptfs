@@ -119,7 +119,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 		
 	}
 
-	if (con->GetConfig()->m_LongNames && storage.size() > 255) {
+	if (con->GetConfig()->m_LongNames && storage.size() > MAX_FILENAME_LEN) {
 		if (actual_encrypted)
 			*actual_encrypted = storage;
 		BYTE sum[32];
@@ -311,7 +311,7 @@ encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, 
 
 			std::wstring s;
 
-			s.reserve(255);
+			s.reserve(MAX_FILENAME_LEN);
 
 			while (*p) {
 
