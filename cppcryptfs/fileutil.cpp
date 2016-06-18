@@ -354,15 +354,18 @@ get_file_information(LPCWSTR FileName, HANDLE handle, LPBY_HANDLE_FILE_INFORMATI
 			}
 		} 
 
-		LARGE_INTEGER l;
-		l.LowPart = pInfo->nFileSizeLow;
-		l.HighPart = pInfo->nFileSizeHigh;
+		if (!(pInfo->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 
-		if (!adjust_file_size_down(l))
-			throw((int)ERROR_INVALID_PARAMETER);
+			LARGE_INTEGER l;
+			l.LowPart = pInfo->nFileSizeLow;
+			l.HighPart = pInfo->nFileSizeHigh;
 
-		pInfo->nFileSizeLow = l.LowPart;
-		pInfo->nFileSizeHigh = l.HighPart;
+			if (!adjust_file_size_down(l))
+				throw((int)ERROR_INVALID_PARAMETER);
+
+			pInfo->nFileSizeLow = l.LowPart;
+			pInfo->nFileSizeHigh = l.HighPart;
+		}
 
 
 	} catch (int err) {
