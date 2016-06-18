@@ -309,9 +309,13 @@ encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, 
 					throw(-1);
 			}
 
+			std::wstring s;
+
+			s.reserve(255);
+
 			while (*p) {
 
-				std::wstring s;
+				s.clear();
 
 				while (*p && *p != '\\') {
 					s.push_back(*p++);
