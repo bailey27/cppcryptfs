@@ -129,18 +129,18 @@ void lCacheContainer::tabulateL(const EmeCryptContext *eme_context, int m){
 	BYTE Li[16];
 	AesEncrypt(Li, eZero, 16, eme_context);
 
-	LTable = new LPBYTE[m];
+	m_LTable = new LPBYTE[m];
 
 	// Allocate pool once and slice into m pieces in the loop
 
-	pLTableBuf = new LockZeroBuffer<BYTE>(m * 16, true);
+	m_pLTableBuf = new LockZeroBuffer<BYTE>(m * 16, true);
 
-	BYTE *pool = pLTableBuf->m_buf;
+	BYTE *pool = m_pLTableBuf->m_buf;
 
 	for (int i = 0; i < m; i++) {
 		multByTwo(Li, Li, 16);
-		LTable[i] = pool + i * 16;
-		memcpy(LTable[i], Li, 16);
+		m_LTable[i] = pool + i * 16;
+		memcpy(m_LTable[i], Li, 16);
 	}
 	
 }
@@ -150,20 +150,20 @@ void lCacheContainer::tabulateL(const EmeCryptContext *eme_context, int m){
 lCacheContainer::lCacheContainer() 
 {
 
-	LTable = NULL;
+	m_LTable = NULL;
 
-	pEncKeyBuf = NULL;
-	pDecKeyBuf = NULL;
-	pLTableBuf = NULL;
+	m_pEncKeyBuf = NULL;
+	m_pDecKeyBuf = NULL;
+	m_pLTableBuf = NULL;
 }
 
 void lCacheContainer::init(EmeCryptContext *eme_context)
 {
-	pEncKeyBuf = new LockZeroBuffer<AES_KEY>(1, true);
-	pDecKeyBuf = new LockZeroBuffer<AES_KEY>(1, true);
+	m_pEncKeyBuf = new LockZeroBuffer<AES_KEY>(1, true);
+	m_pDecKeyBuf = new LockZeroBuffer<AES_KEY>(1, true);
 
-	AES_set_encrypt_key(eme_context->key, 256, pEncKeyBuf->m_buf);
-	AES_set_decrypt_key(eme_context->key, 256, pDecKeyBuf->m_buf);
+	AES_set_encrypt_key(eme_context->key, 256, m_pEncKeyBuf->m_buf);
+	AES_set_decrypt_key(eme_context->key, 256, m_pDecKeyBuf->m_buf);
 
 	eme_context->lc = this;
 
@@ -174,18 +174,18 @@ void lCacheContainer::init(EmeCryptContext *eme_context)
 lCacheContainer::~lCacheContainer() 
 {
 
-	if (LTable) {
-		delete[] LTable;
+	if (m_LTable) {
+		delete[] m_LTable;
 	}
 
-	if (pLTableBuf)
-		delete pLTableBuf;
+	if (m_pLTableBuf)
+		delete m_pLTableBuf;
 
-	if (pEncKeyBuf)
-		delete pEncKeyBuf;
+	if (m_pEncKeyBuf)
+		delete m_pEncKeyBuf;
 
-	if (pDecKeyBuf)
-		delete pDecKeyBuf;
+	if (m_pDecKeyBuf)
+		delete m_pDecKeyBuf;
 
 }
 
@@ -214,7 +214,7 @@ BYTE* EmeTransform(const EmeCryptContext *eme_context, const BYTE *T, const BYTE
 
 		C = new BYTE[len+1]; // +1 so caller can add a null terminator if necessary without any trouble
 
-		BYTE **LTable = pLCache->LTable;
+		BYTE **LTable = pLCache->m_LTable;
 
 		BYTE PPj[16];
 
