@@ -282,7 +282,7 @@ encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, 
 		
 		storage = config->GetBaseDir();
 
-		if (config->m_PlaintextNames) {
+		if (config->m_PlaintextNames || (path[0] == '\\' && path[1] == '\0')) {
 
 			storage += path;
 
