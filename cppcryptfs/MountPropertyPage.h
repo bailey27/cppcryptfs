@@ -69,4 +69,5 @@ public:
 	afx_msg void OnClickedDismountAll();
 	virtual BOOL OnSetActive();
 	CSecureEdit m_password;
+	afx_msg void OnClickedExit();
 };

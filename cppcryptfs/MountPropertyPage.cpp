@@ -38,6 +38,7 @@ THE SOFTWARE.
 #include "RecentItems.h"
 #include "LockZeroBuffer.h"
 #include "cryptdefs.h"
+#include "CryptPropertySheet.h"
 
 
 // CMountPropertyPage dialog
@@ -200,6 +201,7 @@ BEGIN_MESSAGE_MAP(CMountPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_MOUNT, &CMountPropertyPage::OnClickedMount)
 	ON_BN_CLICKED(IDC_DISMOUNT, &CMountPropertyPage::OnClickedDismount)
 	ON_BN_CLICKED(IDC_DISMOUNT_ALL, &CMountPropertyPage::OnClickedDismountAll)
+	ON_BN_CLICKED(IDC_EXIT, &CMountPropertyPage::OnClickedExit)
 END_MESSAGE_MAP()
 
 
@@ -530,4 +532,15 @@ BOOL CMountPropertyPage::OnSetActive()
 	}
 
 	return CCryptPropertyPage::OnSetActive();
+}
+
+
+void CMountPropertyPage::OnClickedExit()
+{
+	// TODO: Add your control notification handler code here
+
+	CCryptPropertySheet *pParent = (CCryptPropertySheet*)GetParent();
+
+	if (pParent)
+		pParent->OnIdrExitcppcryptfs();
 }
