@@ -161,6 +161,7 @@ base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTran
 	if (!str || strlen(str) < 1)
 		return false;
 
+	// we almost always have urlTransform as true so it doens't hurt to much to unconditionally make a copy of the string
 	char *p = _strdup(str);
 
 	if (!p)
