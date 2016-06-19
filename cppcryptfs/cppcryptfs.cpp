@@ -86,7 +86,9 @@ BOOL CcppcryptfsApp::InitInstance()
 	HANDLE hAppMutex = CreateMutex(NULL, TRUE, szUniqueNamedMutex);
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
-		// Program already running - hAppMutex is NOT NULL though
+		// Program already running - but hAppMutex is NOT NULL.
+		// Aparently it is not necessary to close it in this case.
+
 		// Do something and then return FALSE to exit the app.
 
 		// we can't use classname because our main window is a PropertySheet and has 
