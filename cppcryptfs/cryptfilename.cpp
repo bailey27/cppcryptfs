@@ -311,12 +311,7 @@ encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, 
 
 			std::wstring s;
 
-			s.reserve(MAX_FILENAME_LEN);
-
 			std::wstring uni_crypt_elem;
-
-			uni_crypt_elem.reserve(MAX_FILENAME_LEN);
-
 
 			while (*p) {
 
@@ -330,6 +325,7 @@ encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, 
 	
 				if (actual_encrypted)
 					actual_encrypted->clear();
+
 				if (!encrypt_filename(con, dir_iv, &s[0], uni_crypt_elem, context, actual_encrypted))
 					throw(-1);
 
