@@ -86,8 +86,23 @@ BOOL CcppcryptfsApp::InitInstance()
 	HANDLE hAppMutex = CreateMutex(NULL, TRUE, UniqueNamedMutex);
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
-		// Program already running somewhere
-		::MessageBox(NULL, L"cppcryptfs is already running!", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		// Program already running
+
+		// we can't use classname because our main window is a PropertySheet and has 
+		// class name "DIALOG".  I've seen info about how to change the class
+		// name of a dialog-based app, but not for one based on a PropertySheet
+		// TODO - it may be possible to use a custom class name
+
+		// for now, we use only the window title
+		HWND hWnd = FindWindow(NULL, L"cppcryptfs");
+
+		if (hWnd) {
+			ShowWindow(hWnd, SW_SHOWNORMAL);
+		}
+
+		if (!hWnd) {
+			::MessageBox(NULL, L"cppcryptfs is already running!", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		}
 		return FALSE;
 	}
 
