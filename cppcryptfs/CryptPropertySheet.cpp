@@ -110,11 +110,6 @@ BOOL CCryptPropertySheet::OnInitDialog()
 	if (pWnd)
 		pWnd->ShowWindow(SW_HIDE);
 
-	if (!have_security_name_privilege()) {
-		MessageBox(L"cppcryptfs needs the SE_SECURITY_NAME privilege to work properly.  You should be running it as Adminisrator.", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
-		SetTitle(L"cppcryptfs - no SE_SECURITY_NAME");
-	}
-
 	return bResult;
 }
 
