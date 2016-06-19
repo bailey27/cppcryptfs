@@ -40,19 +40,14 @@ Build Requirements
 Use
 -------
 
-Most of the testing up to this point has been done while running cppcryptfs as
-administrator.  It is currently being tested while not running as administrator.
+cppcryptfs doesn't require administrator privileges to run, but
+if it is not running as administrator, then it won't be able
+to acquire the SE_SECURITY_NAME privilege.  SE_SECURITY_NAME is
+needed for reading all of the security attributes of files.
 
-For now, it is probably better to run cppcrypfs as administrator.
-
-Until recently, it was thought that the SE_SECURITY_NAME privilege was needed
-for cppcryptfs to work properly. The program needs to be running as administrator in order to acquire this privilege. 
-
-cppcryptfs doesn't require administrator to run, but it will warn you
-that you should be running it as administrator, and it will let you 
-know in the window title that it doesn't have SE_SECURITY_NAME and
-therefore doesn't have full access for getting or setting the
-security attributes of the files in the enrypted filesystem.
+cppcryptfs seems to work just fine without SE_SECURITY_NAME.  If you do
+run into problems, for example copying files in File Explorer, then you
+can try running cppcryptfs as adminstrator and see if that helps.
 
 To make a new encrypted virtual fileystem, first click the "Create" tab.
 
