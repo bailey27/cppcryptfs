@@ -86,7 +86,8 @@ BOOL CcppcryptfsApp::InitInstance()
 	HANDLE hAppMutex = CreateMutex(NULL, TRUE, szUniqueNamedMutex);
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
-		// Program already running
+		// Program already running - hAppMutex is NOT NULL though
+		// Do something and then return FALSE to exit the app.
 
 		// we can't use classname because our main window is a PropertySheet and has 
 		// class name "DIALOG".  I've seen info about how to change the class
@@ -201,8 +202,10 @@ BOOL CcppcryptfsApp::InitInstance()
 	}
 
 	// Upon app closing:
-	ReleaseMutex(hAppMutex); // Explicitly release mutex
-	CloseHandle(hAppMutex); // close handle before terminating
+	if (hAppMutex) {
+		ReleaseMutex(hAppMutex); // Explicitly release mutex
+		CloseHandle(hAppMutex); // close handle before terminating
+	}
 
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.
