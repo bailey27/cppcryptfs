@@ -299,7 +299,7 @@ encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, 
 			unsigned char dir_iv[DIR_IV_LEN];
 
 
-			if (!get_dir_iv(con, &(storage[0]), dir_iv))
+			if (!get_dir_iv(con, &storage[0], dir_iv))
 				throw(-1);
 
 
@@ -313,18 +313,24 @@ encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, 
 
 			s.reserve(MAX_FILENAME_LEN);
 
+			std::wstring uni_crypt_elem;
+
+			uni_crypt_elem.reserve(MAX_FILENAME_LEN);
+
+
 			while (*p) {
 
 				s.clear();
 
+				uni_crypt_elem.clear();
+
 				while (*p && *p != '\\') {
 					s.push_back(*p++);
 				}
-
-				std::wstring uni_crypt_elem;
+	
 				if (actual_encrypted)
 					actual_encrypted->clear();
-				if (!encrypt_filename(con, dir_iv, &(s[0]), uni_crypt_elem, context, actual_encrypted))
+				if (!encrypt_filename(con, dir_iv, &s[0], uni_crypt_elem, context, actual_encrypted))
 					throw(-1);
 
 				storage.append(uni_crypt_elem);
@@ -332,7 +338,7 @@ encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, 
 				if (*p) {
 					storage.push_back(*p++); // append slash
 
-					if (!get_dir_iv(con, &(storage[0]), dir_iv))
+					if (!get_dir_iv(con, &storage[0], dir_iv))
 						throw(-1);
 
 				}
