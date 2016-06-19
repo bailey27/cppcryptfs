@@ -81,9 +81,9 @@ CcppcryptfsApp theApp;
 BOOL CcppcryptfsApp::InitInstance()
 {
 
-	CString UniqueNamedMutex = L"cppcryptfs-A7DDB0CF-A856-4E8A-A4E9-722473FB5E49";
+	const WCHAR *szUniqueNamedMutex = L"cppcryptfs-A7DDB0CF-A856-4E8A-A4E9-722473FB5E49";
 
-	HANDLE hAppMutex = CreateMutex(NULL, TRUE, UniqueNamedMutex);
+	HANDLE hAppMutex = CreateMutex(NULL, TRUE, szUniqueNamedMutex);
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
 		// Program already running
