@@ -293,7 +293,6 @@
     <None Include="res\cppcryptfs.rc2" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\aluport_extreme_drive.ico" />
     <Image Include="res\cppcryptfs.ico" />
     <Image Include="res\drive.ico" />
     <Image Include="res\drive.png" />
