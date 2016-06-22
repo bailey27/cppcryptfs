@@ -88,7 +88,7 @@ You can mount as many gocryptfs filesystems as you have unused drive letters ava
 
 Passwords and keys are locked in memory using VirtualLock(). When they are no longer needed, they are erased using SecureZeroMemory() and then unlocked.  If you never hibernate your computer, then you don't have to worry about your passwords or keys ever being written to the hard drive.
 
-If you close the cppcryptfs window, then it will hide itself in the system tray. To exit cppcryptfs, use the context menu of the system tray icon.
+If you close the cppcryptfs window, then it will hide itself in the system tray. To exit cppcryptfs, use the Exit button on the mount page or the context menu of the system tray icon.
 
 
 File name and path length limits
