@@ -38,8 +38,8 @@ THE SOFTWARE.
 
 
 
-static const char longname_prefix[] = LONGNAME_PREFIX_A;
-static const WCHAR longname_prefixW[] = LONGNAME_PREFIX_W;
+
+static const WCHAR longname_prefix[] = LONGNAME_PREFIX_W;
 static const WCHAR longname_suffix[] = LONGNAME_SUFFIX_W;
 
 
@@ -51,7 +51,7 @@ bool is_long_name(const WCHAR *filename)
 	if (last_slash != std::wstring::npos) {
 		filename = &path[last_slash + 1];
 	} 
-	return !wcsncmp(filename, longname_prefixW, sizeof(longname_prefixW) / sizeof(longname_prefixW) - 1);
+	return !wcsncmp(filename, longname_prefix, sizeof(longname_prefix) / sizeof(longname_prefix[0]) - 1);
 }
 
 bool is_long_name_file(const WCHAR *filename)
@@ -62,16 +62,15 @@ bool is_long_name_file(const WCHAR *filename)
 }
 
 
-const char * // returns base64-encoded, encrypted filename
-encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::string& storage, void *context, std::string *actual_encrypted)
+const WCHAR * // returns base64-encoded, encrypted filename
+encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::wstring& storage, void *context, std::string *actual_encrypted)
 {
 	std::string utf8_str;
 
-	const char *rs = NULL;
+	const WCHAR *rs = NULL;
 
 	if (con->GetConfig()->m_PlaintextNames) {
-		if (!unicode_to_utf8(filename, storage))
-			return NULL;
+		storage = filename;
 		return &storage[0];
 	}
 	
@@ -120,12 +119,15 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 	}
 
 	if (con->GetConfig()->m_LongNames && storage.size() > MAX_FILENAME_LEN) {
-		if (actual_encrypted)
-			*actual_encrypted = storage;
+		std::string utf8;
+		unicode_to_utf8(&storage[0], utf8);
+		if (actual_encrypted) {
+			*actual_encrypted = utf8;
+		}
 		BYTE sum[32];
-		if (!sha256(storage, sum))
+		if (!sha256(utf8, sum))
 			return NULL;
-		std::string base64_sum;
+		std::wstring base64_sum;
 		if (!base64_encode(sum, sizeof(sum), base64_sum))
 			return NULL;
 		storage = longname_prefix;
@@ -136,48 +138,33 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 	return rs;
 }
 
-const WCHAR * // returns base64-encoded, encrypted filename
-encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::wstring& storage, void *context, std::string *actual_encrypted)
+
+
+const WCHAR * // returns UNICODE plaintext filename
+decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, std::wstring& storage)
 {
 	if (con->GetConfig()->m_PlaintextNames) {
 		storage = filename;
 		return &storage[0];
 	}
 
-	std::string utf8;
-	if (!encrypt_filename(con, dir_iv, filename, utf8, context, actual_encrypted))
-		return NULL;
-
-	return utf8_to_unicode(&utf8[0], storage);
-}
-
-const WCHAR * // returns UNICODE plaintext filename
-decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const char *filename, std::wstring& storage)
-{
-	if (con->GetConfig()->m_PlaintextNames) {
-		if (!utf8_to_unicode(filename, storage)) {
-			return NULL;
-		}
-		return &storage[0];
-	}
-
 	unsigned char ptbuf[4096];
 
-	if (strlen(filename) > sizeof(ptbuf) / 2)
+	if (wcslen(filename) > sizeof(ptbuf) / 2)
 		return NULL;
 
 	std::vector<unsigned char> ctstorage;
 
 	char longname_buf[4096];
 
-	if (!strncmp(filename, longname_prefix, sizeof(longname_prefix)-1)) {
+	std::wstring longname_storage;
+
+	if (!wcsncmp(filename, longname_prefix, sizeof(longname_prefix)/sizeof(longname_prefix[0])-1)) {
 		std::wstring fullpath = path;
 		if (fullpath[fullpath.size() - 1] != '\\')
 			fullpath.push_back('\\');
-		std::wstring wfilename;
-		if (!utf8_to_unicode(filename, wfilename))
-			return NULL;
-		fullpath += wfilename;
+		
+		fullpath += filename;
 		fullpath += longname_suffix;
 
 		HANDLE hFile = CreateFile(&fullpath[0], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -199,7 +186,10 @@ decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path,
 
 		longname_buf[nRead] = '\0';
 
-		filename = longname_buf;
+		if (!utf8_to_unicode(longname_buf, longname_storage))
+			return NULL;
+
+		filename = &longname_storage[0];
 	}
 
 	if (!base64_decode(filename, ctstorage))
@@ -250,23 +240,7 @@ decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path,
 	}
 }
 
-const WCHAR * // returns UNICODE plaintext filename
-decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, std::wstring& storage)
-{
-	if (con->GetConfig()->m_PlaintextNames) {
-		storage = filename;
-		return &storage[0];
-	}
 
-	std::string utf8;
-	const char *fname;
-
-	fname = unicode_to_utf8(filename, utf8);
-	if (!fname)
-		return NULL;
-
-	return decrypt_filename(con, dir_iv, path, fname, storage);
-}
 
 const WCHAR * // get encrypted path
 encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, std::string *actual_encrypted)

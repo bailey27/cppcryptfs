@@ -203,6 +203,54 @@ base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTran
 	}
 }
 
+bool
+base64_decode(const WCHAR *str, std::vector<unsigned char>& storage, bool urlTransform)
+{
+	size_t str_len;
+
+	if (!str || (str_len = wcslen(str)) < 1)
+		return false;
+
+	// we almost always have urlTransform as true so it doens't hurt too much to unconditionally make a copy of the string
+	WCHAR *p = _wcsdup(str);
+
+	if (!p)
+		return false;
+
+	if (urlTransform) {
+
+		size_t i;
+		for (i = 0; i < str_len; i++) {
+			if (p[i] == '-')
+				p[i] = '+';
+			else if (p[i] == '_')
+				p[i] = '/';
+		}
+	}
+
+	DWORD len = (DWORD)str_len;
+
+	try {
+		storage.resize(len);
+	}
+	catch (...) {
+		free(p);
+		return false;
+	}
+
+	BOOL bResult = CryptStringToBinaryW(p, 0, CRYPT_STRING_BASE64, &storage[0], &len, NULL, NULL);
+
+	free(p);
+
+	if (bResult) {
+		storage.resize(len);
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 
 const char *
 base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTransform)
@@ -235,6 +283,43 @@ base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTra
 		delete[] base64str;
 		return &storage[0];
 	} else {
+		delete[] base64str;
+		return NULL;
+	}
+}
+
+const WCHAR *
+base64_encode(const BYTE *data, DWORD datalen, std::wstring& storage, bool urlTransform)
+{
+	if (!data || datalen < 1)
+		return NULL;
+
+	DWORD base64len = datalen * 2;
+
+	WCHAR *base64str = new WCHAR[base64len + 1];
+
+	if (!base64str)
+		return NULL;
+
+	BOOL bResult = CryptBinaryToStringW(data, datalen, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, base64str, &base64len);
+
+	if (bResult) {
+
+		if (urlTransform) {
+			size_t len = wcslen(base64str);
+			size_t i;
+			for (i = 0; i < len; i++) {
+				if (base64str[i] == '+')
+					base64str[i] = '-';
+				else if (base64str[i] == '/')
+					base64str[i] = '_';
+			}
+		}
+		storage = base64str;
+		delete[] base64str;
+		return &storage[0];
+	}
+	else {
 		delete[] base64str;
 		return NULL;
 	}
