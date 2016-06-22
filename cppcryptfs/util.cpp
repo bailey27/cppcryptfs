@@ -127,23 +127,6 @@ unicode_to_utf8(const WCHAR *unicode_str, std::string& storage)
 	return &storage[0];
 }
 
-const char *
-unicode_to_utf8_trivial(const WCHAR *unicode_str, std::string& storage)
-{
-
-	size_t len = wcslen(unicode_str);
-
-	storage.clear();
-
-	storage.reserve(len);
-
-	size_t i;
-
-	for (i = 0; i < len; i++)
-		storage.push_back((char)(unicode_str[i]));
-
-	return &storage[0];
-}
 
 const WCHAR *
 utf8_to_unicode(const char *utf8_str, std::wstring& storage)
@@ -172,23 +155,6 @@ utf8_to_unicode(const char *utf8_str, std::wstring& storage)
 }
 
 
-const WCHAR *
-utf8_to_unicode_trivial(const char *utf8_str, std::wstring& storage)
-{
-
-	size_t len = strlen(utf8_str);
-
-	storage.clear();
-
-	storage.reserve(len);
-
-	size_t i;
-
-	for (i = 0; i < len; i++)
-		storage.push_back(utf8_str[i]);
-
-	return &storage[0];
-}
 
 bool
 base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTransform)

@@ -148,8 +148,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 	if (!encrypt_filename(con, dir_iv, filename, utf8, context, actual_encrypted))
 		return NULL;
 
-	// is base64 so can use trivial conversion
-	return utf8_to_unicode_trivial(&utf8[0], storage);
+	return utf8_to_unicode(&utf8[0], storage);
 }
 
 const WCHAR * // returns UNICODE plaintext filename
@@ -261,8 +260,8 @@ decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path,
 
 	std::string utf8;
 	const char *fname;
-	// is base64 so can use trivial conversion
-	fname = unicode_to_utf8_trivial(filename, utf8);
+
+	fname = unicode_to_utf8(filename, utf8);
 	if (!fname)
 		return NULL;
 

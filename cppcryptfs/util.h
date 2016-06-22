@@ -38,14 +38,8 @@ unicode_to_utf8(const WCHAR *unicode_str, char *buf, int buflen);
 const char *
 unicode_to_utf8(const WCHAR *unicode_str, std::string& storage);
 
-const char *
-unicode_to_utf8_trivial(const WCHAR *unicode_str, std::string& storage);
-
 const WCHAR *
 utf8_to_unicode(const char *utf8_str, std::wstring& storage);
-
-const WCHAR *
-utf8_to_unicode_trivial(const char *utf8_str, std::wstring& storage);
 
 bool
 base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTransform = true);
