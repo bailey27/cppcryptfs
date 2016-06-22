@@ -257,19 +257,19 @@ base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTra
 
 	int base64len = (int)datalen*2;
 
-	char *base64str = new char[base64len + 1];
-
-	if (!base64str)
-		return NULL;
+	char *base64str = NULL;
 
 	BOOL bResult = FALSE;
 
 	try {
 
+		base64str = new char[base64len + 1];
+
 		// ATL Base64Encode() is supposedly way faster than CryptBinaryToString()
 	
 		bResult = Base64Encode(data, (int)datalen, base64str, &base64len, ATL_BASE64_FLAG_NOCRLF);
 
+		// ATL Base64Encode() doesn't null terminate the string
 		if (bResult)
 			base64str[base64len] = '\0';
 
@@ -292,7 +292,8 @@ base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTra
 		delete[] base64str;
 		return &storage[0];
 	} else {
-		delete[] base64str;
+		if (base64str)
+			delete[] base64str;
 		return NULL;
 	}
 }
