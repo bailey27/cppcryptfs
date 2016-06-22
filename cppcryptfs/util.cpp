@@ -190,18 +190,19 @@ base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTran
 
 	DWORD len = (DWORD)str_len;
 
+	BOOL bResult = FALSE;
+
 	try {
+
 		storage.resize(len);
-	} 
-	catch (...) {
-		if (p)
-			free(p);
-		return false;
+
+		// CryptStringToBinary is supposedly a little faster than ATL Base64Decode
+
+		bResult = CryptStringToBinaryA(p ? p : str, 0, CRYPT_STRING_BASE64, &storage[0], &len, NULL, NULL);
+
+	} catch (...) {
+		bResult = FALSE;
 	}
-
-	// CryptStringToBinary is supposedly a little faster than ATL Base64Decode
-
-	BOOL bResult = CryptStringToBinaryA(p ? p : str, 0, CRYPT_STRING_BASE64, &storage[0], &len, NULL, NULL);
 
 	if (p)
 		free(p);
