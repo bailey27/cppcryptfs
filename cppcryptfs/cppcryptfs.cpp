@@ -96,8 +96,9 @@ BOOL CcppcryptfsApp::InitInstance()
 		// name of a dialog-based app, but not for one based on a PropertySheet
 		// TODO - it may be possible to use a custom class name
 
-		// for now, we use only the window title
-		HWND hWnd = FindWindow(NULL, L"cppcryptfs");
+		// currently use "#32770" for the class (which is the class string for generic dialog boxes)
+
+		HWND hWnd = FindWindow(L"#32770", L"cppcryptfs");
 
 		if (hWnd) {
 			ShowWindow(hWnd, SW_SHOWNORMAL);
