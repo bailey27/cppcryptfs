@@ -39,6 +39,8 @@ THE SOFTWARE.
 
 #include "randombytes.h"
 
+#include <atlenc.h>
+
 template<typename T>
 T swapBytesVal(T x)
 {
@@ -164,11 +166,16 @@ base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTran
 	if (!str || (str_len = strlen(str)) < 1)
 		return false;
 
-	// we almost always have urlTransform as true so it doens't hurt too much to unconditionally make a copy of the string
-	char *p = _strdup(str);
+	
+	char *p = NULL;
+	
+	if (urlTransform) {
 
-	if (!p)
-		return false;
+		p = _strdup(str);
+
+		if (!p)
+			return false;
+	}
 
 	if (urlTransform) {	
 
@@ -187,13 +194,17 @@ base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTran
 		storage.resize(len);
 	} 
 	catch (...) {
-		free(p);
+		if (p)
+			free(p);
 		return false;
 	}
 
-	BOOL bResult = CryptStringToBinaryA(p, 0, CRYPT_STRING_BASE64, &storage[0], &len, NULL, NULL);
+	// CryptStringToBinary is supposedly a little faster than ATL Base64Decode
 
-	free(p);
+	BOOL bResult = CryptStringToBinaryA(p ? p : str, 0, CRYPT_STRING_BASE64, &storage[0], &len, NULL, NULL);
+
+	if (p)
+		free(p);
 
 	if (bResult) {
 		storage.resize(len);
@@ -206,49 +217,31 @@ base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTran
 bool
 base64_decode(const WCHAR *str, std::vector<unsigned char>& storage, bool urlTransform)
 {
-	size_t str_len;
 
-	if (!str || (str_len = wcslen(str)) < 1)
-		return false;
+	std::string utf8;
 
-	// we almost always have urlTransform as true so it doens't hurt too much to unconditionally make a copy of the string
-	WCHAR *p = _wcsdup(str);
+	size_t len = wcslen(str);
 
-	if (!p)
-		return false;
-
-	if (urlTransform) {
-
-		size_t i;
-		for (i = 0; i < str_len; i++) {
-			if (p[i] == '-')
-				p[i] = '+';
-			else if (p[i] == '_')
-				p[i] = '/';
-		}
-	}
-
-	DWORD len = (DWORD)str_len;
+	bool error = false;
 
 	try {
-		storage.resize(len);
+
+		// can do trivial conversion to utf8 because it's a base64 string
+		utf8.reserve(len);
+
+		size_t i;
+
+		for (i = 0; i < len; i++) {
+			utf8.push_back((char)str[i]);
+		}
+	} catch (...) {
+		error = true;
 	}
-	catch (...) {
-		free(p);
+
+	if (error)
 		return false;
-	}
 
-	BOOL bResult = CryptStringToBinaryW(p, 0, CRYPT_STRING_BASE64, &storage[0], &len, NULL, NULL);
-
-	free(p);
-
-	if (bResult) {
-		storage.resize(len);
-		return true;
-	}
-	else {
-		return false;
-	}
+	return base64_decode(&utf8[0], storage, urlTransform);
 }
 
 
@@ -258,15 +251,27 @@ base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTra
 	if (!data || datalen < 1)
 		return NULL;
 
-	DWORD base64len = datalen*2;
+	int base64len = (int)datalen*2;
 
 	char *base64str = new char[base64len + 1];
 
 	if (!base64str)
 		return NULL;
 
-	BOOL bResult = CryptBinaryToStringA(data, datalen, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, base64str, &base64len);
+	BOOL bResult = FALSE;
+	
+	// The ATL Base64Encode is supposedly way faster than CryptStringToBinary
 
+	try {
+	
+		bResult = Base64Encode(data, (int)datalen, base64str, &base64len, ATL_BASE64_FLAG_NOCRLF);
+
+		if (bResult)
+			base64str[base64len] = '\0';
+
+	} catch (...) {
+		bResult = FALSE;
+	}
 	if (bResult) {
 
 		if (urlTransform) {
@@ -291,38 +296,36 @@ base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTra
 const WCHAR *
 base64_encode(const BYTE *data, DWORD datalen, std::wstring& storage, bool urlTransform)
 {
-	if (!data || datalen < 1)
-		return NULL;
+	const WCHAR *rs = NULL;
 
-	DWORD base64len = datalen * 2;
+	try {
+		std::string utf8;
 
-	WCHAR *base64str = new WCHAR[base64len + 1];
+		if (base64_encode(data, datalen, utf8, urlTransform)) {
 
-	if (!base64str)
-		return NULL;
+			// can do trivial conversion to unicode because it's a base64 string
 
-	BOOL bResult = CryptBinaryToStringW(data, datalen, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, base64str, &base64len);
+			size_t len = utf8.size();
 
-	if (bResult) {
+			storage.clear();
 
-		if (urlTransform) {
-			size_t len = wcslen(base64str);
+			storage.reserve(len);
+
 			size_t i;
-			for (i = 0; i < len; i++) {
-				if (base64str[i] == '+')
-					base64str[i] = '-';
-				else if (base64str[i] == '/')
-					base64str[i] = '_';
-			}
+
+			for (i = 0; i < len; i++)
+				storage.push_back(utf8[i]);
+
+			rs = &storage[0];
+
+		} else {
+			throw (-1);
 		}
-		storage = base64str;
-		delete[] base64str;
-		return &storage[0];
+	} catch (...) {
+		rs = NULL;
 	}
-	else {
-		delete[] base64str;
-		return NULL;
-	}
+
+	return rs;
 }
 
 bool read_password(WCHAR *pwbuf, int pwbuflen, const WCHAR *prompt)
