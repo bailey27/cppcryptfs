@@ -49,6 +49,8 @@ THE SOFTWARE.
 #include "fileutil.h"
 #include "LockZeroBuffer.h"
 
+#define SCRYPT_MB 72 // 65 seems to be enough, but allow more just in case
+
 CryptConfig::CryptConfig()
 {
 	m_N = 0;
@@ -503,7 +505,8 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 		if (!pwkey.IsLocked())
 			throw(-1);
 
-		int result = EVP_PBE_scrypt(pass, strlen(pass), &m_encrypted_key_salt[0], m_encrypted_key_salt.size(), m_N, m_R, m_P, 72 * 1024 * 1024, pwkey.m_buf,
+		int result = EVP_PBE_scrypt(pass, strlen(pass), &m_encrypted_key_salt[0], 
+			m_encrypted_key_salt.size(), m_N, m_R, m_P, SCRYPT_MB * 1024 * 1024, pwkey.m_buf,
 			GetKeyLength());
 
 		if (result != 1)
@@ -634,7 +637,8 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		pwkey = new LockZeroBuffer<unsigned char>(GetKeyLength());
 
-		int result = EVP_PBE_scrypt(utf8pass.m_buf, strlen(utf8pass.m_buf), &(m_encrypted_key_salt)[0], m_encrypted_key_salt.size(), m_N, m_R, m_P, 96 * 1024 * 1024, pwkey->m_buf,
+		int result = EVP_PBE_scrypt(utf8pass.m_buf, strlen(utf8pass.m_buf), &(m_encrypted_key_salt)[0], 
+			m_encrypted_key_salt.size(), m_N, m_R, m_P, SCRYPT_MB * 1024 * 1024, pwkey->m_buf,
 			GetKeyLength());
 
 		if (result != 1)
