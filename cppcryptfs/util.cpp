@@ -124,7 +124,7 @@ unicode_to_utf8(const WCHAR *unicode_str, std::string& storage)
 
 	delete[] p_utf8;
 
-	return &(storage[0]);
+	return &storage[0];
 }
 
 const WCHAR *
@@ -150,25 +150,25 @@ utf8_to_unicode(const char *utf8_str, std::wstring& storage)
 
 	delete[] p_unicode;
 
-	return &(storage[0]);
+	return &storage[0];
 }
 
 
 bool
 base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTransform)
 {
+	size_t str_len;
 
-	if (!str || strlen(str) < 1)
+	if (!str || (str_len = strlen(str)) < 1)
 		return false;
 
-	// we almost always have urlTransform as true so it doens't hurt to much to unconditionally make a copy of the string
+	// we almost always have urlTransform as true so it doens't hurt too much to unconditionally make a copy of the string
 	char *p = _strdup(str);
 
 	if (!p)
 		return false;
 
-	if (urlTransform) {
-		size_t str_len = strlen(p);
+	if (urlTransform) {	
 
 		size_t i;
 		for (i = 0; i < str_len; i++) {
@@ -179,28 +179,22 @@ base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTran
 		}
 	}
 
-	DWORD len = 0;
-
-	BOOL bResult = CryptStringToBinaryA(p, 0, CRYPT_STRING_BASE64, NULL, &len, NULL, NULL);
-
-
-	if (!bResult) {
-		free(p);
-		return false;
-	}
+	DWORD len = str_len;
 
 	try {
 		storage.resize(len);
-	} catch (...) {
+	} 
+	catch (...) {
 		free(p);
 		return false;
 	}
 
-	bResult = CryptStringToBinaryA(p, 0, CRYPT_STRING_BASE64, &(storage)[0], &len, NULL, NULL);
+	BOOL bResult = CryptStringToBinaryA(p, 0, CRYPT_STRING_BASE64, &storage[0], &len, NULL, NULL);
 
 	free(p);
 
 	if (bResult) {
+		storage.resize(len);
 		return true;
 	} else {
 		return false;
@@ -214,19 +208,14 @@ base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTra
 	if (!data || datalen < 1)
 		return NULL;
 
-	DWORD base64len = 0;
-
-	BOOL bResult = CryptBinaryToStringA(data, datalen, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, NULL, &base64len);
-
-	if (!bResult)
-		return NULL;
+	DWORD base64len = datalen*2;
 
 	char *base64str = new char[base64len + 1];
 
 	if (!base64str)
 		return NULL;
 
-	bResult = CryptBinaryToStringA(data, datalen, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, base64str, &base64len);
+	BOOL bResult = CryptBinaryToStringA(data, datalen, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, base64str, &base64len);
 
 	if (bResult) {
 
