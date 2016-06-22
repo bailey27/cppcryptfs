@@ -219,6 +219,9 @@ bool
 base64_decode(const WCHAR *str, std::vector<unsigned char>& storage, bool urlTransform)
 {
 
+	// profiling shows that the WCHAR versions of the windows
+	// base64 conversion just converts to utf8 anyway
+
 	std::string utf8;
 
 	size_t len = wcslen(str);
@@ -297,6 +300,10 @@ base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTra
 const WCHAR *
 base64_encode(const BYTE *data, DWORD datalen, std::wstring& storage, bool urlTransform)
 {
+
+	// profiling shows that the WCHAR versions of the windows
+	// base64 conversion just converts from utf8 anyway
+
 	const WCHAR *rs = NULL;
 
 	try {
