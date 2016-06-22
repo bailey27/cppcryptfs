@@ -223,7 +223,7 @@ static bool is_interesting_name(BOOL isRoot, const WIN32_FIND_DATAW& fdata)
 }
 
 DWORD
-find_files(const CryptContext *con, const WCHAR *pt_path, const WCHAR *path, std::vector<WIN32_FIND_DATAW>& files)
+find_files(const CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFillFindData fillData, void * dokan_cb, void * dokan_ctx)
 {
 	DWORD ret = 0;
 	HANDLE hfind = INVALID_HANDLE_VALUE;
@@ -258,7 +258,7 @@ find_files(const CryptContext *con, const WCHAR *pt_path, const WCHAR *path, std
 			if (!convert_fdata(con, dir_iv, path, fdata))
 				throw((int)ERROR_PATH_NOT_FOUND);
 
-			files.push_back(fdata);
+			fillData(&fdata, dokan_cb, dokan_ctx);
 		}
 
 
@@ -267,7 +267,7 @@ find_files(const CryptContext *con, const WCHAR *pt_path, const WCHAR *path, std
 				continue;
 			if (!convert_fdata(con, dir_iv, path, fdata))
 				continue;
-			files.push_back(fdata);
+			fillData(&fdata, dokan_cb, dokan_ctx);
 		}
 
 		DWORD err = GetLastError();

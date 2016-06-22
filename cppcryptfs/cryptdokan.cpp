@@ -828,6 +828,12 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileInformation(
 
 }
 
+// use our own callback so rest of the code doens't need to know about Dokany internals
+static int WINAPI crypt_fill_find_data(PWIN32_FIND_DATAW fdata, void * dokan_cb, void * dokan_ctx)
+{
+	return ((PFillFindData)dokan_cb)(fdata, (PDOKAN_FILE_INFO)dokan_ctx);
+}
+
 static NTSTATUS DOKAN_CALLBACK
 CryptFindFiles(LPCWSTR FileName,
                 PFillFindData FillFindData, // function pointer
@@ -835,30 +841,19 @@ CryptFindFiles(LPCWSTR FileName,
   FileNameEnc filePath(GetContext(), FileName);
   size_t fileLen = 0;
   HANDLE hFind = NULL;
-  WIN32_FIND_DATAW findData;
+
   DWORD error;
   long long count = 0;
 
   DbgPrint(L"FindFiles :%s\n", FileName);
 
-  std::vector<WIN32_FIND_DATAW> file_data;
 
-  if (find_files(GetContext(), FileName, filePath, file_data) != 0) {
+
+  if (find_files(GetContext(), FileName, filePath, crypt_fill_find_data, (void *)FillFindData, (void *)DokanFileInfo) != 0) {
 	  error = GetLastError();
 	  DbgPrint(L"\tFindNextFile error. Error is %u\n\n", error);
 	  return ToNtStatus(error);
   }
-
-  count = file_data.size();
-
-  int i;
-
-  for (i = 0; i < count; i++) {
-	  findData = file_data[i];
-	  FillFindData(&findData, DokanFileInfo);
-  }
-
-  DbgPrint(L"\tFindFiles return %d entries in %s\n\n", count, FileName);
 
   return STATUS_SUCCESS;
 }

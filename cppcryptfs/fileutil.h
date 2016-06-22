@@ -39,8 +39,11 @@ void DbgPrint(LPCWSTR format, ...);
 bool
 get_dir_iv(const CryptContext *con, const WCHAR *path, unsigned char *dir_iv);
 
+
+typedef int(WINAPI *PCryptFillFindData)(PWIN32_FIND_DATAW, void * dokan_cb, void * dokan_ctx);
+
 DWORD
-find_files(const CryptContext *con, const WCHAR *pt_path, const WCHAR *path, std::vector<WIN32_FIND_DATAW>& files);
+find_files(const CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFillFindData, void * dokan_cb, void * dokan_ctx);
 
 DWORD
 get_file_information(LPCWSTR FileName, HANDLE handle, LPBY_HANDLE_FILE_INFORMATION pInfo);
