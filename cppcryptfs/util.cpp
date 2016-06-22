@@ -196,7 +196,7 @@ base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTran
 
 		storage.resize(len);
 
-		// CryptStringToBinary is supposedly a little faster than ATL Base64Decode
+		// CryptStringToBinary() is supposedly a little faster than ATL Base64Decode()
 
 		bResult = CryptStringToBinaryA(p ? p : str, 0, CRYPT_STRING_BASE64, &storage[0], &len, NULL, NULL);
 
@@ -260,10 +260,10 @@ base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTra
 		return NULL;
 
 	BOOL bResult = FALSE;
-	
-	// The ATL Base64Encode is supposedly way faster than CryptStringToBinary
 
 	try {
+
+		// ATL Base64Encode() is supposedly way faster than CryptBinaryToString()
 	
 		bResult = Base64Encode(data, (int)datalen, base64str, &base64len, ATL_BASE64_FLAG_NOCRLF);
 
