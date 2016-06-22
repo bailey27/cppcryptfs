@@ -637,7 +637,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		pwkey = new LockZeroBuffer<unsigned char>(GetKeyLength());
 
-		int result = EVP_PBE_scrypt(utf8pass.m_buf, strlen(utf8pass.m_buf), &(m_encrypted_key_salt)[0], 
+		int result = EVP_PBE_scrypt(utf8pass.m_buf, strlen(utf8pass.m_buf), &m_encrypted_key_salt[0], 
 			m_encrypted_key_salt.size(), m_N, m_R, m_P, SCRYPT_MB * 1024 * 1024, pwkey->m_buf,
 			GetKeyLength());
 
