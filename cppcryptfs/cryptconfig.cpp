@@ -503,7 +503,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 		if (!pwkey.IsLocked())
 			throw(-1);
 
-		int result = EVP_PBE_scrypt(pass, strlen(pass), &(m_encrypted_key_salt)[0], m_encrypted_key_salt.size(), m_N, m_R, m_P, 72 * 1024 * 1024, pwkey.m_buf,
+		int result = EVP_PBE_scrypt(pass, strlen(pass), &m_encrypted_key_salt[0], m_encrypted_key_salt.size(), m_N, m_R, m_P, 72 * 1024 * 1024, pwkey.m_buf,
 			GetKeyLength());
 
 		if (result != 1)
