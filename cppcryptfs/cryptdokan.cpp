@@ -438,6 +438,19 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   // be opened.
   fileAttr = GetFileAttributes(filePath);
 
+  BOOL bHasDirAttr = fileAttr != INVALID_FILE_ATTRIBUTES && (fileAttr & FILE_ATTRIBUTE_DIRECTORY);
+
+  if (!(bHasDirAttr || (CreateOptions & FILE_DIRECTORY_FILE)) && !(DesiredAccess & FILE_READ_DATA)
+	  && DesiredAccess != DELETE) {
+	  DbgPrint(L"\tadded FILE_READ_DATA to desired access\n");
+	  DesiredAccess |= FILE_READ_DATA;
+  }
+  if (!(bHasDirAttr || (CreateOptions & FILE_DIRECTORY_FILE)) && !(ShareAccess & FILE_SHARE_READ)
+	  && DesiredAccess != DELETE) {
+	  DbgPrint(L"\tadded FILE_SHARE_READ to share access\n");
+	  ShareAccess |= FILE_SHARE_READ;
+  }
+
   if (fileAttr != INVALID_FILE_ATTRIBUTES &&
       (fileAttr & FILE_ATTRIBUTE_DIRECTORY &&
        DesiredAccess != DELETE)) { // Directory cannot be open for DELETE
