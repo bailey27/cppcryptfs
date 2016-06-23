@@ -34,8 +34,18 @@ THE SOFTWARE.
 
 #include "fileutil.h"
 
+/* 
+	Thid file implements a cache that replaces the least-recently-used (LRU)
+	item when a new item is inserted and the cache is full.
+
+	The node pointers are kept in both a std::unordered_map and a std::list
+
+	The map is for lookups, and the list is for doing the LRU replacement.
+*/
+
 DirIvCacheNode::DirIvCacheNode()
 {
+	m_key = NULL;
 }
 
 DirIvCacheNode::~DirIvCacheNode()
@@ -49,7 +59,7 @@ DirIvCache::DirIvCache()
 	m_lookups = 0;
 	m_hits = 0;
 
-	m_map.reserve(DIR_IV_CACHE_ENTRIES);
+	m_map.reserve(DIR_IV_CACHE_ENTRIES+1);
 
 	InitializeCriticalSection(&m_crit);
 }
@@ -87,6 +97,10 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 	if (it != m_map.end()) {
 		DirIvCacheNode *node = it->second;
 		memcpy(dir_iv, node->m_dir_iv, DIR_IV_LEN);
+
+		// if node isn't already at front of list, remove
+		// it from wherever it was and put it at the front
+
 		if (node->m_list_it != m_lru_list.begin()) {
 			m_lru_list.erase(node->m_list_it);
 			m_lru_list.push_front(node);
@@ -94,8 +108,7 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 		}
 		found = true;
 		m_hits++;
-	}
-	else {
+	} else {
 		found = false;
 	}
 
@@ -113,32 +126,58 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv)
 {
 
+	bool rval = true;
+
+	std::wstring key = path;
+
+	normalize_key(key);
+
 	EnterCriticalSection(&m_crit);
 
-	DirIvCacheNode *node = NULL;
+	try {
 
-	if (m_map.size() >= DIR_IV_CACHE_ENTRIES) {
-		node = m_lru_list.back();
-		m_lru_list.pop_back();
-		m_map.erase(node->m_key);
+		// see if it's already there
+		auto mp = m_map.emplace(key, (DirIvCacheNode*)NULL);		
+
+		if (mp.second) {
+
+			DirIvCacheNode *node = NULL;
+
+			// if it isn't, then see if the cache is full
+			
+			// if so, remove oldest entry (from tail of linked list)
+			
+			if (m_map.size() >= DIR_IV_CACHE_ENTRIES) {
+				node = m_lru_list.back();
+				m_lru_list.pop_back();
+				m_map.erase(*node->m_key);
+			}
+
+			// re-use node if we removed one, otherwise make a new one
+
+			if (!node)
+				node = new DirIvCacheNode;
+
+			mp.first->second = node;
+
+			node->m_key = &mp.first->first;
+			memcpy(node->m_dir_iv, dir_iv, DIR_IV_LEN);
+			node->m_list_it = m_lru_list.insert(m_lru_list.begin(), node);
+			
+		} else {
+			// copy dir_iv to node at that path (key)
+			memcpy(mp.first->second->m_dir_iv, dir_iv, DIR_IV_LEN);
+		}
+		
+
+	} catch (...) {
+		rval = false;
 	}
-
-	if (!node)
-		node = new DirIvCacheNode;
-
-	memcpy(node->m_dir_iv, dir_iv, DIR_IV_LEN);
-
-	node->m_key = path;
-
-	normalize_key(node->m_key);
-
-	node->m_list_it = m_lru_list.insert(m_lru_list.begin(), node);
-
-	m_map.insert_or_assign(node->m_key, node);
+   
 
 	LeaveCriticalSection(&m_crit);
 
-	return true;
+	return rval;
 }
 
 void DirIvCache::remove(LPCWSTR path)
