@@ -526,34 +526,38 @@ delete_directory(const CryptContext *con, LPCWSTR path)
 
 	try {
 
-		std::wstring diriv_file = path;
+		if (con->GetConfig()->DirIV()) {
 
-		if (diriv_file[diriv_file.size() - 1] != '\\')
-			diriv_file.push_back('\\');
+			std::wstring diriv_file = path;
 
-		diriv_file.append(DIR_IV_NAME);
+			if (diriv_file[diriv_file.size() - 1] != '\\')
+				diriv_file.push_back('\\');
 
-		if (PathFileExists(&diriv_file[0])) {
+			diriv_file.append(DIR_IV_NAME);
+
 			DWORD attr = GetFileAttributes(&diriv_file[0]);
+
 			if (attr != INVALID_FILE_ATTRIBUTES) {
+
 				attr &= ~FILE_ATTRIBUTE_READONLY;
 				if (!SetFileAttributes(&diriv_file[0], attr)) {
 					throw((int)GetLastError());
 				}
-			} else {
-				throw((int)GetLastError());
+
+				dir_iv_cache.remove(path);
+
+				if (!DeleteFile(&diriv_file[0])) {
+					throw((int)GetLastError());
+				}
 			}
-			dir_iv_cache.remove(path);
-			if (!DeleteFile(&diriv_file[0])) {
-				throw((int)GetLastError());
-			}
+			
 		}
 
 		if (!RemoveDirectory(path)) {
 			throw((int)GetLastError());
 		}
 
-		if (!con->GetConfig()->m_PlaintextNames && con->GetConfig()->m_LongNames) {
+		if (!con->GetConfig()->m_PlaintextNames && con->GetConfig()->m_LongNames && is_long_name(path)) {
 			std::wstring name_file = path;
 			if (name_file[name_file.size()-1] == '\\') {
 				name_file.erase(name_file.size() - 1);
@@ -566,9 +570,6 @@ delete_directory(const CryptContext *con, LPCWSTR path)
 				}
 			}
 		}
-		std::wstring name_file;
-
-
 
 	} catch (int err) {
 		if (err)
