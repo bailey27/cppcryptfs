@@ -38,7 +38,8 @@ Build Requirements
 	The default (master) branch of cppcryptfs is for building with Dokany 1.0.0-RC3.
 
 	If you would like to build cppcryptfs with the current Dokany source,
-	then you need to switch to the "current_dokany" branch of cppcrypts. After you clone cppcryptfs, you need to do
+	then you need to switch to the "current_dokany" branch of cppcrypts. 
+	After you clone cppcryptfs, you need to do
 
 		git checkout current_dokany
 
