@@ -539,9 +539,11 @@ delete_directory(const CryptContext *con, LPCWSTR path)
 
 			if (attr != INVALID_FILE_ATTRIBUTES) {
 
-				attr &= ~FILE_ATTRIBUTE_READONLY;
-				if (!SetFileAttributes(&diriv_file[0], attr)) {
-					throw((int)GetLastError());
+				if (attr & FILE_ATTRIBUTE_READONLY) {
+					attr &= ~FILE_ATTRIBUTE_READONLY;
+					if (!SetFileAttributes(&diriv_file[0], attr)) {
+						throw((int)GetLastError());
+					}
 				}
 
 				dir_iv_cache.remove(path);
@@ -589,7 +591,7 @@ bool delete_file(const CryptContext *con, const WCHAR *filename)
 			return false;
 	}
 
-	if (!con->GetConfig()->m_PlaintextNames && con->GetConfig()->m_LongNames) {
+	if (!con->GetConfig()->m_PlaintextNames && con->GetConfig()->m_LongNames && is_long_name(filename)) {
 	
 		std::wstring path = filename;
 
