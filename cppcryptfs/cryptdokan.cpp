@@ -423,17 +423,6 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   CryptCheckFlag(DesiredAccess, STANDARD_RIGHTS_WRITE);
   CryptCheckFlag(DesiredAccess, STANDARD_RIGHTS_EXECUTE);
 
-  if (!(CreateOptions & FILE_DIRECTORY_FILE) && !(DesiredAccess & FILE_READ_DATA)
-	  && DesiredAccess != DELETE) {
-	  DbgPrint(L"\tadded FILE_READ_DATA to desired access\n");
-	  DesiredAccess |= FILE_READ_DATA;
-  }
-  if (!(CreateOptions & FILE_DIRECTORY_FILE) && !(ShareAccess & FILE_SHARE_READ)
-	  && DesiredAccess != DELETE) {
-	  DbgPrint(L"\tadded FILE_SHARE_READ to share access\n");
-	  ShareAccess |= FILE_SHARE_READ;
-  }
-
   // When filePath is a directory, needs to change the flag so that the file can
   // be opened.
   fileAttr = GetFileAttributes(filePath);
