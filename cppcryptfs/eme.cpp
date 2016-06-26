@@ -126,8 +126,9 @@ void lCacheContainer::tabulateL(const EmeCryptContext *eme_context, int m){
 	BYTE eZero[16];
 	memset(eZero, 0, sizeof(eZero));
 
-	BYTE Li[16];
-	AesEncrypt(Li, eZero, 16, eme_context);
+	LockZeroBuffer<BYTE> Li(16);
+
+	AesEncrypt(Li.m_buf, eZero, 16, eme_context);
 
 	m_LTable = new LPBYTE[m];
 
@@ -138,9 +139,9 @@ void lCacheContainer::tabulateL(const EmeCryptContext *eme_context, int m){
 	BYTE *pool = m_pLTableBuf->m_buf;
 
 	for (int i = 0; i < m; i++) {
-		multByTwo(Li, Li, 16);
+		multByTwo(Li.m_buf, Li.m_buf, 16);
 		m_LTable[i] = pool + i * 16;
-		memcpy(m_LTable[i], Li, 16);
+		memcpy(m_LTable[i], Li.m_buf, 16);
 	}
 	
 }
