@@ -440,13 +440,15 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
   BOOL bHasDirAttr = fileAttr != INVALID_FILE_ATTRIBUTES && (fileAttr & FILE_ATTRIBUTE_DIRECTORY);
 
-  if (!(bHasDirAttr || (CreateOptions & FILE_DIRECTORY_FILE)) && !(DesiredAccess & FILE_READ_DATA)
-	  && DesiredAccess != DELETE) {
+  // The two blocks below are there because we generally can't write to file 
+  // unless we can also read from it.
+  if (!(bHasDirAttr || (CreateOptions & FILE_DIRECTORY_FILE)) && 
+	  ((DesiredAccess & GENERIC_WRITE) || (DesiredAccess & FILE_WRITE_DATA))) {
 	  DbgPrint(L"\tadded FILE_READ_DATA to desired access\n");
 	  DesiredAccess |= FILE_READ_DATA;
   }
-  if (!(bHasDirAttr || (CreateOptions & FILE_DIRECTORY_FILE)) && !(ShareAccess & FILE_SHARE_READ)
-	  && DesiredAccess != DELETE) {
+  if (!(bHasDirAttr || (CreateOptions & FILE_DIRECTORY_FILE)) && 
+	  (ShareAccess & FILE_SHARE_WRITE)) {
 	  DbgPrint(L"\tadded FILE_SHARE_READ to share access\n");
 	  ShareAccess |= FILE_SHARE_READ;
   }
