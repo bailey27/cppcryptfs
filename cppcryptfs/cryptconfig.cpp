@@ -608,31 +608,31 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		config_path += CONFIG_NAME;
 
-		unsigned char salt[32];
+		m_encrypted_key_salt.resize(SALT_LEN);
 
-		if (!get_sys_random_bytes(salt, sizeof(salt)))
+		if (!get_sys_random_bytes(&m_encrypted_key_salt[0], SALT_LEN)) {
+			error_mes = L"get random bytes for salt failed\n";
 			throw(-1);
-
-		m_encrypted_key_salt.resize(sizeof(salt));
-
-		for (size_t i = 0; i < sizeof(salt); i++) {
-			m_encrypted_key_salt[i] = salt[i];
 		}
 
 		m_N = 65536;
 		m_R = 8;
 		m_P = 1;
 
-		m_pKeyBuf = new LockZeroBuffer<unsigned char>(32);
+		m_pKeyBuf = new LockZeroBuffer<unsigned char>(DEFAULT_KEY_LEN);
 
-		if (!m_pKeyBuf->IsLocked())
+		if (!m_pKeyBuf->IsLocked()) {
+			error_mes = L"cannot lock key buffer\n";
 			throw(-1);
+		}
 		
 		m_Version = 2;
 		m_DirIV = !m_PlaintextNames;
 		
-		if (!unicode_to_utf8(password, utf8pass.m_buf, utf8pass.m_len - 1)) 
+		if (!unicode_to_utf8(password, utf8pass.m_buf, utf8pass.m_len - 1)) {
+			error_mes = L"cannot convert password to utf-8\n";
 			throw(-1);
+		}
 		
 
 		pwkey = new LockZeroBuffer<unsigned char>(GetKeyLength());
@@ -641,13 +641,17 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 			m_encrypted_key_salt.size(), m_N, m_R, m_P, SCRYPT_MB * 1024 * 1024, pwkey->m_buf,
 			GetKeyLength());
 
-		if (result != 1)
+		if (result != 1) {
+			error_mes = L"key derivation failed\n";
 			throw(-1);
+		}
 
 		unsigned char iv[MASTER_IV_LEN];
 
-		if (!get_sys_random_bytes(iv, sizeof(iv)))
+		if (!get_sys_random_bytes(iv, sizeof(iv))) {
+			error_mes = L"unable to generate iv\n";
 			throw(-1);
+		}
 
 		unsigned char adata[8];
 
@@ -655,8 +659,10 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		memset(adata, 0, adata_len);
 
-		if (!get_sys_random_bytes(m_pKeyBuf->m_buf, GetKeyLength()))
+		if (!get_sys_random_bytes(m_pKeyBuf->m_buf, GetKeyLength())) {
+			error_mes = L"unable to generate master key\n";
 			throw(-1);
+		}
 
 		std::string volume_name_utf8;
 
@@ -672,8 +678,10 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		context = get_crypt_context(MASTER_IV_LEN, AES_MODE_GCM);
 
-		if (!context)
+		if (!context) {
+			error_mes = L"unable to get gcm context\n";
 			throw(-1);
+		}
 
 		encrypted_key = new unsigned char[GetKeyLength() + MASTER_IV_LEN + BLOCK_TAG_LEN];
 
@@ -681,15 +689,19 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		int ctlen = encrypt(m_pKeyBuf->m_buf, GetKeyLength(), adata, sizeof(adata), pwkey->m_buf, iv, (encrypted_key + sizeof(iv)), encrypted_key + sizeof(iv) + GetKeyLength(), context);
 
-		if (ctlen < 1)
+		if (ctlen < 1) {
+			error_mes = L"unable to encrypt master key\n";
 			throw(-1);
+		}
 
 		std::string storage;
 
 		const char *base64_key = base64_encode(encrypted_key, GetKeyLength() + MASTER_IV_LEN + BLOCK_TAG_LEN, storage, false);
 
-		if (!base64_key)
+		if (!base64_key) {
+			error_mes = L"unable to base64 encode key\n";
 			throw(-1);
+		}
 
 		if (_wfopen_s(&fl, &config_path[0], L"wb")) {
 			error_mes = L"cannot create config file\n";
@@ -705,7 +717,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		fprintf(fl, "\t\"EncryptedKey\": \"%s\",\n", base64_key);
 
-		const char *base64_salt = base64_encode(salt, sizeof(salt), storage, false);
+		const char *base64_salt = base64_encode(&m_encrypted_key_salt[0], (DWORD)m_encrypted_key_salt.size(), storage, false);
 
 		fprintf(fl, "\t\"ScryptObject\": {\n");
 		fprintf(fl, "\t\t\"Salt\": \"%s\",\n", base64_salt);
@@ -746,6 +758,9 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 		}
 
 	} catch (...) {
+
+		if (error_mes.size() < 1)
+			error_mes = L"memory allocation failure\n";
 
 		bret = false;
 	}
