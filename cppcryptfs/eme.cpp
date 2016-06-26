@@ -126,7 +126,7 @@ void lCacheContainer::tabulateL(const EmeCryptContext *eme_context, int m){
 	BYTE eZero[16];
 	memset(eZero, 0, sizeof(eZero));
 
-	LockZeroBuffer<BYTE> Li(16);
+	LockZeroBuffer<BYTE> Li(16, true);
 
 	AesEncrypt(Li.m_buf, eZero, 16, eme_context);
 
