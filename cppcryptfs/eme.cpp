@@ -122,7 +122,7 @@ static void aesTransform(BYTE* dst, const BYTE* src, bool direction, int len, co
 // tabulateL - calculate L_i for messages up to a length of m cipher blocks
 void lCacheContainer::tabulateL(const EmeCryptContext *eme_context, int m){
 
-	/* set L0 = 2*AESenc(K; 0) */::
+	/* set L0 = 2*AESenc(K; 0) */
 	BYTE eZero[16];
 	memset(eZero, 0, sizeof(eZero));
 
