@@ -20,9 +20,9 @@ cppcryptfs is currently pre-alpha, or more accurately: EXPERIMENTAL.
 Testing
 -------
 
-cppcryptfs seems to work.  It passes 169/171 of the tests in [winfstest](https://github.com/dimov-cz/winfstest).
+cppcryptfs seems to work.  It passes 170/171 of the tests in [winfstest](https://github.com/dimov-cz/winfstest).
 
-The two failures are due to file sharing issues.  Due to the nature of how gocryptfs is designed (namely that it is impossible to write to a file unless you are also able to read from it), it is probably impossible to pass these two tests.  It is the opinion of the developer of cppcryptfs that these failures probably don't matter.
+The one failure is due to a file sharing issue.  Due to the nature of how gocryptfs is designed (namely that it is generally impossible to write to a file unless you are also able to read from it), it is probably impossible to pass this onoe test.  It is the opinion of the developer of cppcryptfs that this failure probably doesn't matter.
 
 Build Requirements
 -------
