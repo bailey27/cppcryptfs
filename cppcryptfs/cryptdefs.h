@@ -46,6 +46,10 @@ THE SOFTWARE.
 #define AES_MODE_CBC 1
 #define AES_MODE_GCM 2
 
+#define SALT_LEN 32
+
+#define DEFAULT_KEY_LEN 32
+
 
 #define CONFIG_NAME (L"gocryptfs.conf")
 
