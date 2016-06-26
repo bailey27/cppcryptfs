@@ -117,4 +117,4 @@ A lot of Windows progams, including File Explorer that comes with Windows, have 
 Compatibility with gocryptfs
 ------
 
-cppcryptfs is compatible with version 2 of the gocryptfs filesystem.  This is the version of the filesystem used by version 1.0 of the gocryptfs software. The only restriction is that cppcryptfs supports only the 128-bit GCM initialization vector length (GCMIV128 must be specified in gocryptfs.conf).  The legacy  96-bit initialization vector length is not supported.  
+cppcryptfs is compatible with version 2 of the gocryptfs filesystem.  This is the version of the filesystem used by version 1.0 of the gocryptfs software.
