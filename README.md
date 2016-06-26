@@ -52,8 +52,7 @@ to acquire the SE_SECURITY_NAME privilege.  SE_SECURITY_NAME is
 needed for reading all of the security attributes of files.
 
 cppcryptfs seems to work without SE_SECURITY_NAME.  If you do
-run into problems, for example copying files in File Explorer, then you
-can try running cppcryptfs as adminstrator and see if that helps.
+run into problems, then you can try running cppcryptfs as adminstrator and see if that helps.
 
 To make a new encrypted virtual fileystem, first click the "Create" tab.
 
