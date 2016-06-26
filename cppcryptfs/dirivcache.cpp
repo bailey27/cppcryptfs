@@ -59,7 +59,7 @@ DirIvCache::DirIvCache()
 	m_lookups = 0;
 	m_hits = 0;
 
-	m_map.reserve(DIR_IV_CACHE_ENTRIES+1);
+	m_map.reserve(DIR_IV_CACHE_ENTRIES);
 
 	InitializeCriticalSection(&m_crit);
 }
