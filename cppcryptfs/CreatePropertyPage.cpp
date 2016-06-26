@@ -44,7 +44,6 @@ THE SOFTWARE.
 
 static const WCHAR *filename_encryption_types[] = {
 	L"AES256-EME",
-	L"AES256-CBC",
 	L"Plain text"
 };
 
