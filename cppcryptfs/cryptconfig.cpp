@@ -463,11 +463,11 @@ bool CryptConfig::check_config(std::wstring& mes)
 	if (0 && m_PlaintextNames) 
 		mes += L"PlaintextNames not supported\n";
 	
-	if (0 && (!m_DirIV && !m_PlaintextNames)) 
-		mes += L"DirIV must be specified unless PlaintextNames is used\n";
+	if (!m_DirIV && !m_PlaintextNames) 
+		mes += L"DirIV is required unless PlaintextNames is specified\n";
 
-	if (0 && m_EMENames) 
-		mes += L"EMENames not supported\n";
+	if (!m_EMENames && !m_PlaintextNames)
+		mes += L"EMENames is required unless PlaintextNames is specified\n";
 	
 	if (!m_GCMIV128) 
 		mes += L"GCMIV128 must be specified\n";
