@@ -920,7 +920,7 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
   BOOL status;
 
 
-  DbgPrint(L"MoveFile %s -> %s\n\n", FileName, newFilePath);
+  DbgPrint(L"MoveFile %s -> %s\n\n", FileName, NewFileName);
 
   if (DokanFileInfo->Context) {
     // should close? or rename at closing?
