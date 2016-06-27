@@ -57,9 +57,6 @@ void *get_crypt_context(int ivlen, int mode)
 
 		switch (mode) {
 	
-		case AES_MODE_CBC:
-			cipher = EVP_aes_256_cbc();
-			break;
 		case AES_MODE_GCM:
 			cipher = EVP_aes_256_gcm();
 			break;

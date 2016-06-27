@@ -63,7 +63,7 @@ bool is_long_name_file(const WCHAR *filename)
 
 
 const WCHAR * // returns base64-encoded, encrypted filename
-encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::wstring& storage, void *context, std::string *actual_encrypted)
+encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::wstring& storage, std::string *actual_encrypted)
 {
 	std::string utf8_str;
 
@@ -102,18 +102,9 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 
 	} else {
 
-		if (!context)
-			return NULL;
+		// CBC names no longer supported
 
-		unsigned char ctbuf[4096];
-
-		int ctlen = encrypt((const unsigned char *)&(utf8_str[0]), (int)strlen(&(utf8_str[0])), NULL, 0, con->GetConfig()->GetKey(), dir_iv, ctbuf, NULL, context);
-
-		if (ctlen < 1)
-			return NULL;
-
-		
-		rs = base64_encode(ctbuf, ctlen, storage);
+		return NULL;
 		
 		
 	}
@@ -148,11 +139,6 @@ decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path,
 		storage = filename;
 		return &storage[0];
 	}
-
-	unsigned char ptbuf[4096];
-
-	if (wcslen(filename) > sizeof(ptbuf) / 2)
-		return NULL;
 
 	std::vector<unsigned char> ctstorage;
 
@@ -220,24 +206,8 @@ decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path,
 		return ws;
 
 	} else {
-
-		void *context = get_crypt_context(DIR_IV_LEN, AES_MODE_CBC);
-		if (!context)
-			return NULL;
-
-		int ptlen = decrypt(&(ctstorage[0]), (int)ctstorage.size(), NULL, 0, NULL, con->GetConfig()->GetKey(), dir_iv, ptbuf, context);
-
-		free_crypt_context(context);
-
-		if (ptlen < 1)
-			return NULL;
-
-		if (ptlen > sizeof(ptbuf) - 1)
-			return NULL;
-
-		ptbuf[ptlen] = '\0';
-
-		return utf8_to_unicode((const char *)ptbuf, storage);
+		// CBC names no longer supported
+		return NULL;
 	}
 }
 
@@ -250,8 +220,6 @@ encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, 
 	const TCHAR *rval = NULL;
 
 	CryptConfig *config = con->GetConfig();
-
-	void *context = NULL;
 
 
 	try {
@@ -280,9 +248,8 @@ encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, 
 
 
 			if (!con->GetConfig()->m_EMENames) {
-				context = get_crypt_context(DIR_IV_LEN, AES_MODE_CBC);
-				if (!context)
-					throw(-1);
+				// CBC names no longer supported
+				throw(-1);
 			}
 
 			std::wstring s;
@@ -302,7 +269,7 @@ encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, 
 				if (actual_encrypted)
 					actual_encrypted->clear();
 
-				if (!encrypt_filename(con, dir_iv, &s[0], uni_crypt_elem, context, actual_encrypted))
+				if (!encrypt_filename(con, dir_iv, &s[0], uni_crypt_elem, actual_encrypted))
 					throw(-1);
 
 				storage.append(uni_crypt_elem);
@@ -323,10 +290,6 @@ encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, 
 	} catch (...) {
 
 		rval = NULL;
-	}
-
-	if (context) {
-		free_crypt_context(context);
 	}
 	
 	return rval;
