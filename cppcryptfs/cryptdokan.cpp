@@ -917,26 +917,57 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
   std::string actual_encrypted;
   FileNameEnc filePath(GetContext(), FileName);
   FileNameEnc newFilePath(GetContext(), NewFileName, &actual_encrypted);
-  BOOL status;
-
 
   DbgPrint(L"MoveFile %s -> %s\n\n", FileName, NewFileName);
 
-  if (DokanFileInfo->Context) {
-    // should close? or rename at closing?
-    CloseHandle((HANDLE)DokanFileInfo->Context);
-    DokanFileInfo->Context = 0;
+  HANDLE handle;
+  DWORD bufferSize;
+  BOOL result;
+  size_t newFilePathLen;
+
+  PFILE_RENAME_INFO renameInfo = NULL;
+
+  handle = (HANDLE)DokanFileInfo->Context;
+  if (!handle || handle == INVALID_HANDLE_VALUE) {
+	  DbgPrint(L"\tinvalid handle\n\n");
+	  return STATUS_INVALID_HANDLE;
   }
 
-  if (ReplaceIfExisting)
-    status = MoveFileEx(filePath, newFilePath, MOVEFILE_REPLACE_EXISTING);
-  else
-    status = MoveFile(filePath, newFilePath);
+  newFilePathLen = wcslen(newFilePath);
 
-  if (status == FALSE) {
-    DWORD error = GetLastError();
-    DbgPrint(L"\tMoveFile failed status = %d, code = %d\n", status, error);
-    return ToNtStatus(error);
+  // the FILE_RENAME_INFO struct has space for one WCHAR for the name at
+  // the end, so that
+  // accounts for the null terminator
+
+  bufferSize = (DWORD)(sizeof(FILE_RENAME_INFO) +
+	  newFilePathLen * sizeof(newFilePath[0]));
+
+  renameInfo = (PFILE_RENAME_INFO)malloc(bufferSize);
+  if (!renameInfo) {
+	  return STATUS_BUFFER_OVERFLOW;
+  }
+  ZeroMemory(renameInfo, bufferSize);
+
+  renameInfo->ReplaceIfExists =
+	  ReplaceIfExisting
+	  ? TRUE
+	  : FALSE; // some warning about converting BOOL to BOOLEAN
+  renameInfo->RootDirectory = NULL; // hope it is never needed, shouldn't be
+  renameInfo->FileNameLength =
+	  (DWORD)newFilePathLen *
+	  sizeof(newFilePath[0]); // they want length in bytes
+
+  wcscpy_s(renameInfo->FileName, newFilePathLen + 1, newFilePath);
+
+  result = SetFileInformationByHandle(handle, FileRenameInfo, renameInfo,
+	  bufferSize);
+
+  free(renameInfo);
+
+  if (!result) {
+	  DWORD error = GetLastError();
+	  DbgPrint(L"\tMoveFile failed status = %d, code = %d\n", result, error);
+	  return ToNtStatus(error);
   } else {
 	  // clean up any longname
 	  if (!delete_file(GetContext(), filePath)) {
@@ -952,7 +983,7 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 			  return ToNtStatus(error);
 		  }
 	  }
-    return STATUS_SUCCESS;
+      return STATUS_SUCCESS;
   }
 }
 
