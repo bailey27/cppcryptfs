@@ -308,28 +308,8 @@ get_file_information(LPCWSTR FileName, HANDLE handle, LPBY_HANDLE_FILE_INFORMATI
 
 		if (!handle || handle == INVALID_HANDLE_VALUE) {
 
-#if 1
-			// I think we should always have a handle if somebody is querying the file information,
-			// and if we don't then it should be an error.
-
 			throw((int)ERROR_INVALID_PARAMETER);
-#else
-			// this opening a handle code is maybe responsible f
-			// for Dokany issue #249 https://github.com/dokan-dev/dokany/issues/249
-			// aka cppcryptfs issue #3 https://github.com/bailey27/cppcryptfs/issues/3
-			
 
-			// If CreateDirectory returned FILE_ALREADY_EXISTS and
-			// it is called with FILE_OPEN_IF, that handle must be opened.
-			handle = CreateFile(encpath, 0, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-				FILE_FLAG_BACKUP_SEMANTICS, NULL);
-			if (handle == INVALID_HANDLE_VALUE) {
-				DWORD error = GetLastError();
-				
-				throw((int)error);
-			}
-			opened = TRUE;
-#endif
 		}
 
 
