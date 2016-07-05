@@ -42,64 +42,48 @@ THE SOFTWARE.
 static DirIvCache dir_iv_cache;
 
 bool
-adjust_file_size_down(LARGE_INTEGER& l)
+adjust_file_offset_down(LARGE_INTEGER& l)
 {
-	long long size = l.QuadPart;
+	long long offset = l.QuadPart;
 
-	if (size < 0)
+	if (offset < 0)
 		return false;
 
-	if (size == 0)
+	if (offset == 0)
 		return true;
 
-	long long blocks = (size - CIPHER_FILE_OVERHEAD + CIPHER_BS - 1) / CIPHER_BS;
-	size -= (blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD);
-	if (size < 1)
+	long long blocks = (offset - CIPHER_FILE_OVERHEAD + CIPHER_BS - 1) / CIPHER_BS;
+	offset -= (blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD);
+	if (offset < 1)
 		return false;
 
-	l.QuadPart = size;
+	l.QuadPart = offset;
 
 	return true;
 }
 
-bool
-adjust_file_size_up(LARGE_INTEGER& l)
+bool adjust_file_size_down(LARGE_INTEGER& l)
 {
-	long long size = l.QuadPart;
-
-	if (size < 0)
-		return false;
-
-	if (size == 0)
-		return true;
-
-	long long blocks = (size + PLAIN_BS - 1) / PLAIN_BS;
-	size += (blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD);
-	if (size < 1)
-		return false;
-
-	l.QuadPart = size;
-
-	return true;
+	return adjust_file_offset_down(l);
 }
 
 bool
-adjust_write_offset_size_up(LARGE_INTEGER& l)
+adjust_file_offset_up(LARGE_INTEGER& l)
 {
-	long long size = l.QuadPart;
+	long long offset = l.QuadPart;
 
-	if (size < 0)
+	if (offset < 0)
 		return false;
 
-	if (size == 0)
+	if (offset == 0)
 		return true;
 
-	long long blocks = (size + PLAIN_BS - 1) / PLAIN_BS;
-	size += (blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD);
-	if (size < 1)
+	long long blocks = (offset + PLAIN_BS - 1) / PLAIN_BS;
+	offset += (blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD);
+	if (offset < 1)
 		return false;
 
-	l.QuadPart = size;
+	l.QuadPart = offset;
 
 	return true;
 }

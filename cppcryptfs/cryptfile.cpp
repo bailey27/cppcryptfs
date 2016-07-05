@@ -238,7 +238,7 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 	if (bWriteToEndOfFile) {
 		LARGE_INTEGER l;
 		l.QuadPart = m_real_file_size;
-		if (!adjust_file_size_down(l))
+		if (!adjust_file_offset_down(l))
 			return FALSE;
 		offset = l.QuadPart;
 	} else {
@@ -247,7 +247,7 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 		{
 			LARGE_INTEGER l;
 			l.QuadPart = m_real_file_size;
-			if (!adjust_file_size_down(l))
+			if (!adjust_file_offset_down(l))
 				return FALSE;
 
 			if (offset >= l.QuadPart)
@@ -433,14 +433,14 @@ CryptFile::SetEndOfFile(LONGLONG offset)
 
 	LARGE_INTEGER size_down = fileSize;
 
-	if (!adjust_file_size_down(size_down)) {
+	if (!adjust_file_offset_down(size_down)) {
 		return FALSE;
 	}
 
 	LARGE_INTEGER up_off;
 	up_off.QuadPart = offset;
 	
-	if (!adjust_file_size_up(up_off))
+	if (!adjust_file_offset_up(up_off))
 		return FALSE;
 
 	long long last_block = offset / PLAIN_BS;

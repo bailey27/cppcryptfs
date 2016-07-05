@@ -52,10 +52,13 @@ bool
 create_dir_iv(const CryptContext *con, LPCWSTR path); // path is unencrypted
 
 bool
-adjust_file_size_down(LARGE_INTEGER& l);
+adjust_file_offset_down(LARGE_INTEGER& l);
 
 bool
-adjust_file_size_up(LARGE_INTEGER& l);
+adjust_file_offset_up(LARGE_INTEGER& l);
+
+bool
+adjust_file_size_down(LARGE_INTEGER& l);
 
 bool
 can_delete_directory(LPCWSTR path, BOOL bMustReallyBeEmpty = FALSE);
