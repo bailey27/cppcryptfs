@@ -230,7 +230,6 @@
     <ClInclude Include="randombytes.h" />
     <ClInclude Include="RecentItems.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="scrypt.h" />
     <ClInclude Include="SecureEdit.h" />
     <ClInclude Include="status.h" />
     <ClInclude Include="stdafx.h" />
@@ -264,12 +263,6 @@
     <ClCompile Include="pad16.cpp" />
     <ClCompile Include="randombytes.cpp" />
     <ClCompile Include="RecentItems.cpp" />
-    <ClCompile Include="scrypt.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="SecureEdit.cpp" />
     <ClCompile Include="status.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
