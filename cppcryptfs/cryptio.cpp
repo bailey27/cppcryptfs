@@ -110,7 +110,7 @@ write_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsign
 
 	unsigned char tag[BLOCK_TAG_LEN];
 
-	if (!get_random_bytes(buf, BLOCK_IV_LEN))
+	if (!get_random_bytes(con, buf, BLOCK_IV_LEN))
 		return -1;
 
 	int ctlen = encrypt(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetKey(), buf, buf + BLOCK_IV_LEN, tag, openssl_crypt_context);

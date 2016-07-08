@@ -32,13 +32,16 @@ THE SOFTWARE.
 #include <windows.h>
 #include <vector>
 #include "eme.h"
+#include "randombytes.h"
+#include "dirivcache.h"
 
 class CryptContext {
 private:
 
 	CryptConfig *m_config;
 public:
-
+	RandomBytes m_rand_bytes;
+	DirIvCache m_dir_iv_cache;
 	EmeCryptContext m_eme;
 	lCacheContainer m_lc; // for eme
 

@@ -251,7 +251,7 @@ CryptConfig::read(const WCHAR *configfile)
 	return bret;
 }
 
-bool CryptConfig::init_serial(const CryptContext *con)
+bool CryptConfig::init_serial(CryptContext *con)
 {
 	BYTE diriv[DIR_IV_LEN];
 

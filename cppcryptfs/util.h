@@ -31,6 +31,8 @@ THE SOFTWARE.
 #include <windows.h>
 #include <vector>
 
+class CryptContext;
+
 
 const char *
 unicode_to_utf8(const WCHAR *unicode_str, char *buf, int buflen);
@@ -70,6 +72,6 @@ T MakeBigEndianNative(T n);
 bool read_password(WCHAR *pwbuf, int pwbuflen, const WCHAR *prompt = NULL);
 
 bool
-get_random_bytes(unsigned char *buf, DWORD len);
+get_random_bytes(CryptContext *con, unsigned char *buf, DWORD len);
 
 bool get_sys_random_bytes(unsigned char *buf, DWORD len);

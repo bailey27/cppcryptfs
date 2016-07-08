@@ -38,6 +38,7 @@ THE SOFTWARE.
 #include <iostream>
 
 #include "randombytes.h"
+#include "cryptcontext.h"
 
 #include <atlenc.h>
 
@@ -389,12 +390,12 @@ get_sys_random_bytes(unsigned char *buf, DWORD len)
 
 }
 
-static RandomBytes rand_bytes;
+
 
 bool
-get_random_bytes(unsigned char *buf, DWORD len)
+get_random_bytes(CryptContext *con, unsigned char *buf, DWORD len)
 {
-	return rand_bytes.GetRandomBytes(buf, len);
+	return con->m_rand_bytes.GetRandomBytes(buf, len);
 }
 
 
