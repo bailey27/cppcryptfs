@@ -460,9 +460,6 @@ bool CryptConfig::check_config(std::wstring& mes)
 
 	if (m_Version != 2)
 		mes += L"Only version 2 is supported\n";
-
-	if (0 && m_PlaintextNames) 
-		mes += L"PlaintextNames not supported\n";
 	
 	if (!m_DirIV && !m_PlaintextNames) 
 		mes += L"DirIV is required unless PlaintextNames is specified\n";
@@ -472,9 +469,6 @@ bool CryptConfig::check_config(std::wstring& mes)
 	
 	if (!m_GCMIV128) 
 		mes += L"GCMIV128 must be specified\n";
-
-	if (0 && m_LongNames) 
-		mes += L"LongNames not supported\n";
 		
 	return mes.size() == 0;
 }
