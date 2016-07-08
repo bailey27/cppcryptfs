@@ -17,7 +17,7 @@ Current Status
 cppcryptfs is pre-alpha, or more accurately: EXPERIMENTAL.
 
 
-Many of the issues are with Dokany.  They appear to be fixing them.  The next Dokany release should
+Many of the issues are with Dokany.  They are fixing them.  The next Dokany release should
 improve things considerably.
 
 Testing
