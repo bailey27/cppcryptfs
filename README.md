@@ -14,7 +14,7 @@ It uses the the [Dokany](https://github.com/dokan-dev/dokany) driver and library
 Current Status
 --------------
 
-cppcryptfs is pre-alpha, or more accurately, EXPERIMENTAL.
+cppcryptfs is pre-alpha, or more accurately: EXPERIMENTAL.
 
 
 Many of the issues are with Dokany.  They appear to be fixing them.  The next Dokany release should
