@@ -37,19 +37,19 @@ class CryptContext;
 void DbgPrint(LPCWSTR format, ...);
 
 bool
-get_dir_iv(const CryptContext *con, const WCHAR *path, unsigned char *dir_iv);
+get_dir_iv(CryptContext *con, const WCHAR *path, unsigned char *dir_iv);
 
 
 typedef int(WINAPI *PCryptFillFindData)(PWIN32_FIND_DATAW, void * dokan_cb, void * dokan_ctx);
 
 DWORD
-find_files(const CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFillFindData, void * dokan_cb, void * dokan_ctx);
+find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFillFindData, void * dokan_cb, void * dokan_ctx);
 
 DWORD
 get_file_information(LPCWSTR FileName, HANDLE handle, LPBY_HANDLE_FILE_INFORMATION pInfo);
 
 bool
-create_dir_iv(const CryptContext *con, LPCWSTR path); // path is unencrypted
+create_dir_iv(CryptContext *con, LPCWSTR path); // path is unencrypted
 
 bool
 adjust_file_offset_down(LARGE_INTEGER& l);
@@ -67,7 +67,7 @@ bool
 can_delete_file(LPCWSTR path);
 
 bool
-delete_directory(const CryptContext *con, LPCWSTR path);
+delete_directory(CryptContext *con, LPCWSTR path);
 
 bool
 delete_file(const CryptContext *con, const WCHAR *filename);

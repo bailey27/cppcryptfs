@@ -214,7 +214,7 @@ decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path,
 
 
 const WCHAR * // get encrypted path
-encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, std::string *actual_encrypted)
+encrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage, std::string *actual_encrypted)
 {
 
 	const TCHAR *rval = NULL;

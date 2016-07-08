@@ -82,7 +82,7 @@ public:
 
 	bool write_volume_name();
 
-	bool init_serial(const CryptContext *con);
+	bool init_serial(CryptContext *con);
 
 	WCHAR get_base_drive_letter();
 

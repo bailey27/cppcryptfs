@@ -59,6 +59,6 @@ const WCHAR * // returns base64-encoded, encrypted filename
 encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::wstring& storage, std::string *actual_encrypted = NULL);
 
 const WCHAR * // get encrypted path
-encrypt_path(const CryptContext *con, const WCHAR *path, std::wstring& storage, std::string *actual_encrypted = NULL);
+encrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage, std::string *actual_encrypted = NULL);
 
 bool write_encrypted_long_name(const WCHAR *filePath, const std::string& enc_data);

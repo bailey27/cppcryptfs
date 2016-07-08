@@ -39,8 +39,6 @@ THE SOFTWARE.
 
 #include "dirivcache.h"
 
-static DirIvCache dir_iv_cache;
-
 bool
 adjust_file_offset_down(LARGE_INTEGER& l)
 {
@@ -127,7 +125,7 @@ read_dir_iv(const TCHAR *path, unsigned char *diriv)
 }
 
 bool
-get_dir_iv(const CryptContext *con, const TCHAR *path, unsigned char *diriv)
+get_dir_iv(CryptContext *con, const TCHAR *path, unsigned char *diriv)
 {
 
 	if (con && !con->GetConfig()->DirIV()) {
@@ -138,10 +136,10 @@ get_dir_iv(const CryptContext *con, const TCHAR *path, unsigned char *diriv)
 	bool bret = true;
 
 	try {
-		if (!dir_iv_cache.lookup(path, diriv)) {
+		if (!con->m_dir_iv_cache.lookup(path, diriv)) {
 			if (!read_dir_iv(path, diriv))
 				throw(-1);
-			if (!dir_iv_cache.store(path, diriv)) {
+			if (!con->m_dir_iv_cache.store(path, diriv)) {
 				throw(-1);
 			}
 		}
@@ -207,7 +205,7 @@ static bool is_interesting_name(BOOL isRoot, const WIN32_FIND_DATAW& fdata)
 }
 
 DWORD
-find_files(const CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFillFindData fillData, void * dokan_cb, void * dokan_ctx)
+find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFillFindData fillData, void * dokan_cb, void * dokan_ctx)
 {
 	DWORD ret = 0;
 	HANDLE hfind = INVALID_HANDLE_VALUE;
@@ -361,7 +359,7 @@ get_file_information(LPCWSTR FileName, HANDLE handle, LPBY_HANDLE_FILE_INFORMATI
 }
 
 bool
-create_dir_iv(const CryptContext *con, LPCWSTR path)
+create_dir_iv(CryptContext *con, LPCWSTR path)
 {
 
 	if (con && !con->GetConfig()->DirIV())
@@ -374,7 +372,7 @@ create_dir_iv(const CryptContext *con, LPCWSTR path)
 
 		unsigned char diriv[DIR_IV_LEN];
 
-		if (!get_random_bytes(diriv, DIR_IV_LEN))
+		if (!get_random_bytes(con, diriv, DIR_IV_LEN))
 			throw ((int)(GetLastError() ? GetLastError() : ERROR_OUTOFMEMORY));
 
 		std::wstring path_str = path;
@@ -407,7 +405,7 @@ create_dir_iv(const CryptContext *con, LPCWSTR path)
 		hfile = INVALID_HANDLE_VALUE;
 
 		// assume somebody will want to use it soon
-		dir_iv_cache.store(path, diriv);
+		con->m_dir_iv_cache.store(path, diriv);
 
 		DWORD attr = GetFileAttributesW(&path_str[0]);
 		if (attr != INVALID_FILE_ATTRIBUTES) {
@@ -500,7 +498,7 @@ bool can_delete_file(LPCWSTR path)
 }
 
 bool
-delete_directory(const CryptContext *con, LPCWSTR path)
+delete_directory(CryptContext *con, LPCWSTR path)
 {
 	bool bret = true;
 
@@ -526,7 +524,7 @@ delete_directory(const CryptContext *con, LPCWSTR path)
 					}
 				}
 
-				dir_iv_cache.remove(path);
+				con->m_dir_iv_cache.remove(path);
 
 				if (!DeleteFile(&diriv_file[0])) {
 					throw((int)GetLastError());

@@ -207,7 +207,7 @@ BOOL CryptFile::WriteVersionAndFileId()
 	if (!SetFilePointerEx(m_handle, l, NULL, FILE_BEGIN))
 		return FALSE;
 
-	if (!get_random_bytes(m_header.fileid, FILE_ID_LEN))
+	if (!get_random_bytes(m_con, m_header.fileid, FILE_ID_LEN))
 		return FALSE;
 
 	unsigned short version = CRYPT_VERSION;
