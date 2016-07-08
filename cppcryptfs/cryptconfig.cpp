@@ -32,6 +32,8 @@ THE SOFTWARE.
 #include <iostream>
 #include <fstream>
 
+#include <openssl/evp.h>
+
 #include "cryptconfig.h"
 
 
@@ -47,13 +49,6 @@ THE SOFTWARE.
 #include "crypt.h"
 #include "fileutil.h"
 #include "LockZeroBuffer.h"
-
-extern "C" {
-	int EVP_PBE_scrypt(const char *pass, size_t passlen,
-		const unsigned char *salt, size_t saltlen,
-		uint64_t N, uint64_t r, uint64_t p, uint64_t maxmem,
-		unsigned char *key, size_t keylen);
-};
 
 #define SCRYPT_MB 72 // 65 seems to be enough, but allow more just in case
 
