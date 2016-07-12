@@ -59,6 +59,16 @@ RandomBytes::~RandomBytes()
 		delete m_pRandBuf;
 }
 
+void RandomBytes::lock()
+{
+	EnterCriticalSection(&m_crit);
+}
+
+void RandomBytes::unlock()
+{
+	LeaveCriticalSection(&m_crit);
+}
+
 bool RandomBytes::GetRandomBytes(unsigned char *buf, DWORD len)
 {
 	if (len > RANDOM_POOL_SIZE) {
@@ -67,7 +77,7 @@ bool RandomBytes::GetRandomBytes(unsigned char *buf, DWORD len)
 
 	bool bret = true;
 
-	EnterCriticalSection(&m_crit);
+	lock();
 
 	if (m_bufpos + len < RANDOM_POOL_SIZE) {
 		memcpy(buf, m_randbuf + m_bufpos, len);
@@ -88,7 +98,7 @@ bool RandomBytes::GetRandomBytes(unsigned char *buf, DWORD len)
 		}
 	}
 
-	LeaveCriticalSection(&m_crit);
+	unlock();
 
 	return bret;
 }

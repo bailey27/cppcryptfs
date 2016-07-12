@@ -63,6 +63,9 @@ private:
 	
 	void normalize_key(std::wstring &key);
 
+	void lock();
+	void unlock();
+
 public:
 	DirIvCache();
 

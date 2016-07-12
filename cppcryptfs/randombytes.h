@@ -45,6 +45,10 @@ private:
 
 	CRITICAL_SECTION m_crit;
 
+
+	void lock();
+	void unlock();
+
 public:
 	bool GetRandomBytes(unsigned char *buf, DWORD len);
 

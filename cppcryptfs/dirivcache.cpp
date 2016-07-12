@@ -80,6 +80,16 @@ void DirIvCache::normalize_key(std::wstring& key)
 	}
 }
 
+void DirIvCache::lock()
+{
+	EnterCriticalSection(&m_crit);
+}
+
+void DirIvCache::unlock()
+{
+	LeaveCriticalSection(&m_crit);
+}
+
 bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 {
 	std::wstring key = path;
@@ -88,7 +98,7 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 
 	normalize_key(key);
 
-	EnterCriticalSection(&m_crit);
+	lock();
 
 	m_lookups++;
 
@@ -117,7 +127,7 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 		DbgPrint(L"DirIvCache: %I64d lookups, %I64d hits, %I64d misses, hit ratio %0.2f%%\n", m_lookups, m_hits, m_lookups - m_hits, ratio*100);
 	}
 
-	LeaveCriticalSection(&m_crit);
+	unlock();
 
 	return found;
 }
@@ -132,7 +142,7 @@ bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv)
 
 	normalize_key(key);
 
-	EnterCriticalSection(&m_crit);
+	lock();
 
 	try {
 
@@ -174,8 +184,7 @@ bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv)
 		rval = false;
 	}
    
-
-	LeaveCriticalSection(&m_crit);
+	unlock();
 
 	return rval;
 }
@@ -186,7 +195,7 @@ void DirIvCache::remove(LPCWSTR path)
 
 	normalize_key(key);
 
-	EnterCriticalSection(&m_crit);
+	lock();
 
 	auto it = m_map.find(key);
 
@@ -201,5 +210,5 @@ void DirIvCache::remove(LPCWSTR path)
 		delete node;
 	}
 
-	LeaveCriticalSection(&m_crit);
+	unlock();
 }
