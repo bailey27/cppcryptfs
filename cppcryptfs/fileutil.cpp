@@ -405,7 +405,8 @@ create_dir_iv(CryptContext *con, LPCWSTR path)
 		hfile = INVALID_HANDLE_VALUE;
 
 		// assume somebody will want to use it soon
-		con->m_dir_iv_cache.store(path, diriv);
+		if (con)
+			con->m_dir_iv_cache.store(path, diriv);
 
 		DWORD attr = GetFileAttributesW(&path_str[0]);
 		if (attr != INVALID_FILE_ATTRIBUTES) {

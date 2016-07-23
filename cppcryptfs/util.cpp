@@ -395,7 +395,10 @@ get_sys_random_bytes(unsigned char *buf, DWORD len)
 bool
 get_random_bytes(CryptContext *con, unsigned char *buf, DWORD len)
 {
-	return con->m_rand_bytes.GetRandomBytes(buf, len);
+	if (con)
+		return con->m_rand_bytes.GetRandomBytes(buf, len);
+	else
+		return get_sys_random_bytes(buf, len);
 }
 
 
