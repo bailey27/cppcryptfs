@@ -1683,10 +1683,17 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 	DWORD wait_result = WaitForMultipleObjects(sizeof(handles) / sizeof(handles[0]), handles, FALSE, MOUNT_TIMEOUT);
 
 	if (wait_result != WAIT_OBJECT_0) {
-		if (wait_result == WAIT_TIMEOUT)
+		if (wait_result == WAIT_TIMEOUT) {
 			mes = L"mount operation timed out\n";
-		else
+		} else {
 			mes = L"mount operation failed\n";
+			free(dokanOperations);
+			free(dokanOptions);
+			delete con;
+			free(tdata);
+			g_DriveThreadHandles[driveletter - 'A'] = NULL;
+			g_ThreadDatas[driveletter - 'A'] = NULL;
+		}
 		return EXIT_FAILURE;
 	}
 
