@@ -45,7 +45,7 @@ public:
 	EmeCryptContext m_eme;
 	lCacheContainer m_lc; // for eme
 
-	BOOL m_mounted;
+	HANDLE m_mountEvent;
 
 	void InitEme(const BYTE *key);
 

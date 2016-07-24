@@ -39,12 +39,19 @@ void CryptContext::InitEme(const BYTE *key)
 
 CryptContext::CryptContext()
 {
-	m_mounted = FALSE;
+	m_mountEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+	if (!m_mountEvent)
+		throw(GetLastError());
+
 	m_config = new CryptConfig;
 }
 
 CryptContext::~CryptContext()
 {
+	if (m_mountEvent)
+		CloseHandle(m_mountEvent);
+
 	if (m_config)
 		delete m_config;
 }

@@ -1388,7 +1388,7 @@ static NTSTATUS DOKAN_CALLBACK CryptMounted(PDOKAN_FILE_INFO DokanFileInfo) {
   CryptContext *con = GetContext();
   CryptConfig *config = con->GetConfig();
 
-  con->m_mounted = TRUE;
+  SetEvent(con->m_mountEvent);
 
   DbgPrint(L"Mounted\n");
   fwprintf(stdout, L"Mounted on %C:\\\n", config->GetDriveLetter());
@@ -1398,7 +1398,6 @@ static NTSTATUS DOKAN_CALLBACK CryptMounted(PDOKAN_FILE_INFO DokanFileInfo) {
 static NTSTATUS DOKAN_CALLBACK CryptUnmounted(PDOKAN_FILE_INFO DokanFileInfo) {
   CryptContext *con = GetContext();
 
-  con->m_mounted = FALSE;
   DbgPrint(L"Unmounted\n");
   return STATUS_SUCCESS;
 }
@@ -1527,7 +1526,6 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 	CryptContext *con;
 
 	try {
-
 		con = new CryptContext;
 	} catch (...) {
 		mes = L"Failed to allocate context\n";
@@ -1678,15 +1676,17 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 	g_DriveThreadHandles[driveletter - 'A'] = hThread;
 	g_ThreadDatas[driveletter - 'A'] = tdata;
 
-	DWORD waited = 0;
-	while (!con->m_mounted && waited < MOUNT_TIMEOUT) {
-		const DWORD wait = 100;
-		WaitForSingleObject(hThread, wait);
-		waited += wait;
-	}
+	HANDLE handles[2];
+	handles[0] = con->m_mountEvent;
+	handles[1] = hThread;
 
-	if (!con->m_mounted) {
-		mes = L"mount operation timed out\n";
+	DWORD wait_result = WaitForMultipleObjects(sizeof(handles) / sizeof(handles[0]), handles, FALSE, MOUNT_TIMEOUT);
+
+	if (wait_result != WAIT_OBJECT_0) {
+		if (wait_result == WAIT_TIMEOUT)
+			mes = L"mount operation timed out\n";
+		else
+			mes = L"mount operation failed\n";
 		return EXIT_FAILURE;
 	}
 
