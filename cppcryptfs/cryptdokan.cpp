@@ -1685,7 +1685,8 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 	if (wait_result != WAIT_OBJECT_0) {
 		if (wait_result == WAIT_TIMEOUT) {
 			mes = L"mount operation timed out\n";
-		} else {
+		} else if (wait_result == (WAIT_OBJECT_0 + 1)) {
+			// thread exited without mounting
 			mes = L"mount operation failed\n";
 			free(dokanOperations);
 			free(dokanOptions);
@@ -1693,6 +1694,8 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 			free(tdata);
 			g_DriveThreadHandles[driveletter - 'A'] = NULL;
 			g_ThreadDatas[driveletter - 'A'] = NULL;
+		} else {
+			mes = L"error waiting for mount operation\n";
 		}
 		return EXIT_FAILURE;
 	}
