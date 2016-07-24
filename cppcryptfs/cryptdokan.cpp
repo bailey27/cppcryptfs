@@ -687,7 +687,6 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 	PDOKAN_FILE_INFO DokanFileInfo) {
 	FileNameEnc filePath(GetContext(), FileName);
 	HANDLE handle = (HANDLE)DokanFileInfo->Context;
-	ULONG offset = (ULONG)Offset;
 	BOOL opened = FALSE;
 	NTSTATUS ret_status = STATUS_SUCCESS;
 
@@ -709,7 +708,7 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 	CryptFile file;
 	if (file.Associate(GetContext(), handle)) {
 
-		if (!file.Read((unsigned char *)Buffer, BufferLength, ReadLength, offset)) {
+		if (!file.Read((unsigned char *)Buffer, BufferLength, ReadLength, Offset)) {
 			DWORD error = GetLastError();
 			DbgPrint(L"\tread error = %u, buffer length = %d, read length = %d\n\n",
 				error, BufferLength, *ReadLength);
@@ -733,7 +732,6 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
                                                PDOKAN_FILE_INFO DokanFileInfo) {
   FileNameEnc filePath(GetContext(), FileName);
   HANDLE handle = (HANDLE)DokanFileInfo->Context;
-  ULONG offset = (ULONG)Offset;
   BOOL opened = FALSE;
   NTSTATUS ret_status = STATUS_SUCCESS;
 
@@ -768,7 +766,7 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
 
   CryptFile file;
   if (file.Associate(GetContext(), handle)) {
-	  if (!file.Write((const unsigned char *)Buffer, NumberOfBytesToWrite, NumberOfBytesWritten, offset, DokanFileInfo->WriteToEndOfFile, DokanFileInfo->PagingIo)) {
+	  if (!file.Write((const unsigned char *)Buffer, NumberOfBytesToWrite, NumberOfBytesWritten, Offset, DokanFileInfo->WriteToEndOfFile, DokanFileInfo->PagingIo)) {
 		  DWORD error = GetLastError();
 		  DbgPrint(L"\twrite error = %u, buffer length = %d, write length = %d\n",
 			  error, NumberOfBytesToWrite, *NumberOfBytesWritten);
