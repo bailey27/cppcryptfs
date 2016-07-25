@@ -1458,6 +1458,11 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 		return -1;
 	}
 
+	if (g_DriveThreadHandles[driveletter - 'A']) {
+		mes = L"drive letter already in use\n";
+		return -1;
+	}
+
 	int retval = 0;
 	CryptThreadData *tdata = NULL;
 	HANDLE hThread = NULL;
@@ -1652,12 +1657,12 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 	if (retval != 0) {
 		if (hThread) {
 			CloseHandle(hThread);
-			g_DriveThreadHandles[driveletter - 'A'] = NULL;
 		}
+		g_DriveThreadHandles[driveletter - 'A'] = NULL;
 		if (tdata) {
 			delete tdata;
-			g_ThreadDatas[driveletter - 'A'] = NULL;
 		}
+		g_ThreadDatas[driveletter - 'A'] = NULL;
 	}
 
 	return retval;
