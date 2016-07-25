@@ -1452,16 +1452,17 @@ static DWORD WINAPI CryptThreadProc(
 
 int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes) 
 {
+
+	if (driveletter < 'A' || driveletter > 'Z') {
+		mes = L"Invalid drive letter\n";
+		return -1;
+	}
+
 	int retval = 0;
 	CryptThreadData *tdata = NULL;
 
 	try {
-		if (driveletter < 'A' || driveletter > 'Z') {
-			mes = L"Invalid drive letter\n";
-			return -1;
-		}
-
-
+	
 		try {
 			tdata = new CryptThreadData;
 		} catch (...) {
@@ -1630,12 +1631,12 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 		DWORD wait_result = WaitForMultipleObjects(sizeof(handles) / sizeof(handles[0]), handles, FALSE, MOUNT_TIMEOUT);
 
 		if (wait_result != WAIT_OBJECT_0) {
-			if (wait_result == WAIT_TIMEOUT) {
-				mes = L"mount operation timed out\n";
-				tdata = NULL; // deleting it would probably cause crash
-			} else if (wait_result == (WAIT_OBJECT_0 + 1)) {
+			if (wait_result == (WAIT_OBJECT_0 + 1)) {
 				// thread exited without mounting
 				mes = L"mount operation failed\n";
+			} else if (wait_result == WAIT_TIMEOUT) {
+				mes = L"mount operation timed out\n";
+				tdata = NULL; // deleting it would probably cause crash
 			} else {
 				mes = L"error waiting for mount operation\n";
 				tdata = NULL; // deleting it would probably cause crash
