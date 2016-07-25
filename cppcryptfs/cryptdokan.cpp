@@ -99,8 +99,10 @@ BOOL g_UseStdErr;
 BOOL g_DebugMode; 
 
 struct struct_CryptThreadData {
-	PDOKAN_OPERATIONS operations;
-	PDOKAN_OPTIONS options;
+	DOKAN_OPERATIONS operations;
+	DOKAN_OPTIONS options;
+	CryptContext con;
+	WCHAR mountpoint[4];
 };
 
 typedef struct struct_CryptThreadData CryptThreadData;
@@ -1442,265 +1444,218 @@ static DWORD WINAPI CryptThreadProc(
 {
 	CryptThreadData *tdata = (CryptThreadData*)lpParameter;
 
-	NTSTATUS status = DokanMain(tdata->options, tdata->operations);
+	NTSTATUS status = DokanMain(&tdata->options, &tdata->operations);
 
 	return (DWORD)status;
-}
-
-static void cleanup_tdata(CryptThreadData *tdata)
-{
-	CryptContext *con = (CryptContext*)tdata->options->GlobalContext;
-
-	delete con;
-
-	free((void*)tdata->options->MountPoint);
-
-	free(tdata->options);
-	free(tdata->operations);
-
-	free(tdata);
 }
 
 
 int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes) 
 {
-
-	if (driveletter < 'A' || driveletter > 'Z') {
-		mes = L"Invalid drive letter\n";
-		return -1;
-	}
-
-	PDOKAN_OPERATIONS dokanOperations =
-		(PDOKAN_OPERATIONS)malloc(sizeof(DOKAN_OPERATIONS));
-
-	if (!dokanOperations) {
-		mes = L"Failed to allocate doakan operations\n";
-		return -1;
-	}
-
-	init_security_name_privilege();  // make sure AddSecurityNamePrivilege() has been called, whether or not we can get it
-
-	ZeroMemory(dokanOperations, sizeof(DOKAN_OPERATIONS));
-	dokanOperations->ZwCreateFile = CryptCreateFile;
-	dokanOperations->Cleanup = CryptCleanup;
-	dokanOperations->CloseFile = CryptCloseFile;
-	dokanOperations->ReadFile = CryptReadFile;
-	dokanOperations->WriteFile = CryptWriteFile;
-	dokanOperations->FlushFileBuffers = CryptFlushFileBuffers;
-	dokanOperations->GetFileInformation = CryptGetFileInformation;
-	dokanOperations->FindFiles = CryptFindFiles;
-	dokanOperations->FindFilesWithPattern = NULL;
-	dokanOperations->SetFileAttributes = CryptSetFileAttributes;
-	dokanOperations->SetFileTime = CryptSetFileTime;
-	dokanOperations->DeleteFile = CryptDeleteFile;
-	dokanOperations->DeleteDirectory = CryptDeleteDirectory;
-	dokanOperations->MoveFile = CryptMoveFile;
-	dokanOperations->SetEndOfFile = CryptSetEndOfFile;
-	dokanOperations->SetAllocationSize = CryptSetAllocationSize;
-	dokanOperations->LockFile = CryptLockFile;
-	dokanOperations->UnlockFile = CryptUnlockFile;
-	// We seem to work better if we export Get/SetFileSecurity even if we don't have SE_SECURITY_NAME privilege.
-	// It seems that GetFileSecurity() will work without that privilege, at least in the common cases.
-	// So it seems better to do as much Get/SetFileSecurity() as we can regardless of whether we
-	// we can get SE_SECURITY_NAME (getting it implies running as administrator).
-	//
-	// Dokany suggested setting the Get/Set callbacks to NULL if we don't have the privilege, but that keeps us from
-	// being able to copy files out of the encrypted fs, or even copy a file within it to a new file within it.
-	// So, whatever type of GetFileSecurity() that can work even without having SE_SECURITY_NAME
-	// seems to be required for copying files.
-	if (1 || have_security_name_privilege()) {
-		dokanOperations->GetFileSecurity = CryptGetFileSecurity;
-		dokanOperations->SetFileSecurity = CryptSetFileSecurity;
-	} else {
-		dokanOperations->GetFileSecurity = NULL;
-		dokanOperations->SetFileSecurity = NULL;
-	}
-	dokanOperations->GetDiskFreeSpace = CryptGetDiskFreeSpace;
-	dokanOperations->GetVolumeInformation = CryptGetVolumeInformation;
-	dokanOperations->Unmounted = CryptUnmounted;
-	dokanOperations->FindStreams = CryptFindStreams;
-	dokanOperations->Mounted = CryptMounted;
-
-	
-
-	CryptContext *con;
+	int retval = 0;
+	CryptThreadData *tdata = NULL;
 
 	try {
-		con = new CryptContext;
-	} catch (...) {
-		mes = L"Failed to allocate context\n";
-		return -1;
-	}
-
-	CryptConfig *config = con->GetConfig();
-
-	PDOKAN_OPTIONS dokanOptions = (PDOKAN_OPTIONS)malloc(sizeof(DOKAN_OPTIONS));
-
-	if (!dokanOptions) {
-		free(dokanOperations);
-		delete con;
-		mes = L"Failed to allocate dokanOptions";
-		return -1;
-	}
+		if (driveletter < 'A' || driveletter > 'Z') {
+			mes = L"Invalid drive letter\n";
+			return -1;
+		}
 
 
-	ZeroMemory(dokanOptions, sizeof(DOKAN_OPTIONS));
-	dokanOptions->Version = DOKAN_VERSION;
+		try {
+			tdata = new CryptThreadData;
+		} catch (...) {
 
-	dokanOptions->ThreadCount = 0; // use default
+		}
+
+		if (!tdata) {
+			mes = L"Failed to allocate tdata\n";
+			throw(-1);
+		}
+
+		PDOKAN_OPERATIONS dokanOperations = &tdata->operations;
+
+		init_security_name_privilege();  // make sure AddSecurityNamePrivilege() has been called, whether or not we can get it
+
+		ZeroMemory(dokanOperations, sizeof(DOKAN_OPERATIONS));
+		dokanOperations->ZwCreateFile = CryptCreateFile;
+		dokanOperations->Cleanup = CryptCleanup;
+		dokanOperations->CloseFile = CryptCloseFile;
+		dokanOperations->ReadFile = CryptReadFile;
+		dokanOperations->WriteFile = CryptWriteFile;
+		dokanOperations->FlushFileBuffers = CryptFlushFileBuffers;
+		dokanOperations->GetFileInformation = CryptGetFileInformation;
+		dokanOperations->FindFiles = CryptFindFiles;
+		dokanOperations->FindFilesWithPattern = NULL;
+		dokanOperations->SetFileAttributes = CryptSetFileAttributes;
+		dokanOperations->SetFileTime = CryptSetFileTime;
+		dokanOperations->DeleteFile = CryptDeleteFile;
+		dokanOperations->DeleteDirectory = CryptDeleteDirectory;
+		dokanOperations->MoveFile = CryptMoveFile;
+		dokanOperations->SetEndOfFile = CryptSetEndOfFile;
+		dokanOperations->SetAllocationSize = CryptSetAllocationSize;
+		dokanOperations->LockFile = CryptLockFile;
+		dokanOperations->UnlockFile = CryptUnlockFile;
+		// We seem to work better if we export Get/SetFileSecurity even if we don't have SE_SECURITY_NAME privilege.
+		// It seems that GetFileSecurity() will work without that privilege, at least in the common cases.
+		// So it seems better to do as much Get/SetFileSecurity() as we can regardless of whether we
+		// we can get SE_SECURITY_NAME (getting it implies running as administrator).
+		//
+		// Dokany suggested setting the Get/Set callbacks to NULL if we don't have the privilege, but that keeps us from
+		// being able to copy files out of the encrypted fs, or even copy a file within it to a new file within it.
+		// So, whatever type of GetFileSecurity() that can work even without having SE_SECURITY_NAME
+		// seems to be required for copying files.
+		if (1 || have_security_name_privilege()) {
+			dokanOperations->GetFileSecurity = CryptGetFileSecurity;
+			dokanOperations->SetFileSecurity = CryptSetFileSecurity;
+		} else {
+			dokanOperations->GetFileSecurity = NULL;
+			dokanOperations->SetFileSecurity = NULL;
+		}
+		dokanOperations->GetDiskFreeSpace = CryptGetDiskFreeSpace;
+		dokanOperations->GetVolumeInformation = CryptGetVolumeInformation;
+		dokanOperations->Unmounted = CryptUnmounted;
+		dokanOperations->FindStreams = CryptFindStreams;
+		dokanOperations->Mounted = CryptMounted;
+
+
+
+		CryptContext *con = &tdata->con;
+
+		CryptConfig *config = con->GetConfig();
+
+		PDOKAN_OPTIONS dokanOptions = &tdata->options;
+
+		ZeroMemory(dokanOptions, sizeof(DOKAN_OPTIONS));
+		dokanOptions->Version = DOKAN_VERSION;
+
+		dokanOptions->ThreadCount = 0; // use default
 
 #ifdef _DEBUG
-	dokanOptions->Timeout = 900000;
-	dokanOptions->ThreadCount = 1;
-	g_DebugMode = 1;
+		dokanOptions->Timeout = 900000;
+		dokanOptions->ThreadCount = 1;
+		g_DebugMode = 1;
 #else
-	dokanOptions->ThreadCount = 1;  // even the mirror sample has problems launching some executables with default number of threads
+		dokanOptions->ThreadCount = 1;  // even the mirror sample has problems launching some executables with default number of threads
 #endif
-	
-
-	config->m_basedir = path;
-
-	// strip any trailing backslashes
-	while (config->m_basedir.size() > 0 && config->m_basedir[config->m_basedir.size() - 1] == '\\')
-		config->m_basedir.erase(config->m_basedir.size() - 1);
-
-	std::wstring holder = config->m_basedir;
-
-	config->m_basedir = L"\\\\?\\";  // this prefix enables up to 32K long file paths on NTFS
-
-	config->m_basedir += holder;
-
-	config->m_driveletter = (char)driveletter;
-
-	WCHAR *mountpoint = (WCHAR *)malloc(4 * sizeof(WCHAR));
-
-	if (!mountpoint) {
-		free(dokanOptions);
-		free(dokanOperations);
-		delete con;
-		mes = L"Failed to allocated mountpoint\n";
-		return -1;
-	}
-
-	mountpoint[0] = driveletter;
-	mountpoint[1] = L':';
-	mountpoint[2] = L'\\';
-	mountpoint[3] = 0;
-
-	dokanOptions->MountPoint = mountpoint;
 
 
-	if (!config->read()) {
-		mes = L"unable to load config\n";
-		free(dokanOperations);
-		free(dokanOptions);
-		delete con;
-		return EXIT_FAILURE;
-	}
+		config->m_basedir = path;
 
-	std::wstring config_error_mes;
+		// strip any trailing backslashes
+		while (config->m_basedir.size() > 0 && config->m_basedir[config->m_basedir.size() - 1] == '\\')
+			config->m_basedir.erase(config->m_basedir.size() - 1);
 
-	if (!config->check_config(config_error_mes)) {
-		mes = &config_error_mes[0];
-		free(dokanOperations);
-		free(dokanOptions);
-		delete con;
-		return EXIT_FAILURE;
-	}
+		std::wstring holder = config->m_basedir;
 
-	if (!config->decrypt_key(password)) {
-		mes = L"password incorrect\n";
-		free(dokanOperations);
-		free(dokanOptions);
-		delete con;
-		return EXIT_FAILURE;
-	}
+		config->m_basedir = L"\\\\?\\";  // this prefix enables up to 32K long file paths on NTFS
 
-	if (config->m_EMENames) {
-		try {
-			con->InitEme(config->GetKey());
-		} catch (...) {
-			mes = L"unable initialize eme context";
-			free(dokanOperations);
-			free(dokanOperations);
-			delete con;
-			return EXIT_FAILURE;
+		config->m_basedir += holder;
+
+		config->m_driveletter = (char)driveletter;
+
+		WCHAR *mountpoint = tdata->mountpoint;
+
+		mountpoint[0] = driveletter;
+		mountpoint[1] = L':';
+		mountpoint[2] = L'\\';
+		mountpoint[3] = 0;
+
+		dokanOptions->MountPoint = mountpoint;
+
+
+		if (!config->read()) {
+			mes = L"unable to load config\n";
+			throw(-1);
 		}
+
+		std::wstring config_error_mes;
+
+		if (!config->check_config(config_error_mes)) {
+			mes = &config_error_mes[0];
+			throw(-1);
+		}
+
+		if (!config->decrypt_key(password)) {
+			mes = L"password incorrect\n";
+			throw(-1);
+		}
+
+		if (config->m_EMENames) {
+			try {
+				con->InitEme(config->GetKey());
+			} catch (...) {
+				mes = L"unable initialize eme context";
+				throw(-1);
+			}
+		}
+
+		config->init_serial(con);
+
+		WCHAR fs_name[256];
+
+		WCHAR rbuf[4];
+		rbuf[0] = config->get_base_drive_letter();
+		rbuf[1] = ':';
+		rbuf[2] = '\\';
+		rbuf[3] = '\0';
+
+		BOOL bGotVI = GetVolumeInformationW(rbuf, NULL, 0, NULL, NULL, NULL, fs_name, sizeof(fs_name) / sizeof(fs_name[0]) - 1);
+
+		if (bGotVI) {
+			size_t maxlength = (bGotVI && !wcscmp(fs_name, L"NTFS") ? MAX_VOLUME_NAME_LENGTH : MAX_FAT_VOLUME_NAME_LENGTH);
+
+			if (config->m_VolumeName.size() > maxlength)
+				config->m_VolumeName.erase(maxlength, std::wstring::npos);
+		}
+
+
+		dokanOptions->GlobalContext = (ULONG64)con;
+		dokanOptions->Options |= DOKAN_OPTION_ALT_STREAM;
+
+		HANDLE hThread = CreateThread(NULL, 0, CryptThreadProc, tdata, 0, NULL);
+
+		if (!hThread) {
+			mes = L"unable to create thread for drive letter\n";
+			throw(-1);
+		}
+
+		g_DriveThreadHandles[driveletter - 'A'] = hThread;
+		g_ThreadDatas[driveletter - 'A'] = tdata;
+
+		HANDLE handles[2];
+		handles[0] = con->m_mountEvent;
+		handles[1] = hThread;
+
+		DWORD wait_result = WaitForMultipleObjects(sizeof(handles) / sizeof(handles[0]), handles, FALSE, MOUNT_TIMEOUT);
+
+		if (wait_result != WAIT_OBJECT_0) {
+			if (wait_result == WAIT_TIMEOUT) {
+				mes = L"mount operation timed out\n";
+				tdata = NULL; // deleting it would probably cause crash
+			} else if (wait_result == (WAIT_OBJECT_0 + 1)) {
+				// thread exited without mounting
+				mes = L"mount operation failed\n";
+			} else {
+				mes = L"error waiting for mount operation\n";
+				tdata = NULL; // deleting it would probably cause crash
+			}
+			throw(-1);
+		}
+
+	} catch (...) {
+		retval = -1;
 	}
 
-	CryptThreadData *tdata = (CryptThreadData*)malloc(sizeof(CryptThreadData));
-
-	if (!tdata) {
-		free(dokanOperations);
-		free(dokanOptions);
-		delete con;
-		return EXIT_FAILURE;
-	}
-
-	config->init_serial(con);
-
-	WCHAR fs_name[256];
-
-	WCHAR rbuf[4];
-	rbuf[0] = config->get_base_drive_letter();
-	rbuf[1] = ':';
-	rbuf[2] = '\\';
-	rbuf[3] = '\0';
-
-	BOOL bGotVI = GetVolumeInformationW(rbuf, NULL, 0, NULL, NULL, NULL, fs_name, sizeof(fs_name) / sizeof(fs_name[0]) - 1);
-
-	if (bGotVI) {
-		size_t maxlength = (bGotVI && !wcscmp(fs_name, L"NTFS") ? MAX_VOLUME_NAME_LENGTH : MAX_FAT_VOLUME_NAME_LENGTH);
-
-		if (config->m_VolumeName.size() > maxlength)
-			config->m_VolumeName.erase(maxlength, std::wstring::npos);
-	}
-
-
-	dokanOptions->GlobalContext = (ULONG64)con;
-	dokanOptions->Options |= DOKAN_OPTION_ALT_STREAM;
-
-	tdata->operations = dokanOperations;
-	tdata->options = dokanOptions;
-
-	HANDLE hThread = CreateThread(NULL, 0, CryptThreadProc, tdata, 0, NULL);
-
-	if (!hThread) {
-		free(dokanOperations);
-		free(dokanOptions);
-		delete con;
-		free(tdata);
-		return EXIT_FAILURE;
-	}
-
-	g_DriveThreadHandles[driveletter - 'A'] = hThread;
-	g_ThreadDatas[driveletter - 'A'] = tdata;
-
-	HANDLE handles[2];
-	handles[0] = con->m_mountEvent;
-	handles[1] = hThread;
-
-	DWORD wait_result = WaitForMultipleObjects(sizeof(handles) / sizeof(handles[0]), handles, FALSE, MOUNT_TIMEOUT);
-
-	if (wait_result != WAIT_OBJECT_0) {
-		if (wait_result == WAIT_TIMEOUT) {
-			mes = L"mount operation timed out\n";
-		} else if (wait_result == (WAIT_OBJECT_0 + 1)) {
-			// thread exited without mounting
-			mes = L"mount operation failed\n";
-			free(dokanOperations);
-			free(dokanOptions);
-			delete con;
-			free(tdata);
+	if (retval != 0) {
+		if (tdata) {
+			delete tdata;
 			g_DriveThreadHandles[driveletter - 'A'] = NULL;
 			g_ThreadDatas[driveletter - 'A'] = NULL;
-		} else {
-			mes = L"error waiting for mount operation\n";
 		}
-		return EXIT_FAILURE;
 	}
 
-	return STATUS_SUCCESS;
+	return retval;
 }
 
 BOOL unmount_crypt_fs(WCHAR driveletter, bool wait)
@@ -1724,7 +1679,7 @@ BOOL unmount_crypt_fs(WCHAR driveletter, bool wait)
 			CloseHandle(g_DriveThreadHandles[driveletter - 'A']);
 			g_DriveThreadHandles[driveletter - 'A'] = NULL;
 			if (g_ThreadDatas[driveletter - 'A']) {
-				cleanup_tdata(g_ThreadDatas[driveletter - 'A']);
+				delete g_ThreadDatas[driveletter - 'A'];
 				g_ThreadDatas[driveletter - 'A'] = NULL;
 			}
 		} else {
@@ -1764,7 +1719,7 @@ BOOL wait_for_all_unmounted()
 				g_DriveThreadHandles[i] = NULL;
 
 				if (g_ThreadDatas[i]) {
-					cleanup_tdata(g_ThreadDatas[i]);
+					delete g_ThreadDatas[i];
 					g_ThreadDatas[i] = NULL;
 				}
 			}
@@ -1782,10 +1737,8 @@ BOOL write_volume_name_if_changed(WCHAR dl)
 	if (!tdata)
 		return FALSE;
 
-	if (!tdata->options)
-		return FALSE;
 
-	CryptContext *con = (CryptContext*)tdata->options->GlobalContext;
+	CryptContext *con = &tdata->con;
 
 	if (!con)
 		return false;
