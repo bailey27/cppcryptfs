@@ -1460,6 +1460,7 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 
 	int retval = 0;
 	CryptThreadData *tdata = NULL;
+	HANDLE hThread = NULL;
 
 	try {
 	
@@ -1614,7 +1615,7 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 		dokanOptions->GlobalContext = (ULONG64)con;
 		dokanOptions->Options |= DOKAN_OPTION_ALT_STREAM;
 
-		HANDLE hThread = CreateThread(NULL, 0, CryptThreadProc, tdata, 0, NULL);
+		hThread = CreateThread(NULL, 0, CryptThreadProc, tdata, 0, NULL);
 
 		if (!hThread) {
 			mes = L"unable to create thread for drive letter\n";
@@ -1649,9 +1650,12 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 	}
 
 	if (retval != 0) {
+		if (hThread) {
+			CloseHandle(hThread);
+			g_DriveThreadHandles[driveletter - 'A'] = NULL;
+		}
 		if (tdata) {
 			delete tdata;
-			g_DriveThreadHandles[driveletter - 'A'] = NULL;
 			g_ThreadDatas[driveletter - 'A'] = NULL;
 		}
 	}
