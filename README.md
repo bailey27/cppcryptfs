@@ -119,6 +119,16 @@ It is therefore strongly recommended to use NTFS whenever possible.
 A lot of Windows progams, including File Explorer that comes with Windows, have problems with long paths.  If you use encrypted file names, then you might need to use a third-party file manager that handles long file paths if you want to move the root of your encrypted filesystem.  It's a good idea to copy it and then delete the old one instead of moving it in case your file manager has problems.
 
 
+Case Sensitivity
+-----
+Windows filesystems are not case-sensitive, but they are case-preserving.  The gocryptfs filesystem with encrypted filenames is case-senstitive.
+
+The way the file name encryption works means that if you create a file as Foo.txt and then try
+to open it as foo.txt, it will not be found.  However, on a normal windows filesystem, it would be found.  This is not normally a problem because files normally get opened using using the same case of the letters that was
+used when they were created.  So far, the only software that seems to create files with one case and then tries open them with another is Visual Studio.
+
+Currently, the only solution to this problem with cppcryptfs is to use plain text file names.
+
 Compatibility with gocryptfs
 ------
 
