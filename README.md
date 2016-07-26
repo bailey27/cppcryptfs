@@ -124,7 +124,7 @@ Case Sensitivity
 Windows filesystems are not case-sensitive, but they are case-preserving.  The gocryptfs filesystem with encrypted filenames is case-senstitive.
 
 The way the file name encryption works means that if you create a file as Foo.txt and then try
-to open it as foo.txt, it will not be found.  However, on a normal Windows filesystem, it would be found.  This is not normally a problem because files are usually opened using using the same case of the letters that was
+to open it as foo.txt, it will not be found.  However, on a normal Windows filesystem, it would be found.  This is not normally a problem because files are usually opened using the same case of the letters that was
 used when they were created.  So far, the only software that seems to create files with one case and then tries open them with another is Visual Studio.
 
 Currently, the only solution to this problem with cppcryptfs is to use plain text file names.
