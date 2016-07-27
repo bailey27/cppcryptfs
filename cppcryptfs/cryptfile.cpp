@@ -276,11 +276,11 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 		if (!WriteVersionAndFileId())
 			return FALSE;	
 	} else {
-		LARGE_INTEGER l;
-		l.QuadPart = m_real_file_size;
-		adjust_file_offset_down(l);
+		LARGE_INTEGER size_down;
+		size_down.QuadPart = m_real_file_size;
+		adjust_file_offset_down(size_down);
 		// if creating a hole, call this->SetEndOfFile() to deal with last block if necessary
-		if (offset != l.QuadPart && offset + buflen > l.QuadPart) {
+		if (offset > size_down.QuadPart && (size_down.QuadPart % PLAIN_BS)) {
 			SetEndOfFile(offset + buflen, FALSE);
 		}
 	}
