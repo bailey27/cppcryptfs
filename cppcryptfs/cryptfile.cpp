@@ -428,9 +428,7 @@ adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l)
 		return true;
 
 	long long blocks = (offset + PLAIN_BS - 1) / PLAIN_BS;
-	offset += (blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD);
-	if (offset < 1)
-		return false;
+	offset += blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD;
 
 	l.QuadPart = offset;
 
@@ -446,10 +444,8 @@ CryptFile::SetEndOfFile(LONGLONG offset, BOOL bSet)
 	if (m_real_file_size == (long long)-1)
 		return FALSE;
 
-
 	if (m_handle == NULL || m_handle == INVALID_HANDLE_VALUE)
 		return FALSE;
-
 
 	if (m_is_empty && offset != 0) {
 		if (!WriteVersionAndFileId())
@@ -465,10 +461,12 @@ CryptFile::SetEndOfFile(LONGLONG offset, BOOL bSet)
 	}
 
 	LARGE_INTEGER up_off;
-	up_off.QuadPart = offset;
-	
-	if (!adjust_file_offset_up_truncate_zero(up_off))
-		return FALSE;
+
+	if (bSet) {
+		up_off.QuadPart = offset;
+		if (!adjust_file_offset_up_truncate_zero(up_off))
+			return FALSE;
+	}
 
 	long long last_block;
 	int to_write;
