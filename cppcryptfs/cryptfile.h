@@ -57,7 +57,7 @@ public:
 
 	BOOL Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile, BOOL bPagingIo);
 
-	BOOL SetEndOfFile(LONGLONG offset);
+	BOOL SetEndOfFile(LONGLONG offset, BOOL bSet = TRUE);
 
 	BOOL LockFile(LONGLONG ByteOffset, LONGLONG Length);
 

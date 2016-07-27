@@ -155,8 +155,7 @@ BOOL CryptFile::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG 
 				if (advance < 1)
 					break;
 
-			}
-			else {
+			} else {
 
 				unsigned char blockbuf[PLAIN_BS];
 
@@ -223,6 +222,10 @@ BOOL CryptFile::WriteVersionAndFileId()
 	
 	m_header.version = CRYPT_VERSION;
 
+	m_real_file_size = FILE_HEADER_LEN;
+
+	m_is_empty = false;
+
 	return nWritten == FILE_HEADER_LEN;
 }
 
@@ -242,9 +245,7 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 			return FALSE;
 		offset = l.QuadPart;
 	} else {
-	
-		if (bPagingIo)
-		{
+		if (bPagingIo) {
 			LARGE_INTEGER l;
 			l.QuadPart = m_real_file_size;
 			if (!adjust_file_offset_down(l))
@@ -273,9 +274,14 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 
 	if (m_is_empty) {
 		if (!WriteVersionAndFileId())
-			return FALSE;
-
-		m_is_empty = false;
+			return FALSE;	
+	} else {
+		LARGE_INTEGER l;
+		l.QuadPart = m_real_file_size;
+		adjust_file_offset_down(l);
+		if (offset != l.QuadPart && offset + buflen > l.QuadPart) {
+			SetEndOfFile(offset + buflen, FALSE);
+		}
 	}
 
 	*pNwritten = 0;
@@ -305,8 +311,7 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 				if (advance != PLAIN_BS)
 					throw(-1);
 
-			}
-			else { // else read-modify-write 
+			} else { // else read-modify-write 
 
 				unsigned char blockbuf[PLAIN_BS];
 
@@ -408,30 +413,53 @@ CryptFile::UnlockFile(LONGLONG ByteOffset, LONGLONG Length)
 	return ::UnlockFile(m_handle, off.LowPart, off.HighPart, len.LowPart, len.HighPart);
 }
 
+
+// used ONLY by CryptFile::SetEndOfFile()
+static bool
+adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l)
+{
+	long long offset = l.QuadPart;
+
+	if (offset < 0)
+		return false;
+
+	if (offset == 0) // truncate zero-length file to 0 bytes
+		return true;
+
+	long long blocks = (offset + PLAIN_BS - 1) / PLAIN_BS;
+	offset += (blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD);
+	if (offset < 1)
+		return false;
+
+	l.QuadPart = offset;
+
+	return true;
+}
+
+// re-writes last block of necessary to account for file growing or shrinking
+// if bSet is TRUE (the default), actually calls SetEndOfFile()
 BOOL
-CryptFile::SetEndOfFile(LONGLONG offset)
+CryptFile::SetEndOfFile(LONGLONG offset, BOOL bSet)
 {
 
 	if (m_real_file_size == (long long)-1)
 		return FALSE;
 
-	LARGE_INTEGER fileSize;
-
 
 	if (m_handle == NULL || m_handle == INVALID_HANDLE_VALUE)
 		return FALSE;
-
-	fileSize.QuadPart = m_real_file_size;
 
 
 	if (m_is_empty && offset != 0) {
 		if (!WriteVersionAndFileId())
 			return FALSE;
 
-		m_is_empty = false;
+		
 	}
 
-	LARGE_INTEGER size_down = fileSize;
+	LARGE_INTEGER size_down;
+	
+	size_down.QuadPart = m_real_file_size;
 
 	if (!adjust_file_offset_down(size_down)) {
 		return FALSE;
@@ -440,25 +468,36 @@ CryptFile::SetEndOfFile(LONGLONG offset)
 	LARGE_INTEGER up_off;
 	up_off.QuadPart = offset;
 	
-	if (!adjust_file_offset_up(up_off))
+	if (!adjust_file_offset_up_truncate_zero(up_off))
 		return FALSE;
 
-	long long last_block = offset / PLAIN_BS;
+	long long last_block;
+	int to_write;
 
-	int last_off = (int)(offset % PLAIN_BS);
-	
-	if (offset >= size_down.QuadPart || last_off == 0) { // not really sure what to do about growing files
-		DbgPrint(L"setting end of file at %d\n", (int)up_off.QuadPart);
-		if (!SetFilePointerEx(m_handle, up_off, NULL, FILE_BEGIN))
-			return FALSE;
-
-		return ::SetEndOfFile(m_handle);
+	if (offset < size_down.QuadPart) {
+		last_block = offset / PLAIN_BS;
+		to_write = (int)(offset % PLAIN_BS);
+	} else {
+		last_block = size_down.QuadPart / PLAIN_BS;
+		to_write = (int)min(PLAIN_BS, offset - size_down.QuadPart);
 	}
-
 	
-	// need to re-write truncated last block
+	if (to_write == 0) { 
+		if (bSet) {
+			DbgPrint(L"setting end of file at %d\n", (int)up_off.QuadPart);
+			if (!SetFilePointerEx(m_handle, up_off, NULL, FILE_BEGIN))
+				return FALSE;
+			return ::SetEndOfFile(m_handle);
+		} else {
+			return TRUE;
+		}
+	}
+	
+	// need to re-write truncated or expanded last block
 
 	unsigned char buf[PLAIN_BS];
+
+	memset(buf, 0, sizeof(buf));
 
 	void *context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 
@@ -474,22 +513,31 @@ CryptFile::SetEndOfFile(LONGLONG offset)
 
 	if (nread < 1) { // shouldn't happen
 		free_crypt_context(context);
-		if (!SetFilePointerEx(m_handle, up_off, NULL, FILE_BEGIN)) {
-			return FALSE;
+
+		if (bSet) {
+			if (!SetFilePointerEx(m_handle, up_off, NULL, FILE_BEGIN)) {
+				return FALSE;
+			}
+			return ::SetEndOfFile(m_handle);
+		} else {
+			return TRUE;
 		}
-		return ::SetEndOfFile(m_handle);
 	}
 
-	int nwritten = write_block(m_con, m_handle, m_header.fileid, last_block, buf, last_off, context);
+	int nwritten = write_block(m_con, m_handle, m_header.fileid, last_block, buf, to_write, context);
 
 	free_crypt_context(context);
 
-	if (nwritten != last_off)
+	if (nwritten != to_write)
 		return FALSE;
 
-	if (!SetFilePointerEx(m_handle, up_off, NULL, FILE_BEGIN))
-		return FALSE;
+	if (bSet) {
+		if (!SetFilePointerEx(m_handle, up_off, NULL, FILE_BEGIN))
+			return FALSE;
 
-	return ::SetEndOfFile(m_handle);
+		return ::SetEndOfFile(m_handle);
+	} else {
+		return TRUE;
+	}
 
 }

@@ -765,7 +765,18 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
     }
     opened = TRUE;
   }
-
+#if 0 // this code is useful for debugging sometimes
+  if (!lstrcmpi(FileName, L"\\ConsoleApplication1\\ConsoleApplication1\\Debug\\ConsoleApplication1.pch")) {
+	  HANDLE h = CreateFile(L"c:\\tmp\\test.pch", GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, NULL);
+	  if (h != INVALID_HANDLE_VALUE) {
+		  LARGE_INTEGER l;
+		  l.QuadPart = Offset;
+		  SetFilePointerEx(h, l, NULL, FILE_BEGIN);
+		  WriteFile(h, Buffer, NumberOfBytesToWrite, NULL, NULL);
+	  }
+	  CloseHandle(h);
+  }
+#endif
   CryptFile file;
   if (file.Associate(GetContext(), handle)) {
 	  if (!file.Write((const unsigned char *)Buffer, NumberOfBytesToWrite, NumberOfBytesWritten, Offset, DokanFileInfo->WriteToEndOfFile, DokanFileInfo->PagingIo)) {

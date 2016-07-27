@@ -52,7 +52,7 @@ adjust_file_offset_down(LARGE_INTEGER& l)
 
 	long long blocks = (offset - CIPHER_FILE_OVERHEAD + CIPHER_BS - 1) / CIPHER_BS;
 	offset -= (blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD);
-	if (offset < 1)
+	if (offset < 0)
 		return false;
 
 	l.QuadPart = offset;
@@ -65,26 +65,6 @@ bool adjust_file_size_down(LARGE_INTEGER& l)
 	return adjust_file_offset_down(l);
 }
 
-bool
-adjust_file_offset_up(LARGE_INTEGER& l)
-{
-	long long offset = l.QuadPart;
-
-	if (offset < 0)
-		return false;
-
-	if (offset == 0)
-		return true;
-
-	long long blocks = (offset + PLAIN_BS - 1) / PLAIN_BS;
-	offset += (blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD);
-	if (offset < 1)
-		return false;
-
-	l.QuadPart = offset;
-
-	return true;
-}
 
 static bool
 read_dir_iv(const TCHAR *path, unsigned char *diriv)
