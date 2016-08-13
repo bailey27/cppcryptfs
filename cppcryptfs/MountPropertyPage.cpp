@@ -222,7 +222,7 @@ BOOL CMountPropertyPage::GetPathHash(LPCWSTR path, CString& hashstr)
 		return FALSE;
 
 	// use only 96bits of the sha256 to keep registry key length short
-	// base64-encoded it will be 16 chars long
+	// base64-encoded it will be 16 characters long
 
 	std::wstring base64_str;
 
