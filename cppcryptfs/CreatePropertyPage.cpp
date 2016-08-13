@@ -190,7 +190,7 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	CString clfns = IsDlgButtonChecked(IDC_LONG_FILE_NAMES) ? L"1" : L"0";
 
-	theApp.WriteProfileStringW(L"createoptions", L"LongFileNames", clfns);
+	theApp.WriteProfileStringW(L"CreateOptions", L"LongFileNames", clfns);
 
 	CComboBox* pLbox = (CComboBox*)GetDlgItem(IDC_FILENAME_ENCRYPTION);
 	if (!pLbox)
@@ -204,7 +204,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	RecentItems ritems(TEXT("Folders"), TEXT("LastDir"), m_numLastDirs);
 	ritems.Add(cpath);
 
-	theApp.WriteProfileStringW(L"createoptions", L"FilenameEncryption", filename_encryption_types[nenc]);
+	theApp.WriteProfileStringW(L"CreateOptions", L"FilenameEncryption", filename_encryption_types[nenc]);
 }
 
 // CCreatePropertyPage message handlers
@@ -250,9 +250,9 @@ BOOL CCreatePropertyPage::OnInitDialog()
 
 	// TODO:  Add extra initialization here
 
-	CString clfns = theApp.GetProfileStringW(L"createoptions", L"LongFileNames", L"1");
+	CString clfns = theApp.GetProfileStringW(L"CreateOptions", L"LongFileNames", L"1");
 
-	CString cfnenc = theApp.GetProfileStringW(L"createoptions", L"FilenameEncryption", L"AES256-EME");
+	CString cfnenc = theApp.GetProfileStringW(L"CreateOptions", L"FilenameEncryption", L"AES256-EME");
 
 	CheckDlgButton(IDC_LONG_FILE_NAMES, clfns == L"1");
 
