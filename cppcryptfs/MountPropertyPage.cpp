@@ -206,7 +206,7 @@ BOOL CMountPropertyPage::IsDriveLetterAvailable(WCHAR dl)
 		return FALSE;
 }
 
-BOOL CMountPropertyPage::GetPathHash(LPCWSTR path, CString & hashstr)
+BOOL CMountPropertyPage::GetPathHash(LPCWSTR path, CString& hashstr)
 {
 
 	hashstr = L"";
@@ -221,15 +221,15 @@ BOOL CMountPropertyPage::GetPathHash(LPCWSTR path, CString & hashstr)
 	if (!sha256(str, sum))
 		return FALSE;
 
-	int i;
+	// use only 96bits of the sha256 to keep registry key length short
+	// base64-encoded it will be 16 chars long
 
-	// use only 64bits of the sha256 to keep registry key length short
+	std::wstring base64_str;
 
-	for (i = 0; i < 8; i++) {
-		WCHAR buf[3];
-		wsprintf(buf, L"%02x", sum[i]);
-		hashstr += buf;
-	}
+	if (!base64_encode(sum, 12, base64_str, true))
+		return false;
+
+	hashstr = &base64_str[0];
 
 	return TRUE;
 }
