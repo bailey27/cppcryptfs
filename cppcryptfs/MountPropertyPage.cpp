@@ -39,6 +39,8 @@ THE SOFTWARE.
 #include "LockZeroBuffer.h"
 #include "cryptdefs.h"
 #include "CryptPropertySheet.h"
+#include "crypt.h"
+#include "util.h"
 
 
 // CMountPropertyPage dialog
@@ -99,12 +101,7 @@ void CMountPropertyPage::Mount()
 	if (cdl.GetLength() < 1)
 		return;
 
-	bool dlInUse = false;
-
-	DWORD used_drives = ::GetLogicalDrives() | 1; // A: doesn't work
-
-	if (used_drives & (1<<(*(LPCWSTR)cdl-'A'))) 
-		dlInUse = true;
+	BOOL dlInUse = !IsDriveLetterAvailable(*(LPCWSTR)cdl);
 
 	CString mounted_path = pList->GetItemText(nItem, PATH_INDEX);
 
@@ -187,6 +184,54 @@ void CMountPropertyPage::Mount()
 	dl[1] = 0;
 
 	theApp.WriteProfileString(L"MountPoints", L"LastMountPoint", dl);
+
+	CString path_hash;
+
+	if (GetPathHash(cpath, path_hash)) {
+		theApp.WriteProfileString(L"MountPoints", path_hash, dl);
+	}
+		
+}
+
+DWORD CMountPropertyPage::GetUsedDrives()
+{
+	return ::GetLogicalDrives() | 1; // A: doesn't work
+}
+
+BOOL CMountPropertyPage::IsDriveLetterAvailable(WCHAR dl)
+{
+	if (dl >= 'A' && dl <= 'Z')
+		return (GetUsedDrives() & (1 << (dl - 'A'))) == 0;
+	else
+		return FALSE;
+}
+
+BOOL CMountPropertyPage::GetPathHash(LPCWSTR path, CString & hashstr)
+{
+
+	hashstr = L"";
+
+	std::string str;
+
+	if (!unicode_to_utf8(path, str))
+		return FALSE;
+
+	BYTE sum[32];
+
+	if (!sha256(str, sum))
+		return FALSE;
+
+	int i;
+
+	// use only 64bits of the sha256 to keep registry key length short
+
+	for (i = 0; i < 8; i++) {
+		WCHAR buf[3];
+		wsprintf(buf, L"%02x", sum[i]);
+		hashstr += buf;
+	}
+
+	return TRUE;
 }
 
 void CMountPropertyPage::DoDataExchange(CDataExchange* pDX)
@@ -202,6 +247,7 @@ BEGIN_MESSAGE_MAP(CMountPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_DISMOUNT, &CMountPropertyPage::OnClickedDismount)
 	ON_BN_CLICKED(IDC_DISMOUNT_ALL, &CMountPropertyPage::OnClickedDismountAll)
 	ON_BN_CLICKED(IDC_EXIT, &CMountPropertyPage::OnClickedExit)
+	ON_CBN_SELCHANGE(IDC_PATH, &CMountPropertyPage::OnCbnSelchangePath)
 END_MESSAGE_MAP()
 
 
@@ -265,7 +311,7 @@ BOOL CMountPropertyPage::OnInitDialog()
 
 	CString lastLetter = theApp.GetProfileString(L"MountPoints", L"LastMountPoint", L"");
 
-	DWORD drives = ::GetLogicalDrives() | 1; // A: doesn't work
+	DWORD drives = GetUsedDrives();
 
 	int bit;
 
@@ -543,4 +589,65 @@ void CMountPropertyPage::OnClickedExit()
 
 	if (pParent)
 		pParent->OnIdrExitcppcryptfs();
+}
+
+
+void CMountPropertyPage::OnCbnSelchangePath()
+{
+	// TODO: Add your control notification handler code here
+
+	CComboBox *pWnd = (CComboBox*)GetDlgItem(IDC_PATH);
+
+	if (!pWnd)
+		return;
+
+	CString cpath;
+
+	int sel = pWnd->GetCurSel();
+
+	if (sel == CB_ERR)
+		return;
+
+	pWnd->GetLBText(sel, cpath);
+
+	if (cpath.GetLength() < 1)
+		return;
+
+	CString path_hash;
+
+	if (!GetPathHash(cpath, path_hash))
+		return;
+
+	CString cdl = theApp.GetProfileString(L"MountPoints", path_hash, L"");
+
+	if (cdl.GetLength() != 1)
+		return;
+
+	if (!IsDriveLetterAvailable(*((LPCWSTR)cdl)))
+		return;
+
+	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
+
+	if (!pList)
+		return;
+
+	LVFINDINFO fi;
+
+	memset(&fi, 0, sizeof(fi));
+
+	fi.flags = LVFI_STRING;
+
+	cdl += L":";
+
+	fi.psz = (LPCWSTR)cdl;
+
+	int index = pList->FindItem(&fi);
+
+	if (index < 0)
+		return;
+
+	pList->SetItemState(index, LVIS_SELECTED, LVIS_SELECTED);
+
+	pList->EnsureVisible(index, FALSE);
+
 }

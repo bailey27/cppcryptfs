@@ -52,6 +52,12 @@ public:
 
 	void Mount();
 
+	DWORD GetUsedDrives();
+
+	BOOL IsDriveLetterAvailable(WCHAR dl);
+
+	BOOL GetPathHash(LPCWSTR path, CString& hashstr);
+
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_MOUNT };
@@ -70,4 +76,5 @@ public:
 	virtual BOOL OnSetActive();
 	CSecureEdit m_password;
 	afx_msg void OnClickedExit();
+	afx_msg void OnCbnSelchangePath();
 };
