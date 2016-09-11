@@ -83,7 +83,10 @@ static int _getopt_(int argc, wchar_t* const argv[],
                 if(longopts != 0 && *(argv[optind] + 1) == '-') {
                     wchar_t const* spec_long = argv[optind] + 2;
                     wchar_t const* pos_eq = wcschr(spec_long, '=');
-                    long long spec_len = (pos_eq == NULL ? wcslen(spec_long) : pos_eq - spec_long);
+#ifdef  _WIN64
+                    long
+#endif
+						long spec_len = (pos_eq == NULL ? wcslen(spec_long) : pos_eq - spec_long);
                     int index_search = 0;
                     int index_found = -1;
                     const struct option* optdef = 0;
