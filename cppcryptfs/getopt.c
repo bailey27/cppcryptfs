@@ -10,7 +10,7 @@
 #include <string.h>
 #include "getopt.h"
 
-char* optarg = 0;
+wchar_t* optarg = 0;
 int optind = 1;
 int opterr = 1;
 int optopt = 0;
@@ -18,16 +18,16 @@ int optopt = 0;
 int postpone_count = 0;
 int nextchar = 0;
 
-static void postpone(int argc, char* const argv[], int index) {
-    char** nc_argv = (char**)argv;
-    char* p = nc_argv[index];
+static void postpone(int argc, wchar_t* const argv[], int index) {
+    wchar_t** nc_argv = (wchar_t**)argv;
+    wchar_t* p = nc_argv[index];
     int j = index;
     for(; j < argc - 1; j++) {
         nc_argv[j] = nc_argv[j + 1];
     }
     nc_argv[argc - 1] = p;
 }
-static int postpone_noopt(int argc, char* const argv[], int index) {
+static int postpone_noopt(int argc, wchar_t* const argv[], int index) {
     int i = index;
     for(; i < argc; i++) {
         if(*(argv[i]) == '-') {
@@ -37,13 +37,13 @@ static int postpone_noopt(int argc, char* const argv[], int index) {
     }
     return 0;
 }
-static int _getopt_(int argc, char* const argv[],
-        const char* optstring,
+static int _getopt_(int argc, wchar_t* const argv[],
+        const wchar_t* optstring,
         const struct option* longopts, int* longindex)
 {
     while(1) {
         int c;
-        const char* optptr = 0;
+        const wchar_t* optptr = 0;
         if(optind >= argc - postpone_count) {
             c = 0;
             optarg = 0;
@@ -75,23 +75,23 @@ static int _getopt_(int argc, char* const argv[],
                 }
                 break;
             } else {
-                if(strcmp(argv[optind], "--") == 0) {
+                if(wcscmp(argv[optind], L"--") == 0) {
                     optind++;
                     break;
                 }
                 ++nextchar;
                 if(longopts != 0 && *(argv[optind] + 1) == '-') {
-                    char const* spec_long = argv[optind] + 2;
-                    char const* pos_eq = strchr(spec_long, '=');
-                    int spec_len = (pos_eq == NULL ? strlen(spec_long) : pos_eq - spec_long);
+                    wchar_t const* spec_long = argv[optind] + 2;
+                    wchar_t const* pos_eq = wcschr(spec_long, '=');
+                    long long spec_len = (pos_eq == NULL ? wcslen(spec_long) : pos_eq - spec_long);
                     int index_search = 0;
                     int index_found = -1;
                     const struct option* optdef = 0;
                     while(longopts->name != 0) {
-                        if(strncmp(spec_long, longopts->name, spec_len) == 0) {
+                        if(wcsncmp(spec_long, longopts->name, spec_len) == 0) {
                             if(optdef != 0) {
                                 if(opterr) {
-                                    fprintf(stderr, "ambiguous option: %s\n", spec_long);
+                                    fwprintf(stderr, L"ambiguous option: %s\n", spec_long);
                                 }
                                 return '?';
                             }
@@ -103,7 +103,7 @@ static int _getopt_(int argc, char* const argv[],
                     }
                     if(optdef == 0) {
                         if(opterr) {
-                            fprintf(stderr, "no such a option: %s\n", spec_long);
+                            fwprintf(stderr, L"no such a option: %s\n", spec_long);
                         }
                         return '?';
                     }
@@ -112,7 +112,7 @@ static int _getopt_(int argc, char* const argv[],
                             optarg = 0;
                             if(pos_eq != 0) {
                                 if(opterr) {
-                                    fprintf(stderr, "no argument for %s\n", optdef->name);
+                                    fwprintf(stderr, L"no argument for %s\n", optdef->name);
                                 }
                                 return '?';
                             }
@@ -122,7 +122,7 @@ static int _getopt_(int argc, char* const argv[],
                                 ++optind;
                                 optarg = argv[optind];
                             } else {
-                                optarg = (char*)pos_eq + 1;
+                                optarg = (wchar_t*)pos_eq + 1;
                             }
                             break;
                     }
@@ -140,12 +140,12 @@ static int _getopt_(int argc, char* const argv[],
                 continue;
             }
         }
-        optptr = strchr(optstring, c);
+        optptr = wcschr(optstring, c);
         if(optptr == NULL) {
             optopt = c;
             if(opterr) {
-                fprintf(stderr,
-                        "%s: invalid option -- %c\n",
+                fwprintf(stderr,
+                        L"%s: invalid option -- %c\n",
                         argv[0], c);
             }
             ++nextchar;
@@ -169,8 +169,8 @@ static int _getopt_(int argc, char* const argv[],
                 } else {
                     optopt = c;
                     if(opterr) {
-                        fprintf(stderr,
-                            "%s: option requires an argument -- %c\n",
+                        fwprintf(stderr,
+                            L"%s: option requires an argument -- %c\n",
                             argv[0], c);
                     }
                     if(optstring[0] == ':' ||
@@ -202,20 +202,20 @@ static int _getopt_(int argc, char* const argv[],
     return -1;
 }
 
-int getopt(int argc, char* const argv[],
-            const char* optstring)
+int getopt(int argc, wchar_t* const argv[],
+            const wchar_t* optstring)
 {
     return _getopt_(argc, argv, optstring, 0, 0);
 }
-int getopt_long(int argc, char* const argv[],
-        const char* optstring,
+int getopt_long(int argc, wchar_t* const argv[],
+        const wchar_t* optstring,
         const struct option* longopts, int* longindex)
 {
     return _getopt_(argc, argv, optstring, longopts, longindex);
 }
 /********************************************************
-int getopt_long_only(int argc, char* const argv[],
-        const char* optstring,
+int getopt_long_only(int argc, wchar_t* const argv[],
+        const wchar_t* optstring,
         const struct option* longopts, int* longindex)
 {
     return -1;
