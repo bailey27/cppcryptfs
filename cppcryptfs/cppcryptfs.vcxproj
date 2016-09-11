@@ -223,6 +223,7 @@
     <ClInclude Include="eme.h" />
     <ClInclude Include="fileutil.h" />
     <ClInclude Include="FolderDialog.h" />
+    <ClInclude Include="getopt.h" />
     <ClInclude Include="LockZeroBuffer.h" />
     <ClInclude Include="MountPropertyPage.h" />
     <ClInclude Include="numbers.h" />
@@ -258,6 +259,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="getopt.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MountPropertyPage.cpp" />
     <ClCompile Include="pad16.cpp" />
