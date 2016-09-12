@@ -6,6 +6,7 @@
  * Released under the MIT license
  * https://github.com/takamin/win-c/blob/master/LICENSE
  */
+
  /* modified by Bailey Brown to use wchar_t instead of char */
 
 #ifndef _GETOPT_H_
