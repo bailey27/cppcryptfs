@@ -37,6 +37,7 @@ THE SOFTWARE.
 
 #include "resource.h"		// main symbols
 
+#define CPPCRYPTFS_COPYDATA_CMDLINE 0x5cf2fff9
 
 // CcppcryptfsApp:
 // See cppcryptfs.cpp for the implementation of this class

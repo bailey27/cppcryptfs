@@ -75,3 +75,7 @@ bool
 get_random_bytes(CryptContext *con, unsigned char *buf, DWORD len);
 
 bool get_sys_random_bytes(unsigned char *buf, DWORD len);
+
+DWORD getppid();
+
+bool have_args();

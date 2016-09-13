@@ -43,6 +43,8 @@ public:
 
 	BOOL CanClose();
 
+	BOOL m_bHideAfterInit;
+
 protected:
 	DECLARE_MESSAGE_MAP()
 public:
@@ -53,6 +55,8 @@ public:
 	afx_msg void OnIdrShowcppcryptfs();
 	afx_msg void OnIdrExitcppcryptfs();
 	virtual INT_PTR DoModal();
+	afx_msg BOOL OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct);
+	afx_msg void OnWindowPosChanging(WINDOWPOS* lpwndpos);
 };
 
 

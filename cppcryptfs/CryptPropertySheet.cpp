@@ -42,13 +42,13 @@ IMPLEMENT_DYNAMIC(CCryptPropertySheet, CPropertySheet)
 CCryptPropertySheet::CCryptPropertySheet(UINT nIDCaption, CWnd* pParentWnd, UINT iSelectPage)
 	:CPropertySheet(nIDCaption, pParentWnd, iSelectPage)
 {
-
+	m_bHideAfterInit = FALSE;
 }
 
 CCryptPropertySheet::CCryptPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
 	:CPropertySheet(pszCaption, pParentWnd, iSelectPage)
 {
-
+	m_bHideAfterInit = FALSE;
 }
 
 CCryptPropertySheet::~CCryptPropertySheet()
@@ -86,6 +86,8 @@ BEGIN_MESSAGE_MAP(CCryptPropertySheet, CPropertySheet)
 	ON_COMMAND(ID_IDR_SHOWCPPCRYPTFS, &CCryptPropertySheet::OnIdrShowcppcryptfs)
 	ON_COMMAND(ID_IDR_EXITCPPCRYPTFS, &CCryptPropertySheet::OnIdrExitcppcryptfs)
 	ON_WM_CLOSE()
+	ON_WM_COPYDATA()
+	ON_WM_WINDOWPOSCHANGING()
 END_MESSAGE_MAP()
 
 
@@ -94,6 +96,7 @@ END_MESSAGE_MAP()
 
 BOOL CCryptPropertySheet::OnInitDialog()
 {
+
 	BOOL bResult = CPropertySheet::OnInitDialog();
 
 	// TODO:  Add your specialized code here
@@ -109,6 +112,7 @@ BOOL CCryptPropertySheet::OnInitDialog()
 
 	if (pWnd)
 		pWnd->ShowWindow(SW_HIDE);
+
 
 	return bResult;
 }
@@ -138,6 +142,7 @@ BOOL CCryptPropertySheet::OnCommand(WPARAM wParam, LPARAM lParam)
 
 BOOL CCryptPropertySheet::OnNcCreate(LPCREATESTRUCT lpCreateStruct)
 {
+
 	if (!CPropertySheet::OnNcCreate(lpCreateStruct))
 		return FALSE;
 
@@ -154,6 +159,7 @@ BOOL CCryptPropertySheet::OnNcCreate(LPCREATESTRUCT lpCreateStruct)
 void CCryptPropertySheet::OnSysCommand(UINT nID, LPARAM lParam)
 {
 	// TODO: Add your message handler code here and/or call default
+
 	switch (nID & 0xFFF0) {
 	case SC_CLOSE:
 		if (lParam) ShowWindow(SW_HIDE); else SetForegroundWindow(); return;
@@ -168,6 +174,8 @@ void CCryptPropertySheet::OnSysCommand(UINT nID, LPARAM lParam)
 void CCryptPropertySheet::OnIdrShowcppcryptfs()
 {
 	// TODO: Add your command handler code here
+
+	m_bHideAfterInit = FALSE;
 
 	theApp.m_pMainWnd->ShowWindow(SW_SHOW);
 
@@ -191,4 +199,34 @@ INT_PTR CCryptPropertySheet::DoModal()
 	
 	return CPropertySheet::DoModal();
 	
+}
+
+
+BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
+{
+	// TODO: Add your message handler code here and/or call default
+
+	if (pCopyDataStruct && pCopyDataStruct->dwData == CPPCRYPTFS_COPYDATA_CMDLINE) {
+		CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(0);
+		if (page) {
+			page->ProcessCommandLine(*(LPDWORD)pCopyDataStruct->lpData, (LPCTSTR)((BYTE*)pCopyDataStruct->lpData+sizeof(DWORD)));
+			return TRUE;
+		} else {
+			return FALSE;
+		}
+	} else {
+		return CPropertySheet::OnCopyData(pWnd, pCopyDataStruct);
+	}
+}
+
+
+void CCryptPropertySheet::OnWindowPosChanging(WINDOWPOS* lpwndpos)
+{
+	
+	if (this->m_bHideAfterInit)
+		lpwndpos->flags &= ~SWP_SHOWWINDOW;
+
+	CPropertySheet::OnWindowPosChanging(lpwndpos);
+
+	// TODO: Add your message handler code here
 }

@@ -50,7 +50,13 @@ public:
 
 	virtual void DefaultAction();
 
-	void Mount();
+	virtual void ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnStartup = FALSE);
+
+	CString Mount(LPCWSTR argPath = NULL, WCHAR argDriveLetter = 0, LPCWSTR argPassword = NULL);
+
+	CString Dismount(WCHAR argDriveLetter = 0);
+
+	CString DismountAll();
 
 	DWORD GetUsedDrives();
 

@@ -59,6 +59,10 @@ void CCryptPropertyPage::DefaultAction()
 {
 }
 
+void CCryptPropertyPage::ProcessCommandLine(DWORD pid, LPCTSTR szCmd, BOOL bOnStartup)
+{
+}
+
 void CCryptPropertyPage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);

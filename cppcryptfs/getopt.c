@@ -7,7 +7,9 @@
  * https://github.com/takamin/win-c/blob/master/LICENSE
  */
 
-/* modified by Bailey Brown to use wchar_t instead of char */
+/*
+ *modified by Bailey Brown to use wchar_t instead of char 
+ */
 
 #include <stdio.h>
 #include <string.h>

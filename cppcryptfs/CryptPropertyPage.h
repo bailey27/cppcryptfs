@@ -45,6 +45,7 @@ public:
 	enum { IDD = IDD_CRYPTPROPERTYPAGE };
 #endif
 	virtual void DefaultAction();
+	virtual void ProcessCommandLine(DWORD pid, LPCTSTR szCmd, BOOL bOnStartup = FALSE);
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support

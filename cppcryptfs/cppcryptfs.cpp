@@ -41,6 +41,10 @@ THE SOFTWARE.
 #include "RecentItems.h"
 #include "TrayIcon.h"
 #include "cryptdokan.h"
+#include "getopt.h"
+#include "LockZeroBuffer.h"
+#include "util.h"
+
 
 
 #ifdef _DEBUG
@@ -78,8 +82,9 @@ CcppcryptfsApp theApp;
 
 
 
+
 BOOL CcppcryptfsApp::InitInstance()
-{
+{	 
 
 	const WCHAR *szUniqueNamedMutex = L"cppcryptfs-A7DDB0CF-A856-4E8A-A4E9-722473FB5E49";
 
@@ -100,13 +105,28 @@ BOOL CcppcryptfsApp::InitInstance()
 
 		HWND hWnd = FindWindow(L"#32770", L"cppcryptfs");
 
-		if (hWnd) {
-			ShowWindow(hWnd, SW_SHOWNORMAL);
-		}
+		DWORD dwErr = 0;
 
-		if (!hWnd) {
+		if (hWnd) {
+			if (have_args()) {
+				COPYDATASTRUCT cd;
+				memset(&cd, 0, sizeof(cd));
+				cd.dwData = CPPCRYPTFS_COPYDATA_CMDLINE;
+				LPCWSTR cmdLine = GetCommandLineW();
+				cd.cbData = (DWORD)((wcslen(cmdLine) + 1)*sizeof(WCHAR) + sizeof(DWORD));
+				LockZeroBuffer<BYTE> buf(cd.cbData);
+				*(LPDWORD)buf.m_buf = getppid();
+				memcpy(buf.m_buf + sizeof(DWORD), (LPCWSTR)cmdLine, cd.cbData - sizeof(DWORD));
+				cd.lpData = (PVOID)buf.m_buf;
+				SendMessageW(hWnd, WM_COPYDATA, NULL, (LPARAM)&cd);
+				dwErr = GetLastError();
+			} else {
+				ShowWindow(hWnd, SW_SHOWNORMAL);
+			}
+		} else {
 			::MessageBox(NULL, L"cppcryptfs is already running!", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		}
+		
 		return FALSE;
 	}
 
@@ -212,6 +232,7 @@ BOOL CcppcryptfsApp::InitInstance()
 
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.
+
 	return FALSE;
 }
 

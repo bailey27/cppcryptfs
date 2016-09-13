@@ -41,7 +41,7 @@ THE SOFTWARE.
 #include "CryptPropertySheet.h"
 #include "crypt.h"
 #include "util.h"
-
+#include "getopt.h"
 
 // CMountPropertyPage dialog
 
@@ -63,11 +63,17 @@ CMountPropertyPage::~CMountPropertyPage()
 
 void CMountPropertyPage::DefaultAction()
 {
-	Mount();
+	CString mes = Mount();
+
+	if (mes.GetLength() > 0 && mes != L"password cannot be empty")
+		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 }
 
-void CMountPropertyPage::Mount()
+CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR argPassword)
 {
+	if (argDriveLetter != 0 && (argDriveLetter < 'A' || argDriveLetter > 'Z'))
+		return CString(L"invalid drive letter");
+
 	POSITION pos = NULL;
 
 	CSecureEdit *pPass = &m_password;
@@ -75,31 +81,52 @@ void CMountPropertyPage::Mount()
 	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN+1);
 
 	if (!password.IsLocked()) {
-		MessageBox(L"unable to lock password buffer", L"cppcryptfs", MB_OK | MB_ICONERROR);
+		return CString(L"unable to lock password buffer");
 	}
 
-	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN+1, pPass->m_strRealText))
-		return;
+	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN+1, argPassword ? argPassword : pPass->m_strRealText))
+		return CString(L"unable to get password");
 
 	if (wcslen(password.m_buf) < 1)
-		return;
+		return CString(L"password cannot be empty");
 
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
 	if (!pList)
-		return;
+		return CString(L"unable to get list control");
 
 	pos = pList->GetFirstSelectedItemPosition();
 
 	if (!pos)
-		return;
+		return CString(L"unable to get selected entry");
 
-	int nItem = pList->GetNextSelectedItem(pos);
+	int nItem = -1;
+	
+	if (argDriveLetter) {
+		LVFINDINFO fi;
+		memset(&fi, 0, sizeof(fi));
+		fi.flags = LVFI_STRING;
+		CString str = CString(argDriveLetter) + L":";
+		fi.psz = str;
+		nItem = pList->FindItem(&fi);
+		if (nItem < 0)
+			return CString(L"unable to find drive letter in list");
+		int nOldItem = pList->GetNextSelectedItem(pos);
+		if (nOldItem >= 0)
+			pList->SetItemState(nOldItem, ~LVIS_SELECTED, LVIS_SELECTED);
+		if (nItem >= 0)
+			pList->SetItemState(nItem, LVIS_SELECTED, LVIS_SELECTED);
+	} else {
+		nItem = pList->GetNextSelectedItem(pos);
+	}
 
-	CString cdl = pList->GetItemText(nItem, DL_INDEX);
+	if (nItem < 0)
+		return CString(L"unable to find item");
+
+	CString cdl = argDriveLetter ? CString(argDriveLetter) + L":" : pList->GetItemText(nItem, DL_INDEX);
 
 	if (cdl.GetLength() < 1)
-		return;
+		return CString(L"unable to get drive letter");;
 
 	BOOL dlInUse = !IsDriveLetterAvailable(*(LPCWSTR)cdl);
 
@@ -112,21 +139,23 @@ void CMountPropertyPage::Mount()
 		CString mes = L"Drive ";
 		mes += cdl;
 		mes += L" is already being used.";
-		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
-		return;
+		return mes;
 	}
 
 	CWnd *pWnd = GetDlgItem(IDC_PATH);
 
 	if (!pWnd)
-		return;
+		return CString(L"unable to get window");
 
 	CString cpath;
 
-	pWnd->GetWindowTextW(cpath);
+	if (argPath)
+		cpath = argPath;
+	else
+		pWnd->GetWindowTextW(cpath);
 
 	if (cpath.GetLength() < 1)
-		return;
+		return CString(L"path length is zero");
 
 	bool pathInUse = false;
 	CString mdl;
@@ -147,8 +176,7 @@ void CMountPropertyPage::Mount()
 		mes += cpath;
 		mes += L" is already mounted on ";
 		mes += mdl;
-		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
-		return;
+		return mes;
 	}
 
 	pPass->SetRealText(L"");
@@ -168,8 +196,7 @@ void CMountPropertyPage::Mount()
 	theApp.DoWaitCursor(-1);
 
 	if (result != 0) {
-		MessageBoxW(&error_mes[0], L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
-		return;
+		return CString(&error_mes[0]);
 	}
 
 	theApp.m_mountedDrives |= 1 << (*(const WCHAR*)cdl - 'A');
@@ -191,6 +218,7 @@ void CMountPropertyPage::Mount()
 		theApp.WriteProfileString(L"MountPoints", path_hash, dl);
 	}
 		
+	return CString(L"");
 }
 
 DWORD CMountPropertyPage::GetUsedDrives()
@@ -403,6 +431,8 @@ BOOL CMountPropertyPage::OnInitDialog()
 	if (!m_password.ArePasswordBuffersLocked())
 		MessageBox(L"unable to lock password buffer", L"cppcryptfs", MB_OK | MB_ICONERROR);
 
+	ProcessCommandLine(GetCurrentProcessId(), GetCommandLine(), TRUE);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -435,65 +465,100 @@ void CMountPropertyPage::OnClickedMount()
 {
 	// TODO: Add your control notification handler code here
 
-	Mount();
+	CString mes = Mount();
+	if (mes.GetLength() > 0)
+		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 }
 
 
 void CMountPropertyPage::OnClickedDismount()
 {
-	// TODO: Add your control notification handler code here
+	CString mes = Dismount();
+	if (mes.GetLength() > 0)
+		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+}
+
+CString CMountPropertyPage::Dismount(WCHAR argDriveLetter)
+{
+	if (argDriveLetter != 0 && (argDriveLetter < 'A' || argDriveLetter > 'Z'))
+		return CString(L"invalid drive letter");
 
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
 	if (!pList)
-		return;
+		return CString(L"unable to get list");
 
 	POSITION pos = pList->GetFirstSelectedItemPosition();
 
 	if (!pos)
-		return;
+		return CString(L"unable to get selection");
 
-	int nItem = pList->GetNextSelectedItem(pos);
+	int nItem;
+	
+	if (argDriveLetter) {
+		LVFINDINFO fi;
+		memset(&fi, 0, sizeof(fi));
+		fi.flags = LVFI_STRING;
+		CString str = CString(argDriveLetter) + L":";
+		fi.psz = str;
+		nItem = pList->FindItem(&fi);
+	} else {
+		nItem = pList->GetNextSelectedItem(pos);
+	}
+
+	if (nItem < 0)
+		return CString(L"unable to find item");
 
 	CString cdl = pList->GetItemText(nItem, DL_INDEX);
 
 	if (cdl.GetLength() < 1)
-		return;
+		return CString(L"unable to get drive letter");
 
 	CString cpath = pList->GetItemText(nItem, PATH_INDEX);
 
 	if (cpath.GetLength() < 1)
-		return;
+		return CString(L"unable to get path");
+
+	CString mes;
 
 	if (!write_volume_name_if_changed(*(const WCHAR *)cdl))
-		MessageBox(L"unable to update volume label", L"cppcryptfs", MB_OK | MB_ICONERROR);
+		mes += L"unable to update volume label";
 
 	theApp.DoWaitCursor(1);
 	BOOL bresult = unmount_crypt_fs(*(const WCHAR *)cdl, true);
 	theApp.DoWaitCursor(-1);
 
 	if (!bresult) {
-		CString mes = L"cannot umount ";
+		if (mes.GetLength() > 0)
+			mes += L". ";
+		mes += L"cannot umount ";
 		mes.Append(cdl);
-		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
-		return;
+		return mes;
 	}
 
 	theApp.m_mountedDrives &= ~(1 << (*(const WCHAR *)cdl - 'A'));
 
 	pList->SetItemText(nItem, PATH_INDEX, L"");
 
+	return mes;
+
 }
 
 
 void CMountPropertyPage::OnClickedDismountAll()
+{
+
+	DismountAll();
+}
+
+CString CMountPropertyPage::DismountAll()
 {
 	// TODO: Add your control notification handler code here
 
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
 	if (!pList)
-		return;
+		return CString(L"unable to get list");
 
 	int count = pList->GetItemCount();
 
@@ -530,16 +595,23 @@ void CMountPropertyPage::OnClickedDismountAll()
 	wait_for_all_unmounted();
 	theApp.DoWaitCursor(-1);
 
+	CString mes;
+
 	if (hadFailure) {
 		if (hadSuccess) {
-			MessageBox(L"Some of the drives could not be dismounted", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+			mes = L"Some of the drives could not be dismounted";
 		} else {
-			MessageBox(L"Unable to dismount", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+			mes = L"Unable to dismount";
 		}
 	}
 
-	if (volnameFailure)
-		MessageBox(L"unable to update one or more volume labels", L"cppcryptfs", MB_OK | MB_ICONERROR);
+	if (volnameFailure) {
+		if (mes.GetLength() > 0)
+			mes += L". ";
+		mes += L"unable to update one or more volume labels";
+	}
+
+	return mes;
 }
 
 
@@ -649,5 +721,182 @@ void CMountPropertyPage::OnCbnSelchangePath()
 	pList->SetItemState(index, LVIS_SELECTED, LVIS_SELECTED);
 
 	pList->EnsureVisible(index, FALSE);
+
+}
+
+extern wchar_t *optarg;
+extern int optind, opterr, optopt;
+
+static void usage()
+{
+	fprintf(stderr, "Usage: cppcryptfs [OPTIONS]\n");
+	fprintf(stderr, "Mounting:\n");
+	fprintf(stderr, "  -m, --mount=PATH\tmount filesystem locate at PATH\n");
+	fprintf(stderr, "  -d, --drive=D\t\tmount to drive letter D\n");
+	fprintf(stderr, "  -p, password=PASSWORD\tuse password PASSWORD\n");
+	fprintf(stderr, "Unmounting:\n");
+	fprintf(stderr, "  -u, --unmount=D\tumount drive letter D\n");
+	fprintf(stderr, "  -u, --umount=all\tunmount all drives\n");
+	fprintf(stderr, "Misc:\n");
+	fprintf(stderr, "  -t, --tray\thide in system tray\n");
+	fprintf(stderr, "  -x, --exit\texit if no drives mounted\n");
+	
+}
+
+void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnStartup)
+{
+
+	optarg = NULL;
+	optind = 1;
+	opterr = 1;
+	optopt = 0;
+
+	int argc = 1;
+
+	LPWSTR *argv = NULL;
+
+	if (szCmd)
+		argv = CommandLineToArgvW(szCmd, &argc);
+
+	if (argv == NULL)
+		argc = 1;
+
+	if (argc == 1)
+		return;
+
+	CString mes;
+
+	if (AttachConsole(bOnStartup ? ATTACH_PARENT_PROCESS : pid)) {
+#pragma warning( push )
+#pragma warning(disable : 4996)
+		freopen("CONOUT$", "wt", stdout);
+		freopen("CONOUT$", "wt", stderr);
+#pragma warning( pop )
+	}
+
+	CString path;
+	WCHAR driveletter = 0;
+	LockZeroBuffer<WCHAR> password((DWORD)(wcslen(szCmd) + 1));
+	BOOL mount = FALSE;
+	BOOL dismount = FALSE;
+	BOOL dismount_all = FALSE;
+
+	BOOL invalid_opt = FALSE;
+
+	BOOL do_help = FALSE;
+	BOOL exit_if_no_mounted = FALSE;
+	BOOL hide_to_system_tray = FALSE;
+
+	try {
+
+		static struct option long_options[] =
+		{
+			{L"mount",   required_argument,  0, 'm'},
+			{L"drive",   required_argument,  0, 'd'},
+			{L"password", required_argument, 0, 'p'},
+			{L"unmount",  required_argument, 0, 'u'},
+			{L"tray",  no_argument, 0, 't'},
+			{L"exit",  no_argument, 0, 'x'},
+			{L"help",  no_argument, 0, 'h'},
+			{0, 0, 0, 0}
+		};
+
+		int c;
+		int option_index = 0;
+
+		while (1) {
+
+			c = getopt_long(argc, argv, L"m:d:p:u:hxt", long_options, &option_index);
+
+			if (c == -1)
+				break;
+
+			switch (c) {
+			case '?':
+				invalid_opt = TRUE;
+				break;
+			case 'm':
+				mount = TRUE;
+				path = optarg;
+				break;
+			case 'd':
+				driveletter = *optarg;
+				break;
+			case 'p':
+				wcscpy_s(password.m_buf, password.m_len, optarg);
+				break;
+			case 'u':
+				dismount = TRUE;
+				if (wcscmp(optarg, L"all") == 0)
+					dismount_all = TRUE;
+				else
+					driveletter = *optarg;
+				break;
+			case 'h':
+				do_help = TRUE;
+				break;
+			case 't':
+				hide_to_system_tray = TRUE;
+				break;
+			case 'x':
+				exit_if_no_mounted = TRUE;
+				break;
+			default:
+				throw(-1);
+			}
+		}
+	
+		if (IsCharLower(driveletter))
+				driveletter = towupper(driveletter);		
+
+	} catch (int err) {
+		if (err) {
+			if (mes.GetLength() == 0)
+				mes = L"unexpected exception";
+		}
+	}
+
+	if (argv)
+		LocalFree(argv);
+
+	if (mes.GetLength() > 0) {
+		fwprintf(stderr, L"cppcryptfs: %s\n", (LPCWSTR)mes);
+	} else if (do_help) {
+		usage();
+	} else if (invalid_opt) {
+		fprintf(stderr, "Try 'cppcryptfs --help' for more information.\n");
+	} else {
+		CString errMes;
+		if (mount) {
+			errMes = Mount(path, driveletter, password.m_buf);
+		} else if (dismount) {
+			if (dismount_all) {
+				errMes = DismountAll();
+			} else {
+				errMes = Dismount(driveletter);
+			}
+		} else {
+			//errMes = "nothing to do";
+		}
+		if (errMes.GetLength() > 0) {
+			LPCWSTR str = errMes;
+			if (str[wcslen(str) - 1] != '\n')
+				errMes += L"\n";
+			fwprintf(stderr, L"cppcryptfs: %s", (LPCWSTR)errMes);
+		}
+	}
+
+	CCryptPropertySheet *pParent = (CCryptPropertySheet*)GetParent();
+
+	if (pParent) {
+		if (theApp.m_mountedDrives == 0 && exit_if_no_mounted) {
+			pParent->OnIdrExitcppcryptfs();
+		} else if (hide_to_system_tray) {
+			if (bOnStartup)
+				pParent->m_bHideAfterInit = TRUE;
+			else
+				pParent->ShowWindow(SW_HIDE);
+		}
+	}
 
 }

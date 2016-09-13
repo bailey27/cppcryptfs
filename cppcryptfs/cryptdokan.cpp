@@ -1407,7 +1407,7 @@ static NTSTATUS DOKAN_CALLBACK CryptMounted(PDOKAN_FILE_INFO DokanFileInfo) {
   SetEvent(con->m_mountEvent);
 
   DbgPrint(L"Mounted\n");
-  fwprintf(stdout, L"Mounted on %C:\\\n", config->GetDriveLetter());
+  //fwprintf(stdout, L"Mounted on %C:\\\n", config->GetDriveLetter());
   return STATUS_SUCCESS;
 }
 

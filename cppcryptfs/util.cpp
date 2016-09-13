@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include "stdafx.h"
 
 #include <stdio.h>
+#include  <tlhelp32.h>
 #include "util.h"
 #include "cryptdefs.h"
 #include <openssl/rand.h>
@@ -402,3 +403,53 @@ get_random_bytes(CryptContext *con, unsigned char *buf, DWORD len)
 }
 
 
+DWORD 
+getppid()
+{
+	HANDLE hSnapshot;
+	PROCESSENTRY32 pe32;
+	DWORD ppid = 0, pid = GetCurrentProcessId();
+
+	hSnapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
+	__try{
+		if( hSnapshot == INVALID_HANDLE_VALUE ) __leave;
+
+		ZeroMemory( &pe32, sizeof( pe32 ) );
+		pe32.dwSize = sizeof( pe32 );
+		if( !Process32First( hSnapshot, &pe32 ) ) __leave;
+
+		do{
+			if( pe32.th32ProcessID == pid ){
+				ppid = pe32.th32ParentProcessID;
+				break;
+			}
+		}while( Process32Next( hSnapshot, &pe32 ) );
+
+	}
+	__finally{
+		if( hSnapshot != INVALID_HANDLE_VALUE ) CloseHandle( hSnapshot );
+	}
+	return ppid;
+}
+
+
+bool 
+have_args()
+{
+	int argc = 1;
+
+	CString cmdLine = GetCommandLineW();
+
+	LPTSTR *argv = NULL;
+
+	if (cmdLine)
+		argv = CommandLineToArgvW(cmdLine, &argc);
+
+	if (argv == NULL)
+		argc = 1;
+
+	if (argv)
+		LocalFree(argv);
+
+	return argc > 1;
+}
