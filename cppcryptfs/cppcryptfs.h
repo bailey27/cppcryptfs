@@ -39,6 +39,11 @@ THE SOFTWARE.
 
 #define CPPCRYPTFS_COPYDATA_CMDLINE 0x5cf2fff9
 
+typedef struct struct_CmdLineCopyData {
+	DWORD dwPid;  // process whose console should be attached to for printing error messages
+	WCHAR szCmdLine[1]; // command line (null-terminated)
+} CmdLineCopyData;
+
 // CcppcryptfsApp:
 // See cppcryptfs.cpp for the implementation of this class
 //
