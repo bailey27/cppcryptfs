@@ -108,9 +108,9 @@ Passwords and keys are locked in memory using VirtualLock(). When they are no lo
 If you close the cppcryptfs window, then it will hide itself in the system tray. To exit cppcryptfs, use the Exit button on the mount page or the context menu of the system tray icon.
 
 
-Command Line Arguments
+Command Line Options
 ----
-cppcryptfs accepts some command line arguments for mounting and umounting filesystems.  Currently, filesystems can be created only by using the gui.
+cppcryptfs accepts some command line options for mounting and umounting filesystems.  Currently, filesystems can be created only by using the gui.
 ```
 
 Mounting:
