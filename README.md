@@ -23,6 +23,16 @@ cppcryptfs seems to work.  It passes 171/171 of the tests in [winfstest](https:/
 
 
 Build Requirements
+
+It will go easier of you checkout everything into C:\git, e.g.
+```
+c:
+cd \
+mkdir git
+cd git
+git checkout ...
+
+```
 -------
 	
 	Microsoft Visual Studio 2015 Community Edition
@@ -95,6 +105,56 @@ You can mount as many gocryptfs filesystems as you have unused drive letters ava
 Passwords and keys are locked in memory using VirtualLock(). When they are no longer needed, they are erased using SecureZeroMemory() and then unlocked.  If you never hibernate your computer, then you don't have to worry about your passwords or keys ever being written to the hard drive.
 
 If you close the cppcryptfs window, then it will hide itself in the system tray. To exit cppcryptfs, use the Exit button on the mount page or the context menu of the system tray icon.
+
+
+Command Line Arguments
+----
+cppcryptfs accepts some command line arguments for mounting and umounting filesystems.  Currently, filesystems can be created only by using the gui.
+```
+
+Mounting:
+  -m, --mount=PATH      mount filesystem locate at PATH
+  -d, --drive=D         mount to drive letter D
+  -p, password=PASSWORD use password PASSWORD
+Unmounting:
+  -u, --unmount=D       umount drive letter D
+  -u, --umount=all      unmount all drives
+Misc:
+  -t, --tray    hide in system tray
+  -x, --exit    exit if no drives mounted
+
+```
+Note: when using the short version of the option, you should not use the equal sign between the option and its argument.  When using the long version of the option, the equal sign is optional. e.g. these will work
+
+```
+cppcryptfs -m c:\tmp\test -d k -p XYZ
+cppcryptfs --mount=c:\tmp\test --drive=k --password=XYZ
+cppcryptfs --mount c:\tmp\test --drive k --password XYZ
+
+```
+cppcryptfs is a Windows application.  When started with command line options, it will try to write any error messages to the console (if any) that started it.
+
+If you plan to use cppcryptfs in batch files or scripts, it's probbably better to use cygwin bash than Windows cmd.  This is because Windows cmd never blocks when a Windows app is started.
+
+The best way to do this is to start cppcryptfs in the background without mounting anything.  Then you should wait one second for it to initialize.  Then you can run other instances of cppcryptfs, not in the background, to conduct mount and unmount operations.   In cygwin bash, these non-background invocations will block until the operation (e.g. a mount) is completed.  
+
+Here is an example cygwin bash backup script.  Note that you have to use double backslashes in the mount path.
+
+```
+
+#!/bin/bash
+# start cppcryptfs in the background and hidden in the system tray
+/cygdrive/c/bin/cppcryptfs -t &
+# give it time to initialize
+sleep 1
+# mount a filesystem and wait for the mount operation to complete
+/cygdrive/c/bin/cppcryptfs --mount c:\\tmp\\test -d k -p XYZ
+# do backup operation
+rsync .....
+# unmount all drives and exit
+./cppcryptfs -u all -x
+
+```
 
 
 File name and path length limits
