@@ -110,7 +110,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 		fi.psz = str;
 		nItem = pList->FindItem(&fi);
 		if (nItem < 0)
-			return CString(L"unable to find drive letter in list");
+			return CString(L"Drive ") + str + CString(L" is already in use.");
 		int nOldItem = pList->GetNextSelectedItem(pos);
 		if (nOldItem >= 0)
 			pList->SetItemState(nOldItem, ~LVIS_SELECTED, LVIS_SELECTED);
@@ -502,6 +502,8 @@ CString CMountPropertyPage::Dismount(WCHAR argDriveLetter)
 		CString str = CString(argDriveLetter) + L":";
 		fi.psz = str;
 		nItem = pList->FindItem(&fi);
+		if (nItem < 0)
+			return CString(L"Drive ") + str + CString(L" does not have a mounted cppcryptfs filesystem.");
 	} else {
 		nItem = pList->GetNextSelectedItem(pos);
 	}
@@ -517,7 +519,7 @@ CString CMountPropertyPage::Dismount(WCHAR argDriveLetter)
 	CString cpath = pList->GetItemText(nItem, PATH_INDEX);
 
 	if (cpath.GetLength() < 1)
-		return CString(L"unable to get path");
+		return CString(L"Drive ") + cdl + CString(L" does not have a mounted cppcryptfs filesystem.");
 
 	CString mes;
 
