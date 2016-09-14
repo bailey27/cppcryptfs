@@ -24,18 +24,6 @@ cppcryptfs seems to work.  It passes 171/171 of the tests in [winfstest](https:/
 
 Build Requirements
 -----
-
-It will go easier of you checkout everything into C:\git, e.g.
-```
-c:
-cd \
-mkdir git
-cd git
-git checkout ...
-
-```
-
-You will need
 	
 	Microsoft Visual Studio 2015 Community Edition
 	openssl - https://github.com/openssl/openssl (static build recommended)
@@ -53,6 +41,17 @@ You will need
 
 		git checkout current_dokany
 
+
+It will go easier of you checkout everything into C:\git, e.g.
+
+```
+c:
+cd \
+mkdir git
+cd git
+git checkout ...
+
+```
 
 Use
 -------
