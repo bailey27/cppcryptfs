@@ -742,6 +742,7 @@ static void usage()
 	fprintf(stderr, "Misc:\n");
 	fprintf(stderr, "  -t, --tray\thide in system tray\n");
 	fprintf(stderr, "  -x, --exit\texit if no drives mounted\n");
+	fprintf(stderr, "  -h, --help\tdisplay this help message\n");
 	
 }
 
