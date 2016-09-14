@@ -740,9 +740,9 @@ static void usage()
 	fprintf(stderr, "  -u, --unmount=D\tumount drive letter D\n");
 	fprintf(stderr, "  -u, --umount=all\tunmount all drives\n");
 	fprintf(stderr, "Misc:\n");
-	fprintf(stderr, "  -t, --tray\thide in system tray\n");
-	fprintf(stderr, "  -x, --exit\texit if no drives mounted\n");
-	fprintf(stderr, "  -h, --help\tdisplay this help message\n");
+	fprintf(stderr, "  -t, --tray\t\thide in system tray\n");
+	fprintf(stderr, "  -x, --exit\t\texit if no drives mounted\n");
+	fprintf(stderr, "  -h, --help\t\tdisplay this help message\n");
 	
 }
 

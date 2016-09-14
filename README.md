@@ -121,9 +121,9 @@ Unmounting:
   -u, --unmount=D       umount drive letter D
   -u, --umount=all      unmount all drives
 Misc:
-  -t, --tray    hide in system tray
-  -x, --exit    exit if no drives mounted
-  -h, --help    display this help message
+  -t, --tray            hide in system tray
+  -x, --exit            exit if no drives mounted
+  -h, --help            display this help message
 
 ```
 Note: when using the short version of the option, you should not use the equal sign between the option and its argument.  When using the long version of the option, the equal sign is optional. e.g. these will work
