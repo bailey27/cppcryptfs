@@ -34,7 +34,8 @@ cd git
 git checkout ...
 
 ```
--------
+
+You will need
 	
 	Microsoft Visual Studio 2015 Community Edition
 	openssl - https://github.com/openssl/openssl (static build recommended)
