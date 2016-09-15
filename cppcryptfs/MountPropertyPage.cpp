@@ -733,16 +733,16 @@ static void usage()
 {
 	fprintf(stderr, "Usage: cppcryptfs [OPTIONS]\n");
 	fprintf(stderr, "\nMounting:\n");
-	fprintf(stderr, "  -m, --mount=PATH\tmount filesystem locate at PATH\n");
-	fprintf(stderr, "  -d, --drive=D\t\tmount to drive letter D\n");
-	fprintf(stderr, "  -p, password=PASSWORD\tuse password PASSWORD\n");
+	fprintf(stderr, "  -m, --mount=PATH\t\tmount filesystem locate at PATH\n");
+	fprintf(stderr, "  -d, --drive=D\t\t\tmount to drive letter D\n");
+	fprintf(stderr, "  -p, --password=PASSWORD\tuse password PASSWORD\n");
 	fprintf(stderr, "\nUnmounting:\n");
-	fprintf(stderr, "  -u, --unmount=D\tumount drive letter D\n");
-	fprintf(stderr, "  -u, --umount=all\tunmount all drives\n");
+	fprintf(stderr, "  -u, --unmount=D\t\tumount drive letter D\n");
+	fprintf(stderr, "  -u, --umount=all\t\tunmount all drives\n");
 	fprintf(stderr, "\nMisc:\n");
-	fprintf(stderr, "  -t, --tray\t\thide in system tray\n");
-	fprintf(stderr, "  -x, --exit\t\texit if no drives mounted\n");
-	fprintf(stderr, "  -h, --help\t\tdisplay this help message\n");
+	fprintf(stderr, "  -t, --tray\t\t\thide in system tray\n");
+	fprintf(stderr, "  -x, --exit\t\t\texit if no drives mounted\n");
+	fprintf(stderr, "  -h, --help\t\t\tdisplay this help message\n");
 	
 }
 
