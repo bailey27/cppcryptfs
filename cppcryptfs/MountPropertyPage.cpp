@@ -769,6 +769,8 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 
 	CString mes;
 
+	FreeConsole();
+
 	if (AttachConsole(bOnStartup ? ATTACH_PARENT_PROCESS : pid)) {
 #pragma warning( push )
 #pragma warning(disable : 4996)
