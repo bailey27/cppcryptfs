@@ -732,14 +732,14 @@ extern int optind, opterr, optopt;
 static void usage()
 {
 	fprintf(stderr, "Usage: cppcryptfs [OPTIONS]\n");
-	fprintf(stderr, "Mounting:\n");
+	fprintf(stderr, "\nMounting:\n");
 	fprintf(stderr, "  -m, --mount=PATH\tmount filesystem locate at PATH\n");
 	fprintf(stderr, "  -d, --drive=D\t\tmount to drive letter D\n");
 	fprintf(stderr, "  -p, password=PASSWORD\tuse password PASSWORD\n");
-	fprintf(stderr, "Unmounting:\n");
+	fprintf(stderr, "\nUnmounting:\n");
 	fprintf(stderr, "  -u, --unmount=D\tumount drive letter D\n");
 	fprintf(stderr, "  -u, --umount=all\tunmount all drives\n");
-	fprintf(stderr, "Misc:\n");
+	fprintf(stderr, "\nMisc:\n");
 	fprintf(stderr, "  -t, --tray\t\thide in system tray\n");
 	fprintf(stderr, "  -x, --exit\t\texit if no drives mounted\n");
 	fprintf(stderr, "  -h, --help\t\tdisplay this help message\n");

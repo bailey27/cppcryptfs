@@ -112,14 +112,17 @@ Command Line Options
 ----
 cppcryptfs accepts some command line options for mounting and umounting filesystems.  Currently, filesystems can be created only by using the gui.
 ```
+Usage: cppcryptfs [OPTIONS]
 
 Mounting:
   -m, --mount=PATH      mount filesystem locate at PATH
   -d, --drive=D         mount to drive letter D
   -p, password=PASSWORD use password PASSWORD
+
 Unmounting:
   -u, --unmount=D       umount drive letter D
   -u, --umount=all      unmount all drives
+
 Misc:
   -t, --tray            hide in system tray
   -x, --exit            exit if no drives mounted
