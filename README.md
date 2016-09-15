@@ -115,7 +115,7 @@ cppcryptfs accepts some command line options for mounting and umounting filesyst
 Usage: cppcryptfs [OPTIONS]
 
 Mounting:
-  -m, --mount=PATH      mount filesystem locate at PATH
+  -m, --mount=PATH      mount filesystem located at PATH
   -d, --drive=D         mount to drive letter D
   -p, password=PASSWORD use password PASSWORD
 
