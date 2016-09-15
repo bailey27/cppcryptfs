@@ -871,12 +871,19 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	} else {
 		CString errMes;
 		if (mount) {
-			errMes = Mount(path, driveletter, password.m_buf);
+			if (driveletter)
+				errMes = Mount(path, driveletter, password.m_buf);
+			else
+				errMes = L"drive letter must be specified";
 		} else if (dismount) {
 			if (dismount_all) {
 				errMes = DismountAll();
 			} else {
-				errMes = Dismount(driveletter);
+				if (driveletter)
+					errMes = Dismount(driveletter);
+				else
+					errMes = L"drive letter must be specified";
+					
 			}
 		} else {
 			//errMes = "nothing to do";
