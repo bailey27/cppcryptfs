@@ -137,9 +137,9 @@ cppcryptfs --mount=c:\tmp\test --drive=k --password=XYZ
 cppcryptfs --mount c:\tmp\test --drive k --password XYZ
 
 ```
-cppcryptfs is a Windows application.  When started with command line options, it will try to write any error messages to the console (if any) that started it.
+cppcryptfs is a Windows gui application and not a console application.  However, when started with command line options, it will try to write any error messages to the console (if any) that started it.
 
-If you plan to use cppcryptfs in batch files or scripts, it's probbably better to use cygwin bash than Windows cmd.  This is because Windows cmd never blocks when a Windows app is started.
+If you plan to use cppcryptfs in batch files or scripts, it's probbably better to use cygwin bash than Windows cmd.  This is because Windows cmd never blocks when a Windows gui app is started.
 
 The best way to do this is to start cppcryptfs in the background without mounting anything.  Then you should wait one second for it to initialize.  Then you can run other instances of cppcryptfs, not in the background, to conduct mount and unmount operations.   In cygwin bash, these non-background invocations will block until the operation (e.g. a mount) is completed.  
 
