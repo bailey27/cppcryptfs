@@ -209,7 +209,7 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 	if (pCopyDataStruct && pCopyDataStruct->dwData == CPPCRYPTFS_COPYDATA_CMDLINE) {
 		CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(0);
 		if (page) {
-			CmdLineCopyData *pcd = (CmdLineCopyData*)pCopyDataStruct->lpData;
+			CopyDataCmdLine *pcd = (CopyDataCmdLine*)pCopyDataStruct->lpData;
 			page->ProcessCommandLine(pcd->dwPid, pcd->szCmdLine);
 			return TRUE;
 		} else {

@@ -113,9 +113,9 @@ BOOL CcppcryptfsApp::InitInstance()
 				memset(&cd, 0, sizeof(cd));
 				cd.dwData = CPPCRYPTFS_COPYDATA_CMDLINE;
 				LPCWSTR cmdLine = GetCommandLineW();
-				cd.cbData = (DWORD)(sizeof(CmdLineCopyData) + wcslen(cmdLine)*sizeof(WCHAR)); // WCHAR in CmdLineCopyData accounts for null terminator
+				cd.cbData = (DWORD)(sizeof(CopyDataCmdLine) + wcslen(cmdLine)*sizeof(WCHAR)); // WCHAR in CmdLineCopyData accounts for null terminator
 				LockZeroBuffer<BYTE> buf(cd.cbData);
-				CmdLineCopyData *pcd = (CmdLineCopyData*)buf.m_buf;
+				CopyDataCmdLine *pcd = (CopyDataCmdLine*)buf.m_buf;
 				pcd->dwPid = getppid();
 				lstrcpy(pcd->szCmdLine, cmdLine);
 				cd.lpData = (PVOID)pcd;
