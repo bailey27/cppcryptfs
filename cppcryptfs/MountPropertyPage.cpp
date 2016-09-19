@@ -911,4 +911,9 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 		}
 	}
 
+	fclose(stderr);
+	fclose(stdout);
+
+	FreeConsole();
+
 }
