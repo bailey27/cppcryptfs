@@ -143,11 +143,57 @@ cppcryptfs --mount c:\tmp\test --drive k --password XYZ
 ```
 cppcryptfs is a Windows gui application and not a console application.  However, when started with command line options, it will try to write any error messages to the console (if any) that started it.
 
-If you plan to use cppcryptfs in batch files or scripts, it's probbably better to use cygwin bash than Windows cmd.  This is because Windows cmd never blocks when a Windows gui app is started.
+There can be only one instance of cppcryptfs running at any time.
 
-The best way to do this is to start cppcryptfs in the background without mounting anything.  Then you should wait one second for it to initialize.  Then you can run other instances of cppcryptfs, not in the background, to conduct mount and unmount operations.   In cygwin bash, these non-background invocations will block until the operation (e.g. a mount) is completed.  
+When cppcryptfs is invoked, then it checks to see if there is another instance running.  If there is, then if there are no command line options, the second instance of cppcryptfs will simply exit.
 
-Here is an example cygwin bash backup script.  Note that you have to use double backslashes in the mount path.
+If the second instance is invoked with command line options, it will send its command line to the already-running instance using the WM_COPYDATA message.  It will block until the already-running instance has processed the command line and then exit.  Any error messages that result from processing the command line will be printed in the cmd window in which the second instance was invoked.
+
+Therefore, if you plan to use cppcryptfs in batch files, you need to start an instance in the background first.  Then you should do the other operations in the foreground so they will block until completed.
+
+If you start "cppcryptfs --tray" in the background, then if there is already a running instance, then that instance will be told to hide itself in the system tray.  If there is not already an instance running, then you will have started cppcryptfs hidden in the system tray, running in the background. 
+
+Here is an example Windows cmd batch file using cppcryptfs.
+
+
+```
+@rem ====================================================
+@rem Dismount mounted drives - ignore errors
+@rem ====================================================
+
+cppcryptfs --unmount=u --tray --exit
+cppcryptfs --unmount=v --tray --exit
+
+@rem ====================================================
+@rem run cppcryptfs in background and give it time to startup
+@rem ====================================================
+
+start cppcryptfs --tray
+timeout /t 1 >nul
+
+@rem ====================================================
+@rem Mount drive U:
+@rem ====================================================
+
+cppcryptfs --mount=d:\TestCryptCppFS --drive=u --password=PASSWORD --tray  --exit
+
+@rem ====================================================
+@rem Mount drive V:
+@rem ====================================================
+
+cppcryptfs --mount=d:\TestCryptCppFS2 --drive=v --password=PASSWORD --tray  --exit
+
+@rem ====================================================
+@rem Run any command with the mounted drives
+@rem ====================================================
+
+copy  C:\test.txt U:\test.txt
+copy  C:\test.txt V:\test.txt
+```
+
+Here is an example cygwin bash scrypt.  Note thatn in bash, you need to
+use double-backslashes in the mount paths.
+
 
 ```
 
@@ -161,7 +207,7 @@ sleep 1
 # do backup operation
 rsync .....
 # unmount all drives and exit
-./cppcryptfs -u all -x
+/cygdrive/c/bin/cppcryptfs -u all -x
 
 ```
 
