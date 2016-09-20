@@ -158,13 +158,6 @@ Here is an example Windows cmd batch file using cppcryptfs.
 
 ```
 @rem ====================================================
-@rem Dismount mounted drives - ignore errors
-@rem ====================================================
-
-cppcryptfs --unmount=u --tray --exit
-cppcryptfs --unmount=v --tray --exit
-
-@rem ====================================================
 @rem run cppcryptfs in background and give it time to startup
 @rem ====================================================
 
