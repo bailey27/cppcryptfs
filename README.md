@@ -161,20 +161,20 @@ Here is an example Windows cmd batch file using cppcryptfs.
 @rem run cppcryptfs in background and give it time to startup
 @rem ====================================================
 
-start cppcryptfs --tray
+start cppcryptfs.exe --tray
 timeout /t 1 >nul
 
 @rem ====================================================
 @rem Mount drive U:
 @rem ====================================================
 
-cppcryptfs --mount=d:\TestCppCryptFS --drive=u --password=PASSWORD --tray  --exit
+cppcryptfs.exe --mount=d:\TestCppCryptFS --drive=u --password=PASSWORD --tray  --exit
 
 @rem ====================================================
 @rem Mount drive V:
 @rem ====================================================
 
-cppcryptfs --mount=d:\TestCppCryptFS2 --drive=v --password=PASSWORD --tray  --exit
+cppcryptfs.exe --mount=d:\TestCppCryptFS2 --drive=v --password=PASSWORD --tray  --exit
 
 @rem ====================================================
 @rem Run any command with the mounted drives
