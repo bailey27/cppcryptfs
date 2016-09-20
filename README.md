@@ -168,13 +168,13 @@ timeout /t 1 >nul
 @rem Mount drive U:
 @rem ====================================================
 
-cppcryptfs --mount=d:\TestCryptCppFS --drive=u --password=PASSWORD --tray  --exit
+cppcryptfs --mount=d:\TestCppCryptFS --drive=u --password=PASSWORD --tray  --exit
 
 @rem ====================================================
 @rem Mount drive V:
 @rem ====================================================
 
-cppcryptfs --mount=d:\TestCryptCppFS2 --drive=v --password=PASSWORD --tray  --exit
+cppcryptfs --mount=d:\TestCppCryptFS2 --drive=v --password=PASSWORD --tray  --exit
 
 @rem ====================================================
 @rem Run any command with the mounted drives
