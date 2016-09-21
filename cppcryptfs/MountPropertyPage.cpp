@@ -764,7 +764,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	if (szCmd)
 		argv = CommandLineToArgvW(szCmd, &argc);
 
-	if (argv == NULL || argc == 1) {
+	if (argv == NULL || argc < 2) {
 		if (argv)
 			LocalFree(argv);
 		return;
