@@ -105,8 +105,6 @@ BOOL CcppcryptfsApp::InitInstance()
 
 		HWND hWnd = FindWindow(L"#32770", L"cppcryptfs");
 
-		DWORD dwErr = 0;
-
 		if (hWnd) {
 			if (have_args()) {
 				COPYDATASTRUCT cd;
@@ -120,7 +118,6 @@ BOOL CcppcryptfsApp::InitInstance()
 				lstrcpy(pcd->szCmdLine, cmdLine);
 				cd.lpData = (PVOID)pcd;
 				SendMessageW(hWnd, WM_COPYDATA, NULL, (LPARAM)&cd);
-				dwErr = GetLastError();
 			} else {
 				ShowWindow(hWnd, SW_SHOWNORMAL);
 			}
