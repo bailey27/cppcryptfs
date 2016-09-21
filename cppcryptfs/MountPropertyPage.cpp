@@ -731,6 +731,7 @@ extern int optind, opterr, optopt;
 
 static void usage()
 {
+
 	fprintf(stderr, "Usage: cppcryptfs [OPTIONS]\n");
 	fprintf(stderr, "\nMounting:\n");
 	fprintf(stderr, "  -m, --mount=PATH\t\tmount filesystem locate at PATH\n");
@@ -754,6 +755,8 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	opterr = 1;
 	optopt = 0;
 
+	CString errMes;
+
 	int argc = 1;
 
 	LPWSTR *argv = NULL;
@@ -761,13 +764,8 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	if (szCmd)
 		argv = CommandLineToArgvW(szCmd, &argc);
 
-	if (argv == NULL)
-		argc = 1;
-
-	if (argc == 1)
+	if (argv == NULL || argc == 1)
 		return;
-
-	CString mes;
 
 	FreeConsole();
 
@@ -856,22 +854,20 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 
 	} catch (int err) {
 		if (err) {
-			if (mes.GetLength() == 0)
-				mes = L"unexpected exception";
+			if (errMes.GetLength() == 0)
+				errMes = L"unexpected exception";
 		}
 	}
 
-	if (argv)
-		LocalFree(argv);
+	LocalFree(argv);
 
-	if (mes.GetLength() > 0) {
-		fwprintf(stderr, L"cppcryptfs: %s\n", (LPCWSTR)mes);
+	if (errMes.GetLength() > 0) {
+		fwprintf(stderr, L"cppcryptfs: %s\n", (LPCWSTR)errMes);
 	} else if (do_help) {
 		usage();
 	} else if (invalid_opt) {
-		fprintf(stderr, "Try 'cppcryptfs --help' for more information.\n");
+		fwprintf(stderr, L"Try 'cppcryptfs --help' for more information.\n");
 	} else {
-		CString errMes;
 		if (mount) {
 			if (driveletter)
 				errMes = Mount(path, driveletter, password.m_buf);
@@ -884,12 +880,9 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 				if (driveletter)
 					errMes = Dismount(driveletter);
 				else
-					errMes = L"drive letter must be specified";
-					
+					errMes = L"drive letter must be specified";			
 			}
-		} else {
-			//errMes = "nothing to do";
-		}
+		} 
 		if (errMes.GetLength() > 0) {
 			LPCWSTR str = errMes;
 			if (str[wcslen(str) - 1] != '\n')
