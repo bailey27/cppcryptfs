@@ -28,13 +28,16 @@ public:
 			//
 			// Attempt to increase the minimum working set size to 1MB
 			
+			const SIZE_T desired_min_ws = 1024 * 1024;
+
 			SIZE_T min_ws, max_ws;
 
 			if (GetProcessWorkingSetSize(GetCurrentProcess(), &min_ws, &max_ws)) {
-				min_ws = max(1024 * 1024, min_ws);
-				max_ws = max(max_ws, min_ws);
-				if (SetProcessWorkingSetSize(GetCurrentProcess(), min_ws, max_ws)) {
-					m_IsLocked = VirtualLock(m_buf, sizeof(T)*m_len);
+				if (min_ws < desired_min_ws) {
+					max_ws = max(max_ws, desired_min_ws);
+					if (SetProcessWorkingSetSize(GetCurrentProcess(), desired_min_ws, max_ws)) {
+						m_IsLocked = VirtualLock(m_buf, sizeof(T)*m_len);
+					}
 				}
 			}
 		}
