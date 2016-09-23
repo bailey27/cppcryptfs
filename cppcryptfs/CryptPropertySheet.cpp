@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "CryptPropertySheet.h"
 #include "CryptPropertyPage.h"
 #include "cryptdokan.h"
+#include "LockZeroBuffer.h"
 
 // CryptPropertySheet
 
@@ -206,10 +207,15 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 {
 	// TODO: Add your message handler code here and/or call default
 
-	if (pCopyDataStruct && pCopyDataStruct->dwData == CPPCRYPTFS_COPYDATA_CMDLINE) {
+	if (pCopyDataStruct && pCopyDataStruct->dwData == CPPCRYPTFS_COPYDATA_CMDLINE && 
+		pCopyDataStruct->cbData >= sizeof(CopyDataCmdLine) &&
+		pCopyDataStruct->cbData <= CPPCRYPTFS_COPYDATA_CMDLINE_MAXLEN) {
 		CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(0);
 		if (page) {
-			CopyDataCmdLine *pcd = (CopyDataCmdLine*)pCopyDataStruct->lpData;
+			// ensure that szCmdLine is null terminated
+			LockZeroBuffer<BYTE> buf(pCopyDataStruct->cbData + sizeof(WCHAR));
+			memcpy(buf.m_buf, pCopyDataStruct->lpData, pCopyDataStruct->cbData);
+			CopyDataCmdLine *pcd = (CopyDataCmdLine*)buf.m_buf;
 			page->ProcessCommandLine(pcd->dwPid, pcd->szCmdLine);
 			return TRUE;
 		} else {
