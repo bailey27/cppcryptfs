@@ -22,6 +22,22 @@ public:
 		m_len = len;
 		m_buf = new T[m_len];
 		m_IsLocked = VirtualLock(m_buf, sizeof(T)*m_len);
+		if (!m_IsLocked) {
+			// The amount of memory that can be locked is a little bit less than the
+			// minimum working set size, which defaults to 200KB.
+			//
+			// Attempt to increase the minimum working set size to 1MB
+			
+			SIZE_T min_ws, max_ws;
+
+			if (GetProcessWorkingSetSize(GetCurrentProcess(), &min_ws, &max_ws)) {
+				min_ws = max(1024 * 1024, min_ws);
+				max_ws = max(max_ws, min_ws);
+				if (SetProcessWorkingSetSize(GetCurrentProcess(), min_ws, max_ws)) {
+					m_IsLocked = VirtualLock(m_buf, sizeof(T)*m_len);
+				}
+			}
+		}
 		if (!m_IsLocked && throw_if_not_locked) {
 			delete[] m_buf;
 			std::bad_alloc exception;
