@@ -37,7 +37,9 @@ THE SOFTWARE.
 
 #include "resource.h"		// main symbols
 
-#define CPPCRYPTFS_COPYDATA_CMDLINE 0x5cf2fff9
+#define CPPCRYPTFS_COPYDATA_CMDLINE 0x574cd9d1
+
+#define CPPCRYPTFS_COPYDATA_CMDLINE_MAXLEN (64*1024) // keep small because of VirtualLock()
 
 typedef struct struct_CopyDataCmdLine {
 	DWORD dwPid;  // process whose console should be attached to for printing error messages
