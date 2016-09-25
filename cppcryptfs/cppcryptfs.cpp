@@ -115,11 +115,17 @@ BOOL CcppcryptfsApp::InitInstance()
 				if (dataLen <= CPPCRYPTFS_COPYDATA_CMDLINE_MAXLEN) {
 					cd.cbData = (DWORD)dataLen;
 					LockZeroBuffer<BYTE> buf(cd.cbData);
-					CopyDataCmdLine *pcd = (CopyDataCmdLine*)buf.m_buf;
-					pcd->dwPid = getppid();
-					lstrcpy(pcd->szCmdLine, cmdLine);
-					cd.lpData = (PVOID)pcd;
-					SendMessageW(hWnd, WM_COPYDATA, NULL, (LPARAM)&cd);
+					if (buf.IsLocked()) {
+						CopyDataCmdLine *pcd = (CopyDataCmdLine*)buf.m_buf;
+						pcd->dwPid = getppid();
+						lstrcpy(pcd->szCmdLine, cmdLine);
+						cd.lpData = (PVOID)pcd;
+						SendMessageW(hWnd, WM_COPYDATA, NULL, (LPARAM)&cd);
+					} else {
+						ConsoleErrMes(L"unable to lock command line buffer in source");
+					}
+				} else {
+					ConsoleErrMes(L"command line too long");
 				}
 			} else {
 				ShowWindow(hWnd, SW_SHOWNORMAL);

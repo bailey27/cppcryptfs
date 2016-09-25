@@ -453,3 +453,34 @@ have_args()
 
 	return argc > 1;
 }
+
+void 
+OpenConsole(DWORD pid)
+{
+	FreeConsole();
+
+	if (AttachConsole(pid ? pid : ATTACH_PARENT_PROCESS)) {
+#pragma warning( push )
+#pragma warning(disable : 4996)
+		freopen("CONOUT$", "wt", stdout);
+		freopen("CONOUT$", "wt", stderr);
+#pragma warning( pop )
+	}
+}
+
+void
+CloseConsole()
+{
+	fclose(stderr);
+	fclose(stdout);
+	
+	FreeConsole();
+}
+
+void 
+ConsoleErrMes(LPCWSTR err, DWORD pid)
+{
+	OpenConsole(pid);
+	fwprintf(stderr, L"cppcryptfs: %s\n", err);
+	CloseConsole();
+}

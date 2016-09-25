@@ -431,7 +431,7 @@ BOOL CMountPropertyPage::OnInitDialog()
 	if (!m_password.ArePasswordBuffersLocked())
 		MessageBox(L"unable to lock password buffer", L"cppcryptfs", MB_OK | MB_ICONERROR);
 
-	ProcessCommandLine(GetCurrentProcessId(), GetCommandLine(), TRUE);
+	ProcessCommandLine(0, GetCommandLine(), TRUE);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
@@ -770,15 +770,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 		return;
 	}
 
-	FreeConsole();
-
-	if (AttachConsole(bOnStartup ? ATTACH_PARENT_PROCESS : pid)) {
-#pragma warning( push )
-#pragma warning(disable : 4996)
-		freopen("CONOUT$", "wt", stdout);
-		freopen("CONOUT$", "wt", stderr);
-#pragma warning( pop )
-	}
+	OpenConsole(bOnStartup ? 0 : pid);
 
 	CString path;
 	WCHAR driveletter = 0;
@@ -907,9 +899,6 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 		}
 	}
 
-	fclose(stderr);
-	fclose(stdout);
-
-	FreeConsole();
+	CloseConsole();
 
 }

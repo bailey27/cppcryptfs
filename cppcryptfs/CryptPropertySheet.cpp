@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include "CryptPropertyPage.h"
 #include "cryptdokan.h"
 #include "LockZeroBuffer.h"
+#include "util.h"
 
 // CryptPropertySheet
 
@@ -210,15 +211,24 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 	if (pCopyDataStruct && pCopyDataStruct->dwData == CPPCRYPTFS_COPYDATA_CMDLINE && 
 		pCopyDataStruct->cbData >= sizeof(CopyDataCmdLine) &&
 		pCopyDataStruct->cbData <= CPPCRYPTFS_COPYDATA_CMDLINE_MAXLEN) {
+
+		DWORD consolePid = ((CopyDataCmdLine*)pCopyDataStruct->lpData)->dwPid;
+
 		CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(0);
+
 		if (page) {
-			// ensure that szCmdLine is null terminated
+			// ensure that szCmdLine is null terminated by allocating extra WCHAR
 			LockZeroBuffer<BYTE> buf(pCopyDataStruct->cbData + sizeof(WCHAR));
+			if (!buf.IsLocked()) {
+				ConsoleErrMes(L"unable to lock command line buffer in target", consolePid);
+				return FALSE;
+			}
 			memcpy(buf.m_buf, pCopyDataStruct->lpData, pCopyDataStruct->cbData);
 			CopyDataCmdLine *pcd = (CopyDataCmdLine*)buf.m_buf;
-			page->ProcessCommandLine(pcd->dwPid, pcd->szCmdLine);
+			page->ProcessCommandLine(consolePid, pcd->szCmdLine);
 			return TRUE;
 		} else {
+			ConsoleErrMes(L"unable to get mount page", consolePid);
 			return FALSE;
 		}
 	} else {

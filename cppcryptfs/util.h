@@ -79,3 +79,9 @@ bool get_sys_random_bytes(unsigned char *buf, DWORD len);
 DWORD getppid();
 
 bool have_args();
+
+void OpenConsole(DWORD pid = 0);
+
+void CloseConsole();
+
+void ConsoleErrMes(LPCWSTR err, DWORD pid = 0);
