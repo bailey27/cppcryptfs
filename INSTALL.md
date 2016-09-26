@@ -33,19 +33,19 @@ git clone ...
 
 Dokany
 ------
-Unless you want to develop for or debug Dokany, you should just install the Dokany release binaries from here.
+Unless you want to develop or debug Dokany, you should just install the Dokany release binaries from here.
 
 https://github.com/dokan-dev/dokany/releases
 
 Using DokanSetup_redist-VERSION.exe is probably the safest bet. Be sure to go into the installer options and select "install development files".
 
-Openssl
+OpenSSL
 ---------
-cppcryptfs uses Openssl for doing the actual encrypting and decrypting of data.
+cppcryptfs uses OpenSSL for doing the actual encrypting and decrypting of data.
 
 Please refer to the "INSTALL" file from the openssl distribution in case these instructions don't work.
 
-First clone openssl
+First clone OpenSSL
 
 ```
 cd \git
@@ -64,7 +64,7 @@ I think installing the Windows DDK and or the SDK caused me to need to set these
 and lib paths.  If you are building with the Dokany release libs and headers, you shouldn't
 need to install the Windows DDK or SDK.  They are needed only if you are building Dokany from source.
 
-So, these "set" commands probably won't be needed, but here they are just in case
+So these "set" commands probably won't be needed, but here they are just in case
 
 ```
 set include=C:\Program Files (x86)\Windows Kits\10\Include\10.0.10586.0\um;%include%
@@ -75,18 +75,18 @@ set lib=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.10586.0\um\x64;%lib%
 set lib=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.10586.0\ucrt\x64;%lib%
 ```
 
-Then run (Activestate) perl to configure openssl for a MS Visual Studio AMD64/X86_64 static build.  
+Then run (ActiveState) perl to configure OpenSSL for a MS Visual Studio AMD64/X86_64 static build.  
 Use "VC-WIN32" instead of  "VC-WIN64A" if you're doing a 32bit build
 
 ```
 perl Configure VC-WIN64A no-shared
 ```
 
-Then run "nmake" to build openssl.
+Then run "nmake" to build OpenSSL.
 
-Then run "nmake install" to install it.  nmake install must be run from an elevated (Adminstrator) command prompt in order to work.
+Then run "nmake install" to install it.  nmake install must be run from an elevated (adminstrator) command prompt in order to work.
 
-There are sometimes some errors about installing the openssl documentation.  They won't affect your ability to build cppcryptfs.
+There are sometimes some errors about installing the OpenSSL documentation.  They won't affect your ability to build cppcryptfs.
 
 rapidjson
 ------
@@ -105,7 +105,7 @@ cd \git
 git clone https://github.com/bailey27/cppcryptfs.git
 ```
 
-Then go to c:\\git\\cppcryptfs in Windows Explorer and double click on cppcryptfs.sln.  This will load the project into Visual Studio.
+Then go to c:\\git\\cppcryptfs in Windows Explorer and double-click on cppcryptfs.sln.  This will load the project into Visual Studio.
 
 Then change the build target to "Release" and "x64" to do a release 64-buit build, and then do Build -> Build Solution.
 
