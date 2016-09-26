@@ -34,12 +34,6 @@ Build Requirements
 		https://github.com/dokan-dev/dokany/releases
 	(be sure to select "install development files" in the installer options)
 
-	The default (master) branch of cppcryptfs is for building with Dokany 1.0.0.
-
-	If you would like to build cppcryptfs with the current Dokany source,
-	then after you clone cppcryptfs you need to switch to the current_dokany branch of cppcryptfs. 
-
-		git checkout current_dokany
 
 
 There are detailed build instructions in [INSTALL.md](INSTALL.md).
