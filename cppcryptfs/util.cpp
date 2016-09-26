@@ -438,7 +438,7 @@ have_args()
 {
 	int argc = 1;
 
-	CString cmdLine = GetCommandLineW();
+	LPCWSTR cmdLine = GetCommandLineW();
 
 	LPTSTR *argv = NULL;
 
