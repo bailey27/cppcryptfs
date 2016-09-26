@@ -26,9 +26,9 @@ Build Requirements
 -----
 	
 	Microsoft Visual Studio 2015 Community Edition
-	openssl - https://github.com/openssl/openssl (static build recommended)
+	OpenSSL - https://github.com/openssl/openssl (static build recommended)
 	rapidjson - https://github.com/miloyip/rapidjson (for parsing gocryptfs.conf)
-	dokany - https://github.com/dokan-dev/dokany
+	Dokany - https://github.com/dokan-dev/dokany
 
 	For Dokany, you probably want to use the binary distribution from here:
 		https://github.com/dokan-dev/dokany/releases
