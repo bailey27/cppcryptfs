@@ -1,4 +1,4 @@
-cppcyrptfs Build and Installation
+cppcryptfs Build and Installation
 --------------
 
 You will need the following software to build cppcryptfs:
