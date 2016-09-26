@@ -57,7 +57,7 @@ Then "cd openssl".
 First, you need to run the batch file that comes with Visual Studio to set up the environment variables for compiling from the command line, e.g.
 
 ```
-call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x64
+"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x64
 ```
 
 I think installing the Windows DDK and or the SDK caused me to need to set these include 
