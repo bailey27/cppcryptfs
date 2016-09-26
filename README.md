@@ -42,16 +42,8 @@ Build Requirements
 		git checkout current_dokany
 
 
-It will go easier of you checkout everything into C:\git, e.g.
+There are detailed build instructions in [INSTALL.md!](INSTALL.md).
 
-```
-c:
-cd \
-mkdir git
-cd git
-git checkout ...
-
-```
 
 Use
 -------
