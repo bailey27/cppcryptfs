@@ -45,7 +45,7 @@ cppcryptfs uses OpenSSL for doing the actual encrypting and decrypting of data.
 
 Please refer to the "INSTALL" file from the OpenSSL distribution in case these instructions don't work.
 
-First clone OpenSSL
+First clone OpenSSL.
 
 ```
 cd \git
@@ -54,7 +54,7 @@ git clone https://github.com/openssl/openssl.git
 
 Then "cd openssl".
 
-First, you need to run the batch file that comes with Visual Studio to set up the environment variables for compiling from the command line, e.g.
+You need to run the batch file that comes with Visual Studio to set up the environment variables for compiling from the command line, e.g.
 
 ```
 "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x64
