@@ -42,7 +42,7 @@ Build Requirements
 		git checkout current_dokany
 
 
-There are detailed build instructions in [INSTALL.md!](INSTALL.md).
+There are detailed build instructions in [INSTALL.md](INSTALL.md).
 
 
 Use

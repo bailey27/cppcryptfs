@@ -1,4 +1,4 @@
-cppcyrptfs Build and Intallation
+cppcyrptfs Build and Installation
 --------------
 
 You will need the following software:
