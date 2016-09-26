@@ -1,9 +1,9 @@
 cppcyrptfs Build and Installation
 --------------
 
-You will need the following software:
+You will need the following software to build cppcryptfs:
 
-git, Microsoft Visual Studio, and Perl to build cppcryptfs.  
+git, Microsoft Visual Studio, and Perl
 
 The free Microsoft Visual Studio 2015 Community Edition is recommended
 
