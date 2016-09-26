@@ -445,11 +445,10 @@ have_args()
 	if (cmdLine)
 		argv = CommandLineToArgvW(cmdLine, &argc);
 
-	if (argv == NULL)
-		argc = 1;
-
 	if (argv)
 		LocalFree(argv);
+	else
+		argc = 1;
 
 	return argc > 1;
 }
