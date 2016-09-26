@@ -76,7 +76,7 @@ set lib=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.10586.0\ucrt\x64;%lib%
 ```
 
 Then run (ActiveState) perl to configure OpenSSL for a Visual Studio AMD64/X86_64 static build.  
-Use "VC-WIN32" instead of  "VC-WIN64A" if you're doing a 32bit build
+Use "VC-WIN32" instead of  "VC-WIN64A" if you're doing a 32-bit build
 
 ```
 perl Configure VC-WIN64A no-shared
@@ -112,4 +112,4 @@ Then change the build target to "Release" and "x64" to do a release 64-buit buil
 There is no installation program for cppcryptfs.  You will need to copy cppcrypfs.exe (e.g. C:\\git\\cppcryptfs\\x64\\Release\\cppcryptfs.exe) to some directory in your path.
 
 
-
+A 32-bit build should work (assuming you have installed Dokany on a 32-bit machine and have build and installed 32-bit OpenSSL).  However, it has not been tested in a while.
