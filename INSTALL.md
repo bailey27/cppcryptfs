@@ -5,9 +5,6 @@ You will need the following software to build cppcryptfs:
 
 Microsoft Visual Studio, perl, and git.
 
-You can get by without git if you download and unzip the source zip files
-from github.  These instructions assume that you are using git.
-
 The free Microsoft Visual Studio 2015 Community Edition is recommended
 
 https://www.visualstudio.com/vs/community/
@@ -24,7 +21,12 @@ For git, the git that comes with cygwin works well.
 
 https://www.cygwin.com/
 
-Everything will go easier if you clone everything into C:\git, e.g.
+You don't need git if you download the source zip files from github
+and unzip them.
+
+These instructions assume that you are using git.
+
+Everything will go easier if you put everything in C:\git, e.g.
 
 ```
 c:
