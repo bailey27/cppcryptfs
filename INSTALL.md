@@ -13,7 +13,7 @@ You need to install it in such a way that you can compile C++ applications with 
 The professional edition should be fine if you already have that. The "Express" edition will not work 
 due to its lack of support for MFC.
 
-Also, in order to build OpenSSL, you will need perl.  They recommend ActiveState ActivePerl 
+Also, in order to build OpenSSL, you will need perl.  They recommend using the rfree ActiveState ActivePerl 
 
 http://www.activestate.com/activeperl/downloads
 
