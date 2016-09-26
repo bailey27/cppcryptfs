@@ -43,7 +43,7 @@ OpenSSL
 ---------
 cppcryptfs uses OpenSSL for doing the actual encrypting and decrypting of data.
 
-Please refer to the "INSTALL" file from the openssl distribution in case these instructions don't work.
+Please refer to the "INSTALL" file from the OpenSSL distribution in case these instructions don't work.
 
 First clone OpenSSL
 
