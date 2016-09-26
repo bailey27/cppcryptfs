@@ -64,7 +64,7 @@ I think installing the Windows DDK and or the SDK caused me to need to set these
 and lib paths.  If you are building with the Dokany release libs and headers, you shouldn't
 need to install the Windows DDK or SDK.  They are needed only if you are building Dokany from source.
 
-So these "set" commands probably won't be needed, but here they are just in case
+So these "set" commands probably won't be needed, but here they are just in case.
 
 ```
 set include=C:\Program Files (x86)\Windows Kits\10\Include\10.0.10586.0\um;%include%
