@@ -90,7 +90,7 @@ Then run "nmake" to build OpenSSL.
 
 Then run "nmake install" to install it.  nmake install must be run from an elevated (adminstrator) command prompt in order to work.
 
-There are sometimes some errors about installing the OpenSSL documentation.  They won't affect your ability to build cppcryptfs.
+There might be some errors about installing the OpenSSL documentation.  They won't affect your ability to build cppcryptfs.
 
 rapidjson
 ------
