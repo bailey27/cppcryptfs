@@ -17,7 +17,7 @@ In order to build OpenSSL, you will need perl.  The OpenSSL documentation recomm
 
 http://www.activestate.com/activeperl/downloads
 
-For git, the git that comes with cygwin works well.
+For git, the git that comes with cygwin works well.  git is not selected in the cygwin install by default.  You will need to select it.
 
 https://www.cygwin.com/
 
