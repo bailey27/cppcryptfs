@@ -50,7 +50,7 @@ cppcryptfs uses OpenSSL for doing the actual encrypting and decrypting of data.
 
 Please refer to the "INSTALL" file from the OpenSSL distribution in case these instructions don't work.
 
-First clone OpenSSL.
+First, clone OpenSSL.
 
 ```
 cd \git
@@ -104,6 +104,8 @@ git clone https://github.com/miloyip/rapidjson.git
 
 cppcryptfs
 ----------
+First, clone cppcryptfs.
+
 ```
 cd \git
 git clone https://github.com/bailey27/cppcryptfs.git
