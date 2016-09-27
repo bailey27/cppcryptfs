@@ -113,7 +113,7 @@ Then go to c:\\git\\cppcryptfs in Windows Explorer and double-click on cppcryptf
 
 Then change the build target to "Release" and "x64" to do a release 64-bit build, and then do Build -> Build Solution.
 
-There is no installation program for cppcryptfs.  You will need to copy cppcrypfs.exe (e.g. C:\\git\\cppcryptfs\\x64\\Release\\cppcryptfs.exe) to some directory in your path.
+There is no installation program for cppcryptfs.  You will need to copy cppcryptfs.exe (e.g. C:\\git\\cppcryptfs\\x64\\Release\\cppcryptfs.exe) to some directory in your path.
 
 
 A 32-bit build should work.  However, it has not been tested in a while.
