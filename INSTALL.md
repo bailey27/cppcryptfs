@@ -88,7 +88,7 @@ perl Configure VC-WIN64A no-shared
 
 Then run "nmake" to build OpenSSL.
 
-Then run "nmake install" to install it.  nmake install must be run from an elevated (adminstrator) command prompt in order to work.
+Then run "nmake install" to install it.  nmake install must be run from an elevated (adminstrator) command prompt in order for it to work.
 
 There might be some errors about installing the OpenSSL documentation.  They won't affect your ability to build cppcryptfs.
 
