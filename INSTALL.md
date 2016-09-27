@@ -9,11 +9,11 @@ The free Microsoft Visual Studio 2015 Community Edition is recommended
 
 https://www.visualstudio.com/vs/community/
 
-You need to install it in such a way that you can compile C++ applications with MFC (Microsoft Foundation Classes) support.  
-The professional edition should be fine if you already have that. The "Express" edition will not work 
-due to its lack of support for MFC.
+You need to install Visual Studio in such a way that you can compile C++ applications with support for Microsoft Foundation Classes (MFC).  
 
-Also, in order to build OpenSSL, you will need perl.  The OpenSSL documentation recommends using the free ActiveState ActivePerl.
+The professional edition should be fine if you already have that. The "Express" edition will not work due to its lack of support for MFC.
+
+In order to build OpenSSL, you will need perl.  The OpenSSL documentation recommends using the free ActiveState ActivePerl.
 
 http://www.activestate.com/activeperl/downloads
 
