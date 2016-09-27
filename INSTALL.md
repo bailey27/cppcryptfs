@@ -95,7 +95,7 @@ There might be some errors about installing the OpenSSL documentation.  They won
 rapidjson
 ------
 
-rapidjson is used for parsing the config file gocryptfs.conf.  It consists of only header files and doesn't need to be compiled.
+rapidjson is used for parsing the config file gocryptfs.conf.  It consists of only header files, so there is no need to build it separately.
 
 ```
 cd \git
