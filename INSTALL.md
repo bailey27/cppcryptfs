@@ -58,7 +58,7 @@ git clone https://github.com/openssl/openssl.git
 cd openssl
 ```
 
-Run the batch file that comes with Visual Studio to set up the environment variables for compiling from the command line, e.g.
+Then run the batch file that comes with Visual Studio to set up the environment variables for compiling from the command line, e.g.
 
 ```
 "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x64
