@@ -116,7 +116,7 @@ Then change the build target to "Release" and "x64" to do a release 64-bit build
 There is no installation program for cppcryptfs.  You will need to copy cppcrypfs.exe (e.g. C:\\git\\cppcryptfs\\x64\\Release\\cppcryptfs.exe) to some directory in your path.
 
 
-A 32-bit build should work (assuming you have installed Dokany on a 32-bit machine and have built and installed 32-bit OpenSSL).  However, it has not been tested in a while.
+A 32-bit build should work.  However, it has not been tested in a while.
 
 
 The default (master) branch of cppcryptfs is for building with the Dokany 1.0.0 binary release.  
