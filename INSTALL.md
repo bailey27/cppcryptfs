@@ -65,7 +65,7 @@ You need to run the batch file that comes with Visual Studio to set up the envir
 ```
 
 I think installing the Windows SDK and/or the DDK created the need to set these include 
-and lib paths.  If you are building with the Dokany binary release libs and headers, you shouldn't
+and lib paths.  If you are building with the Dokany binary release libs and headers, then you shouldn't
 need to install the Windows SDK or DDK.  They are needed only if you are building Dokany from source.
 
 So these "set" commands probably won't be needed, but here they are just in case.
