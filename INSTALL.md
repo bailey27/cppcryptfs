@@ -64,7 +64,7 @@ Then run the batch file that comes with Visual Studio to set up the environment 
 "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x64
 ```
 
-I think installing the Windows SDK and/or the DDK created the need to set these include 
+If you've installed the Windows SDK and/or the DDK, then you might need  to set these include 
 and lib paths.  If you are building with the Dokany binary release libs and headers, then you shouldn't
 need to install the Windows SDK or DDK.  They are needed only if you are building Dokany from source.
 
