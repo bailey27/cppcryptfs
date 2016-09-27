@@ -36,12 +36,23 @@ THE SOFTWARE.
 
 #include "cryptconfig.h"
 
+// min() and max() macros cause compiler warnings with rapidjson
+
+#pragma push_macro("min")
+#pragma push_macro("max")
+
+#undef min
+#undef max
 
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/filewritestream.h"
 #include "rapidjson/prettywriter.h"
+
+#pragma pop_macro("min")
+#pragma pop_macro("max")
+
 #include <cstdio>
 
 #include "util.h"
