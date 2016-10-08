@@ -144,7 +144,7 @@ Here is an example Windows cmd batch file using cppcryptfs.
 
 ```
 @rem ====================================================
-@rem run cppcryptfs in background and give it time to startup
+@rem run cppcryptfs in background and give it time to start up
 @rem ====================================================
 
 start cppcryptfs.exe --tray
