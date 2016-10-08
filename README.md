@@ -170,7 +170,7 @@ copy  C:\test.txt U:\test.txt
 copy  C:\test.txt V:\test.txt
 ```
 
-Here is an example cygwin bash scrypt.  Note thatn in bash, you need to
+Here is an example cygwin bash scrypt.  Note that in bash, you need to
 use double-backslashes in the mount paths.
 
 
