@@ -225,17 +225,17 @@ Below are some benchmark results.  The tests were conducted using the cygwin uti
 
 Windows Defender realtime scanning was disabled during the tests because it really slows down cygwin tar.  It took 2m43.600s to extract linux-3.0.tar.gz on native NTFS with realtime scanning enabled.
 
+cppcyptfs performs about the same as the mirror sample program from Dokany which doesn't do any encryption or decryption.  
+
 ```
-								cppcryptfs		native NTFS
+								cppcryptfs		native NTFS		Dokany mirror
 								
-Streaming Write					284 MB/s		402 MB/s
-Extract linux-3.0.tar.gz		1m24.707s		0m21.291s
-ls -lR linux-3.0				0m45.968s		0m2.983s
-Delete linux-3.0 				1m11.298s		0m10.144s
+Streaming Write					284 MB/s		402 MB/s		321 MB/s
+Extract linux-3.0.tar.gz		1m36.412s		0m21.291s		1m34.125s	
+ls -lR linux-3.0				1m1.979s		0m2.983s		1m11.618s
+Delete linux-3.0 				1m28.749s		0m10.144s		1m24.677s
 
 ```
-
-Other than on the streaming write test, the performance of cppcryptfs is much slower than native NTFS.  The reason for this is that there is quite a lot of overhead with Dokany.  cppcyptfs performs about the same as the mirror sample program from Dokany which doesn't do any encryption or decryption.
 
 Compatibility with gocryptfs
 ------
