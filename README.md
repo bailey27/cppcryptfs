@@ -219,6 +219,22 @@ used when they were created.  So far, the only software that seems to create fil
 
 Currently, the only solution to this problem is to use plain text file names.
 
+Performance
+------
+Bellow are some benchmarks.  The tests were conducted using the cygwin utilities under Windows 10 64-bit running on an Intel I5-4200U cpu with a Crucial M500 ssd.  
+
+```
+								cppcryptfs		native NTFS
+								
+Streaming Write					284 MB/s		402 MB/s
+Extract linux-3.0.tar.gz		1m24.707s		0m21.291s
+ls -lR linux-3.0				0m45.968s		0m2.983s
+Delete linux-3.0 				1m11.298s		0m10.144s
+
+```
+
+Other than on the streaming write test, the performance of cppcryptfs is much slower than native NTFS.  The reason for this is that there is quite a lot of overheadwith Dokany.  cppcyptfs performs about the same as the mirror sample program from Dokany, and Dokany mirror doesn't do any encryption or decryption.
+
 Compatibility with gocryptfs
 ------
 
