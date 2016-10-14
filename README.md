@@ -225,7 +225,7 @@ Below are some benchmark results.  The tests were conducted using the cygwin uti
 
 Windows Defender realtime scanning was disabled during the tests because it really slows down cygwin tar.  It took 2m43.600s to extract linux-3.0.tar.gz on native NTFS with realtime scanning enabled.
 
-cppcryptfs performs about the same as the mirror sample program from Dokany which doesn't do any encryption or decryption.  
+cppcryptfs performs about the same as the mirror sample program from Dokany which doesn't do encryption.
 
 ```
 								cppcryptfs		native NTFS		Dokany mirror
