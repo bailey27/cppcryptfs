@@ -221,7 +221,7 @@ Currently, the only solution to this problem is to use plain text file names.
 
 Performance
 ------
-Below are some benchmark results.  The tests were conducted using the cygwin utilities under Windows 10 64-bit running on an Intel I5-4200U cpu with a Crucial M500 ssd.  
+Below are some benchmark results.  The tests were conducted using the cygwin utilities under Windows 10 64-bit running on an Intel i5-4200U cpu with a Crucial M500 ssd.  
 
 Windows Defender realtime scanning was disabled during the tests because it really slows down cygwin tar.  It took 2m43.600s to extract linux-3.0.tar.gz on native NTFS with realtime scanning enabled.
 
