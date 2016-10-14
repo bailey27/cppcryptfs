@@ -81,6 +81,8 @@ set lib=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.10586.0\um\x64;%lib%
 set lib=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.10586.0\ucrt\x64;%lib%
 ```
 
+Use "x86" in place of "x64" in the above lib vars if you are doing a 32-bit build.
+
 Then run (ActiveState) perl to configure OpenSSL for a Visual Studio AMD64/X86_64 static build.  
 Use "VC-WIN32" instead of  "VC-WIN64A" if you're doing a 32-bit build
 
