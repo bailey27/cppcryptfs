@@ -233,7 +233,7 @@ Delete linux-3.0 				1m11.298s		0m10.144s
 
 ```
 
-Other than on the streaming write test, the performance of cppcryptfs is much slower than native NTFS.  The reason for this is that there is quite a lot of overhead with Dokany.  cppcyptfs performs about the same as the mirror sample program from Dokany, and Dokany mirror doesn't do any encryption or decryption.
+Other than on the streaming write test, the performance of cppcryptfs is much slower than native NTFS.  The reason for this is that there is quite a lot of overhead with Dokany.  cppcyptfs performs about the same as the mirror sample program from Dokany which doesn't do any encryption or decryption.
 
 Compatibility with gocryptfs
 ------
