@@ -221,7 +221,7 @@ Currently, the only solution to this problem is to use plain text file names.
 
 Performance
 ------
-Bellow are some benchmarks.  The tests were conducted using the cygwin utilities under Windows 10 64-bit running on an Intel I5-4200U cpu with a Crucial M500 ssd.  
+Below are some benchmarks.  The tests were conducted using the cygwin utilities under Windows 10 64-bit running on an Intel I5-4200U cpu with a Crucial M500 ssd.  
 
 ```
 								cppcryptfs		native NTFS
