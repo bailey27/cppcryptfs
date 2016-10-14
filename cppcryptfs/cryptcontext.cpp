@@ -43,12 +43,12 @@ CryptContext::CryptContext()
 {
 	m_mountEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-	m_prand_bytes = &random_bytes;
-
 	if (!m_mountEvent)
 		throw((int)GetLastError());
 
 	m_config = new CryptConfig;
+
+	m_prand_bytes = &random_bytes;
 }
 
 CryptContext::~CryptContext()
