@@ -29,6 +29,8 @@ THE SOFTWARE.
 #include "stdafx.h"
 #include "cryptcontext.h"
 
+static RandomBytes random_bytes;
+
 void CryptContext::InitEme(const BYTE *key)
 {
 	m_eme.key = key;
@@ -40,6 +42,8 @@ void CryptContext::InitEme(const BYTE *key)
 CryptContext::CryptContext()
 {
 	m_mountEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+	m_prand_bytes = &random_bytes;
 
 	if (!m_mountEvent)
 		throw((int)GetLastError());

@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 #include "LockZeroBuffer.h"
 
-#define RANDOM_POOL_SIZE 4096
+#define RANDOM_POOL_SIZE (32*1024)
 
 class RandomBytes {
 private:
