@@ -230,7 +230,7 @@ cppcryptfs performs about the same as the mirror sample program from Dokany whic
 ```
 								cppcryptfs		native NTFS		Dokany mirror
 								
-Streaming Write					164 MB/s		223 MB/s		173 MB/s
+Streaming Write					164 MB/s		223 MB/s		181 MB/s
 Extract linux-3.0.tar.gz		1m36.412s		0m21.291s		1m34.125s	
 ls -lR linux-3.0				1m1.979s		0m2.983s		1m11.618s
 Delete linux-3.0 				1m28.749s		0m10.144s		1m24.677s
