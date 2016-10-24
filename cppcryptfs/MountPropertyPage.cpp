@@ -192,9 +192,13 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	cpath = &basedir[0];
 	
+	m_bSuppressDeviceChange = TRUE;
+
 	theApp.DoWaitCursor(1);
 	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes);
 	theApp.DoWaitCursor(-1);
+
+	m_bSuppressDeviceChange = FALSE;
 
 	if (result != 0) {
 		return CString(&error_mes[0]);
@@ -810,16 +814,17 @@ static void usage()
 
 	fprintf(stderr, "Usage: cppcryptfs [OPTIONS]\n");
 	fprintf(stderr, "\nMounting:\n");
-	fprintf(stderr, "  -m, --mount=PATH\t\tmount filesystem locate at PATH\n");
-	fprintf(stderr, "  -d, --drive=D\t\t\tmount to drive letter D\n");
-	fprintf(stderr, "  -p, --password=PASSWORD\tuse password PASSWORD\n");
+	fprintf(stderr, "  -m, --mount=PATH\tmount filesystem locate at PATH\n");
+	fprintf(stderr, "  -d, --drive=D\t\tmount to drive letter D\n");
+	fprintf(stderr, "  -p, --password=PASS\tuse password PASS\n");
 	fprintf(stderr, "\nUnmounting:\n");
-	fprintf(stderr, "  -u, --unmount=D\t\tumount drive letter D\n");
-	fprintf(stderr, "  -u, --umount=all\t\tunmount all drives\n");
+	fprintf(stderr, "  -u, --unmount=D\tumount drive letter D\n");
+	fprintf(stderr, "  -u, --umount=all\tunmount all drives\n");
 	fprintf(stderr, "\nMisc:\n");
-	fprintf(stderr, "  -t, --tray\t\t\thide in system tray\n");
-	fprintf(stderr, "  -x, --exit\t\t\texit if no drives mounted\n");
-	fprintf(stderr, "  -h, --help\t\t\tdisplay this help message\n");
+	fprintf(stderr, "  -t, --tray\t\thide in system tray\n");
+	fprintf(stderr, "  -x, --exit\t\texit if no drives mounted\n");
+	fprintf(stderr, "  -l, --list\t\tlist available and mounted drive letters (with paths)\n");
+	fprintf(stderr, "  -h, --help\t\tdisplay this help message\n");
 	
 }
 
@@ -860,6 +865,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	BOOL do_help = FALSE;
 	BOOL exit_if_no_mounted = FALSE;
 	BOOL hide_to_system_tray = FALSE;
+	BOOL do_list = FALSE;
 
 	try {
 
@@ -871,6 +877,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			{L"unmount",  required_argument, 0, 'u'},
 			{L"tray",  no_argument, 0, 't'},
 			{L"exit",  no_argument, 0, 'x'},
+			{L"list",  no_argument, 0, 'l'},
 			{L"help",  no_argument, 0, 'h'},
 			{0, 0, 0, 0}
 		};
@@ -880,7 +887,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 
 		while (1) {
 
-			c = getopt_long(argc, argv, L"m:d:p:u:hxt", long_options, &option_index);
+			c = getopt_long(argc, argv, L"m:d:p:u:hxtl", long_options, &option_index);
 
 			if (c == -1)
 				break;
@@ -909,6 +916,9 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			case 'h':
 				do_help = TRUE;
 				break;
+			case 'l':
+				do_list = TRUE;
+				break;
 			case 't':
 				hide_to_system_tray = TRUE;
 				break;
@@ -934,10 +944,28 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 
 	if (errMes.GetLength() > 0) {
 		fwprintf(stderr, L"cppcryptfs: %s\n", (LPCWSTR)errMes);
-	} else if (do_help) {
-		usage();
 	} else if (invalid_opt) {
 		fwprintf(stderr, L"Try 'cppcryptfs --help' for more information.\n");
+	} else if (do_help) {
+		usage();
+	} else if (do_list) {
+		CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS); 
+		if (pList) {
+			int nItems = pList->GetItemCount();
+			int i;
+			bool selected_was_visible = false;
+			WCHAR selected = 0;
+			for (i = 0; i < nItems; i++) {
+				CString cdl = pList->GetItemText(i, 0);
+				fwprintf(stdout, L"%s", (LPCWSTR)cdl);
+				if (cdl.GetLength() > 0 && (theApp.m_mountedDrives & (1 << (*cdl - 'A')))) {
+					CString cpath = pList->GetItemText(i, 1);
+					if (cpath.GetLength() > 0)
+						fwprintf(stdout, L" %s", (LPCWSTR)cpath);
+				}
+				fwprintf(stdout, L"\n");
+			}
+		}
 	} else {
 		if (mount) {
 			if (driveletter)
