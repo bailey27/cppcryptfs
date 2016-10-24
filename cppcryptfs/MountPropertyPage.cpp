@@ -953,8 +953,6 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 		if (pList) {
 			int nItems = pList->GetItemCount();
 			int i;
-			bool selected_was_visible = false;
-			WCHAR selected = 0;
 			for (i = 0; i < nItems; i++) {
 				CString cdl = pList->GetItemText(i, 0);
 				fwprintf(stdout, L"%s", (LPCWSTR)cdl);
