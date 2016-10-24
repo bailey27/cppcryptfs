@@ -104,18 +104,19 @@ Passwords passed through the command line are not really secure.  cppcryptfs loc
 usage: cppcryptfs [OPTIONS]
 
 Mounting:
-  -m, --mount=PATH              mount filesystem locate at PATH
-  -d, --drive=D                 mount to drive letter D
-  -p, --password=PASSWORD       use password PASSWORD
+  -m, --mount=PATH      mount filesystem locate at PATH
+  -d, --drive=D         mount to drive letter D
+  -p, --password=PASS   use password PASS
 
 Unmounting:
-  -u, --unmount=D               umount drive letter D
-  -u, --umount=all              unmount all drives
+  -u, --unmount=D       umount drive letter D
+  -u, --umount=all      unmount all drives
 
 Misc:
-  -t, --tray                    hide in system tray
-  -x, --exit                    exit if no drives mounted
-  -h, --help                    display this help message
+  -t, --tray            hide in system tray
+  -x, --exit            exit if no drives mounted
+  -l, --list            list available and mounted drive letters (with paths)
+  -h, --help            display this help message
 
 ```
 
