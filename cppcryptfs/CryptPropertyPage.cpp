@@ -67,6 +67,10 @@ void CCryptPropertyPage::DeviceChange()
 {
 }
 
+void CCryptPropertyPage::SuppressDeviceChange(BOOL bSuppress)
+{
+}
+
 void CCryptPropertyPage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);

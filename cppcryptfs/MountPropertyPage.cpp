@@ -192,13 +192,13 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	cpath = &basedir[0];
 	
-	m_bSuppressDeviceChange = TRUE;
+	SuppressDeviceChange(TRUE);
 
 	theApp.DoWaitCursor(1);
 	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes);
 	theApp.DoWaitCursor(-1);
 
-	m_bSuppressDeviceChange = FALSE;
+	SuppressDeviceChange(FALSE);
 
 	if (result != 0) {
 		return CString(&error_mes[0]);
@@ -458,10 +458,11 @@ void CMountPropertyPage::DeviceChange()
 	int i;
 	bool selected_was_visible = false;
 	WCHAR selected = 0;
+	CString cdl, cpath;
 	for (i = 0; i < nItems; i++) {
-		CString cdl = pList->GetItemText(i, 0);
+		cdl = pList->GetItemText(i, 0);
 		if (cdl.GetLength() > 0 && (theApp.m_mountedDrives & (1 << (*cdl - 'A')))) {
-			CString cpath = pList->GetItemText(i, 1);
+			cpath = pList->GetItemText(i, 1);
 			if (cpath.GetLength() > 0)
 				paths[*cdl - 'A'] = cpath;
 		}
@@ -507,6 +508,11 @@ void CMountPropertyPage::DeviceChange()
 			pList->EnsureVisible(new_selected_index, FALSE);
 		}
 	}
+}
+
+void CMountPropertyPage::SuppressDeviceChange(BOOL bSuppress)
+{
+	m_bSuppressDeviceChange = bSuppress;
 }
 
 
@@ -598,13 +604,13 @@ CString CMountPropertyPage::Dismount(WCHAR argDriveLetter)
 	if (!write_volume_name_if_changed(*(const WCHAR *)cdl))
 		mes += L"unable to update volume label";
 
-	m_bSuppressDeviceChange = TRUE;
+	SuppressDeviceChange(TRUE);
 
 	theApp.DoWaitCursor(1);
 	BOOL bresult = unmount_crypt_fs(*(const WCHAR *)cdl, true);
 	theApp.DoWaitCursor(-1);
 
-	m_bSuppressDeviceChange = FALSE;
+	SuppressDeviceChange(FALSE);
 
 	if (!bresult) {
 		if (mes.GetLength() > 0)
@@ -647,7 +653,7 @@ CString CMountPropertyPage::DismountAll()
 
 	bool volnameFailure = false;
 
-	m_bSuppressDeviceChange = TRUE;
+	SuppressDeviceChange(TRUE);
 
 	for (i = 0; i < count; i++) {
 		CString cdl;
@@ -675,7 +681,7 @@ CString CMountPropertyPage::DismountAll()
 	wait_for_all_unmounted();
 	theApp.DoWaitCursor(-1);
 
-	m_bSuppressDeviceChange = FALSE;
+	SuppressDeviceChange(FALSE);
 
 	CString mes;
 
@@ -953,12 +959,13 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 		if (pList) {
 			int nItems = pList->GetItemCount();
 			int i;
+			CString cdl, cpath;
 			for (i = 0; i < nItems; i++) {
-				CString cdl = pList->GetItemText(i, 0);
+				cdl = pList->GetItemText(i, 0);
 				if (cdl.GetLength() > 0) {
 					fwprintf(stdout, L"%s", (LPCWSTR)cdl);
 					if (theApp.m_mountedDrives & (1 << (*cdl - 'A'))) {
-						CString cpath = pList->GetItemText(i, 1);
+						cpath = pList->GetItemText(i, 1);
 						if (cpath.GetLength() > 0)
 							fwprintf(stdout, L" %s", (LPCWSTR)cpath);
 					}

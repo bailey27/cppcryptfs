@@ -63,8 +63,15 @@ CCryptPropertySheet::~CCryptPropertySheet()
 BOOL CCryptPropertySheet::CanClose()
 {
 	if (theApp.m_mountedDrives) {
+		
 		if (MessageBox(L"All mounted cppcryptfs filesystems will be dismounted. Do you really wish to exit?", L"cppcryptfs",
 			MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
+
+			CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(m_nMountPageIndex);
+
+			if (page)
+				page->SuppressDeviceChange(TRUE);
+
 			int i;
 			for (i = 0; i < 26; i++) {
 				if (theApp.m_mountedDrives & (1<<i)) {
@@ -75,6 +82,10 @@ BOOL CCryptPropertySheet::CanClose()
 			theApp.DoWaitCursor(1);
 			wait_for_all_unmounted();
 			theApp.DoWaitCursor(-1);
+
+			if (page)
+				page->SuppressDeviceChange(FALSE);
+
 			return TRUE;
 		} else {
 			return FALSE;

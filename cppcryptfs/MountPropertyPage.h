@@ -48,14 +48,16 @@ public:
 	const int m_numLastDirs = 10;
 	CImageList m_imageList;
 	int m_imageIndex;
-
+private:
 	BOOL m_bSuppressDeviceChange;
-
+public:
 	virtual void DefaultAction();
 
 	virtual void ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnStartup = FALSE);
 
 	virtual void DeviceChange();
+
+	virtual void SuppressDeviceChange(BOOL bSuppress);
 
 	CString Mount(LPCWSTR argPath = NULL, WCHAR argDriveLetter = 0, LPCWSTR argPassword = NULL);
 
