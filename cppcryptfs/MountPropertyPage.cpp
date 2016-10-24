@@ -50,7 +50,8 @@ IMPLEMENT_DYNAMIC(CMountPropertyPage, CCryptPropertyPage)
 CMountPropertyPage::CMountPropertyPage()
 	: CCryptPropertyPage(IDD_MOUNT)
 {
-
+	m_imageIndex = -1;
+	m_bSuppressDeviceChange = FALSE;
 }
 
 CMountPropertyPage::~CMountPropertyPage()
@@ -370,7 +371,7 @@ BOOL CMountPropertyPage::OnInitDialog()
 		}
 	}
 
-	int imageIndex = -1;
+	m_imageIndex = -1;
 
 	if (m_imageList.m_hImageList == NULL) {
 		HIMAGELIST himlIcons = ImageList_Create(16, 16, ILC_MASK | ILC_COLOR32 | ILC_HIGHQUALITYSCALE, 1, 1);
@@ -378,10 +379,10 @@ BOOL CMountPropertyPage::OnInitDialog()
 			// Load the icon resources, and add the icons to the image list. 
 			HICON hicon = (HICON)LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_DRIVE), IMAGE_ICON, 16, 16, 0);
 			if (hicon) {
-				imageIndex = ImageList_AddIcon(himlIcons, hicon);
-				if (imageIndex >= 0) {
+				m_imageIndex = ImageList_AddIcon(himlIcons, hicon);
+				if (m_imageIndex >= 0) {
 					if (!m_imageList.Attach(himlIcons)) {
-						imageIndex = -1;
+						m_imageIndex = -1;
 					}
 				}
 			} else {
@@ -410,8 +411,8 @@ BOOL CMountPropertyPage::OnInitDialog()
 			isSelected = bFirst;
 		}
 
-		pList->InsertItem(LVIF_TEXT | (imageIndex >= 0 ? LVIF_IMAGE : 0) | LVIF_STATE, i++, dl,
-			isSelected ? LVIS_SELECTED : 0, LVIS_SELECTED, imageIndex >= 0 ? imageIndex : 0, 0);
+		pList->InsertItem(LVIF_TEXT | (m_imageIndex >= 0 ? LVIF_IMAGE : 0) | LVIF_STATE, i++, dl,
+			isSelected ? LVIS_SELECTED : 0, LVIS_SELECTED, m_imageIndex >= 0 ? m_imageIndex : 0, 0);
 
 		bFirst = false;
 	}
@@ -435,6 +436,73 @@ BOOL CMountPropertyPage::OnInitDialog()
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CMountPropertyPage::DeviceChange()
+{
+
+	if (m_bSuppressDeviceChange)
+		return;
+
+	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
+
+	if (!pList)
+		return;
+
+	CString paths[26];
+	int nItems = pList->GetItemCount();
+	int i;
+	bool selected_was_visible = false;
+	WCHAR selected = 0;
+	for (i = 0; i < nItems; i++) {
+		CString cdl = pList->GetItemText(i, 0);
+		if (cdl.GetLength() > 0 && (theApp.m_mountedDrives & (1 << (*cdl - 'A')))) {
+			CString cpath = pList->GetItemText(i, 1);
+			if (cpath.GetLength() > 0)
+				paths[*cdl - 'A'] = cpath;
+		}
+		if (pList->GetItemState(i, LVIS_SELECTED) == LVIS_SELECTED) {
+			selected = *cdl;
+			if (pList->IsItemVisible(i))
+				selected_was_visible = true;
+		}
+	}
+
+	pList->DeleteAllItems();
+
+	WCHAR dl;
+	i = 0;
+	bool selected_something = false;
+	int new_selected_index = -1;
+	for (dl = 'A'; dl <= 'Z'; dl++) {
+		
+		if (IsDriveLetterAvailable(dl) || (theApp.m_mountedDrives & (1 << (dl - 'A')))) {
+			WCHAR dls[3];
+
+			dls[0] = dl;
+			dls[1] = ':';
+			dls[2] = '\0';
+
+			if (dl == selected) {
+				selected_something = true;
+				new_selected_index = i;
+			}
+
+			pList->InsertItem(LVIF_TEXT | (m_imageIndex >= 0 ? LVIF_IMAGE : 0) | LVIF_STATE, i, dls,
+				dl == selected ? LVIS_SELECTED : 0, LVIS_SELECTED, m_imageIndex >= 0 ? m_imageIndex : 0, 0);
+			if (paths[dl - 'A'].GetLength() > 0)
+				pList->SetItemText(i, 1, paths[dl - 'A']);
+			i++;
+		}
+	}
+	if (pList->GetItemCount() > 0) {
+		if (!selected_something) {
+			pList->SetItemState(-1, 0, LVIS_SELECTED);
+			pList->SetItemState(0, LVIS_SELECTED, LVIS_SELECTED);
+		} else if (selected_was_visible && !pList->IsItemVisible(new_selected_index)) {
+			pList->EnsureVisible(new_selected_index, FALSE);
+		}
+	}
 }
 
 
@@ -526,9 +594,13 @@ CString CMountPropertyPage::Dismount(WCHAR argDriveLetter)
 	if (!write_volume_name_if_changed(*(const WCHAR *)cdl))
 		mes += L"unable to update volume label";
 
+	m_bSuppressDeviceChange = TRUE;
+
 	theApp.DoWaitCursor(1);
 	BOOL bresult = unmount_crypt_fs(*(const WCHAR *)cdl, true);
 	theApp.DoWaitCursor(-1);
+
+	m_bSuppressDeviceChange = FALSE;
 
 	if (!bresult) {
 		if (mes.GetLength() > 0)
@@ -571,6 +643,8 @@ CString CMountPropertyPage::DismountAll()
 
 	bool volnameFailure = false;
 
+	m_bSuppressDeviceChange = TRUE;
+
 	for (i = 0; i < count; i++) {
 		CString cdl;
 		CString cpath;
@@ -596,6 +670,8 @@ CString CMountPropertyPage::DismountAll()
 	theApp.DoWaitCursor(1);
 	wait_for_all_unmounted();
 	theApp.DoWaitCursor(-1);
+
+	m_bSuppressDeviceChange = FALSE;
 
 	CString mes;
 
@@ -902,3 +978,5 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	CloseConsole();
 
 }
+
+

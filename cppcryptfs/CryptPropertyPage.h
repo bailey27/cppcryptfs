@@ -46,6 +46,7 @@ public:
 #endif
 	virtual void DefaultAction();
 	virtual void ProcessCommandLine(DWORD pid, LPCTSTR szCmd, BOOL bOnStartup = FALSE);
+	virtual void DeviceChange();
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support

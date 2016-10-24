@@ -30,6 +30,7 @@ THE SOFTWARE.
 //
 
 #include "stdafx.h"
+#include <Dbt.h>
 #include "cppcryptfs.h"
 #include "CryptPropertySheet.h"
 #include "CryptPropertyPage.h"
@@ -44,12 +45,14 @@ IMPLEMENT_DYNAMIC(CCryptPropertySheet, CPropertySheet)
 CCryptPropertySheet::CCryptPropertySheet(UINT nIDCaption, CWnd* pParentWnd, UINT iSelectPage)
 	:CPropertySheet(nIDCaption, pParentWnd, iSelectPage)
 {
+	m_nMountPageIndex = 0;
 	m_bHideAfterInit = FALSE;
 }
 
 CCryptPropertySheet::CCryptPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
 	:CPropertySheet(pszCaption, pParentWnd, iSelectPage)
 {
+	m_nMountPageIndex = 0;
 	m_bHideAfterInit = FALSE;
 }
 
@@ -90,6 +93,7 @@ BEGIN_MESSAGE_MAP(CCryptPropertySheet, CPropertySheet)
 	ON_WM_CLOSE()
 	ON_WM_COPYDATA()
 	ON_WM_WINDOWPOSCHANGING()
+	ON_WM_DEVICECHANGE()
 END_MESSAGE_MAP()
 
 
@@ -214,7 +218,7 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 
 		DWORD consolePid = ((CopyDataCmdLine*)pCopyDataStruct->lpData)->dwPid;
 
-		CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(0);
+		CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(m_nMountPageIndex);
 
 		if (page) {
 			// ensure that szCmdLine is null terminated by allocating extra WCHAR
@@ -246,4 +250,16 @@ void CCryptPropertySheet::OnWindowPosChanging(WINDOWPOS* lpwndpos)
 	CPropertySheet::OnWindowPosChanging(lpwndpos);
 
 	// TODO: Add your message handler code here
+}
+
+
+BOOL CCryptPropertySheet::OnDeviceChange( UINT nEventType, DWORD_PTR dwData )
+{
+	if (nEventType == DBT_DEVICEARRIVAL || nEventType == DBT_DEVICEREMOVECOMPLETE) {
+		CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(m_nMountPageIndex);
+		if (page)
+			page->DeviceChange();
+	}
+
+	return CPropertySheet::OnDeviceChange(nEventType, dwData);
 }

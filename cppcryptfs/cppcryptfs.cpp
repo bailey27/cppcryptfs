@@ -184,6 +184,8 @@ BOOL CcppcryptfsApp::InitInstance()
 
 	ritems.Populate(mount.m_lastDirs, TEXT("C:\\"));
 
+	dlg.m_nMountPageIndex = 0;
+
 	dlg.AddPage(&mount);
 
 	CCreatePropertyPage create;

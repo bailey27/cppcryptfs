@@ -63,6 +63,10 @@ void CCryptPropertyPage::ProcessCommandLine(DWORD pid, LPCTSTR szCmd, BOOL bOnSt
 {
 }
 
+void CCryptPropertyPage::DeviceChange()
+{
+}
+
 void CCryptPropertyPage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);

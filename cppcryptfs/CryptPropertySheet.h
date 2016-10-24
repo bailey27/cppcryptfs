@@ -45,6 +45,8 @@ public:
 
 	BOOL m_bHideAfterInit;
 
+	int m_nMountPageIndex;
+
 protected:
 	DECLARE_MESSAGE_MAP()
 public:
@@ -57,6 +59,7 @@ public:
 	virtual INT_PTR DoModal();
 	afx_msg BOOL OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct);
 	afx_msg void OnWindowPosChanging(WINDOWPOS* lpwndpos);
+	afx_msg BOOL OnDeviceChange(UINT nEventType, DWORD_PTR dwData);
 };
 
 
