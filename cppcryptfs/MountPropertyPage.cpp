@@ -955,13 +955,15 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			int i;
 			for (i = 0; i < nItems; i++) {
 				CString cdl = pList->GetItemText(i, 0);
-				fwprintf(stdout, L"%s", (LPCWSTR)cdl);
-				if (cdl.GetLength() > 0 && (theApp.m_mountedDrives & (1 << (*cdl - 'A')))) {
-					CString cpath = pList->GetItemText(i, 1);
-					if (cpath.GetLength() > 0)
-						fwprintf(stdout, L" %s", (LPCWSTR)cpath);
+				if (cdl.GetLength() > 0) {
+					fwprintf(stdout, L"%s", (LPCWSTR)cdl);
+					if (theApp.m_mountedDrives & (1 << (*cdl - 'A'))) {
+						CString cpath = pList->GetItemText(i, 1);
+						if (cpath.GetLength() > 0)
+							fwprintf(stdout, L" %s", (LPCWSTR)cpath);
+					}
+					fwprintf(stdout, L"\n");
 				}
-				fwprintf(stdout, L"\n");
 			}
 		}
 	} else {
