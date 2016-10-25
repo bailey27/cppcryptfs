@@ -47,7 +47,6 @@ CCryptPropertySheet::CCryptPropertySheet(UINT nIDCaption, CWnd* pParentWnd, UINT
 {
 	m_nMountPageIndex = 0;
 	m_bHideAfterInit = FALSE;
-	m_bExiting = FALSE;
 }
 
 CCryptPropertySheet::CCryptPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
@@ -55,7 +54,6 @@ CCryptPropertySheet::CCryptPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd, U
 {
 	m_nMountPageIndex = 0;
 	m_bHideAfterInit = FALSE;
-	m_bExiting = FALSE;
 }
 
 CCryptPropertySheet::~CCryptPropertySheet()
@@ -68,8 +66,6 @@ BOOL CCryptPropertySheet::CanClose()
 		
 		if (MessageBox(L"All mounted cppcryptfs filesystems will be dismounted. Do you really wish to exit?", L"cppcryptfs",
 			MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
-
-			m_bExiting = TRUE;
 
 			int i;
 			for (i = 0; i < 26; i++) {
@@ -262,7 +258,7 @@ void CCryptPropertySheet::OnWindowPosChanging(WINDOWPOS* lpwndpos)
 
 BOOL CCryptPropertySheet::OnDeviceChange( UINT nEventType, DWORD_PTR dwData )
 {
-	if (!m_bExiting && (nEventType == DBT_DEVICEARRIVAL || nEventType == DBT_DEVICEREMOVECOMPLETE)) {
+	if (nEventType == DBT_DEVICEARRIVAL || nEventType == DBT_DEVICEREMOVECOMPLETE) {
 
 		PDEV_BROADCAST_HDR pHdr = (PDEV_BROADCAST_HDR)dwData;
 
