@@ -125,7 +125,7 @@ There is no installation program for cppcryptfs.  You will need to copy cppcrypt
 A 32-bit build should work.  However, it has not been tested in a while.
 
 
-The default (master) branch of cppcryptfs is for building with the Dokany 1.0.0 binary release.  
+The default (master) branch of cppcryptfs is for building with the Dokany binary release.  
 
 If you would like to build cppcryptfs with the current Dokany source, then after you clone cppcryptfs you need to switch to the current_dokany branch of cppcryptfs. 
 
