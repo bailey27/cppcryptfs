@@ -75,7 +75,7 @@ CryptConfig::CryptConfig()
 	m_EMENames = false;
 	m_GCMIV128 = false;
 	m_LongNames = false;
-
+	m_AESSIV = false;
 	
 	m_pKeyBuf = NULL;
 
@@ -231,18 +231,16 @@ CryptConfig::read(const WCHAR *configfile)
 				if (itr->IsString()) {
 					if (!strcmp(itr->GetString(), "PlaintextNames")) {
 						m_PlaintextNames = true;
-					}
-					else if (!strcmp(itr->GetString(), "DirIV")) {
+					} else if (!strcmp(itr->GetString(), "DirIV")) {
 						m_DirIV = true;
-					}
-					else if (!strcmp(itr->GetString(), "EMENames")) {
+					} else if (!strcmp(itr->GetString(), "EMENames")) {
 						m_EMENames = true;
-					}
-					else if (!strcmp(itr->GetString(), "GCMIV128")) {
+					} else if (!strcmp(itr->GetString(), "GCMIV128")) {
 						m_GCMIV128 = true;
-					}
-					else if (!strcmp(itr->GetString(), "LongNames")) {
+					} else if (!strcmp(itr->GetString(), "LongNames")) {
 						m_LongNames = true;
+					} else if (!strcmp(itr->GetString(), "AESSIV")) {
+						m_AESSIV = true;
 					}
 				}
 			}
@@ -480,6 +478,9 @@ bool CryptConfig::check_config(std::wstring& mes)
 	
 	if (!m_GCMIV128) 
 		mes += L"GCMIV128 must be specified\n";
+
+	if (m_AESSIV)
+		mes += L"AESSIV is not supported\n";
 		
 	return mes.size() == 0;
 }

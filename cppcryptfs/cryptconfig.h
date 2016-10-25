@@ -53,6 +53,7 @@ public:
 	bool m_EMENames;
 	bool m_GCMIV128;
 	bool m_LongNames;
+	bool m_AESSIV;
 
 	int m_Version;
 	std::wstring m_VolumeName;
