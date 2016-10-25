@@ -100,7 +100,7 @@ Command Line Options
 ----
 cppcryptfs accepts some command line options for mounting and umounting filesystems.  Currently, filesystems can be created only by using the gui.
 
-Passwords passed through the command line are not really secure.  cppcryptfs locks and zeros its internal copies of the command line, but it does not zero the command line stored in the Windows PEB (Process Environment Block). Also, it is unkown how many times the command line might be copied by Windows out of cppcryptfs' control.  So there is some chance that a password passed via the command line might end up in the paging file.
+Passwords passed through the command line are not really secure.  cppcryptfs locks and zeros its internal copies of the command line, but, for example, it does not zero the command line stored in the Windows PEB (Process Environment Block). Also, it is unkown how many times the command line might be copied by Windows out of cppcryptfs' control.  So there is some chance that a password passed via the command line might end up in the paging file.
 
 ```
 usage: cppcryptfs [OPTIONS]
