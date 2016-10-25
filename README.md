@@ -244,3 +244,6 @@ Compatibility with gocryptfs
 cppcryptfs can mount all filesystems created by gocryptfs v0.7 and higher. Likewise, filesystems created by cppcryptfs with "long file names = off" can be mounted by gocryptfs v0.7 and higher. Filesystems with "long file names = on" can mounted by gocryptfs v0.9 and higher.
 
 The gocryptfs [compatability matrix](https://github.com/rfjakob/gocryptfs/wiki/Compatibility) provides more details. cppcryptfs *requires* the DirIV, EMENames and GCMIV128 feature flags. It *supports* LongNames and can create filesystems with the flag on and off.
+
+cppcryptfs supports only the default AES-GCM mode of gocryptfs.  cppcryptfs does not support the new optional AES-SIV mode of gocryptfs.
+
