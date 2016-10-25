@@ -47,6 +47,7 @@ CCryptPropertySheet::CCryptPropertySheet(UINT nIDCaption, CWnd* pParentWnd, UINT
 {
 	m_nMountPageIndex = 0;
 	m_bHideAfterInit = FALSE;
+	m_bExiting = FALSE;
 }
 
 CCryptPropertySheet::CCryptPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
@@ -54,6 +55,7 @@ CCryptPropertySheet::CCryptPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd, U
 {
 	m_nMountPageIndex = 0;
 	m_bHideAfterInit = FALSE;
+	m_bExiting = FALSE;
 }
 
 CCryptPropertySheet::~CCryptPropertySheet()
@@ -67,10 +69,7 @@ BOOL CCryptPropertySheet::CanClose()
 		if (MessageBox(L"All mounted cppcryptfs filesystems will be dismounted. Do you really wish to exit?", L"cppcryptfs",
 			MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
 
-			CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(m_nMountPageIndex);
-
-			if (page)
-				page->SuppressDeviceChange(TRUE);
+			m_bExiting = TRUE;
 
 			int i;
 			for (i = 0; i < 26; i++) {
@@ -82,9 +81,6 @@ BOOL CCryptPropertySheet::CanClose()
 			theApp.DoWaitCursor(1);
 			wait_for_all_unmounted();
 			theApp.DoWaitCursor(-1);
-
-			if (page)
-				page->SuppressDeviceChange(FALSE);
 
 			return TRUE;
 		} else {
@@ -266,10 +262,18 @@ void CCryptPropertySheet::OnWindowPosChanging(WINDOWPOS* lpwndpos)
 
 BOOL CCryptPropertySheet::OnDeviceChange( UINT nEventType, DWORD_PTR dwData )
 {
-	if (nEventType == DBT_DEVICEARRIVAL || nEventType == DBT_DEVICEREMOVECOMPLETE) {
-		CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(m_nMountPageIndex);
-		if (page)
-			page->DeviceChange();
+	if (!m_bExiting && (nEventType == DBT_DEVICEARRIVAL || nEventType == DBT_DEVICEREMOVECOMPLETE)) {
+
+		PDEV_BROADCAST_HDR pHdr = (PDEV_BROADCAST_HDR)dwData;
+
+		if (pHdr->dbch_devicetype == DBT_DEVTYP_VOLUME) {
+			PDEV_BROADCAST_VOLUME pVolHdr = (PDEV_BROADCAST_VOLUME)dwData;
+			if ((pVolHdr->dbcv_unitmask & theApp.m_mountedDrives) != pVolHdr->dbcv_unitmask) {
+				CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(m_nMountPageIndex);
+				if (page)
+					page->DeviceChange();
+			}
+		}
 	}
 
 	return CPropertySheet::OnDeviceChange(nEventType, dwData);

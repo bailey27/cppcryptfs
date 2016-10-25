@@ -51,7 +51,6 @@ CMountPropertyPage::CMountPropertyPage()
 	: CCryptPropertyPage(IDD_MOUNT)
 {
 	m_imageIndex = -1;
-	m_bSuppressDeviceChange = FALSE;
 }
 
 CMountPropertyPage::~CMountPropertyPage()
@@ -191,20 +190,17 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 		basedir.erase(basedir.size() - 1);
 
 	cpath = &basedir[0];
-	
-	SuppressDeviceChange(TRUE);
+
+	theApp.m_mountedDrives |= 1 << (*(const WCHAR*)cdl - 'A');
 
 	theApp.DoWaitCursor(1);
 	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes);
 	theApp.DoWaitCursor(-1);
 
-	SuppressDeviceChange(FALSE);
-
 	if (result != 0) {
+		theApp.m_mountedDrives &= ~(1 << (*(const WCHAR *)cdl - 'A'));
 		return CString(&error_mes[0]);
 	}
-
-	theApp.m_mountedDrives |= 1 << (*(const WCHAR*)cdl - 'A');
 
 	pList->SetItemText(nItem, PATH_INDEX, cpath);
 
@@ -356,6 +352,9 @@ BOOL CMountPropertyPage::OnInitDialog()
 
 	WCHAR dl[3];
 
+	dl[1] = ':';
+	dl[2] = 0;
+
 
 	if (lastLetter.GetLength() > 0) {
 		for (bit = 0; bit < 26; bit++) {
@@ -363,8 +362,6 @@ BOOL CMountPropertyPage::OnInitDialog()
 				continue;
 
 			dl[0] = 'A' + bit;
-			dl[1] = ':';
-			dl[2] = 0;
 
 			if (*(const WCHAR *)lastLetter == dl[0]) {
 				lastIndex = i;
@@ -404,8 +401,6 @@ BOOL CMountPropertyPage::OnInitDialog()
 			continue;	
 
 		dl[0] = 'A' + bit;
-		dl[1] = ':';
-		dl[2] = 0;
 
 		bool isSelected;
 
@@ -445,9 +440,6 @@ BOOL CMountPropertyPage::OnInitDialog()
 void CMountPropertyPage::DeviceChange()
 {
 
-	if (m_bSuppressDeviceChange)
-		return;
-
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
 	if (!pList)
@@ -479,14 +471,17 @@ void CMountPropertyPage::DeviceChange()
 	i = 0;
 	bool selected_something = false;
 	int new_selected_index = -1;
+
+	WCHAR dls[3];
+
+	dls[1] = ':';
+	dls[2] = '\0';
+
 	for (dl = 'A'; dl <= 'Z'; dl++) {
 		
 		if (IsDriveLetterAvailable(dl) || (theApp.m_mountedDrives & (1 << (dl - 'A')))) {
-			WCHAR dls[3];
-
+			
 			dls[0] = dl;
-			dls[1] = ':';
-			dls[2] = '\0';
 
 			if (dl == selected) {
 				selected_something = true;
@@ -508,11 +503,6 @@ void CMountPropertyPage::DeviceChange()
 			pList->EnsureVisible(new_selected_index, FALSE);
 		}
 	}
-}
-
-void CMountPropertyPage::SuppressDeviceChange(BOOL bSuppress)
-{
-	m_bSuppressDeviceChange = bSuppress;
 }
 
 
@@ -604,13 +594,9 @@ CString CMountPropertyPage::Dismount(WCHAR argDriveLetter)
 	if (!write_volume_name_if_changed(*(const WCHAR *)cdl))
 		mes += L"unable to update volume label";
 
-	SuppressDeviceChange(TRUE);
-
 	theApp.DoWaitCursor(1);
 	BOOL bresult = unmount_crypt_fs(*(const WCHAR *)cdl, true);
 	theApp.DoWaitCursor(-1);
-
-	SuppressDeviceChange(FALSE);
 
 	if (!bresult) {
 		if (mes.GetLength() > 0)
@@ -653,7 +639,7 @@ CString CMountPropertyPage::DismountAll()
 
 	bool volnameFailure = false;
 
-	SuppressDeviceChange(TRUE);
+	DWORD mounted_drives = theApp.m_mountedDrives;
 
 	for (i = 0; i < count; i++) {
 		CString cdl;
@@ -668,7 +654,7 @@ CString CMountPropertyPage::DismountAll()
 			if (!write_volume_name_if_changed(*(const WCHAR *)cdl))
 				volnameFailure = true;
 			if (unmount_crypt_fs(*(const WCHAR *)cdl, false)) {
-				theApp.m_mountedDrives &= ~(1 << (*(const WCHAR *)cdl - 'A'));
+				mounted_drives &= ~(1 << (*(const WCHAR *)cdl - 'A'));
 				hadSuccess = true;
 				pList->SetItemText(i, PATH_INDEX, L"");
 			} else {
@@ -681,7 +667,7 @@ CString CMountPropertyPage::DismountAll()
 	wait_for_all_unmounted();
 	theApp.DoWaitCursor(-1);
 
-	SuppressDeviceChange(FALSE);
+	theApp.m_mountedDrives = mounted_drives;
 
 	CString mes;
 

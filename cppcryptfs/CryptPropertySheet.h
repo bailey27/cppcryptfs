@@ -47,6 +47,9 @@ public:
 
 	int m_nMountPageIndex;
 
+private:
+	BOOL m_bExiting;
+
 protected:
 	DECLARE_MESSAGE_MAP()
 public:
