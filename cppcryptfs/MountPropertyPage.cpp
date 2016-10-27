@@ -894,6 +894,8 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 				break;
 			case 'd':
 				driveletter = *optarg;
+				if (driveletter >= 'a' && driveletter <= 'z')
+					driveletter -= 'a' - 'A';
 				break;
 			case 'p':
 				wcscpy_s(password.m_buf, password.m_len, optarg);
@@ -921,9 +923,6 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 				throw(-1);
 			}
 		}
-	
-		if (driveletter >= 'a' && driveletter <= 'z')
-			driveletter -= 'a' - 'A';
 
 	} catch (int err) {
 		if (err) {
