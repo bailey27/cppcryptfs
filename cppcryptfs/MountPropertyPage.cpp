@@ -922,8 +922,8 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			}
 		}
 	
-		if (IsCharLower(driveletter))
-				driveletter = towupper(driveletter);		
+		if (driveletter >= 'a' && driveletter <= 'z')
+			driveletter -= 'a' - 'A';
 
 	} catch (int err) {
 		if (err) {
