@@ -117,7 +117,7 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 
 		DirIvCacheNode *node = it->second;
 
-		// If a node is older than the TTL (currently 1 second), then delete it and pretend it wasn't there.
+		// If a node is older than the TTL (currently 1 second), then remove it, add it to the spare node list, and pretend it wasn't there.
 		// This is done in order to have some sort of coherency if other systems are modifying a synced filesystem.
 
 		if (GetTickCount64() - node->m_timestap < DIR_IV_CACHE_TTL) {
@@ -139,7 +139,7 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 
 		} else {
 
-			// The entry is expired. Delete it and return a miss.
+			// The entry is expired. Remove it, add it to the spare list, and return a miss.
 
 			m_map.erase(it);
 
