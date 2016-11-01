@@ -46,6 +46,7 @@ THE SOFTWARE.
 DirIvCacheNode::DirIvCacheNode()
 {
 	m_key = NULL;
+	m_timestap = 0;
 }
 
 DirIvCacheNode::~DirIvCacheNode()
@@ -56,6 +57,7 @@ DirIvCacheNode::~DirIvCacheNode()
 
 DirIvCache::DirIvCache()
 {
+
 	m_lookups = 0;
 	m_hits = 0;
 
@@ -68,6 +70,11 @@ DirIvCache::~DirIvCache()
 {
 
 	for (auto it = m_lru_list.begin(); it != m_lru_list.end(); it++) {
+		DirIvCacheNode *node = *it;
+		delete node;
+	}
+
+	for (auto it = m_spare_node_list.begin(); it != m_spare_node_list.end(); it++) {
 		DirIvCacheNode *node = *it;
 		delete node;
 	}
@@ -90,6 +97,8 @@ void DirIvCache::unlock()
 	LeaveCriticalSection(&m_crit);
 }
 
+
+
 bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 {
 	std::wstring key = path;
@@ -105,19 +114,41 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 	auto it = m_map.find(key);
 
 	if (it != m_map.end()) {
+
 		DirIvCacheNode *node = it->second;
-		memcpy(dir_iv, node->m_dir_iv, DIR_IV_LEN);
 
-		// if node isn't already at front of list, remove
-		// it from wherever it was and put it at the front
+		// If a node is older than the TTL (currently 1 second), then delete it and pretend it wasn't there.
+		// This is done in order to have some sort of coherency if other systems are modifying a synced filesystem.
 
-		if (node->m_list_it != m_lru_list.begin()) {
+		if (GetTickCount64() - node->m_timestap < DIR_IV_CACHE_TTL) {
+
+			// entry is less than TLL old, use it
+
+			memcpy(dir_iv, node->m_dir_iv, DIR_IV_LEN);
+
+			// if node isn't already at front of list, remove
+			// it from wherever it was and put it at the front
+
+			if (node->m_list_it != m_lru_list.begin()) {
+				m_lru_list.erase(node->m_list_it);
+				m_lru_list.push_front(node);
+				node->m_list_it = m_lru_list.begin();
+			}
+			found = true;
+			m_hits++;
+
+		} else {
+
+			// The entry is expired. Delete it and return a miss.
+
+			m_map.erase(it);
+
 			m_lru_list.erase(node->m_list_it);
-			m_lru_list.push_front(node);
-			node->m_list_it = m_lru_list.begin();
+
+			m_spare_node_list.push_front(node);
+
+			found = false;
 		}
-		found = true;
-		m_hits++;
 	} else {
 		found = false;
 	}
@@ -163,15 +194,22 @@ bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv)
 				m_map.erase(*node->m_key);
 			}
 
-			// re-use node if we removed one, otherwise make a new one
+			// re-use node if we removed one, otherwise get one from spare list, otherwise make a new one
 
-			if (!node)
-				node = new DirIvCacheNode;
+			if (!node) {
+				if (!m_spare_node_list.empty()) {
+					node = m_spare_node_list.front();
+					m_spare_node_list.pop_front();
+				} else {
+					node = new DirIvCacheNode;
+				}
+			}
 
 			mp.first->second = node;
 
 			node->m_key = &mp.first->first;
 			memcpy(node->m_dir_iv, dir_iv, DIR_IV_LEN);
+			node->m_timestap = GetTickCount64();
 			node->m_list_it = m_lru_list.insert(m_lru_list.begin(), node);
 			
 		} else {
@@ -207,7 +245,7 @@ void DirIvCache::remove(LPCWSTR path)
 
 		m_lru_list.erase(node->m_list_it);
 
-		delete node;
+		m_spare_node_list.push_back(node);
 	}
 
 	unlock();

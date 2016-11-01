@@ -40,12 +40,15 @@ public:
 	const std::wstring *m_key;
 	unsigned char m_dir_iv[DIR_IV_LEN];
 	std::list<DirIvCacheNode*>::iterator m_list_it;  // holds position in lru list
+	ULONGLONG m_timestap; // milliseconds
 	DirIvCacheNode();
 	virtual ~DirIvCacheNode();
 };
 
 
-#define DIR_IV_CACHE_ENTRIES 200
+#define DIR_IV_CACHE_ENTRIES 100
+
+#define DIR_IV_CACHE_TTL 1000 // milliseconds
 
 class DirIvCache {
 
@@ -56,6 +59,8 @@ private:
 
 	std::list<DirIvCacheNode*> m_lru_list;
 
+	std::list<DirIvCacheNode*> m_spare_node_list;
+
 	CRITICAL_SECTION m_crit;
 
 	long long m_lookups;
@@ -65,6 +70,7 @@ private:
 
 	void lock();
 	void unlock();
+
 
 public:
 	DirIvCache();
