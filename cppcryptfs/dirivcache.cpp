@@ -122,7 +122,7 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 
 		if (GetTickCount64() - node->m_timestap < DIR_IV_CACHE_TTL) {
 
-			// entry is less than TLL old, use it
+			// The entry is less than TTL old, so use it.
 
 			memcpy(dir_iv, node->m_dir_iv, DIR_IV_LEN);
 
