@@ -254,40 +254,9 @@ static void PrintUserName(PDOKAN_FILE_INFO DokanFileInfo) {
 }
 
 NTSTATUS ToNtStatus(DWORD dwError) {
-#if 0
-  switch (dwError) {
-  case ERROR_DIR_NOT_EMPTY:
-	  return STATUS_DIRECTORY_NOT_EMPTY;
-  case ERROR_FILE_NOT_FOUND:
-    return STATUS_OBJECT_NAME_NOT_FOUND;
-  case ERROR_PATH_NOT_FOUND:
-    return STATUS_OBJECT_PATH_NOT_FOUND;
-  case ERROR_INVALID_PARAMETER:
-    return STATUS_INVALID_PARAMETER;
-  case ERROR_ACCESS_DENIED:
-    return STATUS_ACCESS_DENIED;
-  case ERROR_SHARING_VIOLATION:
-    return STATUS_SHARING_VIOLATION;
-  case ERROR_INVALID_NAME:
-    return STATUS_OBJECT_NAME_NOT_FOUND;
-  case ERROR_FILE_EXISTS:
-  case ERROR_ALREADY_EXISTS:
-    return STATUS_OBJECT_NAME_COLLISION;
-  case ERROR_PRIVILEGE_NOT_HELD:
-    return STATUS_PRIVILEGE_NOT_HELD;
-  case ERROR_NOT_READY:
-    return STATUS_DEVICE_NOT_READY;
-  case ERROR_DIRECTORY:
-	  return STATUS_NOT_A_DIRECTORY;
-  case ERROR_HANDLE_EOF:
-	  return STATUS_END_OF_FILE;
-  default:
-    DbgPrint(L"Unknown error code %d\n", dwError);
-    return STATUS_ACCESS_DENIED;
-  }
-#else
+
 	return DokanNtStatusFromWin32(dwError);
-#endif
+
 }
 
 static BOOL AddSeSecurityNamePrivilege() {
