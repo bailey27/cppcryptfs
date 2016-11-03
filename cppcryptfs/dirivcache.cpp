@@ -97,6 +97,40 @@ void DirIvCache::unlock()
 	LeaveCriticalSection(&m_crit);
 }
 
+bool DirIvCache::check_node_clean(DirIvCacheNode *node, const std::wstring& path)
+{
+
+	if (GetTickCount64() - node->m_timestap < DIR_IV_CACHE_TTL)
+		return true;
+
+	std::wstring filepath = path;
+	
+	// already normalized with trailing slash
+	filepath += DIR_IV_NAME;
+
+	HANDLE hFile = CreateFile(&filepath[0], GENERIC_READ, FILE_SHARE_READ, NULL,
+		OPEN_EXISTING, 0, NULL);
+
+	if (hFile == INVALID_HANDLE_VALUE)
+		return false;
+
+	FILETIME LastWriteTime;
+
+	BOOL bResult = GetFileTime(hFile, NULL, NULL, &LastWriteTime);
+
+	CloseHandle(hFile);
+
+	if (!bResult)
+		return false;
+
+	bResult = !memcmp(&node->m_last_write_time, &LastWriteTime, sizeof(FILETIME));
+
+	if (bResult)
+		node->m_timestap = GetTickCount64();
+
+	return bResult != 0;
+}
+
 
 
 bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
@@ -117,12 +151,13 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 
 		DirIvCacheNode *node = it->second;
 
-		// If a node is older than the TTL (currently 1 second), then remove it, add it to the spare node list, and pretend it wasn't there.
+		// If the node's TTL has expired, then check if the diriv file's last write time has changed.
+		// If it has changed, then remove the node, add it to the spare node list, and return a miss.
 		// This is done in order to have some sort of coherency if other systems are modifying a synced filesystem.
 
-		if (GetTickCount64() - node->m_timestap < DIR_IV_CACHE_TTL) {
+		if (check_node_clean(node, key)) {
 
-			// The entry is less than TTL old, so use it.
+			// The entry is less than TTL old or the diriv file is unmodified, so use it.
 
 			memcpy(dir_iv, node->m_dir_iv, DIR_IV_LEN);
 
@@ -164,7 +199,7 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 }
 
 
-bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv)
+bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv, const FILETIME& last_write_time)
 {
 
 	bool rval = true;
@@ -210,6 +245,7 @@ bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv)
 			node->m_key = &mp.first->first;
 			memcpy(node->m_dir_iv, dir_iv, DIR_IV_LEN);
 			node->m_timestap = GetTickCount64();
+			node->m_last_write_time = last_write_time;
 			node->m_list_it = m_lru_list.insert(m_lru_list.begin(), node);
 			
 		} else {

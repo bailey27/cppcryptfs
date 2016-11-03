@@ -41,6 +41,7 @@ public:
 	unsigned char m_dir_iv[DIR_IV_LEN];
 	std::list<DirIvCacheNode*>::iterator m_list_it;  // holds position in lru list
 	ULONGLONG m_timestap; // milliseconds
+	FILETIME m_last_write_time;
 	DirIvCacheNode();
 	virtual ~DirIvCacheNode();
 };
@@ -71,6 +72,7 @@ private:
 	void lock();
 	void unlock();
 
+	bool check_node_clean(DirIvCacheNode *node, const std::wstring& path);
 
 public:
 	DirIvCache();
@@ -79,11 +81,10 @@ public:
 
 	bool lookup(LPCWSTR path, unsigned char *dir_iv);
 
-	bool store(LPCWSTR path, const unsigned char *dir_iv);
+	bool store(LPCWSTR path, const unsigned char *dir_iv, const FILETIME& last_write_time);
 
 	void remove(LPCWSTR path);
-
-
+	
 };
 
 

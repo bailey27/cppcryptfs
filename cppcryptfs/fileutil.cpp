@@ -67,7 +67,7 @@ bool adjust_file_size_down(LARGE_INTEGER& l)
 
 
 static bool
-read_dir_iv(const TCHAR *path, unsigned char *diriv)
+read_dir_iv(const TCHAR *path, unsigned char *diriv, FILETIME& LastWriteTime)
 {
 
 	HANDLE hfile = INVALID_HANDLE_VALUE;
@@ -91,6 +91,10 @@ read_dir_iv(const TCHAR *path, unsigned char *diriv)
 		}
 
 		if (!ReadFile(hfile, diriv, DIR_IV_LEN, &nRead, NULL)) {
+			throw(-1);
+		}
+
+		if (!GetFileTime(hfile, NULL, NULL, &LastWriteTime)) {
 			throw(-1);
 		}
 	}
@@ -117,9 +121,10 @@ get_dir_iv(CryptContext *con, const TCHAR *path, unsigned char *diriv)
 
 	try {
 		if (!con->m_dir_iv_cache.lookup(path, diriv)) {
-			if (!read_dir_iv(path, diriv))
+			FILETIME LastWritten;
+			if (!read_dir_iv(path, diriv, LastWritten))
 				throw(-1);
-			if (!con->m_dir_iv_cache.store(path, diriv)) {
+			if (!con->m_dir_iv_cache.store(path, diriv, LastWritten)) {
 				throw(-1);
 			}
 		}
@@ -378,15 +383,22 @@ create_dir_iv(CryptContext *con, LPCWSTR path)
 			throw((int)GetLastError());
 		}
 
-		if (nWritten != DIR_IV_LEN)
+		if (nWritten != DIR_IV_LEN) {
 			throw((int)ERROR_OUTOFMEMORY);
+		}
+
+		FILETIME LastWriteTime;
+
+		if (!GetFileTime(hfile, NULL, NULL, &LastWriteTime)) {
+			throw((int)GetLastError());
+		}
 
 		CloseHandle(hfile);
 		hfile = INVALID_HANDLE_VALUE;
 
 		// assume somebody will want to use it soon
 		if (con)
-			con->m_dir_iv_cache.store(path, diriv);
+			con->m_dir_iv_cache.store(path, diriv, LastWriteTime);
 
 		DWORD attr = GetFileAttributesW(&path_str[0]);
 		if (attr != INVALID_FILE_ATTRIBUTES) {
