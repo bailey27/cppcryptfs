@@ -47,6 +47,7 @@ DirIvCacheNode::DirIvCacheNode()
 {
 	m_key = NULL;
 	m_timestap = 0;
+	m_last_write_time = { 0 , 0 };
 }
 
 DirIvCacheNode::~DirIvCacheNode()
