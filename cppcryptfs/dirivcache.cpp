@@ -252,6 +252,8 @@ bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv, const FILETIME
 		} else {
 			// copy dir_iv to node at that path (key)
 			memcpy(mp.first->second->m_dir_iv, dir_iv, DIR_IV_LEN);
+			mp.first->second->m_timestap = GetTickCount64();
+			mp.first->second->m_last_write_time = last_write_time;
 		}
 		
 
