@@ -175,7 +175,7 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 
 		} else {
 
-			// The entry is expired. Remove it, add it to the spare list, and return a miss.
+			// The entry is no longer valid. Remove it, add it to the spare list, and return a miss.
 
 			m_map.erase(it);
 
