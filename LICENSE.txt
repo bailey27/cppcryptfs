@@ -7,10 +7,14 @@ open source projects.
 All incorporated sources use the MIT license or other permissive 
 open source licenses.
 
+All statically linked libraries use a permisive open source license.
+
+Some libraries which are linked with dynamically use the GNU LGPL.
+
 See the "About" dialog box in cppcryptfs.exe for a list of these projects
 and their licenses.
 
-cppcryptfs itself uses the MIT license:
+cppcryptfs itself uses an MIT license which is as follows:
 
 The MIT License (MIT)
 
