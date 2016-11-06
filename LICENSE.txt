@@ -7,7 +7,7 @@ open source projects.
 All incorporated sources use the MIT license or other permissive 
 open source licenses.
 
-All statically linked libraries use a permisive open source license.
+All statically linked libraries use a permissive open source license.
 
 Some libraries which are linked with dynamically use the GNU LGPL.
 
