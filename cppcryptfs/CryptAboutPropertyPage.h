@@ -54,4 +54,5 @@ public:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnEnChangeInfo();
 	afx_msg void OnSetfocusInfo();
+	afx_msg void OnItemchangedComponentsList(NMHDR *pNMHDR, LRESULT *pResult);
 };
