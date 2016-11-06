@@ -1,8 +1,6 @@
 
 cppcryptfs - Copyright (c) 2016 Bailey Brown. All rights reserved. 
 
-project url: github.com/bailey27/cppcryptfs
-
 The MIT License (MIT)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
