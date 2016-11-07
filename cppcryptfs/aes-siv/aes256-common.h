@@ -1,0 +1,23 @@
+#ifndef AES256_COMMON_H
+#define AES256_COMMON_H
+
+#include <stdlib.h>
+#include <stdint.h>
+
+#include "AES.h"
+
+const uint8_t aes256_cmac_Rb[16] = {
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x87
+}; // for 128-bit blocks, per NIST
+const uint8_t aes256_zero_block[16] = {
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+const uint8_t aes256_iso_pad = 0x80; // 0b10000000
+
+
+void aes256_xor(uint8_t *buf, const uint8_t *xorval, const size_t len);
+void aes256_bitshift_left(uint8_t *buf, const size_t len);
+
+#endif // AES256_COMMON_H
