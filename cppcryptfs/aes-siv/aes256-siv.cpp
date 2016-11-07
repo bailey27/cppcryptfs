@@ -54,7 +54,7 @@ void aes256_siv_s2v(AES *ctx, const uint8_t *header_data,
 		aes256_siv_dbl(mac);
 		memcpy(buf, last_part, last_part_len);
 		buf[last_part_len] = aes256_iso_pad;
-		for (uint8_t i = last_part_len + 1; i < 16; i++)
+		for (size_t i = last_part_len + 1; i < 16; i++)
 			buf[i] = 0x00;
 		aes256_xor(buf, mac, 16);
 		aes256_cmac(ctx, buf, 16, mac);

@@ -51,7 +51,7 @@ void aes256_cmac(AES *ctx, const uint8_t *plaintext, const size_t plaintext_len,
 	{
 		// The last block is an incomplete block.
 		buf[last_block_len] = aes256_iso_pad;
-		for (uint8_t i = last_block_len + 1; i < 16; i++)
+		for (size_t i = last_block_len + 1; i < 16; i++)
 			buf[i] = 0x00;
 		aes256_xor(buf, k2, 16);
 	}
