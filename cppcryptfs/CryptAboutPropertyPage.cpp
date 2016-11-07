@@ -120,7 +120,8 @@ static const WCHAR *licenses[] = {
 	// openssl
 
 	L"poject url: github.com/openssl/openssl\r\n\r\n"
-	L"OpenSSL license:\r\n\r\n"
+	L"cppcryptfs usage: statically linked library\r\n\r\n"
+	L"OpenSSL copyright and license:\r\n\r\n"
 	L" LICENSE ISSUES\r\n"
 	L"  ==============\r\n"
 	L"\r\n"
@@ -247,7 +248,8 @@ static const WCHAR *licenses[] = {
 
 	// rapidjson
 	L"project url: github.com/miloyip/rapidjson\r\n\r\n"
-	L"RapidJSON license:\r\n\r\n"
+	L"cppcryptfs usage: included header files\r\n\r\n"
+	L"RapidJSON copyright and license:\r\n\r\n"
 	L"Tencent is pleased to support the open source community by making RapidJSON available. \r\n"
 	L" \r\n"
 	L"Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.  All rights reserved.\r\n"
@@ -309,7 +311,8 @@ static const WCHAR *licenses[] = {
 	// Dokany (mirror)
 
 	L"project url: github.com/dokan-dev/dokany\r\n\r\n"
-	L"Code from the mirror.c sample program from Dokany was used in modifed form in cppcryptfs (in cryptdokan.c). Dokany mirror.c is licensed using the following MIT license:\r\n\r\n"
+	L"cppcryptfs usage: code from the mirror.c sample program from Dokany was used in modifed form in cppcryptfs (in cryptdokan.c).\r\n\r\n"
+	L"Dokany mirror.c copyright and license (MIT license):\r\n\r\n"
 	L"Copyright (C) 2015 - 2016 Adrien J. <liryna.stark@gmail.com> and Maxime C. <maxime@islog.com>\r\n"
 	L"Copyright (C) 2007 - 2011 Hiroki Asakawa <info@dokan-dev.net>\r\n"
 	L"\r\n"
@@ -334,7 +337,8 @@ static const WCHAR *licenses[] = {
 	// dokany (library)
 
 	L"project url: github.com/dokan-dev/dokany\r\n\r\n"
-	L"The Dokany library, which cppcryptfs links with dynamically, is licensed using the GNU LGPL license which is as follows:\r\n\r\n"
+	L"cppcryptfs usage: dynamically linked library\r\n\r\n"
+	L"Dokany library copyright and license (GNU LGPL):\r\n\r\n"
 	L"Copyright (C) 2015 - 2016 Adrien J. <liryna.stark@gmail.com> and Maxime C. <maxime@islog.com>\r\n"
 	L"Copyright (C) 2007 - 2011 Hiroki Asakawa <info@dokan-dev.net>\r\n\r\n"
 	L" GNU LESSER GENERAL PUBLIC LICENSE\r\n"
@@ -504,7 +508,8 @@ static const WCHAR *licenses[] = {
 	L"Library.\r\n",
 		
 	// Secure Edit
-
+	L"cppcryptfs usage: modified and incorporated into cppcryptfs (as SecureEdit.cpp and SecureEdit.h).\r\n\r\n"
+	L"Secure Edit copyright and license:\r\n\r\n"
 	L"100% free Secure Edit control MFC class\r\n"
 	L"Copyright (c) 2003 Dominik Reichl\r\n"
 	L"If you use this class I would be more than happy if you mention\r\n"
@@ -515,8 +520,8 @@ static const WCHAR *licenses[] = {
 	// getopt
 
 	L"project url: github.com/takamin/win-c\r\n\r\n"
-	L"note: getopt.c and getopt.h from this project were incorporated into cppcryptfs\r\n\r\n"
-	L"win-c license:\r\n\r\n"
+	L"cppcryptfs usage: getopt.c and getopt.h from this project were modified and incorporated into cppcryptfs.\r\n\r\n"
+	L"win-c copyright and license:\r\n\r\n"
 	L"The MIT License (MIT)\r\n"
 	L"\r\n"
 	L"Copyright (c) 2015 Koji Takami\r\n"
@@ -616,16 +621,17 @@ void CCryptAboutPropertyPage::OnItemchangedComponentsList(NMHDR *pNMHDR, LRESULT
 	// TODO: Add your control notification handler code here
 	*pResult = 0;
 
-	
-
 	if (pNMLV->uNewState & LVIS_SELECTED) {
 
 		CWnd *pWnd = GetDlgItem(IDC_INFO);
 
-		if (pWnd && pNMLV->iItem < sizeof(licenses)/sizeof(licenses[0])) {
-			pWnd->SetWindowTextW(licenses[pNMLV->iItem]);
+		if (pWnd) {
+			if (pNMLV->iItem < sizeof(licenses) / sizeof(licenses[0])) {
+				pWnd->SetWindowTextW(licenses[pNMLV->iItem]);
+			} else {
+				pWnd->SetWindowTextW(L"");
+			}
 			pWnd->PostMessageW(WM_CLEAR, 0, 0);
 		}
-		
 	}
 }
