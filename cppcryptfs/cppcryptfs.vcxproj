@@ -206,11 +206,11 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="aes-siv\AES.h" />
     <ClInclude Include="aes-siv\aes256-cmac.h" />
     <ClInclude Include="aes-siv\aes256-common.h" />
     <ClInclude Include="aes-siv\aes256-ctr.h" />
     <ClInclude Include="aes-siv\aes256-siv.h" />
+    <ClInclude Include="aes.h" />
     <ClInclude Include="cppcryptfs.h" />
     <ClInclude Include="CreatePropertyPage.h" />
     <ClInclude Include="crypt.h" />
@@ -245,11 +245,11 @@
     <ClInclude Include="util.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="aes-siv\AES.cpp" />
     <ClCompile Include="aes-siv\aes256-cmac.cpp" />
     <ClCompile Include="aes-siv\aes256-common.cpp" />
     <ClCompile Include="aes-siv\aes256-ctr.cpp" />
     <ClCompile Include="aes-siv\aes256-siv.cpp" />
+    <ClCompile Include="aes.cpp" />
     <ClCompile Include="cppcryptfs.cpp" />
     <ClCompile Include="CreatePropertyPage.cpp" />
     <ClCompile Include="crypt.cpp" />
