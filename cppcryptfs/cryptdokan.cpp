@@ -1584,6 +1584,16 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 			}
 		}
 
+		if (config->m_AESSIV) {
+			try {
+				con->m_siv.SetKey(config->GetKey(), 32);
+			} catch (...) {
+				mes = L"unable to intialize AESSIV context";
+				throw(-1);
+			}
+		}
+
+
 		config->init_serial(con);
 
 		WCHAR fs_name[256];

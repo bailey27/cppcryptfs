@@ -237,6 +237,7 @@
     <ClInclude Include="RecentItems.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SecureEdit.h" />
+    <ClInclude Include="siv.h" />
     <ClInclude Include="status.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -281,6 +282,7 @@
     <ClCompile Include="randombytes.cpp" />
     <ClCompile Include="RecentItems.cpp" />
     <ClCompile Include="SecureEdit.cpp" />
+    <ClCompile Include="siv.cpp" />
     <ClCompile Include="status.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>

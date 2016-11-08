@@ -76,7 +76,7 @@ read_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigne
 	
 	if (con->GetConfig()->m_AESSIV) {
 		ptlen = decrypt_siv(buf + BLOCK_IV_LEN + BLOCK_SIV_LEN, nread - BLOCK_IV_LEN * 2, auth_data, sizeof(auth_data), 
-			buf + BLOCK_IV_LEN, con->GetConfig()->GetKey(), buf, ptbuf);	
+			buf + BLOCK_IV_LEN, con->GetConfig()->GetKey(), buf, ptbuf, &con->m_siv);	
 	} else {
 		ptlen = decrypt(buf + BLOCK_IV_LEN, nread - BLOCK_IV_LEN - BLOCK_TAG_LEN, auth_data, sizeof(auth_data),
 			buf + nread - BLOCK_TAG_LEN, con->GetConfig()->GetKey(), buf, ptbuf, openssl_crypt_context);
@@ -129,7 +129,7 @@ write_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsign
 
 	if (siv) {
 		ctlen = encrypt_siv(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetKey(), 
-			buf, buf + BLOCK_IV_LEN + BLOCK_SIV_LEN, buf + BLOCK_IV_LEN);
+			buf, buf + BLOCK_IV_LEN + BLOCK_SIV_LEN, buf + BLOCK_IV_LEN, &con->m_siv);
 	} else {
 		ctlen = encrypt(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetKey(),
 			buf, buf + BLOCK_IV_LEN, tag, openssl_crypt_context);

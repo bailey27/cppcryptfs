@@ -33,6 +33,7 @@ THE SOFTWARE.
 #include "cryptcontext.h"
 
 
+class SivContext;
 
 #define GetMasterKey() (con->GetConfig()->GetKey())
 
@@ -50,11 +51,11 @@ int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *
 
 int encrypt_siv(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
 	int aad_len, const unsigned char *key, const unsigned char *iv,
-	unsigned char *ciphertext, unsigned char *siv);
+	unsigned char *ciphertext, unsigned char *siv, const SivContext *context);
 
 int decrypt_siv(const unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
 	int aad_len, const unsigned char *siv, const unsigned char *key, const unsigned char *iv,
-	unsigned char *plaintext);
+	unsigned char *plaintext, const SivContext *context);
 
 bool sha256(const std::string& str, BYTE *sum);  // sum is a 32-byte buffer
 

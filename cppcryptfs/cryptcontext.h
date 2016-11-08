@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "eme.h"
 #include "randombytes.h"
 #include "dirivcache.h"
+#include "siv.h"
 
 class CryptContext {
 private:
@@ -44,6 +45,7 @@ public:
 	DirIvCache m_dir_iv_cache;
 	EmeCryptContext m_eme;
 	lCacheContainer m_lc; // for eme
+	SivContext m_siv;
 
 	HANDLE m_mountEvent;
 

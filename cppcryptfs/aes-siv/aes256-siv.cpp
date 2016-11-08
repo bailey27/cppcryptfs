@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../siv.h"
+
 const uint8_t aes256_siv_one_block[16] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
@@ -61,7 +63,7 @@ void aes256_siv_s2v(AES *ctx, const uint8_t *header_data,
 	}
 }
 
-bool aes256_encrypt_siv(const uint8_t *key, const uint8_t *header_data,
+bool aes256_encrypt_siv(const SivContext *siv_context, const uint8_t *header_data,
 	const size_t *header_sizes, const uint8_t header_sizes_len,
 	uint8_t *plaintext, const size_t plaintext_len, uint8_t *siv)
 {
@@ -69,7 +71,8 @@ bool aes256_encrypt_siv(const uint8_t *key, const uint8_t *header_data,
 		return false;
 
 	AES ctx;
-	ctx.set_key(key, 32);
+	//ctx.set_key(key, 32);
+	ctx.set_keys(siv_context->GetEncryptKeyLow(), siv_context->GetDecryptKeyLow());
 
 	aes256_siv_s2v(&ctx, header_data, header_sizes, header_sizes_len, plaintext, plaintext_len, siv);
 
@@ -80,13 +83,14 @@ bool aes256_encrypt_siv(const uint8_t *key, const uint8_t *header_data,
 	iv[8] &= 0x7f;
 	iv[12] &= 0x7f;
 
-	ctx.set_key(&key[32], 32);
+	//ctx.set_key(&key[32], 32);
+	ctx.set_keys(siv_context->GetEncryptKeyHigh(), siv_context->GetDecryptKeyHigh());
 	aes256_ctr(&ctx, plaintext, plaintext_len, iv);
 
 	return true;
 }
 
-bool aes256_decrypt_siv(const uint8_t *key, const uint8_t *header_data,
+bool aes256_decrypt_siv(const SivContext *siv_context, const uint8_t *header_data,
 	const size_t *header_sizes, const uint8_t header_sizes_len,
 	uint8_t *ciphertext, const size_t ciphertext_len, const uint8_t *siv)
 {
@@ -94,7 +98,8 @@ bool aes256_decrypt_siv(const uint8_t *key, const uint8_t *header_data,
 		return false;
 
 	AES ctx;
-	ctx.set_key(&key[32], 32);
+	//ctx.set_key(&key[32], 32);
+	ctx.set_keys(siv_context->GetEncryptKeyHigh(), siv_context->GetDecryptKeyHigh());
 
 	uint8_t iv[16];
 	memcpy(iv, siv, sizeof(iv));
@@ -105,7 +110,8 @@ bool aes256_decrypt_siv(const uint8_t *key, const uint8_t *header_data,
 
 	aes256_ctr(&ctx, ciphertext, ciphertext_len, iv);
 
-	ctx.set_key(key, 32);
+	//ctx.set_key(key, 32);
+	ctx.set_keys(siv_context->GetEncryptKeyLow(), siv_context->GetDecryptKeyLow());
 	uint8_t mac[16];
 	aes256_siv_s2v(&ctx, header_data, header_sizes, header_sizes_len, ciphertext, ciphertext_len, mac);
 

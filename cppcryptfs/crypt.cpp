@@ -212,12 +212,8 @@ int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *
 
 int encrypt_siv(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
 	int aad_len, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *ciphertext, unsigned char *siv)
+	unsigned char *ciphertext, unsigned char *siv, const SivContext *context)
 {
-	unsigned char key512[64];
-
-	if (!sha512(key, 32, key512))
-		return -1;
 
 	if (aad_len != 24)
 		return -1;
@@ -232,7 +228,7 @@ int encrypt_siv(const unsigned char *plaintext, int plaintext_len, unsigned char
 
 	memcpy(ciphertext, plaintext, plaintext_len);
 
-	if (!aes256_encrypt_siv(key512, header_data, header_sizes, 2, ciphertext, plaintext_len, siv))
+	if (!aes256_encrypt_siv(context, header_data, header_sizes, 2, ciphertext, plaintext_len, siv))
 		return -1;
 
 	return plaintext_len;
@@ -240,12 +236,8 @@ int encrypt_siv(const unsigned char *plaintext, int plaintext_len, unsigned char
 
 int decrypt_siv(const unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
 	int aad_len, const unsigned char *siv, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *plaintext)
+	unsigned char *plaintext, const SivContext *context)
 {
-	unsigned char key512[64];
-
-	if (!sha512(key, 32, key512))
-		return -1;
 
 	if (aad_len != 24)
 		return -1;
@@ -260,7 +252,7 @@ int decrypt_siv(const unsigned char *ciphertext, int ciphertext_len, unsigned ch
 
 	memcpy(plaintext, ciphertext, ciphertext_len);
 
-	if (!aes256_decrypt_siv(key512, header_data, header_sizes, 2, plaintext, ciphertext_len, siv))
+	if (!aes256_decrypt_siv(context, header_data, header_sizes, 2, plaintext, ciphertext_len, siv))
 		return -1;
 
 	return ciphertext_len;
