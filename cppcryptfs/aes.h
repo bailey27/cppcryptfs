@@ -29,13 +29,6 @@ THE SOFTWARE.
 #pragma once
 
 #include "openssl/aes.h"
-#include "LockZeroBuffer.h"
- 
-
-#define N_BLOCK   (16)
-
-#define SUCCESS (0)
-#define FAILURE (-1)
 
 // this class is used by aes-siv
 
@@ -43,17 +36,15 @@ class AES
 {
  public:
 
-  int set_keys(const AES_KEY *key_encrypt, const AES_KEY *key_decrypt)
+  void set_keys(const AES_KEY *key_encrypt, const AES_KEY *key_decrypt)
   {
 	  m_key_encrypt = key_encrypt;
 	  m_key_decrypt = key_decrypt;
-
-	  return SUCCESS ;
   };
  
-  int encrypt(const unsigned char* plain, unsigned char *cipher) ;
+  void encrypt(const unsigned char* plain, unsigned char *cipher) ;
   
-  int decrypt(const unsigned char *cipher, unsigned char *plain) ;
+  void decrypt(const unsigned char *cipher, unsigned char *plain) ;
   
   AES();
   virtual ~AES();

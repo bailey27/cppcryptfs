@@ -43,22 +43,21 @@ AES::~AES()
 
 /*  Encrypt a single block of 16 bytes */
 
-int AES::encrypt (const unsigned char *plain, unsigned char *cipher)
+void AES::encrypt (const unsigned char *plain, unsigned char *cipher)
 {
  
 	AES_encrypt(plain, cipher, m_key_encrypt);
-	
-	return SUCCESS ;
+
 }
 
 
 /*  Decrypt a single block of 16 bytes */
 
-int  AES::decrypt(const unsigned char *cipher, unsigned char *plain)
+void  AES::decrypt(const unsigned char *cipher, unsigned char *plain)
 {
+	
 	AES_decrypt(cipher, plain, m_key_decrypt);
 
-	return SUCCESS ;
 }
 
 
