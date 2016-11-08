@@ -72,6 +72,7 @@ static const WCHAR * components[] = {
 	L"Dokany (library) - Copyright (C) 2015 - 2016 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
 	L"100% free Secure Edit control MFC class - Copyright (c) 2003 Dominik Reichl",
 	L"win-c (getopt) - Windows Console Library Copyright (c) 2015 Koji Takami",
+	L"ais-siv - Copyright (c) 2015 ARKconcepts / Sasha Kotlyar",
 	NULL
 };
 
@@ -543,6 +544,27 @@ static const WCHAR *licenses[] = {
 	L"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\r\n"
 	L"OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\r\n"
 	L"SOFTWARE.\r\n",
+
+	// aes-siv
+
+	L"project url: github.com/arktronic/aes-siv\r\n\r\n"
+	L"cppcryptfs usage: code from this project was modified and incorporated into cppcryptfs (in the aes-siv directory).\r\n\r\n"
+	L"aes-siv copyright and license:\r\n\r\n"
+	L"This project is licensed under the OSI-approved ISC License:\r\n"
+	L"\r\n"
+	L"Copyright (c) 2015 ARKconcepts / Sasha Kotlyar\r\n"
+	L"\r\n"
+	L"Permission to use, copy, modify, and/or distribute this software for any\r\n"
+	L"purpose with or without fee is hereby granted, provided that the above\r\n"
+	L"copyright notice and this permission notice appear in all copies.\r\n"
+	L"\r\n"
+	L"THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH\r\n"
+	L"REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND\r\n"
+	L"FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,\r\n"
+	L"INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM\r\n"
+	L"LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR\r\n"
+	L"OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR\r\n"
+	L"PERFORMANCE OF THIS SOFTWARE.\r\n",
 
 	NULL
 };
