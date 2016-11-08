@@ -72,7 +72,7 @@ static const WCHAR * components[] = {
 	L"Dokany (library) - Copyright (C) 2015 - 2016 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
 	L"100% free Secure Edit control MFC class - Copyright (c) 2003 Dominik Reichl",
 	L"win-c (getopt) - Windows Console Library Copyright (c) 2015 Koji Takami",
-	L"ais-siv - Copyright (c) 2015 ARKconcepts / Sasha Kotlyar",
+	L"aes-siv - Copyright (c) 2015 ARKconcepts / Sasha Kotlyar",
 	NULL
 };
 
