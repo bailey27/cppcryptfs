@@ -479,7 +479,7 @@ bool CryptConfig::check_config(std::wstring& mes)
 	if (!m_GCMIV128) 
 		mes += L"GCMIV128 must be specified\n";
 
-	if (m_AESSIV)
+	if (0 && m_AESSIV)
 		mes += L"AESSIV is not supported\n";
 		
 	return mes.size() == 0;

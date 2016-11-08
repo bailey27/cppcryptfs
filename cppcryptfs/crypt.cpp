@@ -30,8 +30,9 @@ THE SOFTWARE.
 #include "stdafx.h"
 
 #include <openssl/evp.h>
-
+#include "aes-siv/aes256-siv.h"
 #include "cryptdefs.h"
+#include "crypt.h"
 #include "util.h"
 
 #include <string>
@@ -209,6 +210,62 @@ int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *
 	}
 }
 
+int encrypt_siv(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
+	int aad_len, const unsigned char *key, const unsigned char *iv, 
+	unsigned char *ciphertext, unsigned char *siv)
+{
+	unsigned char key512[64];
+
+	if (!sha512(key, 32, key512))
+		return -1;
+
+	if (aad_len != 24)
+		return -1;
+
+	unsigned char header_data[24+16];
+
+	memcpy(header_data, aad, aad_len);
+
+	memcpy(header_data + aad_len, iv, 16);
+
+	size_t header_sizes[2] = { 24, 16 };
+
+	memcpy(ciphertext, plaintext, plaintext_len);
+
+	if (!aes256_encrypt_siv(key512, header_data, header_sizes, 2, ciphertext, plaintext_len, siv))
+		return -1;
+
+	return plaintext_len;
+}
+
+int decrypt_siv(const unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
+	int aad_len, const unsigned char *siv, const unsigned char *key, const unsigned char *iv, 
+	unsigned char *plaintext)
+{
+	unsigned char key512[64];
+
+	if (!sha512(key, 32, key512))
+		return -1;
+
+	if (aad_len != 24)
+		return -1;
+
+	unsigned char header_data[24+16];
+
+	memcpy(header_data, aad, aad_len);
+
+	memcpy(header_data + aad_len, iv, 16);
+
+	size_t header_sizes[2] = { 24, 16 };
+
+	memcpy(plaintext, ciphertext, ciphertext_len);
+
+	if (!aes256_decrypt_siv(key512, header_data, header_sizes, 2, plaintext, ciphertext_len, siv))
+		return -1;
+
+	return ciphertext_len;
+}
+
 bool sha256(const std::string& str, BYTE *sum)
 {
 	EVP_MD_CTX *mdctx = NULL;
@@ -246,6 +303,42 @@ bool sha256(const std::string& str, BYTE *sum)
 
 }
 
+bool sha512(const BYTE *data, int datalen, BYTE *sum)
+{
+	EVP_MD_CTX *mdctx = NULL;
+	bool ret = true;
+
+	try {
+
+		if (EVP_MD_size(EVP_sha512()) != 64)
+			handleErrors();
+
+		if ((mdctx = EVP_MD_CTX_create()) == NULL)
+			handleErrors();
+
+		if (1 != EVP_DigestInit_ex(mdctx, EVP_sha512(), NULL))
+			handleErrors();
+
+		if (1 != EVP_DigestUpdate(mdctx, data, datalen))
+			handleErrors();
+
+		unsigned int len;
+		if (1 != EVP_DigestFinal_ex(mdctx, sum, &len))
+			handleErrors();
+
+		if (len != 64)
+			handleErrors();
+
+	} catch (...) {
+		ret = false;
+	}
+
+	if (mdctx)
+		EVP_MD_CTX_destroy(mdctx);
+
+	return ret;
+
+}
 
 bool encrypt_string_gcm(const std::wstring& str, const BYTE *key, std::string& base64_out)
 {

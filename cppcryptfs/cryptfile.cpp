@@ -129,10 +129,16 @@ BOOL CryptFile::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG 
 
 	unsigned char *p = buf;
 
-	void *context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+	void *context;
 
-	if (!context)
-		return FALSE;
+	if (!m_con->GetConfig()->m_AESSIV) {
+		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+
+		if (!context)
+			return FALSE;
+	} else {
+		context = NULL;
+	}
 
 	BOOL bRet = TRUE;
 
@@ -291,10 +297,16 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 
 	const unsigned char *p = buf;
 
-	void *context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+	void *context;
+	
+	if (!m_con->GetConfig()->m_AESSIV) {
+		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 
-	if (!context)
-		return FALSE;
+		if (!context)
+			return FALSE;
+	} else {
+		context = NULL;
+	}
 
 	try {
 
@@ -498,10 +510,16 @@ CryptFile::SetEndOfFile(LONGLONG offset, BOOL bSet)
 
 	memset(buf, 0, sizeof(buf));
 
-	void *context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+	void *context;
 
-	if (!context)
-		return FALSE;
+	if (!m_con->GetConfig()->m_AESSIV) {
+		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+
+		if (!context)
+			return FALSE;
+	} else {
+		context = NULL;
+	}
 
 	int nread = read_block(m_con, m_handle, m_header.fileid, last_block, buf, context);
 

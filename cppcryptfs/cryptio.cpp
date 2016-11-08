@@ -69,8 +69,15 @@ read_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigne
 	if (nread == 0)
 		return 0;
 
-	int ptlen = decrypt(buf + BLOCK_IV_LEN, nread - BLOCK_IV_LEN - BLOCK_TAG_LEN, auth_data, sizeof(auth_data), 
-		buf + nread - BLOCK_TAG_LEN, con->GetConfig()->GetKey(), buf, ptbuf, openssl_crypt_context);
+	int ptlen;
+	
+	if (con->GetConfig()->m_AESSIV) {
+		ptlen = decrypt_siv(buf + BLOCK_IV_LEN * 2, nread - BLOCK_IV_LEN * 2, auth_data, sizeof(auth_data), 
+			buf + BLOCK_IV_LEN, con->GetConfig()->GetKey(), buf, ptbuf);	
+	} else {
+		ptlen = decrypt(buf + BLOCK_IV_LEN, nread - BLOCK_IV_LEN - BLOCK_TAG_LEN, auth_data, sizeof(auth_data),
+			buf + nread - BLOCK_TAG_LEN, con->GetConfig()->GetKey(), buf, ptbuf, openssl_crypt_context);
+	}
 
 	if (ptlen < 0) {  // return all zeros for un-authenticated blocks (might exist if file was resized without writing)
 
