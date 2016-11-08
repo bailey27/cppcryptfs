@@ -39,6 +39,9 @@ THE SOFTWARE.
 int
 read_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigned long long block, unsigned char *ptbuf, void *openssl_crypt_context)
 {
+	static_assert(BLOCK_IV_LEN == BLOCK_SIV_LEN, "BLOCK_IV_LEN != BLOCK_SIV_LEN.");
+	static_assert(BLOCK_SIV_LEN == BLOCK_TAG_LEN, "BLOCK_SIV_LEN != BLOCK_TAG_LEN.");
+
 	long long offset = FILE_HEADER_LEN + block*CIPHER_BS;
 
 	LARGE_INTEGER l;
@@ -72,7 +75,7 @@ read_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigne
 	int ptlen;
 	
 	if (con->GetConfig()->m_AESSIV) {
-		ptlen = decrypt_siv(buf + BLOCK_IV_LEN * 2, nread - BLOCK_IV_LEN * 2, auth_data, sizeof(auth_data), 
+		ptlen = decrypt_siv(buf + BLOCK_IV_LEN + BLOCK_SIV_LEN, nread - BLOCK_IV_LEN * 2, auth_data, sizeof(auth_data), 
 			buf + BLOCK_IV_LEN, con->GetConfig()->GetKey(), buf, ptbuf);	
 	} else {
 		ptlen = decrypt(buf + BLOCK_IV_LEN, nread - BLOCK_IV_LEN - BLOCK_TAG_LEN, auth_data, sizeof(auth_data),
@@ -120,12 +123,23 @@ write_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsign
 	if (!get_random_bytes(con, buf, BLOCK_IV_LEN))
 		return -1;
 
-	int ctlen = encrypt(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetKey(), buf, buf + BLOCK_IV_LEN, tag, openssl_crypt_context);
+	bool siv = con->GetConfig()->m_AESSIV;
+
+	int ctlen;
+
+	if (siv) {
+		ctlen = encrypt_siv(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetKey(), 
+			buf, buf + BLOCK_IV_LEN + BLOCK_SIV_LEN, buf + BLOCK_IV_LEN);
+	} else {
+		ctlen = encrypt(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetKey(),
+			buf, buf + BLOCK_IV_LEN, tag, openssl_crypt_context);
+	}
 
 	if (ctlen < 0 || ctlen > PLAIN_BS)
 		return -1;
 
-	memcpy(buf + BLOCK_IV_LEN + ctlen, tag, sizeof(tag));
+	if (!siv)
+		memcpy(buf + BLOCK_IV_LEN + ctlen, tag, sizeof(tag));
 
 	DWORD nWritten = 0;
 

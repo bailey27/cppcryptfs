@@ -35,6 +35,7 @@ THE SOFTWARE.
 #define FILE_ID_LEN 16
 #define PLAIN_BS 4096
 #define BLOCK_IV_LEN 16
+#define BLOCK_SIV_LEN 16
 #define MASTER_IV_LEN 12
 #define DIR_IV_LEN 16
 #define BLOCK_TAG_LEN 16
