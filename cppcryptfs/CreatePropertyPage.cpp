@@ -47,7 +47,14 @@ static const WCHAR *filename_encryption_types[] = {
 	L"Plain text"
 };
 
-#define NUM_ENC_TYPES (sizeof(filename_encryption_types)/sizeof(filename_encryption_types[0]))
+#define NUM_FN_ENC_TYPES (sizeof(filename_encryption_types)/sizeof(filename_encryption_types[0]))
+
+static const WCHAR *data_encryption_types[] = {
+	L"AES256-GCM",
+	L"AES256-SIV"
+};
+
+#define NUM_DATA_ENC_TYPES (sizeof(data_encryption_types)/sizeof(data_encryption_types[0]))
 
 
 // CCreatePropertyPage dialog
@@ -144,17 +151,20 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	std::wstring error_mes;
 
-	CComboBox *pBox = (CComboBox *)GetDlgItem(IDC_FILENAME_ENCRYPTION);
+	
 
-	int nsel = pBox->GetCurSel();
-
+	bool siv = false;
 	bool eme = false;
 	bool plaintext = false;
 	bool longfilenames = false;
 
+	CComboBox *pBox = (CComboBox *)GetDlgItem(IDC_FILENAME_ENCRYPTION);
+
+	int nsel = pBox->GetCurSel();
+
 	CString cfenc;
 
-	if (nsel >= 0 && nsel < NUM_ENC_TYPES)
+	if (nsel >= 0 && nsel < NUM_FN_ENC_TYPES)
 		cfenc = filename_encryption_types[nsel];
 
 	if (cfenc == L"AES256-EME")
@@ -166,11 +176,23 @@ void CCreatePropertyPage::CreateCryptfs()
 		longfilenames = IsDlgButtonChecked(IDC_LONG_FILE_NAMES) != 0;
 	}
 
+	pBox = (CComboBox *)GetDlgItem(IDC_DATA_ENCRYPTION);
+
+	nsel = pBox->GetCurSel();
+
+	CString cdataenc;
+
+	if (nsel >= 0 && nsel < NUM_DATA_ENC_TYPES)
+		cfenc = data_encryption_types[nsel];
+
+	if (cfenc == L"AES256-SIV")
+		siv = true;
+
 	CString volume_name;
 	GetDlgItemText(IDC_VOLUME_NAME, volume_name);
 
 	theApp.DoWaitCursor(1);
-	bool bResult = config.create(cpath, password.m_buf, eme, plaintext, longfilenames, volume_name, error_mes);
+	bool bResult = config.create(cpath, password.m_buf, eme, plaintext, longfilenames, siv, volume_name, error_mes);
 	theApp.DoWaitCursor(-1);
 
 	if (!bResult) {
@@ -198,13 +220,25 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	int nenc = pLbox->GetCurSel();
 
-	if (nenc < 0 || nenc >= NUM_ENC_TYPES)
+	if (nenc < 0 || nenc >= NUM_FN_ENC_TYPES)
 		return;
+
+	theApp.WriteProfileStringW(L"CreateOptions", L"FilenameEncryption", filename_encryption_types[nenc]);
+
+	pLbox = (CComboBox*)GetDlgItem(IDC_DATA_ENCRYPTION);
+	if (!pLbox)
+		return;
+
+	nenc = pLbox->GetCurSel();
+
+	if (nenc < 0 || nenc >= NUM_DATA_ENC_TYPES)
+		return;
+
+	theApp.WriteProfileStringW(L"CreateOptions", L"DataEncryption", data_encryption_types[nenc]);
 
 	RecentItems ritems(TEXT("Folders"), TEXT("LastDir"), m_numLastDirs);
 	ritems.Add(cpath);
 
-	theApp.WriteProfileStringW(L"CreateOptions", L"FilenameEncryption", filename_encryption_types[nenc]);
 }
 
 // CCreatePropertyPage message handlers
@@ -254,6 +288,8 @@ BOOL CCreatePropertyPage::OnInitDialog()
 
 	CString cfnenc = theApp.GetProfileStringW(L"CreateOptions", L"FilenameEncryption", L"AES256-EME");
 
+	CString cdataenc = theApp.GetProfileStringW(L"CreateOptions", L"DataEncryption", L"AES256-GCM");
+
 	CheckDlgButton(IDC_LONG_FILE_NAMES, clfns == L"1");
 
 	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_PATH);
@@ -272,10 +308,22 @@ BOOL CCreatePropertyPage::OnInitDialog()
 	if (!pLbox)
 		return FALSE;
 
-	for (i = 0; i < NUM_ENC_TYPES; i++) {
+	for (i = 0; i < NUM_FN_ENC_TYPES; i++) {
 		pLbox->InsertString(i, filename_encryption_types[i]);
 		if (cfnenc == filename_encryption_types[i]) {
 			pLbox->SelectString(-1, cfnenc);
+		}
+	}
+
+	pLbox = (CComboBox*)GetDlgItem(IDC_DATA_ENCRYPTION);
+
+	if (!pLbox)
+		return FALSE;
+
+	for (i = 0; i < NUM_DATA_ENC_TYPES; i++) {
+		pLbox->InsertString(i, data_encryption_types[i]);
+		if (cdataenc == data_encryption_types[i]) {
+			pLbox->SelectString(-1, cdataenc);
 		}
 	}
 

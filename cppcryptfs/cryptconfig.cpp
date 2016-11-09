@@ -478,9 +478,6 @@ bool CryptConfig::check_config(std::wstring& mes)
 	
 	if (!m_GCMIV128) 
 		mes += L"GCMIV128 must be specified\n";
-
-	if (0 && m_AESSIV)
-		mes += L"AESSIV is not supported\n";
 		
 	return mes.size() == 0;
 }
@@ -571,7 +568,9 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 	return bret;
 }
 
-bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, const WCHAR *volume_name, std::wstring& error_mes)
+
+
+bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, const WCHAR *volume_name, std::wstring& error_mes)
 {
 
 	LockZeroBuffer<char> utf8pass(256);
@@ -597,6 +596,9 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 	if (!m_PlaintextNames)
 		m_LongNames = longfilenames;
+
+	if (siv)
+		m_AESSIV = true;
 
 	try {
 		if (!can_delete_directory(&m_basedir[0], TRUE)) {
@@ -722,10 +724,19 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		fprintf(fl, "{\n");
 
+		std::wstring prodName, prodVersion, prodCopyright;
+
+		if (GetProductVersionInfo(prodName, prodVersion, prodCopyright)) {
+			std::string creator_str;
+			std::wstring wcreator = prodName + L" v" + prodVersion;
+			const char *creator = unicode_to_utf8(&wcreator[0], creator_str);
+			if (creator)
+				fprintf(fl, "\t\"Creator\": \"%s\",\n", creator);
+		}
+
 		fprintf(fl, "\t\"EncryptedKey\": \"%s\",\n", base64_key);
 
 		const char *base64_salt = base64_encode(&m_encrypted_key_salt[0], (DWORD)m_encrypted_key_salt.size(), storage, false);
-
 		fprintf(fl, "\t\"ScryptObject\": {\n");
 		fprintf(fl, "\t\t\"Salt\": \"%s\",\n", base64_salt);
 		fprintf(fl, "\t\t\"N\": %d,\n", m_N);
@@ -744,6 +755,8 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 			fprintf(fl, "\t\t\"PlaintextNames\",\n");
 		else if (m_DirIV)
 			fprintf(fl, "\t\t\"DirIV\",\n");
+		if (m_AESSIV)
+			fprintf(fl, "\t\t\"AESSIV\",\n");
 		fprintf(fl, "\t\t\"GCMIV128\"\n");
 		fprintf(fl, "\t]\n");
 		fprintf(fl, "}\n");

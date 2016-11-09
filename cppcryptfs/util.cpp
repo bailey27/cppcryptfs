@@ -483,3 +483,80 @@ ConsoleErrMes(LPCWSTR err, DWORD pid)
 	fwprintf(stderr, L"cppcryptfs: %s\n", err);
 	CloseConsole();
 }
+
+
+static bool 
+GetProductVersionInfo(CString& strProductName, CString& strProductVersion,
+	CString& strLegalCopyright)
+{
+
+	TCHAR fullPath[MAX_PATH];
+	if (!GetModuleFileName(NULL, fullPath, MAX_PATH-1)) {
+		return false;
+	}
+	DWORD dummy = 0;
+	DWORD vSize = GetFileVersionInfoSize(fullPath, &dummy);
+	if (vSize < 1) {
+		return false;
+	}
+
+	void *pVersionResource = NULL;
+
+	pVersionResource = malloc(vSize);
+
+	if (pVersionResource == NULL)
+	{
+		return false;
+	}
+
+	if (!GetFileVersionInfo(fullPath, NULL, vSize, pVersionResource)) {
+		free(pVersionResource);
+		return false;
+	}
+
+	// get the name and version strings
+	LPVOID pvProductName = NULL;
+	unsigned int iProductNameLen = 0;
+	LPVOID pvProductVersion = NULL;
+	unsigned int iProductVersionLen = 0;
+	LPVOID pvLegalCopyright = NULL;
+	unsigned int iLegalCopyrightLen = 0;
+
+	// replace "040904e4" with the language ID of your resources
+	if (!VerQueryValue(pVersionResource, _T("\\StringFileInfo\\040904b0\\ProductName"), &pvProductName, &iProductNameLen) ||
+		!VerQueryValue(pVersionResource, _T("\\StringFileInfo\\040904b0\\ProductVersion"), &pvProductVersion, &iProductVersionLen) ||
+		!VerQueryValue(pVersionResource, _T("\\StringFileInfo\\040904b0\\LegalCopyright"), &pvLegalCopyright, &iLegalCopyrightLen))
+	{
+		free(pVersionResource);
+		return false;
+	}
+
+	if (iProductNameLen < 1 || iProductVersionLen < 1 || iLegalCopyrightLen < 1) {
+		free(pVersionResource);
+		return false;
+	}
+
+	strProductName.SetString((LPCTSTR)pvProductName, iProductNameLen-1);
+	strProductVersion.SetString((LPCTSTR)pvProductVersion, iProductVersionLen-1);
+	strLegalCopyright.SetString((LPCTSTR)pvLegalCopyright, iLegalCopyrightLen-1);
+
+	free(pVersionResource);
+
+	return true;
+}
+
+bool 
+GetProductVersionInfo(std::wstring& strProductName, std::wstring& strProductVersion,
+	std::wstring& strLegalCopyright)
+{
+	CString cName, cVer, cCop;
+
+	if (GetProductVersionInfo(cName, cVer, cCop)) {
+		strProductName = cName;
+		strProductVersion = cVer;
+		strLegalCopyright = cCop;
+		return true;
+	} else {
+		return false;
+	}
+}

@@ -77,7 +77,7 @@ public:
 	bool read(const WCHAR *configfile = NULL);
 	bool decrypt_key(LPCTSTR password);
 
-	bool create(const WCHAR *path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, const WCHAR *volume_name, std::wstring& error_mes);
+	bool create(const WCHAR *path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, const WCHAR *volume_name, std::wstring& error_mes);
 
 	bool check_config(std::wstring& mes);
 

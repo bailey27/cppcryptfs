@@ -33,7 +33,6 @@ THE SOFTWARE.
 
 class CryptContext;
 
-
 const char *
 unicode_to_utf8(const WCHAR *unicode_str, char *buf, int buflen);
 
@@ -85,3 +84,7 @@ void OpenConsole(DWORD pid = 0);
 void CloseConsole();
 
 void ConsoleErrMes(LPCWSTR err, DWORD pid = 0);
+
+bool
+GetProductVersionInfo(std::wstring& strProductName, std::wstring& strProductVersion,
+	std::wstring& strLegalCopyright);

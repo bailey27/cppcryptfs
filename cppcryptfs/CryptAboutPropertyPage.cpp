@@ -34,6 +34,8 @@ THE SOFTWARE.
 #include "cppcryptfs.h"
 #include "CryptAboutPropertyPage.h"
 #include "afxdialogex.h"
+#include <string>
+#include "util.h"
 
 
 // CCryptAboutPropertyPage dialog
@@ -79,21 +81,15 @@ static const WCHAR * components[] = {
 static const WCHAR *licenses[] = {
 
 	// cppcryptfs
+	L"cppcryptfs - Copyright (C) 2016 Bailey Brown. All rights reserved.\r\n\r\n"
 	L"project url: github.com/bailey27/cppcryptfs\r\n\r\n"
-	L"cppcryptfs - Copyright (C) 2016 Bailey Brown. All rights reserved. \r\n"
-	L"\r\n"
-	L"This project links with and incorporates source from several \r\n"
-	L"open source projects.\r\n"
-	L"\r\n"
-	L"All incorporated sources use the MIT license or other permissive \r\n"
-	L"open source licenses.\r\n"
-	L"\r\n"
+	L"cppcryptfs is a user-mode cryptographic virtual overlay filesystem\r\n\r\n"
+	L"cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)\r\n\r\n"
+	L"cppcryptfs links with and incorporates source code from several open source projects.\r\n\r\n"
+	L"All incorporated sources use the MIT license or other permissive open source licenses.\r\n\r\n"
 	L"All statically linked libraries use a permissive open source license.\r\n"
 	L"\r\n"
 	L"Some libraries which are linked with dynamically use the GNU LGPL.\r\n"
-	L"\r\n"
-	L"See the \"About\" dialog box in cppcryptfs.exe for a list of these projects\r\n"
-	L"and their licenses.\r\n"
 	L"\r\n"
 	L"cppcryptfs itself uses an MIT license which is as follows:\r\n"
 	L"\r\n"
@@ -312,7 +308,7 @@ static const WCHAR *licenses[] = {
 	// Dokany (mirror)
 
 	L"project url: github.com/dokan-dev/dokany\r\n\r\n"
-	L"cppcryptfs usage: code from the mirror.c sample program from Dokany was used in modifed form in cppcryptfs (in cryptdokan.c).\r\n\r\n"
+	L"cppcryptfs usage: code from the mirror.c sample program from Dokany was used in modifed form in cppcryptfs (in cryptdokan.cpp).\r\n\r\n"
 	L"Dokany mirror.c copyright and license (MIT license):\r\n\r\n"
 	L"Copyright (C) 2015 - 2016 Adrien J. <liryna.stark@gmail.com> and Maxime C. <maxime@islog.com>\r\n"
 	L"Copyright (C) 2007 - 2011 Hiroki Asakawa <info@dokan-dev.net>\r\n"
@@ -548,7 +544,7 @@ static const WCHAR *licenses[] = {
 	// aes-siv
 
 	L"project url: github.com/arktronic/aes-siv\r\n\r\n"
-	L"cppcryptfs usage: code from this project was modified and incorporated into cppcryptfs (in the aes-siv directory).\r\n\r\n"
+	L"cppcryptfs usage: code from this project was modified and incorporated into cppcryptfs (in the cppcryptfs/aes-siv directory).\r\n\r\n"
 	L"aes-siv copyright and license:\r\n\r\n"
 	L"This project is licensed under the OSI-approved ISC License:\r\n"
 	L"\r\n"
@@ -577,6 +573,19 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 	CCryptPropertyPage::OnInitDialog();
 
 	// TODO:  Add extra initialization here
+
+	std::wstring prod = L"cppryptfs";
+	std::wstring ver = L"1.0";
+	std::wstring copyright = L"Copyright (C) 2016 - Bailey Brown.  All Rights Reserved.";
+
+	GetProductVersionInfo(prod, ver, copyright);
+
+	CString prod_ver = &prod[0];
+	prod_ver += L", Version ";
+	prod_ver += &ver[0];
+
+	SetDlgItemText(IDC_PROD_VERSION, prod_ver);
+	SetDlgItemText(IDC_COPYRIGHT, &copyright[0]);
 
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_COMPONENTS_LIST);
 
