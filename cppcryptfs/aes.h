@@ -34,20 +34,23 @@ THE SOFTWARE.
 
 class AES
 {
- public:
+public:
 
-  void set_keys(const AES_KEY *key_encrypt, const AES_KEY *key_decrypt)
-  {
-	  m_key_encrypt = key_encrypt;
-	  m_key_decrypt = key_decrypt;
-  };
- 
-  void encrypt(const unsigned char* plain, unsigned char *cipher) ;
+	void set_keys(const AES_KEY *key_encrypt, const AES_KEY *key_decrypt) 
+	{ 
+		m_key_encrypt = key_encrypt; 
+		m_key_decrypt = key_decrypt; 
+	};
+
+	// encrypt single AES block (16 bytes)
+	void encrypt(const unsigned char* plain, unsigned char *cipher) { AES_encrypt(plain, cipher, m_key_encrypt); };
+
+	// decrypt single AES block (16 bytes)
+	void decrypt(const unsigned char *cipher, unsigned char *plain) { AES_decrypt(cipher, plain, m_key_decrypt); };
   
-  void decrypt(const unsigned char *cipher, unsigned char *plain) ;
-  
-  AES();
-  virtual ~AES();
+	AES() { m_key_encrypt = NULL; m_key_decrypt = NULL; };
+
+	virtual ~AES();
 
  private:
 	 const AES_KEY *m_key_encrypt;

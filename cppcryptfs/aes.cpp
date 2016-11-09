@@ -29,35 +29,10 @@ THE SOFTWARE.
 #include "stdafx.h"
 #include "AES.h"
 
-AES::AES()
-{
-	m_key_encrypt = NULL;
-	m_key_decrypt = NULL;
-}
 
 AES::~AES()
 {
 	// don't delete keys
-}
-
-
-/*  Encrypt a single block of 16 bytes */
-
-void AES::encrypt (const unsigned char *plain, unsigned char *cipher)
-{
- 
-	AES_encrypt(plain, cipher, m_key_encrypt);
-
-}
-
-
-/*  Decrypt a single block of 16 bytes */
-
-void  AES::decrypt(const unsigned char *cipher, unsigned char *plain)
-{
-	
-	AES_decrypt(cipher, plain, m_key_decrypt);
-
 }
 
 
