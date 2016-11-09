@@ -94,12 +94,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include;C:\Program Files\Dokan\Dokan Library-1.0.0\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include;C:\Program Files\Dokan\Dokan Library-1.0.1\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>version.lib;C:\Program Files (X86)\OpenSSL\lib\libcrypto.lib;C:\Program Files\Dokan\Dokan Library-1.0.0\x86\lib\dokan1.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;C:\Program Files (X86)\OpenSSL\lib\libcrypto.lib;C:\Program Files\Dokan\Dokan Library-1.0.1\x86\lib\dokan1.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
     <Midl>
@@ -120,13 +120,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>c:\git\rapidjson\include;C:\Program Files\OpenSSL\include;C:\Program Files\Dokan\Dokan Library-1.0.0\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\git\rapidjson\include;C:\Program Files\OpenSSL\include;C:\Program Files\Dokan\Dokan Library-1.0.1\include</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>version.lib;C:\Program Files\OpenSSL\lib\libcrypto.lib;C:\Program Files\Dokan\Dokan Library-1.0.0\lib\dokan1.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;C:\Program Files\OpenSSL\lib\libcrypto.lib;C:\Program Files\Dokan\Dokan Library-1.0.1\lib\dokan1.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
@@ -150,14 +150,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include;C:\Program Files\Dokan\Dokan Library-1.0.0\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include;C:\Program Files\Dokan\Dokan Library-1.0.1\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>version.lib;C:\Program Files (X86)\OpenSSL\lib\libcrypto.lib;C:\Program Files\Dokan\Dokan Library-1.0.0\x86\lib\dokan1.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;C:\Program Files (X86)\OpenSSL\lib\libcrypto.lib;C:\Program Files\Dokan\Dokan Library-1.0.1\x86\lib\dokan1.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
     <Midl>
@@ -180,14 +180,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>c:\git\rapidjson\include;C:\Program Files\OpenSSL\include;C:\Program Files\Dokan\Dokan Library-1.0.0\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\git\rapidjson\include;C:\Program Files\OpenSSL\include;C:\Program Files\Dokan\Dokan Library-1.0.1\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>version.lib;C:\Program Files\OpenSSL\lib\libcrypto.lib;C:\Program Files\Dokan\Dokan Library-1.0.0\lib\dokan1.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;C:\Program Files\OpenSSL\lib\libcrypto.lib;C:\Program Files\Dokan\Dokan Library-1.0.1\lib\dokan1.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
