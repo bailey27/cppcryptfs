@@ -29,10 +29,62 @@ THE SOFTWARE.
 #include "stdafx.h"
 #include "AES.h"
 
+#ifdef USE_AES_NI
+extern "C" unsigned int OPENSSL_ia32cap_P[];
+
+#define HAVE_AES_NI   (OPENSSL_ia32cap_P[1]&(1<<(57-32)))
+#endif
+
+bool AES::use_aes_ni()
+{
+#ifdef USE_AES_NI
+	if (HAVE_AES_NI)
+		return true;
+#endif
+	return false;
+}
+
+AES::AES()
+{
+	m_key_encrypt = NULL;
+	m_key_decrypt = NULL;
+	m_use_aes_ni = use_aes_ni();
+}
 
 AES::~AES()
 {
 	// don't delete keys
 }
 
+void AES::set_keys(const AES_KEY *key_encrypt, const AES_KEY *key_decrypt) 
+{ 
+	m_key_encrypt = key_encrypt; 
+	m_key_decrypt = key_decrypt; 
+}
+
+// encrypt single AES block (16 bytes)
+void AES::encrypt(const unsigned char* plain, unsigned char *cipher) 
+{ 
+#ifdef USE_AES_NI
+	if (m_use_aes_ni) {
+		aesni_encrypt(plain, cipher, m_key_encrypt);
+	} else
+#endif
+	{
+		AES_encrypt(plain, cipher, m_key_encrypt);
+	}
+}
+
+// decrypt single AES block (16 bytes)
+void AES::decrypt(const unsigned char *cipher, unsigned char *plain) 
+{ 
+#ifdef USE_AES_NI
+	if (m_use_aes_ni) {
+		aesni_decrypt(cipher, plain, m_key_encrypt);
+	} else
+#endif
+	{
+		AES_decrypt(cipher, plain, m_key_encrypt);
+	}
+}
 

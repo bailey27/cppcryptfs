@@ -44,7 +44,7 @@ THE SOFTWARE.
 #include "getopt.h"
 #include "LockZeroBuffer.h"
 #include "util.h"
-
+#include "crypt.h"
 
 
 #ifdef _DEBUG
@@ -66,10 +66,18 @@ CcppcryptfsApp::CcppcryptfsApp()
 	// support Restart Manager
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
 
-	m_mountedDrives = 0;
-
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
+
+	m_mountedDrives = 0;
+
+	// get an OpenSSL EVP context to force detection of AES-NI instructions
+	// so we can use AES-NI even if EVP is never used
+
+	void *context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+
+	if (context)
+		free_crypt_context(context);
 }
 
 
