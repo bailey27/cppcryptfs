@@ -64,7 +64,7 @@ Then you need to choose a (hopefully strong) password and repeat it.  The dialog
 
 You can choose to have your file names encryped using AES256-EME or not to encrypt the file names (plain text).
 
-You can choose between AES256-GCM or AES256-SIV for data encryption.  The
+You can choose between AES256-GCM or AES256-SIV (RFC 5297) for data encryption.  The
 default is AES256-GCM, which is recommended.
 
 When you click on the "Create" button, a gocryptfs.conf file will be created in the directory.  Unless you choose to use plain text file names, a gocryptfs.diriv will also be created there.  Be sure to back up these files in case they get lost or corrupted.  You won't be able to access any of your data if something happens to gocryptfs.conf.  gocryptfs.conf will never change for the life of your filesystem unless you change the volume label (see bellow).
@@ -83,9 +83,6 @@ just created the filesystem in.  Then enter the password and click on the "Mount
 ![Alt text](/screenshots/screenshot_mount.png?raw=true "Mount tab")
 
 Your will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is encrypted and saved in files in the folder you specified.
-
-File data is encrypt using AES256-GCM by default.  It can optionally
-be encrypted using AES256-SIV (RFC 5297) instead.
 
 For technical details of the cryptographic design of gocryptfs, please visit
 the [gocryptfs project page](https://github.com/rfjakob/gocryptfs).
