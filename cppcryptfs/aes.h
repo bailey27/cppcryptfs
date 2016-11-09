@@ -50,7 +50,7 @@ void aesni_decrypt(const unsigned char *in, unsigned char *out,
 #endif
 #endif // USE_AES_NI
 
-// this class is used by aes-siv
+// this class is used by aes-siv (this header and static use_aes_ni method used by eme code)
 
 class AES
 {

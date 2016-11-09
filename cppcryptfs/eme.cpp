@@ -45,6 +45,8 @@ THE SOFTWARE.
 
 #include "openssl/aes.h"
 
+#include "aes.h"
+
 
 
 static const bool DirectionEncrypt = true;
@@ -89,8 +91,17 @@ static void AesEncrypt(BYTE* dst, const BYTE* src, int len, const EmeCryptContex
 {
 	int numBlocks = len / 16;
 
-	for (int i = 0; i < numBlocks; i++) {
-		AES_encrypt(src + i * 16, dst + i * 16, eme_context->lc->get_encryption_key());
+#ifdef USE_AES_NI
+	if (AES::use_aes_ni()) {
+		for (int i = 0; i < numBlocks; i++) {
+			aesni_encrypt(src + i * 16, dst + i * 16, eme_context->lc->get_encryption_key());
+		}
+	} else 
+#endif	
+	{
+		for (int i = 0; i < numBlocks; i++) {
+			AES_encrypt(src + i * 16, dst + i * 16, eme_context->lc->get_encryption_key());
+		}
 	}
 }
 
@@ -98,8 +109,17 @@ static void AesDecrypt(BYTE* dst, const BYTE* src, int len, const EmeCryptContex
 {
 	int numBlocks = len / 16;
 	
-	for (int i = 0; i < numBlocks; i++) {
-		AES_decrypt(src + i * 16, dst + i * 16, eme_context->lc->get_decryption_key());
+#ifdef USE_AES_NI
+	if (AES::use_aes_ni()) {
+		for (int i = 0; i < numBlocks; i++) {
+			aesni_decrypt(src + i * 16, dst + i * 16, eme_context->lc->get_decryption_key());
+		}
+	} else
+#endif
+	{
+		for (int i = 0; i < numBlocks; i++) {
+			AES_decrypt(src + i * 16, dst + i * 16, eme_context->lc->get_decryption_key());
+		}
 	}
 }
 
@@ -163,8 +183,16 @@ void lCacheContainer::init(EmeCryptContext *eme_context)
 	m_pEncKeyBuf = new LockZeroBuffer<AES_KEY>(1, true);
 	m_pDecKeyBuf = new LockZeroBuffer<AES_KEY>(1, true);
 
-	AES_set_encrypt_key(eme_context->key, 256, m_pEncKeyBuf->m_buf);
-	AES_set_decrypt_key(eme_context->key, 256, m_pDecKeyBuf->m_buf);
+#ifdef USE_AES_NI
+	if (AES::use_aes_ni()) {
+		aesni_set_encrypt_key(eme_context->key, 256, m_pEncKeyBuf->m_buf);
+		aesni_set_decrypt_key(eme_context->key, 256, m_pDecKeyBuf->m_buf);
+	} else
+#endif
+	{
+		AES_set_encrypt_key(eme_context->key, 256, m_pEncKeyBuf->m_buf);
+		AES_set_decrypt_key(eme_context->key, 256, m_pDecKeyBuf->m_buf);
+	}
 
 	eme_context->lc = this;
 
