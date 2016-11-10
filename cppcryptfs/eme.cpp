@@ -166,19 +166,18 @@ lCacheContainer::lCacheContainer()
 
 	m_LTable = NULL;
 
-	m_pEncKeyBuf = NULL;
-	m_pDecKeyBuf = NULL;
+	m_pKeyBuf = NULL;
+
 	m_pLTableBuf = NULL;
 }
 
 void lCacheContainer::init(EmeCryptContext *eme_context)
 {
-	m_pEncKeyBuf = new LockZeroBuffer<AES_KEY>(1, true);
-	m_pDecKeyBuf = new LockZeroBuffer<AES_KEY>(1, true);
+	m_pKeyBuf = new LockZeroBuffer<AES_KEY>(2, true);
 
-	AES::initialize_keys(eme_context->key, 256, m_pEncKeyBuf->m_buf, m_pDecKeyBuf->m_buf);
+	AES::initialize_keys(eme_context->key, 256, &m_pKeyBuf->m_buf[0], &m_pKeyBuf->m_buf[1]);
 
-	eme_context->aes_ctx.set_keys(m_pEncKeyBuf->m_buf, m_pDecKeyBuf->m_buf);
+	eme_context->aes_ctx.set_keys(&m_pKeyBuf->m_buf[0], &m_pKeyBuf->m_buf[1]);
 
 	eme_context->lc = this;
 
@@ -196,12 +195,8 @@ lCacheContainer::~lCacheContainer()
 	if (m_pLTableBuf)
 		delete m_pLTableBuf;
 
-	if (m_pEncKeyBuf)
-		delete m_pEncKeyBuf;
-
-	if (m_pDecKeyBuf)
-		delete m_pDecKeyBuf;
-
+	if (m_pKeyBuf)
+		delete m_pKeyBuf;
 }
 
 

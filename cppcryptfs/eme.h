@@ -55,8 +55,8 @@ private:
 	void tabulateL(const EmeCryptContext *eme_context, int m);
 public:
 
-	LockZeroBuffer<AES_KEY> *m_pEncKeyBuf;
-	LockZeroBuffer<AES_KEY> *m_pDecKeyBuf;
+	LockZeroBuffer<AES_KEY> *m_pKeyBuf;
+
 	LockZeroBuffer<BYTE> *m_pLTableBuf;
 	LPBYTE *m_LTable;
 
