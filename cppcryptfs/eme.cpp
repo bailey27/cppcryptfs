@@ -91,35 +91,17 @@ static void AesEncrypt(BYTE* dst, const BYTE* src, int len, const EmeCryptContex
 {
 	int numBlocks = len / 16;
 
-#ifdef USE_AES_NI
-	if (AES::use_aes_ni()) {
-		for (int i = 0; i < numBlocks; i++) {
-			aesni_encrypt(src + i * 16, dst + i * 16, eme_context->lc->get_encryption_key());
-		}
-	} else 
-#endif	
-	{
-		for (int i = 0; i < numBlocks; i++) {
-			AES_encrypt(src + i * 16, dst + i * 16, eme_context->lc->get_encryption_key());
-		}
+	for (int i = 0; i < numBlocks; i++) {
+		eme_context->aes_ctx.encrypt(src + i * 16, dst + i * 16);
 	}
 }
 
 static void AesDecrypt(BYTE* dst, const BYTE* src, int len, const EmeCryptContext *eme_context)
 {
 	int numBlocks = len / 16;
-	
-#ifdef USE_AES_NI
-	if (AES::use_aes_ni()) {
-		for (int i = 0; i < numBlocks; i++) {
-			aesni_decrypt(src + i * 16, dst + i * 16, eme_context->lc->get_decryption_key());
-		}
-	} else
-#endif
-	{
-		for (int i = 0; i < numBlocks; i++) {
-			AES_decrypt(src + i * 16, dst + i * 16, eme_context->lc->get_decryption_key());
-		}
+
+	for (int i = 0; i < numBlocks; i++) {
+		eme_context->aes_ctx.decrypt(src + i * 16, dst + i * 16);
 	}
 }
 
@@ -137,6 +119,17 @@ static void aesTransform(BYTE* dst, const BYTE* src, bool direction, int len, co
 	else {
 		panic(L"unknown direction");
 	}
+}
+
+EmeCryptContext::EmeCryptContext()
+{ 
+	key = NULL; 
+	lc = NULL; 
+}
+
+EmeCryptContext::~EmeCryptContext()
+{
+	
 }
 
 // tabulateL - calculate L_i for messages up to a length of m cipher blocks
@@ -183,16 +176,9 @@ void lCacheContainer::init(EmeCryptContext *eme_context)
 	m_pEncKeyBuf = new LockZeroBuffer<AES_KEY>(1, true);
 	m_pDecKeyBuf = new LockZeroBuffer<AES_KEY>(1, true);
 
-#ifdef USE_AES_NI
-	if (AES::use_aes_ni()) {
-		aesni_set_encrypt_key(eme_context->key, 256, m_pEncKeyBuf->m_buf);
-		aesni_set_decrypt_key(eme_context->key, 256, m_pDecKeyBuf->m_buf);
-	} else
-#endif
-	{
-		AES_set_encrypt_key(eme_context->key, 256, m_pEncKeyBuf->m_buf);
-		AES_set_decrypt_key(eme_context->key, 256, m_pDecKeyBuf->m_buf);
-	}
+	AES::initialize_keys(eme_context->key, 256, m_pEncKeyBuf->m_buf, m_pDecKeyBuf->m_buf);
+
+	eme_context->aes_ctx.set_keys(m_pEncKeyBuf->m_buf, m_pDecKeyBuf->m_buf);
 
 	eme_context->lc = this;
 

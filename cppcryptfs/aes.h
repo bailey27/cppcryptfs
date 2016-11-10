@@ -30,49 +30,36 @@ THE SOFTWARE.
 
 #include "openssl/aes.h"
 
-#define USE_AES_NI 1
+#define USE_AES_NI 1 // aes native instructions
 
-#ifdef USE_AES_NI
-#ifdef __cplusplus
-extern "C" {
-#endif
-int aesni_set_encrypt_key(const unsigned char *userKey, int bits,
-	AES_KEY *key);
-int aesni_set_decrypt_key(const unsigned char *userKey, int bits,
-	AES_KEY *key);
-
-void aesni_encrypt(const unsigned char *in, unsigned char *out,
-	const AES_KEY *key);
-void aesni_decrypt(const unsigned char *in, unsigned char *out,
-	const AES_KEY *key);
-#ifdef __cplusplus
-};
-#endif
-#endif // USE_AES_NI
-
-// this class is used by aes-siv (this header and static use_aes_ni method used by eme code)
+// this class is used by aes-siv and eme
 
 class AES
 {
 public:
-
-	static bool use_aes_ni();
+	// expanded aes keys are stored elsewhere (preferably in a LockZeroBuffer)
+	static void initialize_keys(const unsigned char *key, int keylen /* in bits */, 
+		AES_KEY *encrypt_key, AES_KEY *decrypt_key);
 
 	void set_keys(const AES_KEY *key_encrypt, const AES_KEY *key_decrypt);
 
 	// encrypt single AES block (16 bytes)
-	void encrypt(const unsigned char* plain, unsigned char *cipher);
+	void encrypt(const unsigned char* plain, unsigned char *cipher) const;
 
 	// decrypt single AES block (16 bytes)
-	void decrypt(const unsigned char *cipher, unsigned char *plain);
+	void decrypt(const unsigned char *cipher, unsigned char *plain) const;
   
 	AES();
 
 	virtual ~AES();
 
+	const AES_KEY *m_key_encrypt;
+	const AES_KEY *m_key_decrypt;
+
  private:
-	 const AES_KEY *m_key_encrypt;
-	 const AES_KEY *m_key_decrypt;
+	 static bool use_aes_ni();
+
+	
 	 bool m_use_aes_ni;
 };
 
