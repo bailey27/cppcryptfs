@@ -38,33 +38,31 @@ THE SOFTWARE.
 
 #include "LockZeroBuffer.h"
 
-class lCacheContainer;
+
+
 
 class EmeCryptContext {
 public:
-	const BYTE *key;
-	lCacheContainer *lc;
-	AES aes_ctx;
+	
+	AES m_aes_ctx;
 
 	EmeCryptContext();
 	virtual ~EmeCryptContext();
-};
 
-class lCacheContainer {
 private:
-	void tabulateL(const EmeCryptContext *eme_context, int m);
+	const BYTE *m_key;
+	LockZeroBuffer<AES_KEY> *m_pKeyBuf;
+	LockZeroBuffer<BYTE> *m_pLTableBuf;
+
+	void tabulateL(int m);
 public:
 
-	LockZeroBuffer<AES_KEY> *m_pKeyBuf;
-
-	LockZeroBuffer<BYTE> *m_pLTableBuf;
 	LPBYTE *m_LTable;
 
-	void init(EmeCryptContext *eme_context);
-	lCacheContainer();
-	virtual ~lCacheContainer();
+	void init(const BYTE *key);
 };
 
 
-BYTE* EmeTransform(const EmeCryptContext *eme_context, const BYTE *T, const BYTE *P, int len, bool direction);
+BYTE* EmeTransform(const EmeCryptContext *eme_context, 
+	const BYTE *T, const BYTE *P, int len, bool direction);
 

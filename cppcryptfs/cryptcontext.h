@@ -44,7 +44,6 @@ public:
 	RandomBytes *m_prand_bytes;
 	DirIvCache m_dir_iv_cache;
 	EmeCryptContext m_eme;
-	lCacheContainer m_lc; // for eme
 	SivContext m_siv;
 
 	HANDLE m_mountEvent;

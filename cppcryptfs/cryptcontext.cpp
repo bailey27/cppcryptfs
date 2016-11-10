@@ -33,10 +33,9 @@ static RandomBytes random_bytes;
 
 void CryptContext::InitEme(const BYTE *key)
 {
-	m_eme.key = key;
-	m_eme.lc = NULL;
-	m_lc.init(&m_eme);
-	m_eme.lc = &m_lc;
+
+	m_eme.init(key);
+
 }
 
 CryptContext::CryptContext()

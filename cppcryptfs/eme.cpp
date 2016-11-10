@@ -92,7 +92,7 @@ static void AesEncrypt(BYTE* dst, const BYTE* src, int len, const EmeCryptContex
 	int numBlocks = len / 16;
 
 	for (int i = 0; i < numBlocks; i++) {
-		eme_context->aes_ctx.encrypt(src + i * 16, dst + i * 16);
+		eme_context->m_aes_ctx.encrypt(src + i * 16, dst + i * 16);
 	}
 }
 
@@ -101,7 +101,7 @@ static void AesDecrypt(BYTE* dst, const BYTE* src, int len, const EmeCryptContex
 	int numBlocks = len / 16;
 
 	for (int i = 0; i < numBlocks; i++) {
-		eme_context->aes_ctx.decrypt(src + i * 16, dst + i * 16);
+		eme_context->m_aes_ctx.decrypt(src + i * 16, dst + i * 16);
 	}
 }
 
@@ -123,17 +123,30 @@ static void aesTransform(BYTE* dst, const BYTE* src, bool direction, int len, co
 
 EmeCryptContext::EmeCryptContext()
 { 
-	key = NULL; 
-	lc = NULL; 
+	m_key = NULL; 
+	
+
+	m_LTable = NULL;
+
+	m_pKeyBuf = NULL;
+
+	m_pLTableBuf = NULL;
 }
 
 EmeCryptContext::~EmeCryptContext()
 {
-	
+	if (m_LTable) 
+		delete[] m_LTable;
+
+	if (m_pLTableBuf)
+		delete m_pLTableBuf;
+
+	if (m_pKeyBuf)
+		delete m_pKeyBuf;
 }
 
 // tabulateL - calculate L_i for messages up to a length of m cipher blocks
-void lCacheContainer::tabulateL(const EmeCryptContext *eme_context, int m){
+void EmeCryptContext::tabulateL(int m){
 
 	/* set L0 = 2*AESenc(K; 0) */
 	BYTE eZero[16];
@@ -141,7 +154,7 @@ void lCacheContainer::tabulateL(const EmeCryptContext *eme_context, int m){
 
 	LockZeroBuffer<BYTE> Li(16, true);
 
-	AesEncrypt(Li.m_buf, eZero, 16, eme_context);
+	AesEncrypt(Li.m_buf, eZero, 16, this);
 
 	m_LTable = new LPBYTE[m];
 
@@ -161,42 +174,20 @@ void lCacheContainer::tabulateL(const EmeCryptContext *eme_context, int m){
 
 
 
-lCacheContainer::lCacheContainer() 
+
+
+void EmeCryptContext::init(const BYTE *key)
 {
+	m_key = key;
 
-	m_LTable = NULL;
-
-	m_pKeyBuf = NULL;
-
-	m_pLTableBuf = NULL;
-}
-
-void lCacheContainer::init(EmeCryptContext *eme_context)
-{
 	m_pKeyBuf = new LockZeroBuffer<AES_KEY>(2, true);
 
-	AES::initialize_keys(eme_context->key, 256, &m_pKeyBuf->m_buf[0], &m_pKeyBuf->m_buf[1]);
+	AES::initialize_keys(m_key, 256, &m_pKeyBuf->m_buf[0], &m_pKeyBuf->m_buf[1]);
 
-	eme_context->aes_ctx.set_keys(&m_pKeyBuf->m_buf[0], &m_pKeyBuf->m_buf[1]);
+	m_aes_ctx.set_keys(&m_pKeyBuf->m_buf[0], &m_pKeyBuf->m_buf[1]);
 
-	eme_context->lc = this;
+	tabulateL(16 * 8);
 
-	tabulateL(eme_context, 16 * 8);
-
-}
-
-lCacheContainer::~lCacheContainer() 
-{
-
-	if (m_LTable) {
-		delete[] m_LTable;
-	}
-
-	if (m_pLTableBuf)
-		delete m_pLTableBuf;
-
-	if (m_pKeyBuf)
-		delete m_pKeyBuf;
 }
 
 
@@ -211,8 +202,6 @@ BYTE* EmeTransform(const EmeCryptContext *eme_context, const BYTE *T, const BYTE
 
 	bool error = false;
 
-	const lCacheContainer* pLCache = eme_context->lc;
-
 	try {
 		if (len % 16 != 0) {
 			panic(L"Data length is not a multiple of 16");
@@ -224,7 +213,7 @@ BYTE* EmeTransform(const EmeCryptContext *eme_context, const BYTE *T, const BYTE
 
 		C = new BYTE[len+1]; // +1 so caller can add a null terminator if necessary without any trouble
 
-		BYTE **LTable = pLCache->m_LTable;
+		BYTE **LTable = eme_context->m_LTable;
 
 		BYTE PPj[16];
 
