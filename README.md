@@ -134,7 +134,7 @@ cppcryptfs is a Windows gui application and not a console application.  However,
 
 There can be only one instance of cppcryptfs running at any time.
 
-When cppcryptfs is invoked, then it checks to see if there is another instance running.  If there is, then if there are no command line options, the second instance of cppcryptfs will simply exit.
+When cppcryptfs is invoked, it checks to see if there is another instance running.  If there is, then if there are no command line options, the second instance of cppcryptfs will simply exit.
 
 If the second instance is invoked with command line options, it will send its command line to the already-running instance using the WM_COPYDATA message.  It will block until the already-running instance has processed the command line and then exit.  Any error messages that result from processing the command line will be printed in the cmd window in which the second instance was invoked.
 
