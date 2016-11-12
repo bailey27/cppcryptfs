@@ -83,14 +83,6 @@ LongFilenameCache::~LongFilenameCache()
 	}
 }
 
-void LongFilenameCache::normalize_key(std::wstring& key)
-{
-#if 0
-	if (key.size() > 0 && key[key.size() - 1] != '\\') {
-		key.push_back('\\');
-	}
-#endif
-}
 
 void LongFilenameCache::lock()
 {
@@ -117,13 +109,12 @@ bool LongFilenameCache::check_node_clean(LongFilenameCacheNode *node, const std:
 
 
 
-bool LongFilenameCache::lookup(LPCWSTR path, unsigned char *lfn_hash)
+bool LongFilenameCache::lookup(LPCWSTR base64_hash, std::wstring& path)
 {
-	std::wstring key = path;
+
+	const WCHAR *key = base64_hash;
 
 	bool found;
-
-	normalize_key(key);
 
 	lock();
 
@@ -139,7 +130,7 @@ bool LongFilenameCache::lookup(LPCWSTR path, unsigned char *lfn_hash)
 
 			// The entry not stale, so use it.
 
-			memcpy(lfn_hash, node->m_lfn_hash, SHA256_LEN);
+			path = node->m_path;
 
 			// if node isn't already at front of list, remove
 			// it from wherever it was and put it at the front
@@ -179,14 +170,12 @@ bool LongFilenameCache::lookup(LPCWSTR path, unsigned char *lfn_hash)
 }
 
 
-bool LongFilenameCache::store(LPCWSTR path, const unsigned char *lfn_hash)
+bool LongFilenameCache::store(LPCWSTR base64_hash, LPCWSTR path)
 {
 
 	bool rval = true;
 
-	std::wstring key = path;
-
-	normalize_key(key);
+	const WCHAR *key = base64_hash;
 
 	lock();
 
@@ -223,15 +212,15 @@ bool LongFilenameCache::store(LPCWSTR path, const unsigned char *lfn_hash)
 			mp.first->second = node;
 
 			node->m_key = &mp.first->first;
-			memcpy(node->m_lfn_hash, lfn_hash, SHA256_LEN);
+			node->m_path = path;
 #ifndef LFN_CACHE_NOTTL
 			node->m_timestap = GetTickCount64();
 #endif
 			node->m_list_it = m_lru_list.insert(m_lru_list.begin(), node);
 			
 		} else {
-			// copy lfn_hash to node at that path (key)
-			memcpy(mp.first->second->m_lfn_hash, lfn_hash, SHA256_LEN);
+			// copy path to node at that base64_hash (key)
+			mp.first->second->m_path = path;
 #ifndef LFN_CACHE_NOTTL
 			mp.first->second->m_timestap = GetTickCount64();
 #endif
@@ -247,11 +236,9 @@ bool LongFilenameCache::store(LPCWSTR path, const unsigned char *lfn_hash)
 	return rval;
 }
 
-void LongFilenameCache::remove(LPCWSTR path)
+void LongFilenameCache::remove(LPCWSTR base64_hash)
 {
-	std::wstring key = path;
-
-	normalize_key(key);
+	const WCHAR *key = base64_hash;
 
 	lock();
 
