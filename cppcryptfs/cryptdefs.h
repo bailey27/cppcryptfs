@@ -50,8 +50,14 @@ THE SOFTWARE.
 
 #define DEFAULT_KEY_LEN 32
 
+#define TYPE_DIRIV (L"DIRIV")
+#define TYPE_FILEID (L"FILEID")
+#define TYPE_BLOCK0IV (L"BLOCK0IV")
+
 
 #define CONFIG_NAME (L"gocryptfs.conf")
+
+#define REVERSE_CONFIG_NAME (L".gocryptfs.reverse.conf")
 
 #define DIR_IV_NAME (L"gocryptfs.diriv")
 

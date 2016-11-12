@@ -295,6 +295,43 @@ bool sha256(const std::string& str, BYTE *sum)
 
 }
 
+bool sha256(const BYTE *data, int datalen, BYTE *sum)
+{
+	EVP_MD_CTX *mdctx = NULL;
+	bool ret = true;
+
+	try {
+
+		if (EVP_MD_size(EVP_sha256()) != 32)
+			handleErrors();
+
+		if ((mdctx = EVP_MD_CTX_create()) == NULL)
+			handleErrors();
+
+		if (1 != EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL))
+			handleErrors();
+
+		if (1 != EVP_DigestUpdate(mdctx, data, datalen))
+			handleErrors();
+
+		unsigned int len;
+		if (1 != EVP_DigestFinal_ex(mdctx, sum, &len))
+			handleErrors();
+
+		if (len != 32)
+			handleErrors();
+
+	} catch (...) {
+		ret = false;
+	}
+
+	if (mdctx)
+		EVP_MD_CTX_destroy(mdctx);
+
+	return ret;
+
+}
+
 bool sha512(const BYTE *data, int datalen, BYTE *sum)
 {
 	EVP_MD_CTX *mdctx = NULL;

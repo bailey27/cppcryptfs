@@ -52,6 +52,9 @@ bool is_long_name(const WCHAR *filename);
 
 bool is_long_name_file(const WCHAR *filename);
 
+bool // used for reverse mode
+derive_path_iv(const WCHAR *path, unsigned char *dir_iv, const char *type);
+
 const WCHAR * // returns UNICODE plaintext filename
 decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, std::wstring& storage);
 

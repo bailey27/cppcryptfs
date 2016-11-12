@@ -54,6 +54,9 @@ static const WCHAR *data_encryption_types[] = {
 	L"AES256-SIV"
 };
 
+#define AES256_GCM_INDEX 0
+#define AES256_SIV_INDEX 1
+
 #define NUM_DATA_ENC_TYPES (sizeof(data_encryption_types)/sizeof(data_encryption_types[0]))
 
 
@@ -84,6 +87,7 @@ BEGIN_MESSAGE_MAP(CCreatePropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_CREATE, &CCreatePropertyPage::OnClickedCreate)
 	ON_LBN_SELCHANGE(IDC_FILENAME_ENCRYPTION, &CCreatePropertyPage::OnLbnSelchangeFilenameEncryption)
 	ON_CBN_SELCHANGE(IDC_PATH, &CCreatePropertyPage::OnCbnSelchangePath)
+	ON_BN_CLICKED(IDC_REVERSE, &CCreatePropertyPage::OnClickedReverse)
 END_MESSAGE_MAP()
 
 void CCreatePropertyPage::DefaultAction()
@@ -157,6 +161,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	bool eme = false;
 	bool plaintext = false;
 	bool longfilenames = false;
+	bool reverse = false;
 
 	CComboBox *pBox = (CComboBox *)GetDlgItem(IDC_FILENAME_ENCRYPTION);
 
@@ -176,6 +181,8 @@ void CCreatePropertyPage::CreateCryptfs()
 		longfilenames = IsDlgButtonChecked(IDC_LONG_FILE_NAMES) != 0;
 	}
 
+	reverse = IsDlgButtonChecked(IDC_REVERSE) != 0;
+
 	pBox = (CComboBox *)GetDlgItem(IDC_DATA_ENCRYPTION);
 
 	nsel = pBox->GetCurSel();
@@ -192,7 +199,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	GetDlgItemText(IDC_VOLUME_NAME, volume_name);
 
 	theApp.DoWaitCursor(1);
-	bool bResult = config.create(cpath, password.m_buf, eme, plaintext, longfilenames, siv, volume_name, error_mes);
+	bool bResult = config.create(cpath, password.m_buf, eme, plaintext, longfilenames, siv, reverse, volume_name, error_mes);
 	theApp.DoWaitCursor(-1);
 
 	if (!bResult) {
@@ -202,7 +209,7 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	CString mes;
 
-	mes = L"Created encrypted filesystem in ";
+	mes = reverse ? L"Created reverse encrypted filesystem in " : L"Created encrypted filesystem in ";
 
 	mes.Append(cpath);
 
@@ -213,6 +220,10 @@ void CCreatePropertyPage::CreateCryptfs()
 	CString clfns = IsDlgButtonChecked(IDC_LONG_FILE_NAMES) ? L"1" : L"0";
 
 	theApp.WriteProfileStringW(L"CreateOptions", L"LongFileNames", clfns);
+
+	CString creverse = IsDlgButtonChecked(IDC_REVERSE) ? L"1" : L"0";
+
+	theApp.WriteProfileStringW(L"CreateOptions", L"Reverse", creverse);
 
 	CComboBox* pLbox = (CComboBox*)GetDlgItem(IDC_FILENAME_ENCRYPTION);
 	if (!pLbox)
@@ -286,11 +297,15 @@ BOOL CCreatePropertyPage::OnInitDialog()
 
 	CString clfns = theApp.GetProfileStringW(L"CreateOptions", L"LongFileNames", L"1");
 
+	CString creverse = theApp.GetProfileStringW(L"CreateOptions", L"Reverse", L"0");
+
 	CString cfnenc = theApp.GetProfileStringW(L"CreateOptions", L"FilenameEncryption", L"AES256-EME");
 
 	CString cdataenc = theApp.GetProfileStringW(L"CreateOptions", L"DataEncryption", L"AES256-GCM");
 
 	CheckDlgButton(IDC_LONG_FILE_NAMES, clfns == L"1");
+
+	CheckDlgButton(IDC_REVERSE, creverse == L"1");
 
 	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_PATH);
 
@@ -360,4 +375,20 @@ void CCreatePropertyPage::OnLbnSelchangeFilenameEncryption()
 void CCreatePropertyPage::OnCbnSelchangePath()
 {
 	// TODO: Add your control notification handler code here
+}
+
+
+void CCreatePropertyPage::OnClickedReverse()
+{
+	// TODO: Add your control notification handler code here
+
+	CComboBox *pEncBox = (CComboBox*)GetDlgItem(IDC_DATA_ENCRYPTION);
+
+	if (!pEncBox)
+		return;
+
+	BOOL bIsChecked = IsDlgButtonChecked(IDC_REVERSE);
+
+	pEncBox->SelectString(-1, data_encryption_types[bIsChecked ? AES256_SIV_INDEX : AES256_GCM_INDEX]);
+	
 }

@@ -76,6 +76,7 @@ CryptConfig::CryptConfig()
 	m_GCMIV128 = false;
 	m_LongNames = false;
 	m_AESSIV = false;
+	m_reverse = false;
 	
 	m_pKeyBuf = NULL;
 
@@ -97,15 +98,17 @@ CryptConfig::~CryptConfig()
 
 
 bool
-CryptConfig::read(const WCHAR *configfile)
+CryptConfig::read(const WCHAR *config_file_path)
 {
 
+	FILE *fl = NULL;
 
-	std::wstring config_path;
-
-	if (configfile) {
-		config_path = configfile;
+	if (config_file_path) {
+		if (_wfopen_s(&fl, config_file_path, L"rb"))
+			return false;
 	} else {
+
+		std::wstring config_path;
 
 		if (m_basedir.size() < 1)
 			return false;
@@ -115,16 +118,15 @@ CryptConfig::read(const WCHAR *configfile)
 		if (config_path[config_path.size() - 1] != '\\')
 			config_path.push_back('\\');
 
-		config_path += CONFIG_NAME;
+		std::wstring config_file = config_path + CONFIG_NAME;
 
+		if (_wfopen_s(&fl, &config_file[0], L"rb")) {
+			config_file = config_path + REVERSE_CONFIG_NAME;
+			if (_wfopen_s(&fl, &config_file[0], L"rb"))
+				return false;
+			m_reverse = true;
+		}
 	}
-
-	const WCHAR *path = &config_path[0];
-
-	FILE *fl = NULL;
-
-	if (_wfopen_s(&fl, path, L"rb"))
-		return false;
 
 	if (fseek(fl, 0, SEEK_END))
 		return false;
@@ -322,7 +324,7 @@ bool CryptConfig::write_volume_name()
 		if (config_path[config_path.size() - 1] != '\\')
 			config_path.push_back('\\');
 
-		config_path += CONFIG_NAME;
+		config_path += m_reverse ? REVERSE_CONFIG_NAME : CONFIG_NAME;
 
 		const WCHAR *path = &config_path[0];
 
@@ -478,6 +480,9 @@ bool CryptConfig::check_config(std::wstring& mes)
 	
 	if (!m_GCMIV128) 
 		mes += L"GCMIV128 must be specified\n";
+
+	if (m_reverse && !m_AESSIV)
+		mes += L"reverse mode is being used but AESSIV not specfied\n";
 		
 	return mes.size() == 0;
 }
@@ -570,7 +575,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 
 
 
-bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, const WCHAR *volume_name, std::wstring& error_mes)
+bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, std::wstring& error_mes)
 {
 
 	LockZeroBuffer<char> utf8pass(256);
@@ -600,13 +605,10 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 	if (siv)
 		m_AESSIV = true;
 
-	try {
-		if (!can_delete_directory(&m_basedir[0], TRUE)) {
-			error_mes = L"the directory is not empty\n";
-			throw(-1);
-		}
+	if (reverse)
+		m_reverse = true;
 
-		
+	try {
 
 		std::wstring config_path;
 
@@ -615,7 +617,24 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 		if (config_path[config_path.size() - 1] != '\\')
 			config_path.push_back('\\');
 
-		config_path += CONFIG_NAME;
+		config_path += m_reverse ? REVERSE_CONFIG_NAME : CONFIG_NAME;
+
+		if (m_reverse && !m_AESSIV) {
+			error_mes = L"AES256-SIV must be used with Reverse\n";
+			throw(-1);
+		}
+
+		if (m_reverse) {
+			if (PathFileExists(&config_path[0])) {
+				error_mes = config_path + L" (normally a hidden file) already exits.  Please remove it and try again.";
+				throw(-1);
+			}
+		} else {
+			if (!can_delete_directory(&m_basedir[0], TRUE)) {
+				error_mes = L"the directory is not empty\n";
+				throw(-1);
+			}
+		}	
 
 		m_encrypted_key_salt.resize(SALT_LEN);
 
@@ -766,11 +785,11 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		DWORD attr = GetFileAttributesW(&config_path[0]);
 		if (attr != INVALID_FILE_ATTRIBUTES) {
-			attr |= FILE_ATTRIBUTE_READONLY;
+			attr |= FILE_ATTRIBUTE_READONLY | (m_reverse ? FILE_ATTRIBUTE_HIDDEN : 0);
 			SetFileAttributes(&config_path[0], attr);
 		}
 
-		if (m_DirIV) {
+		if (m_DirIV && !m_reverse) {
 			if (!create_dir_iv(NULL, &m_basedir[0])) {
 				error_mes = L"cannot create diriv file\n";
 				throw(-1);

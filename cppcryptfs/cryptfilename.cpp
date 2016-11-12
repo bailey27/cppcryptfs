@@ -30,6 +30,9 @@ THE SOFTWARE.
 
 #include <string>
 
+
+#include "cryptdefs.h"
+#include "crypt.h"
 #include "cryptconfig.h"
 #include "cryptcontext.h"
 #include "cryptfilename.h"
@@ -59,6 +62,40 @@ bool is_long_name_file(const WCHAR *filename)
 	size_t len = wcslen(filename);
 
 	return len > (LONGNAME_PREFIX_LEN + LONGNAME_SUFFIX_LEN) && !wcsncmp(filename, LONGNAME_PREFIX_W, LONGNAME_PREFIX_LEN) && !wcscmp(filename + len - LONGNAME_SUFFIX_LEN, LONGNAME_SUFFIX_W);
+}
+
+bool 
+derive_path_iv(const WCHAR *path, unsigned char *dir_iv, const char *type)
+{
+	std::string utf8path;
+
+	if (!unicode_to_utf8(&path[0], utf8path))
+		return false;
+
+	bool bRet = true;
+
+	char *pbuf = NULL;
+
+	try {
+		int typelen = (int)strlen(type);
+		int bufsize = (int)(utf8path.length() + 1 + typelen + 1);
+		pbuf = new char[bufsize];
+		memcpy(pbuf, &utf8path[0], utf8path.length() + 1);
+		memcpy(pbuf + utf8path.length() + 1, type, typelen + 1);
+		unsigned char hash[32];
+		if (!sha256((const BYTE*)pbuf, bufsize, &hash[0]))
+			throw(-1);
+
+		memcpy(dir_iv, hash, DIR_IV_LEN);
+
+	} catch (...) {
+		bRet = false;
+	}
+
+	if (pbuf)
+		delete[] pbuf;
+
+	return bRet;
 }
 
 
@@ -211,13 +248,90 @@ decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path,
 	}
 }
 
+const WCHAR * // get decrypted path (used only in reverse mode)
+decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage)
+{
+	const WCHAR *rval = NULL;
+
+	CryptConfig *config = con->GetConfig();
+
+	try {
+
+		storage = config->GetBaseDir();
+
+		if (config->m_PlaintextNames || (path[0] == '\\' && path[1] == '\0')) {
+
+			storage += path;
+
+		} else {
+			if (*path && path[0] == '\\') {
+				storage.push_back('\\');
+				path++;
+			}
+
+			const TCHAR *p = path;
+
+
+			unsigned char dir_iv[DIR_IV_LEN];
+
+
+			if (!get_dir_iv(con, &storage[0], dir_iv))
+				throw(-1);
+
+
+			if (!con->GetConfig()->m_EMENames) {
+				// CBC names no longer supported
+				throw(-1);
+			}
+
+			std::wstring s;
+
+			std::wstring uni_plain_elem;
+
+			while (*p) {
+
+				s.clear();
+
+				uni_plain_elem.clear();
+
+				while (*p && *p != '\\') {
+					s.push_back(*p++);
+				}
+
+				//if (!decrypt_filename(con, dir_iv, ))
+
+
+				//if (!encrypt_filename(con, dir_iv, &s[0], uni_crypt_elem, actual_encrypted))
+					//throw(-1);
+
+				storage.append(uni_plain_elem);
+
+				if (*p) {
+					storage.push_back(*p++); // append slash
+
+					if (!get_dir_iv(con, &storage[0], dir_iv))
+						throw(-1);
+
+				}
+
+			}
+		}
+
+		rval = &storage[0];
+
+	} catch (...) {
+		rval = NULL;
+	}
+
+	return rval;
+}
 
 
 const WCHAR * // get encrypted path
 encrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage, std::string *actual_encrypted)
 {
 
-	const TCHAR *rval = NULL;
+	const WCHAR *rval = NULL;
 
 	CryptConfig *config = con->GetConfig();
 
@@ -285,7 +399,7 @@ encrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage, std::s
 			}
 		}
 
-		rval = &(storage[0]);
+		rval = &storage[0];
 
 	} catch (...) {
 

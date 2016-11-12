@@ -67,4 +67,5 @@ public:
 	afx_msg void OnCbnSelchangePath();
 	CSecureEdit m_password;
 	CSecureEdit m_password2;
+	afx_msg void OnClickedReverse();
 };

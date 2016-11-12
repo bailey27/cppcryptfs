@@ -55,6 +55,8 @@ public:
 	bool m_LongNames;
 	bool m_AESSIV;
 
+	bool m_reverse;
+
 	int m_Version;
 	std::wstring m_VolumeName;
 
@@ -74,10 +76,11 @@ public:
 	const WCHAR *GetBaseDir() { return &m_basedir[0]; }
 
 	CryptConfig();
-	bool read(const WCHAR *configfile = NULL);
+	bool read(const WCHAR *config_file_path = NULL);
 	bool decrypt_key(LPCTSTR password);
 
-	bool create(const WCHAR *path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, const WCHAR *volume_name, std::wstring& error_mes);
+	bool create(const WCHAR *path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, 
+					bool siv, bool reverse, const WCHAR *volume_name, std::wstring& error_mes);
 
 	bool check_config(std::wstring& mes);
 

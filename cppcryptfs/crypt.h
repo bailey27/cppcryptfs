@@ -59,6 +59,8 @@ int decrypt_siv(const unsigned char *ciphertext, int ciphertext_len, unsigned ch
 
 bool sha256(const std::string& str, BYTE *sum);  // sum is a 32-byte buffer
 
+bool sha256(const BYTE *data, int datalen, BYTE *sum); // sum is a 32-byte buffer
+
 bool sha512(const BYTE *data, int datalen, BYTE *sum); // sum is a 64-byte buffer
 
 bool encrypt_string_gcm(const std::wstring& str, const BYTE *key, std::string& base64_out);

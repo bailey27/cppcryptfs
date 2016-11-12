@@ -154,6 +154,7 @@ void DbgPrint(LPCWSTR format, ...) {
 // When creating a new file or directory, if a file or directory with a long name is being created,
 // then the actual encrypted name must be written to the special gocryptfs.longname.XXXXX.name file.
 // actual_encrypted will contain this data in that case.
+//
 
 class FileNameEnc {
 private:
@@ -174,8 +175,13 @@ public:
 			m_tried = true;
 
 			try {
-				if (!encrypt_path(m_con, m_plain_path, m_enc_path, m_actual_encrypted))
-					throw(-1);
+				if (m_con->GetConfig()->m_reverse) {
+					//if (!decrypt_p)
+				} else {
+					if (!encrypt_path(m_con, m_plain_path, m_enc_path, m_actual_encrypted)) {
+						throw(-1);
+					}
+				}
 			} 
 			catch (...) {
 				m_failed = true;
@@ -1531,6 +1537,9 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 #else
 		dokanOptions->ThreadCount = 1;  // even the mirror sample has problems launching some executables with default number of threads
 #endif
+
+		if (config->m_reverse)
+			dokanOptions->Options |= DOKAN_OPTION_WRITE_PROTECT;
 
 
 		config->m_basedir = path;
