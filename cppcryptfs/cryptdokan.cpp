@@ -176,7 +176,9 @@ public:
 
 			try {
 				if (m_con->GetConfig()->m_reverse) {
-					//if (!decrypt_p)
+					if (!decrypt_path(m_con, m_plain_path, m_enc_path)) {
+						throw(-1);
+					}
 				} else {
 					if (!encrypt_path(m_con, m_plain_path, m_enc_path, m_actual_encrypted)) {
 						throw(-1);

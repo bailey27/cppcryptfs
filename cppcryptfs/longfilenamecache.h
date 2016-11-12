@@ -43,6 +43,9 @@ THE SOFTWARE.
 #define LFN_CACHE_TTL 3600000
 #endif
 
+// this class is used only for reverse mode
+// it maps a the base64-encoded sha256 hash in the encrypted long filename to the actual file it corresponds to
+
 class LongFilenameCacheNode {
 
 public:

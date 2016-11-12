@@ -60,6 +60,7 @@ THE SOFTWARE.
 #include "crypt.h"
 #include "fileutil.h"
 #include "LockZeroBuffer.h"
+#include "cryptfilename.h"
 
 #define SCRYPT_MB 72 // 65 seems to be enough, but allow more just in case
 
@@ -118,12 +119,14 @@ CryptConfig::read(const WCHAR *config_file_path)
 		if (config_path[config_path.size() - 1] != '\\')
 			config_path.push_back('\\');
 
-		std::wstring config_file = config_path + CONFIG_NAME;
+		std::wstring config_file = config_path + REVERSE_CONFIG_NAME;
 
 		if (_wfopen_s(&fl, &config_file[0], L"rb")) {
-			config_file = config_path + REVERSE_CONFIG_NAME;
+			config_file = config_path + CONFIG_NAME;
 			if (_wfopen_s(&fl, &config_file[0], L"rb"))
 				return false;
+			m_reverse = false;
+		} else {
 			m_reverse = true;
 		}
 	}
@@ -263,7 +266,7 @@ bool CryptConfig::init_serial(CryptContext *con)
 
 	this->m_serial = 0;
 
-	if (this->DirIV() && get_dir_iv(con, &this->m_basedir[0], diriv)) {
+	if (!m_reverse && this->DirIV() && get_dir_iv(con, &this->m_basedir[0], diriv)) {
 
 		this->m_serial = *(DWORD*)diriv;
 

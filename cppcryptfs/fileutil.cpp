@@ -60,11 +60,34 @@ adjust_file_offset_down(LARGE_INTEGER& l)
 	return true;
 }
 
+bool
+adjust_file_offset_up(LARGE_INTEGER& l)
+{
+	long long offset = l.QuadPart;
+
+	if (offset < 0)
+		return false;
+
+	if (offset == 0)
+		return true;
+
+	long long blocks = (offset + PLAIN_BS - 1) / PLAIN_BS;
+	offset += (blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD);
+	
+	l.QuadPart = offset;
+
+	return true;
+}
+
 bool adjust_file_size_down(LARGE_INTEGER& l)
 {
 	return adjust_file_offset_down(l);
 }
 
+bool adjust_file_size_up(LARGE_INTEGER& l)
+{
+	return adjust_file_offset_up(l);
+}
 
 static bool
 read_dir_iv(const TCHAR *path, unsigned char *diriv, FILETIME& LastWriteTime)
@@ -109,7 +132,7 @@ read_dir_iv(const TCHAR *path, unsigned char *diriv, FILETIME& LastWriteTime)
 }
 
 bool
-get_dir_iv(CryptContext *con, const TCHAR *path, unsigned char *diriv)
+get_dir_iv(CryptContext *con, const WCHAR *path, unsigned char *diriv)
 {
 
 	if (con && !con->GetConfig()->DirIV()) {
@@ -120,6 +143,11 @@ get_dir_iv(CryptContext *con, const TCHAR *path, unsigned char *diriv)
 	bool bret = true;
 
 	try {
+
+		if (con && con->GetConfig()->m_reverse) {
+			throw(-1);
+		}
+
 		if (!con->m_dir_iv_cache.lookup(path, diriv)) {
 			FILETIME LastWritten;
 			if (!read_dir_iv(path, diriv, LastWritten))
@@ -142,21 +170,39 @@ convert_fdata(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, WI
 	if (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))
 		return true;
 
+	bool isReverseConfig = con->GetConfig()->m_reverse && !wcscmp(fdata.cFileName, REVERSE_CONFIG_NAME);
+
 	long long size = ((long long)fdata.nFileSizeHigh << 32) | fdata.nFileSizeLow;
 
-	if (size > 0 && !(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+	if (size > 0 && !(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && !isReverseConfig) {
 		LARGE_INTEGER l;
 		l.LowPart = fdata.nFileSizeLow;
 		l.HighPart = fdata.nFileSizeHigh;
-		if (!adjust_file_size_down(l))
-			return false;
+		if (con->GetConfig()->m_reverse) {
+			if (!adjust_file_size_up(l))
+				return false;
+		} else {
+			if (!adjust_file_size_down(l))
+				return false;
+		}
 		fdata.nFileSizeHigh = l.HighPart;
 		fdata.nFileSizeLow = l.LowPart;
 	}
 
+	
+
 	if (wcscmp(fdata.cFileName, L".") && wcscmp(fdata.cFileName, L"..")) {
 		std::wstring storage;
-		const WCHAR *dname = decrypt_filename(con, dir_iv, path, fdata.cFileName, storage);
+		const WCHAR *dname;
+		
+		if (isReverseConfig) {
+			fdata.dwFileAttributes &= ~FILE_ATTRIBUTE_HIDDEN;
+			dname = CONFIG_NAME;
+		} else {
+			dname = con->GetConfig()->m_reverse
+				? encrypt_filename(con, dir_iv, fdata.cFileName, storage, NULL)
+				: decrypt_filename(con, dir_iv, path, fdata.cFileName, storage);
+		}
 
 		if (!dname)
 			return false;
@@ -176,11 +222,11 @@ convert_fdata(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, WI
 	return true;
 }
 
-static bool is_interesting_name(BOOL isRoot, const WIN32_FIND_DATAW& fdata)
+static bool is_interesting_name(BOOL isRoot, const WIN32_FIND_DATAW& fdata, bool reverse)
 {
 	if (isRoot && (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))) {
 		return false;
-	} else if (!wcscmp(fdata.cFileName, CONFIG_NAME) || !wcscmp(fdata.cFileName, DIR_IV_NAME)) {
+	} else if ((!reverse && !wcscmp(fdata.cFileName, CONFIG_NAME)) || !wcscmp(fdata.cFileName, DIR_IV_NAME)) {
 		return false;
 	} else if (is_long_name_file(fdata.cFileName)) {
 		return false;
@@ -194,13 +240,14 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 {
 	DWORD ret = 0;
 	HANDLE hfind = INVALID_HANDLE_VALUE;
+
 	try {
 
 		std::wstring enc_path_search = path;
 
-		WIN32_FIND_DATAW fdata;		
+		WIN32_FIND_DATAW fdata, fdata_dot;
 
-		if (enc_path_search[enc_path_search.size()-1] != '\\')
+		if (enc_path_search[enc_path_search.size() - 1] != '\\')
 			enc_path_search.push_back('\\');
 
 		enc_path_search.push_back('*');
@@ -212,35 +259,49 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 
 		BYTE dir_iv[DIR_IV_LEN];
 
-		if (!get_dir_iv(con, path, dir_iv)) {
-			DWORD error = GetLastError();
-			if (error == 0)
-				error = ERROR_PATH_NOT_FOUND;
-			throw((int)error);
+		if (con->GetConfig()->m_reverse) {
+			const WCHAR *diriv_path = pt_path;
+			DbgPrint(L"find_files getting derived iv for %s\n", diriv_path);
+			if (!derive_path_iv(con, diriv_path, dir_iv, TYPE_DIRIV)) {
+				throw((int)ERROR_PATH_NOT_FOUND);
+			}
+		} else {
+			if (!get_dir_iv(con, path, dir_iv)) {
+				DWORD error = GetLastError();
+				if (error == 0)
+					error = ERROR_PATH_NOT_FOUND;
+				throw((int)error);
+			}
 		}
+	
 
 		bool isRoot = !wcscmp(pt_path, L"\\");
 
-		if (is_interesting_name(isRoot, fdata)) {
-			if (!convert_fdata(con, dir_iv, path, fdata))
-				throw((int)ERROR_PATH_NOT_FOUND);
-
-			fillData(&fdata, dokan_cb, dokan_ctx);
-		}
-
-
-		while (FindNextFile(hfind, &fdata)) {
-			if (!is_interesting_name(isRoot, fdata))
+		do {
+			if (con->GetConfig()->m_reverse && !wcscmp(fdata.cFileName, L".")) {
+				fdata_dot = fdata;
+			}
+			if (!is_interesting_name(isRoot, fdata, con->GetConfig()->m_reverse))
 				continue;
 			if (!convert_fdata(con, dir_iv, path, fdata))
 				continue;
 			fillData(&fdata, dokan_cb, dokan_ctx);
-		}
+		} while (FindNextFile(hfind, &fdata));
 
 		DWORD err = GetLastError();
 
 		if (err != ERROR_NO_MORE_FILES)
 			throw((int)err);
+
+		if (con->GetConfig()->m_reverse && !con->GetConfig()->m_PlaintextNames) {
+			fdata_dot.cAlternateFileName[0] = '\0';
+			lstrcpy(fdata_dot.cFileName, DIR_IV_NAME);
+			fdata_dot.nFileSizeHigh = 0;
+			fdata_dot.nFileSizeLow = DIR_IV_LEN;
+			fdata_dot.ftLastWriteTime = fdata_dot.ftCreationTime;
+			fdata_dot.dwFileAttributes = FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_READONLY;
+			fillData(&fdata_dot, dokan_cb, dokan_ctx);
+		}
 
 		ret = 0;
 
