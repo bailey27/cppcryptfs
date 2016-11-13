@@ -164,7 +164,7 @@ get_dir_iv(CryptContext *con, const WCHAR *path, unsigned char *diriv)
 }
 
 static bool
-convert_fdata(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, WIN32_FIND_DATAW& fdata)
+convert_fdata(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, WIN32_FIND_DATAW& fdata, std::string *actual_encrypted)
 {
 
 	if (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))
@@ -199,9 +199,11 @@ convert_fdata(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, WI
 			fdata.dwFileAttributes &= ~FILE_ATTRIBUTE_HIDDEN;
 			dname = CONFIG_NAME;
 		} else {
-			dname = con->GetConfig()->m_reverse
-				? encrypt_filename(con, dir_iv, fdata.cFileName, storage, NULL)
-				: decrypt_filename(con, dir_iv, path, fdata.cFileName, storage);
+			if (con->GetConfig()->m_reverse) {
+				dname = encrypt_filename(con, dir_iv, fdata.cFileName, storage, actual_encrypted);	
+			} else {
+				dname = decrypt_filename(con, dir_iv, path, fdata.cFileName, storage);
+			}
 		}
 
 		if (!dname)
@@ -241,6 +243,8 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 	DWORD ret = 0;
 	HANDLE hfind = INVALID_HANDLE_VALUE;
 
+	bool reverse = con->GetConfig()->m_reverse;
+
 	try {
 
 		std::wstring enc_path_search = path;
@@ -259,10 +263,8 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 
 		BYTE dir_iv[DIR_IV_LEN];
 
-		if (con->GetConfig()->m_reverse) {
-			const WCHAR *diriv_path = pt_path;
-			DbgPrint(L"find_files getting derived iv for %s\n", diriv_path);
-			if (!derive_path_iv(con, diriv_path, dir_iv, TYPE_DIRIV)) {
+		if (reverse) {
+			if (!derive_path_iv(con, pt_path, dir_iv, TYPE_DIRIV)) {
 				throw((int)ERROR_PATH_NOT_FOUND);
 			}
 		} else {
@@ -277,15 +279,26 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 
 		bool isRoot = !wcscmp(pt_path, L"\\");
 
+		std::string actual_encrypted;
+
 		do {
-			if (con->GetConfig()->m_reverse && !wcscmp(fdata.cFileName, L".")) {
+			if (reverse && !wcscmp(fdata.cFileName, L".")) {
 				fdata_dot = fdata;
 			}
-			if (!is_interesting_name(isRoot, fdata, con->GetConfig()->m_reverse))
+			if (!is_interesting_name(isRoot, fdata, reverse))
 				continue;
-			if (!convert_fdata(con, dir_iv, path, fdata))
+			if (!convert_fdata(con, dir_iv, path, fdata, &actual_encrypted))
 				continue;
 			fillData(&fdata, dokan_cb, dokan_ctx);
+			if (reverse && is_long_name(fdata.cFileName)) {
+				std::wstring name_file = fdata.cFileName;
+				name_file += LONGNAME_SUFFIX_W;
+				wcscpy_s(fdata.cFileName, MAX_PATH, &name_file[0]);
+				fdata.cAlternateFileName[0] = '\0';
+				fdata.nFileSizeHigh = 0;
+				fdata.nFileSizeLow = (DWORD)actual_encrypted.length();
+				fillData(&fdata, dokan_cb, dokan_ctx);
+			}
 		} while (FindNextFile(hfind, &fdata));
 
 		DWORD err = GetLastError();
@@ -293,7 +306,7 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 		if (err != ERROR_NO_MORE_FILES)
 			throw((int)err);
 
-		if (con->GetConfig()->m_reverse && !con->GetConfig()->m_PlaintextNames) {
+		if (reverse && !con->GetConfig()->m_PlaintextNames) {
 			fdata_dot.cAlternateFileName[0] = '\0';
 			lstrcpy(fdata_dot.cFileName, DIR_IV_NAME);
 			fdata_dot.nFileSizeHigh = 0;

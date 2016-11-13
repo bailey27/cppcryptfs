@@ -91,8 +91,6 @@ derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *dir_iv, cons
 	if (!unicode_to_utf8(&wpath[0], utf8path))
 		return false;
 
-	DbgPrint(L"derive_path_iv %s\n", &wpath[0]);
-
 	bool bRet = true;
 
 	char *pbuf = NULL;
