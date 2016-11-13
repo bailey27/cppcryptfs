@@ -245,6 +245,8 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 
 	bool reverse = con->GetConfig()->m_reverse;
 
+	bool plaintext_names = con->GetConfig()->m_PlaintextNames;
+
 	try {
 
 		std::wstring enc_path_search = path;
@@ -290,10 +292,8 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 			if (!convert_fdata(con, dir_iv, path, fdata, &actual_encrypted))
 				continue;
 			fillData(&fdata, dokan_cb, dokan_ctx);
-			if (reverse && is_long_name(fdata.cFileName)) {
-				std::wstring name_file = fdata.cFileName;
-				name_file += LONGNAME_SUFFIX_W;
-				wcscpy_s(fdata.cFileName, MAX_PATH, &name_file[0]);
+			if (reverse && !plaintext_names && is_long_name(fdata.cFileName)) {
+				wcscat_s(fdata.cFileName, MAX_PATH, LONGNAME_SUFFIX_W);
 				fdata.cAlternateFileName[0] = '\0';
 				fdata.nFileSizeHigh = 0;
 				fdata.nFileSizeLow = (DWORD)actual_encrypted.length();
@@ -306,9 +306,9 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 		if (err != ERROR_NO_MORE_FILES)
 			throw((int)err);
 
-		if (reverse && !con->GetConfig()->m_PlaintextNames) {
+		if (reverse && !plaintext_names) {
 			fdata_dot.cAlternateFileName[0] = '\0';
-			lstrcpy(fdata_dot.cFileName, DIR_IV_NAME);
+			wcscpy_s(fdata_dot.cFileName, MAX_PATH, DIR_IV_NAME);
 			fdata_dot.nFileSizeHigh = 0;
 			fdata_dot.nFileSizeLow = DIR_IV_LEN;
 			fdata_dot.ftLastWriteTime = fdata_dot.ftCreationTime;
