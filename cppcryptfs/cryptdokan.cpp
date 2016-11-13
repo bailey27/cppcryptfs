@@ -175,7 +175,13 @@ public:
 			m_tried = true;
 
 			try {
-				if (m_con->GetConfig()->m_reverse) {
+				if (is_config_file(m_con, m_plain_path)) {
+					m_enc_path = m_con->GetConfig()->m_basedir + L"\\";
+					m_enc_path += REVERSE_CONFIG_NAME;
+				} else if (is_dir_iv_file(m_con, m_plain_path)) {
+					m_enc_path = m_con->GetConfig()->m_basedir + L"\\";
+					m_enc_path += DIR_IV_NAME;
+				} else if (m_con->GetConfig()->m_reverse) {
 					if (!decrypt_path(m_con, m_plain_path, m_enc_path)) {
 						throw(-1);
 					}
@@ -349,7 +355,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   DWORD error = 0;
   SECURITY_ATTRIBUTES securityAttrib;
 
- 
+  bool is_virtual = is_virtual_file(GetContext(), FileName);
 
   securityAttrib.nLength = sizeof(securityAttrib);
   securityAttrib.lpSecurityDescriptor =
@@ -407,7 +413,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
   // When filePath is a directory, needs to change the flag so that the file can
   // be opened.
-  fileAttr = GetFileAttributes(filePath);
+  fileAttr = is_virtual ? FILE_ATTRIBUTE_NORMAL : GetFileAttributes(filePath);
 
   BOOL bHasDirAttr = fileAttr != INVALID_FILE_ATTRIBUTES && (fileAttr & FILE_ATTRIBUTE_DIRECTORY);
 
@@ -570,7 +576,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 		  return STATUS_OBJECT_NAME_COLLISION; // File already exist because
 											   // GetFileAttributes found it
 	 
-		handle = CreateFile(
+		handle = is_virtual ? INVALID_HANDLE_VALUE : CreateFile(
 			filePath,
 			DesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
 			ShareAccess,
@@ -581,7 +587,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 	
 		status = ToNtStatus(GetLastError());
 
-    if (handle == INVALID_HANDLE_VALUE) {
+    if (!is_virtual && handle == INVALID_HANDLE_VALUE) {
       error = GetLastError();
       DbgPrint(L"\terror code = %d\n\n", error);
 
@@ -624,7 +630,8 @@ static void DOKAN_CALLBACK CryptCloseFile(LPCWSTR FileName,
   if (DokanFileInfo->Context) {
     DbgPrint(L"CloseFile: %s, %x\n", FileName, (DWORD)DokanFileInfo->Context);
     DbgPrint(L"\terror : not cleanuped file\n\n");
-    CloseHandle((HANDLE)DokanFileInfo->Context);
+	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE)
+		CloseHandle((HANDLE)DokanFileInfo->Context);
     DokanFileInfo->Context = 0;
   } else {
     DbgPrint(L"Close (no handle): %s\n\n", FileName);
@@ -638,7 +645,8 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
 
   if (DokanFileInfo->Context) {
     DbgPrint(L"Cleanup: %s, %x\n\n", FileName, (DWORD)DokanFileInfo->Context);
-    CloseHandle((HANDLE)DokanFileInfo->Context);
+	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE)
+		CloseHandle((HANDLE)DokanFileInfo->Context);
     DokanFileInfo->Context = 0;
 
     if (DokanFileInfo->DeleteOnClose) {
@@ -675,10 +683,11 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 	BOOL opened = FALSE;
 	NTSTATUS ret_status = STATUS_SUCCESS;
 
-
 	DbgPrint(L"ReadFile : %s, %I64u, paging io = %u\n", FileName, (ULONGLONG)handle, DokanFileInfo->PagingIo);
 
-	if (!handle || handle == INVALID_HANDLE_VALUE) {
+	bool is_virtual = is_virtual_file(GetContext(), FileName);
+
+	if (!handle || (!is_virtual && handle == INVALID_HANDLE_VALUE)) {
 		DbgPrint(L"\tinvalid handle, cleanuped?\n");
 		handle = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
 			OPEN_EXISTING, 0, NULL);
@@ -691,7 +700,27 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 	}
 
 	CryptFile file;
-	if (file.Associate(GetContext(), handle)) {
+
+	if (is_config_file(GetContext(), FileName)) {
+		LARGE_INTEGER l;
+		l.QuadPart = Offset;
+		if (SetFilePointerEx(handle, l, NULL, FILE_BEGIN)) {
+			if (!ReadFile(handle, Buffer, BufferLength, ReadLength, NULL)) {
+				ret_status = ToNtStatus(GetLastError());
+			}
+		} else {
+			ret_status = ToNtStatus(GetLastError());
+		}
+	} else if (is_virtual) {
+		if (!read_virtual_file(GetContext(), FileName, (unsigned char *)Buffer, BufferLength, ReadLength, Offset)) {
+			DWORD error = GetLastError();
+			if (error == 0)
+				error = ERROR_ACCESS_DENIED;
+			DbgPrint(L"\tread error = %u, buffer length = %d, read length = %d\n\n",
+				error, BufferLength, *ReadLength);
+			ret_status = ToNtStatus(error);
+		}
+	} else if (file.Associate(GetContext(), handle)) {
 
 		if (!file.Read((unsigned char *)Buffer, BufferLength, ReadLength, Offset)) {
 			DWORD error = GetLastError();
@@ -814,7 +843,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileInformation(
 
   DbgPrint(L"GetFileInfo : %s\n", FileName);
 
-  if (get_file_information(filePath, handle, HandleFileInformation) != 0) {
+  if (get_file_information(GetContext(), filePath, handle, HandleFileInformation) != 0) {
 	  DWORD error = GetLastError();
 	  DbgPrint(L"GetFileInfo failed(%d)\n", error);
 	  return ToNtStatus(error);
@@ -1059,7 +1088,7 @@ static NTSTATUS DOKAN_CALLBACK CryptSetAllocationSize(
   BY_HANDLE_FILE_INFORMATION finfo;
   DWORD error = 0;
   try {
-	  if (get_file_information(filePath, handle, &finfo) != 0) {
+	  if (get_file_information(GetContext(), filePath, handle, &finfo) != 0) {
 		  throw(-1);
 	  }
 	  fileSize.LowPart = finfo.nFileSizeLow;

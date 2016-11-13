@@ -65,7 +65,7 @@ bool is_long_name_file(const WCHAR *filename)
 }
 
 bool 
-derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *dir_iv, const char *type)
+derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const char *type)
 {
 
 	DbgPrint(L"derive_path_iv input = %s\n", path);
@@ -105,7 +105,7 @@ derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *dir_iv, cons
 		if (!sha256((const BYTE*)pbuf, bufsize-1, hash))
 			throw(-1);
 
-		memcpy(dir_iv, hash, DIR_IV_LEN);
+		memcpy(iv, hash, DIR_IV_LEN);  // all iv's are 16 bytes (DIR_IV_LEN)
 
 	} catch (...) {
 		bRet = false;

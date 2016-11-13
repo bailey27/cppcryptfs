@@ -330,12 +330,111 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 	return ret;
 }
 
+bool
+is_config_file(CryptContext *con, LPCWSTR FileName)
+{
+	if (!con->GetConfig()->m_reverse)
+		return false;
+	else
+		return *FileName == '\\' && !wcscmp(FileName + 1, CONFIG_NAME);
+}
+
+bool
+is_dir_iv_file(CryptContext *con, LPCWSTR FileName)
+{
+	CryptConfig *cfg = con->GetConfig();
+
+	if (!cfg->m_reverse || cfg->m_PlaintextNames || !cfg->DirIV())
+		return false;
+
+	const WCHAR *last_slash = wcsrchr(FileName, '\\');
+
+	const WCHAR *str = last_slash ? last_slash + 1 : FileName;
+
+	return !wcscmp(str, DIR_IV_NAME);
+}
+
+bool 
+is_name_file(CryptContext *con, LPCWSTR FileName)
+{
+	CryptConfig *cfg = con->GetConfig();
+
+	if (!cfg->m_reverse || cfg->m_PlaintextNames || !cfg->m_LongNames)
+		return false;
+
+	const WCHAR *last_slash = wcsrchr(FileName, '\\');
+
+	const WCHAR *str = last_slash ? last_slash + 1 : FileName;
+
+	return is_long_name_file(str);
+}
+
+bool
+is_virtual_file(CryptContext *con, LPCWSTR FileName)
+{
+	return is_dir_iv_file(con, FileName) || is_name_file(con, FileName);
+}
+
+bool
+read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset)
+{
+	if (is_dir_iv_file(con, FileName)) {
+		std::wstring dirpath;
+		if (!get_file_directory(FileName, dirpath))
+			return false;
+		BYTE dir_iv[DIR_IV_LEN];
+		if (!derive_path_iv(con, &dirpath[0], dir_iv, TYPE_DIRIV))
+			return false;
+		LONGLONG count = min(DIR_IV_LEN - offset, buflen);
+		if (count <= 0) {
+			*pNread = 0;
+			return true;
+		}
+		memcpy(buf, dir_iv + offset, count);
+		*pNread = (DWORD)count;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool 
+get_file_directory(LPCWSTR filepath, std::wstring& dirpath)
+{
+	size_t len = wcslen(filepath);
+
+	if (len < 1)
+		return false;
+
+	const WCHAR *lastslash = wcsrchr(filepath, '\\');
+
+	if (!lastslash)
+		return false;
+
+	if (lastslash == filepath) {
+		dirpath = L"\\";
+		return true;
+	} 
+
+	dirpath = filepath;
+
+	dirpath = dirpath.substr(0, lastslash - filepath);
+
+	return true;
+}
+
 DWORD
-get_file_information(LPCWSTR FileName, HANDLE handle, LPBY_HANDLE_FILE_INFORMATION pInfo)
+get_file_information(CryptContext *con, LPCWSTR FileName, HANDLE handle, LPBY_HANDLE_FILE_INFORMATION pInfo)
 {
 	BOOL opened = FALSE;
 
 	DWORD dwRet = 0;
+
+	bool is_config = is_config_file(con, FileName);
+
+	bool is_dir_iv = is_dir_iv_file(con, FileName);
+
+	bool is_virtual = is_virtual_file(con, FileName);
 
 	try {
 
@@ -347,14 +446,38 @@ get_file_information(LPCWSTR FileName, HANDLE handle, LPBY_HANDLE_FILE_INFORMATI
 
 
 
-		if (!handle || handle == INVALID_HANDLE_VALUE) {
+		if (!handle || (handle == INVALID_HANDLE_VALUE && !is_virtual)) {
 
 			throw((int)ERROR_INVALID_PARAMETER);
 
 		}
 
+		if (is_dir_iv) {
+			std::wstring dirpath;
+			if (!get_file_directory(FileName, dirpath))
+				throw((int)ERROR_ACCESS_DENIED);
 
-		if (!GetFileInformationByHandle(handle, pInfo)) {
+			HANDLE hDir = CreateFile(&dirpath[0], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+			if (hDir == INVALID_HANDLE_VALUE)
+				throw((int)GetLastError());
+			
+			BOOL bResult = GetFileInformationByHandle(handle, pInfo);
+
+			if (!bResult) {
+				DWORD lastErr = GetLastError();
+				CloseHandle(hDir);
+				throw((int)lastErr);
+			}
+
+			CloseHandle(hDir);
+
+			pInfo->dwFileAttributes = FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_READONLY;
+			pInfo->ftLastWriteTime = pInfo->ftCreationTime;
+			pInfo->nFileSizeHigh = 0;
+			pInfo->nFileSizeLow = DIR_IV_LEN;
+			pInfo->nNumberOfLinks = 1;
+
+		}  else if (!GetFileInformationByHandle(handle, pInfo)) {
 			
 
 			if (opened) {
@@ -388,7 +511,7 @@ get_file_information(LPCWSTR FileName, HANDLE handle, LPBY_HANDLE_FILE_INFORMATI
 			}
 		} 
 
-		if (!(pInfo->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+		if (!is_config && !is_virtual && !(pInfo->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 
 			LARGE_INTEGER l;
 			l.LowPart = pInfo->nFileSizeLow;
@@ -399,6 +522,7 @@ get_file_information(LPCWSTR FileName, HANDLE handle, LPBY_HANDLE_FILE_INFORMATI
 
 			pInfo->nFileSizeLow = l.LowPart;
 			pInfo->nFileSizeHigh = l.HighPart;
+	
 		}
 
 
