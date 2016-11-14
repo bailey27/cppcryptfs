@@ -31,7 +31,7 @@ THE SOFTWARE.
 	This code was translated into C++ by Bailey Brown from
 	eme.go from the project EME for Go (github.com/rfjakob/eme).
 
-	Bellow is the comment header from emo.go 
+	Below is the comment header from emo.go 
 */
 
 // EME (ECB-Mix-ECB) is a wide-block encryption mode presented in the 2003 paper
