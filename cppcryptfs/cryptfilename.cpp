@@ -405,7 +405,7 @@ decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage)
 					}
 					std::wstring lfn_path;
 					if (con->m_lfn_cache.lookup(&base64_hash[0], lfn_path)) {
-						storage += lfn_path;
+						storage = lfn_path;
 						done = true;
 					}
 				}
