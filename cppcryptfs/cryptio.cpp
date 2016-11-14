@@ -127,15 +127,21 @@ write_block(CryptContext *con, unsigned char *cipher_buf, HANDLE hfile, const un
 	} else {
 		if (!block0iv)
 			return -1;
+
 		unsigned long long block0IVlow;
 		static_assert(BLOCK_SIV_LEN == 16, "BLOCK_SIV_LEN != 16.");
-		static_assert(sizeof(block0IVlow) == 8, "sizeof(block0IVlow) != 8.");		
-		memcpy(&block0IVlow, block0iv, sizeof(block0IVlow));
+		static_assert(sizeof(block0IVlow) == 8, "sizeof(block0IVlow) != 8.");
+		memcpy(&block0IVlow, block0iv + 8, sizeof(block0IVlow));
+
 		block0IVlow = MakeBigEndianNative(block0IVlow);
+
 		block0IVlow += block;
+
 		block0IVlow = MakeBigEndian(block0IVlow);
-		memcpy(cipher_buf, &block0IVlow, sizeof(block0IVlow));
-		memcpy(cipher_buf + 8, block0iv + 8, 8);
+
+		memcpy(cipher_buf + 8, &block0IVlow, sizeof(block0IVlow));
+		memcpy(cipher_buf, block0iv, 8);
+		
 	}
 
 	bool siv = con->GetConfig()->m_AESSIV;

@@ -661,24 +661,30 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 	try {
 
 		if (offset < sizeof(m_header)) {
-			FileHeader tmp_header = m_header;
-			//tmp_header.version = MakeBigEndian(m_header.version);
-			long long copylen = min(sizeof(tmp_header) - offset, min(bytesleft, sizeof(tmp_header)));
-			memcpy(p, (BYTE*)&tmp_header + offset, copylen);
+			long long copylen = min(sizeof(m_header) - offset, min(bytesleft, sizeof(m_header)));
+			memcpy(p, (BYTE*)&m_header + offset, copylen);
 			bytesleft -= copylen;
 			offset += copylen;
 			p += copylen;
 			*pNread += (int)copylen;
+		} else {
+			atoi("1");
 		}
 
-		while (bytesleft > 0) {
-
-			LARGE_INTEGER l;
-			l.QuadPart = offset - sizeof(m_header);
-			SetFilePointerEx(m_handle, l, NULL, FILE_BEGIN);
+		while (bytesleft > 0) {	
 
 			LONGLONG blockno = (offset - sizeof(m_header)) / CIPHER_BS;
+
 			int blockoff = (int)((offset - sizeof(m_header)) % CIPHER_BS);
+
+			LARGE_INTEGER l;
+
+			l.QuadPart = blockno * PLAIN_BS;
+
+			if (!SetFilePointerEx(m_handle, l, NULL, FILE_BEGIN)) {
+				bRet = FALSE;
+				break;
+			}	
 
 			int advance;
 
