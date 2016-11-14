@@ -667,9 +667,7 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 			offset += copylen;
 			p += copylen;
 			*pNread += (int)copylen;
-		} else {
-			atoi("1");
-		}
+		} 
 
 		while (bytesleft > 0) {	
 

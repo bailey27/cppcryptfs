@@ -369,9 +369,6 @@ decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage)
 {
 	const WCHAR *rval = NULL;
 
-	if (wcslen(path) > 10)
-		atoi("1");
-
 	HANDLE hFind = NULL;
 
 	CryptConfig *config = con->GetConfig();
