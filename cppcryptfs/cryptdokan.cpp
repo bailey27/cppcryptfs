@@ -1579,9 +1579,6 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 		dokanOptions->ThreadCount = 1;  // even the mirror sample has problems launching some executables with default number of threads
 #endif
 
-		if (config->m_reverse)
-			dokanOptions->Options |= DOKAN_OPTION_WRITE_PROTECT;
-
 
 		config->m_basedir = path;
 
@@ -1632,6 +1629,9 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 				throw(-1);
 			}
 		}
+
+		if (config->m_reverse)
+			dokanOptions->Options |= DOKAN_OPTION_WRITE_PROTECT;
 
 		if (config->m_AESSIV) {
 			try {
