@@ -709,7 +709,7 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 		opened = TRUE;
 	}
 
-	CryptFile file;
+	CryptFile *file = CryptFile::NewInstance(GetContext());
 
 	if (is_config_file(GetContext(), FileName)) {
 		LARGE_INTEGER l;
@@ -730,9 +730,9 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 				error, BufferLength, *ReadLength);
 			ret_status = ToNtStatus(error);
 		}
-	} else if (file.Associate(GetContext(), handle)) {
+	} else if (file->Associate(GetContext(), handle, FileName)) {
 
-		if (!file.Read((unsigned char *)Buffer, BufferLength, ReadLength, Offset)) {
+		if (!file->Read((unsigned char *)Buffer, BufferLength, ReadLength, Offset)) {
 			DWORD error = GetLastError();
 			DbgPrint(L"\tread error = %u, buffer length = %d, read length = %d\n\n",
 				error, BufferLength, *ReadLength);
@@ -742,6 +742,8 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
     } else {
 		ret_status = STATUS_ACCESS_DENIED;
     }
+
+	delete file;
 
     if (opened)
       CloseHandle(handle);
@@ -799,9 +801,9 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
 	  CloseHandle(h);
   }
 #endif
-  CryptFile file;
-  if (file.Associate(GetContext(), handle)) {
-	  if (!file.Write((const unsigned char *)Buffer, NumberOfBytesToWrite, NumberOfBytesWritten, Offset, DokanFileInfo->WriteToEndOfFile, DokanFileInfo->PagingIo)) {
+  CryptFile *file = CryptFile::NewInstance(GetContext());
+  if (file->Associate(GetContext(), handle, FileName)) {
+	  if (!file->Write((const unsigned char *)Buffer, NumberOfBytesToWrite, NumberOfBytesWritten, Offset, DokanFileInfo->WriteToEndOfFile, DokanFileInfo->PagingIo)) {
 		  DWORD error = GetLastError();
 		  DbgPrint(L"\twrite error = %u, buffer length = %d, write length = %d\n",
 			  error, NumberOfBytesToWrite, *NumberOfBytesWritten);
@@ -813,6 +815,8 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
   } else {
 	  ret_status = STATUS_ACCESS_DENIED;
   }
+
+  delete file;
 
   // close the file when it is reopened
   if (opened)
@@ -1035,18 +1039,22 @@ static NTSTATUS DOKAN_CALLBACK CryptLockFile(LPCWSTR FileName,
     return STATUS_INVALID_HANDLE;
   }
 
-  CryptFile file;
+  CryptFile *file = CryptFile::NewInstance(GetContext());
 
-  if (file.Associate(GetContext(), handle)) {
+  if (file->Associate(GetContext(), handle, FileName)) {
 
-	  if (!file.LockFile(ByteOffset, Length)) {
+	  if (!file->LockFile(ByteOffset, Length)) {
 		  DWORD error = GetLastError();
 		  DbgPrint(L"\tfailed(%d)\n", error);
+		  delete file;
 		  return ToNtStatus(error);
 	  }
   } else {
+	  delete file;
 	  return STATUS_ACCESS_DENIED;
   }
+
+  delete file;
 
   DbgPrint(L"\tsuccess\n\n");
   return STATUS_SUCCESS;
@@ -1066,16 +1074,21 @@ static NTSTATUS DOKAN_CALLBACK CryptSetEndOfFile(
     return STATUS_INVALID_HANDLE;
   }
 
-  CryptFile file;
-  if (file.Associate(GetContext(), handle)) {
-	  if (!file.SetEndOfFile(ByteOffset)) {
+  CryptFile *file = CryptFile::NewInstance(GetContext());
+
+  if (file->Associate(GetContext(), handle, FileName)) {
+	  if (!file->SetEndOfFile(ByteOffset)) {
 		  DWORD error = GetLastError();
 		  DbgPrint(L"\tSetEndOfFile error code = %d\n\n", error);
+		  delete file;
 		  return ToNtStatus(error);
 	  }
   } else {
+	  delete file;
 	  return STATUS_ACCESS_DENIED;
   }
+
+  delete file;
 
   return STATUS_SUCCESS;
 }
@@ -1105,12 +1118,16 @@ static NTSTATUS DOKAN_CALLBACK CryptSetAllocationSize(
 	  fileSize.HighPart = finfo.nFileSizeHigh;
 	  if (AllocSize < fileSize.QuadPart) {
 		fileSize.QuadPart = AllocSize;
-		CryptFile file;
-		if (!file.Associate(GetContext(), handle))
-			throw(-1);
-		if (!file.SetEndOfFile(fileSize.QuadPart)) {
+		CryptFile * file = CryptFile::NewInstance(GetContext());
+		if (!file->Associate(GetContext(), handle, FileName)) {
+			delete file;
 			throw(-1);
 		}
+		if (!file->SetEndOfFile(fileSize.QuadPart)) {
+			delete file;
+			throw(-1);
+		}
+		delete file;
 	  }
   } catch (...) {
 	  error = GetLastError();
@@ -1186,19 +1203,21 @@ CryptUnlockFile(LPCWSTR FileName, LONGLONG ByteOffset, LONGLONG Length,
     return STATUS_INVALID_HANDLE;
   }
 
-  CryptFile file;
+  CryptFile *file = CryptFile::NewInstance(GetContext());
 
-  if (file.Associate(GetContext(), handle)) {
+  if (file->Associate(GetContext(), handle, FileName)) {
 
-	  if (!file.UnlockFile(ByteOffset, Length)) {
+	  if (!file->UnlockFile(ByteOffset, Length)) {
 		  DWORD error = GetLastError();
 		  DbgPrint(L"\terror code = %d\n\n", error);
+		  delete file;
 		  return ToNtStatus(error);
 	  }
   } else {
+	  delete file;
 	  return STATUS_ACCESS_DENIED;
   }
-
+  delete file;
   DbgPrint(L"\tsuccess\n\n");
   return STATUS_SUCCESS;
 }

@@ -616,8 +616,13 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 			l.LowPart = pInfo->nFileSizeLow;
 			l.HighPart = pInfo->nFileSizeHigh;
 
-			if (!adjust_file_size_down(l))
-				throw((int)ERROR_INVALID_PARAMETER);
+			if (con->GetConfig()->m_reverse) {
+				if (!adjust_file_size_up(l))
+					throw((int)ERROR_INVALID_PARAMETER);
+			} else {
+				if (!adjust_file_size_down(l))
+					throw((int)ERROR_INVALID_PARAMETER);
+			}
 
 			pInfo->nFileSizeLow = l.LowPart;
 			pInfo->nFileSizeHigh = l.HighPart;

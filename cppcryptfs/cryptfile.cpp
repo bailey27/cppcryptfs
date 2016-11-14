@@ -30,9 +30,18 @@ THE SOFTWARE.
 #include "cryptdefs.h"
 #include "cryptio.h"
 #include "cryptfile.h"
+#include "cryptfilename.h"
 #include "fileutil.h"
 #include "util.h"
 #include "crypt.h"
+
+CryptFile *CryptFile::NewInstance(CryptContext *con)
+{
+	if (con->GetConfig()->m_reverse)
+		return new CryptFileReverse;
+	else
+		return new CryptFileForward;
+}
 
 CryptFile::CryptFile()
 {
@@ -43,8 +52,24 @@ CryptFile::CryptFile()
 	memset(&m_header, 0, sizeof(m_header));
 }
 
+
+CryptFile::~CryptFile()
+{
+	// don't close m_handle
+}
+
+CryptFileForward::CryptFileForward()
+{
+	
+}
+
+CryptFileForward::~CryptFileForward()
+{
+
+}
+
 BOOL
-CryptFile::Associate(CryptContext *con, HANDLE hfile)
+CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
 {
 
 	static_assert(sizeof(m_header) == FILE_HEADER_LEN, "sizeof(m_header) != FILE_HEADER_LEN");
@@ -109,12 +134,7 @@ CryptFile::Associate(CryptContext *con, HANDLE hfile)
 }
 
 
-CryptFile::~CryptFile()
-{
-	// do not close handle
-}
-
-BOOL CryptFile::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset)
+BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset)
 {
 
 	if (m_real_file_size == (long long)-1)
@@ -201,7 +221,7 @@ BOOL CryptFile::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG 
 
 // write version and fileid to empty file before writing to it
 
-BOOL CryptFile::WriteVersionAndFileId()
+BOOL CryptFileForward::WriteVersionAndFileId()
 {
 	if (m_real_file_size == (long long)-1)
 		return FALSE;
@@ -236,7 +256,7 @@ BOOL CryptFile::WriteVersionAndFileId()
 }
 
 
-BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile, BOOL bPagingIo)
+BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile, BOOL bPagingIo)
 {
 
 	if (m_real_file_size == (long long)-1)
@@ -310,6 +330,8 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 
 	try {
 
+		BYTE cipher_buf[CIPHER_BS];
+
 		while (bytesleft > 0) {
 
 			LONGLONG blockno = offset / PLAIN_BS;
@@ -319,7 +341,7 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 
 			if (blockoff == 0 && bytesleft >= PLAIN_BS) { // overwriting whole blocks
 
-				advance = write_block(m_con, m_handle, m_header.fileid, blockno, p, PLAIN_BS, context);
+				advance = write_block(m_con, cipher_buf, m_handle, m_header.fileid, blockno, p, PLAIN_BS, context);
 
 				if (advance != PLAIN_BS)
 					throw(-1);
@@ -346,7 +368,7 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 
 				int blockwrite = max(blockoff + blockcpy, blockbytes);
 
-				int nWritten = write_block(m_con, m_handle, m_header.fileid, blockno, blockbuf, blockwrite, context);
+				int nWritten = write_block(m_con, cipher_buf, m_handle, m_header.fileid, blockno, blockbuf, blockwrite, context);
 
 				advance = blockcpy;
 
@@ -375,7 +397,7 @@ BOOL CryptFile::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten,
 }
 
 BOOL
-CryptFile::LockFile(LONGLONG ByteOffset, LONGLONG Length)
+CryptFileForward::LockFile(LONGLONG ByteOffset, LONGLONG Length)
 {
 	if (m_real_file_size == (long long)-1)
 		return FALSE;
@@ -401,7 +423,7 @@ CryptFile::LockFile(LONGLONG ByteOffset, LONGLONG Length)
 }
 
 BOOL
-CryptFile::UnlockFile(LONGLONG ByteOffset, LONGLONG Length)
+CryptFileForward::UnlockFile(LONGLONG ByteOffset, LONGLONG Length)
 {
 	if (m_real_file_size == (long long)-1)
 		return FALSE;
@@ -427,7 +449,7 @@ CryptFile::UnlockFile(LONGLONG ByteOffset, LONGLONG Length)
 }
 
 
-// used ONLY by CryptFile::SetEndOfFile()
+// used ONLY by CryptFileForward::SetEndOfFile()
 static bool
 adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l)
 {
@@ -450,7 +472,7 @@ adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l)
 // re-writes last block of necessary to account for file growing or shrinking
 // if bSet is TRUE (the default), actually calls SetEndOfFile()
 BOOL
-CryptFile::SetEndOfFile(LONGLONG offset, BOOL bSet)
+CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 {
 
 	if (m_real_file_size == (long long)-1)
@@ -540,8 +562,10 @@ CryptFile::SetEndOfFile(LONGLONG offset, BOOL bSet)
 			return TRUE;
 		}
 	}
+	
+	BYTE cipher_buf[CIPHER_BS];
 
-	int nwritten = write_block(m_con, m_handle, m_header.fileid, last_block, buf, to_write, context);
+	int nwritten = write_block(m_con, cipher_buf, m_handle, m_header.fileid, last_block, buf, to_write, context);
 
 	free_crypt_context(context);
 
@@ -557,4 +581,173 @@ CryptFile::SetEndOfFile(LONGLONG offset, BOOL bSet)
 		return TRUE;
 	}
 
+}
+
+CryptFileReverse::CryptFileReverse()
+{
+	memset(m_block0iv, 0, sizeof(m_block0iv));
+}
+
+CryptFileReverse::~CryptFileReverse()
+{
+	// do not close m_handle
+}
+
+
+BOOL CryptFileReverse::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
+{
+	m_handle = hfile;
+
+	m_con = con;
+
+	LARGE_INTEGER l;
+
+	if (!GetFileSizeEx(hfile, &l)) {
+		DbgPrint(L"ASSOCIATE: failed to get size of file\n");
+		return FALSE;
+	}
+
+	m_real_file_size = l.QuadPart;
+
+	if (l.QuadPart == 0) {
+		m_header.version = CRYPT_VERSION;
+		m_is_empty = true;
+		return TRUE;
+	} 
+
+	m_header.version = MakeBigEndianNative((unsigned short)m_con->GetConfig()->m_Version);
+
+
+	if (!derive_path_iv(m_con, inputPath, m_header.fileid, TYPE_FILEID))
+		return FALSE;
+	
+	if (!derive_path_iv(m_con, inputPath, m_block0iv, TYPE_BLOCK0IV))
+		return FALSE;
+
+	return TRUE;
+}
+
+BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset)
+{
+	if (m_real_file_size == (long long)-1)
+		return FALSE;
+
+	if (!pNread || !buf)
+		return FALSE;
+
+	*pNread = 0;
+
+	if (m_is_empty) {
+		return TRUE;
+	}
+
+	LONGLONG bytesleft = buflen;
+
+	unsigned char *p = buf;
+
+	void *context;
+
+	if (!m_con->GetConfig()->m_AESSIV) {
+		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+
+		if (!context)
+			return FALSE;
+	} else {
+		context = NULL;
+	}
+
+	BOOL bRet = TRUE;
+
+	try {
+
+		if (offset < sizeof(m_header)) {
+			FileHeader tmp_header = m_header;
+			//tmp_header.version = MakeBigEndian(m_header.version);
+			long long copylen = min(sizeof(tmp_header) - offset, min(bytesleft, sizeof(tmp_header)));
+			memcpy(p, (BYTE*)&tmp_header + offset, copylen);
+			bytesleft -= copylen;
+			offset += copylen;
+			p += copylen;
+			*pNread += (int)copylen;
+		}
+
+		while (bytesleft > 0) {
+
+			LARGE_INTEGER l;
+			l.QuadPart = offset - sizeof(m_header);
+			SetFilePointerEx(m_handle, l, NULL, FILE_BEGIN);
+
+			LONGLONG blockno = (offset - sizeof(m_header)) / CIPHER_BS;
+			int blockoff = (int)((offset - sizeof(m_header)) % CIPHER_BS);
+
+			int advance;
+
+			BYTE plain_buf[PLAIN_BS];
+
+			if (blockoff == 0 && bytesleft >= CIPHER_BS) {
+				DWORD nRead = 0;
+				if (!ReadFile(m_handle, plain_buf, sizeof(plain_buf), &nRead, NULL)) {
+					bRet = FALSE;
+					break;
+				}
+
+				if (nRead == 0) {
+					bRet = TRUE;
+					break;
+				}
+				// advance = read_block(m_con, m_handle, m_header.fileid, blockno, p, context);
+				advance = write_block(m_con, p, INVALID_HANDLE_VALUE, m_header.fileid, blockno, plain_buf, (int)nRead, context, m_block0iv);
+
+				if (advance < 0)
+					throw(-1);
+
+				if (advance < 1)
+					break;
+
+			} else {
+
+				unsigned char blockbuf[CIPHER_BS];
+				DWORD nRead = 0;
+				if (!ReadFile(m_handle, plain_buf, sizeof(plain_buf), &nRead, NULL)) {
+					bRet = FALSE;
+					break;
+				}
+
+				if (nRead == 0) {
+					bRet = TRUE;
+					break;
+				}
+
+				//int blockbytes = read_block(m_con, m_handle, m_header.fileid, blockno, blockbuf, context);
+				int blockbytes = write_block(m_con, blockbuf, INVALID_HANDLE_VALUE, m_header.fileid, blockno, plain_buf, (int)nRead, context, m_block0iv);
+
+				if (blockbytes < 0)
+					throw(-1);
+
+				if (blockbytes < 1)
+					break;
+
+				int blockcpy = (int)min(bytesleft, blockbytes - blockoff);
+
+				if (blockcpy < 1)
+					break;
+
+				memcpy(p, blockbuf + blockoff, blockcpy);
+
+				advance = blockcpy;
+			}
+
+			p += advance;
+			offset += advance;
+			bytesleft -= advance;
+			*pNread += advance;
+		}
+	} catch (...) {
+		bRet = FALSE;
+	}
+
+	if (context)
+		free_crypt_context(context);
+
+	return bRet;
 }

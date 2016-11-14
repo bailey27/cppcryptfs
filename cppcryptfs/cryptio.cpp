@@ -94,8 +94,9 @@ read_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigne
 }
 
 int
-write_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigned long long block, const unsigned char *ptbuf, int ptlen, void *openssl_crypt_context)
+write_block(CryptContext *con, unsigned char *cipher_buf, HANDLE hfile, const unsigned char *fileid, unsigned long long block, const unsigned char *ptbuf, int ptlen, void *openssl_crypt_context, const unsigned char *block0iv)
 {
+
 
 	long long offset = FILE_HEADER_LEN + block*CIPHER_BS;
 
@@ -103,8 +104,10 @@ write_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsign
 
 	l.QuadPart = offset;
 
-	if (!SetFilePointerEx(hfile, l, NULL, FILE_BEGIN)) {
-		return -1;
+	if (hfile != INVALID_HANDLE_VALUE) {
+		if (!SetFilePointerEx(hfile, l, NULL, FILE_BEGIN)) {
+			return -1;
+		}
 	}
 
 
@@ -116,12 +119,24 @@ write_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsign
 
 	memcpy(auth_data + sizeof(be_block), fileid, FILE_ID_LEN);
 
-	unsigned char buf[CIPHER_BS];
-
 	unsigned char tag[BLOCK_TAG_LEN];
 
-	if (!get_random_bytes(con, buf, BLOCK_IV_LEN))
-		return -1;
+	if (!con->GetConfig()->m_reverse) {
+		if (!get_random_bytes(con, cipher_buf, BLOCK_IV_LEN))
+			return -1;
+	} else {
+		if (!block0iv)
+			return -1;
+		unsigned long long block0IVlow;
+		static_assert(BLOCK_SIV_LEN == 16, "BLOCK_SIV_LEN != 16.");
+		static_assert(sizeof(block0IVlow) == 8, "sizeof(block0IVlow) != 8.");		
+		memcpy(&block0IVlow, block0iv, sizeof(block0IVlow));
+		block0IVlow = MakeBigEndianNative(block0IVlow);
+		block0IVlow += block;
+		block0IVlow = MakeBigEndian(block0IVlow);
+		memcpy(cipher_buf, &block0IVlow, sizeof(block0IVlow));
+		memcpy(cipher_buf + 8, block0iv + 8, 8);
+	}
 
 	bool siv = con->GetConfig()->m_AESSIV;
 
@@ -129,27 +144,32 @@ write_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsign
 
 	if (siv) {
 		ctlen = encrypt_siv(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetKey(), 
-			buf, buf + BLOCK_IV_LEN + BLOCK_SIV_LEN, buf + BLOCK_IV_LEN, &con->m_siv);
+			cipher_buf, cipher_buf + BLOCK_IV_LEN + BLOCK_SIV_LEN, cipher_buf + BLOCK_IV_LEN, &con->m_siv);
 	} else {
 		ctlen = encrypt(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetKey(),
-			buf, buf + BLOCK_IV_LEN, tag, openssl_crypt_context);
+			cipher_buf, cipher_buf + BLOCK_IV_LEN, tag, openssl_crypt_context);
 	}
 
 	if (ctlen < 0 || ctlen > PLAIN_BS)
 		return -1;
 
 	if (!siv)
-		memcpy(buf + BLOCK_IV_LEN + ctlen, tag, sizeof(tag));
+		memcpy(cipher_buf + BLOCK_IV_LEN + ctlen, tag, sizeof(tag));
 
-	DWORD nWritten = 0;
+	if (!con->GetConfig()->m_reverse) {
 
-	if (!WriteFile(hfile, buf, BLOCK_IV_LEN + ctlen + sizeof(tag), &nWritten, NULL)) {
-		return -1;
-	}
+		DWORD nWritten = 0;
 
-	if (nWritten == BLOCK_IV_LEN + ctlen + sizeof(tag)) {
-		return ptlen;
+		if (!WriteFile(hfile, cipher_buf, BLOCK_IV_LEN + ctlen + sizeof(tag), &nWritten, NULL)) {
+			return -1;
+		}
+		
+		if (nWritten == BLOCK_IV_LEN + ctlen + sizeof(tag)) {
+			return ptlen;
+		} else {
+			return -1;
+		}
 	} else {
-		return -1;
+		return BLOCK_IV_LEN + ctlen + sizeof(tag);
 	}
 }

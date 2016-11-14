@@ -36,11 +36,8 @@ typedef struct struct_FileHeader {
 	unsigned char fileid[FILE_ID_LEN];
 } FileHeader;
 
-class CryptFile
-{
-
+class CryptFile {
 public:
-
 	FileHeader m_header;
 
 	bool m_is_empty;
@@ -51,23 +48,79 @@ public:
 
 	CryptContext *m_con;
 
-	BOOL Associate(CryptContext *con, HANDLE hfile);
+	static CryptFile *NewInstance(CryptContext *con);
 
-	BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset);
+	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath) = 0;
 
-	BOOL Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile, BOOL bPagingIo);
+	virtual BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset) = 0;
 
-	BOOL SetEndOfFile(LONGLONG offset, BOOL bSet = TRUE);
+	virtual BOOL Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile, BOOL bPagingIo) = 0;
 
-	BOOL LockFile(LONGLONG ByteOffset, LONGLONG Length);
+	virtual BOOL SetEndOfFile(LONGLONG offset, BOOL bSet = TRUE) = 0;
 
-	BOOL UnlockFile(LONGLONG ByteOffset, LONGLONG Length);
+	virtual BOOL LockFile(LONGLONG ByteOffset, LONGLONG Length) = 0;
+
+	virtual BOOL UnlockFile(LONGLONG ByteOffset, LONGLONG Length) = 0;
+
+	BOOL NotImplemented() { SetLastError(ERROR_ACCESS_DENIED); return FALSE; };
 
 	CryptFile();
+	virtual ~CryptFile();
 
-	~CryptFile();
+};
+
+class CryptFileForward:  public CryptFile
+{
+
+public:
+
+
+	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath);
+
+	virtual BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset);
+
+	virtual BOOL Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile, BOOL bPagingIo);
+
+	virtual BOOL SetEndOfFile(LONGLONG offset, BOOL bSet = TRUE);
+
+	virtual BOOL LockFile(LONGLONG ByteOffset, LONGLONG Length);
+
+	virtual BOOL UnlockFile(LONGLONG ByteOffset, LONGLONG Length);
+
+	CryptFileForward();
+
+	~CryptFileForward();
 
 protected:
 	BOOL WriteVersionAndFileId();
 };
+
+class CryptFileReverse:  public CryptFile
+{
+private:
+	BYTE m_block0iv[BLOCK_SIV_LEN];
+public:
+
+
+	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath);
+
+	virtual BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset);
+
+	virtual BOOL Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile, BOOL bPagingIo)
+	{
+		return NotImplemented();
+	};
+
+	virtual BOOL SetEndOfFile(LONGLONG offset, BOOL bSet = TRUE) { return NotImplemented(); };
+
+	virtual BOOL LockFile(LONGLONG ByteOffset, LONGLONG Length) { return NotImplemented(); };
+
+	virtual BOOL UnlockFile(LONGLONG ByteOffset, LONGLONG Length) { return NotImplemented(); };
+
+	CryptFileReverse();
+
+	~CryptFileReverse();
+
+};
+
 

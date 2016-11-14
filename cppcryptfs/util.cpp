@@ -75,6 +75,8 @@ T MakeBigEndianNative(T n)
 
 template unsigned short MakeBigEndianNative(unsigned short);
 
+template unsigned long long MakeBigEndianNative(unsigned long long);
+
 BOOL
 IsBigEndianMachine()
 {
