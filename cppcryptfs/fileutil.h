@@ -46,7 +46,7 @@ DWORD
 find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFillFindData, void * dokan_cb, void * dokan_ctx);
 
 DWORD
-get_file_information(CryptContext *con, LPCWSTR FileName, HANDLE handle, LPBY_HANDLE_FILE_INFORMATION pInfo);
+get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HANDLE handle, LPBY_HANDLE_FILE_INFORMATION pInfo);
 
 bool
 create_dir_iv(CryptContext *con, LPCWSTR path); // path is unencrypted
@@ -91,5 +91,11 @@ bool
 get_file_directory(LPCWSTR filepath, std::wstring& dirpath);
 
 bool
+get_bare_filename(LPCWSTR filepath, std::wstring& filename);
+
+bool
 read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset);
+
+bool
+get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_encrypted);
 

@@ -376,6 +376,35 @@ is_virtual_file(CryptContext *con, LPCWSTR FileName)
 }
 
 bool
+get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_encrypted)
+{
+	std::wstring decrypted_name;
+	std::wstring encrypted_name;
+	std::wstring dirpath;
+	
+	BYTE dir_iv[DIR_IV_LEN];
+
+	if (!get_file_directory(FileName, dirpath))
+		return false;
+
+	if (!derive_path_iv(con, &dirpath[0], dir_iv, TYPE_DIRIV))
+		return false;
+
+	if (!get_bare_filename(FileName, encrypted_name))
+		return false;
+
+	encrypted_name = encrypted_name.substr(0, encrypted_name.length() - sizeof(LONGNAME_SUFFIX_W) / sizeof(WCHAR) - 1);
+
+	if (!decrypt_filename(con, dir_iv, &dirpath[0], &encrypted_name[0], decrypted_name))
+		return false;
+
+	if (!encrypt_filename(con, dir_iv, &decrypted_name[0], encrypted_name, &actual_encrypted))
+		return false;
+
+	return true;
+}
+
+bool
 read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset)
 {
 	if (is_dir_iv_file(con, FileName)) {
@@ -393,9 +422,41 @@ read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD
 		memcpy(buf, dir_iv + offset, count);
 		*pNread = (DWORD)count;
 		return true;
+	} else if (is_name_file(con, FileName)) {
+		std::string actual_encrypted;
+		if (!get_actual_encrypted(con, FileName, actual_encrypted))
+			return false;
+		LONGLONG count = min(actual_encrypted.length() - offset, buflen);
+		if (count <= 0) {
+			*pNread = 0;
+			return true;
+		}
+		memcpy(buf, &actual_encrypted[0], count);
+		*pNread = (DWORD)count;
+		return true;
 	} else {
 		return false;
 	}
+}
+
+bool
+get_bare_filename(LPCWSTR filepath, std::wstring& filename)
+{
+	size_t len = wcslen(filepath);
+
+	if (len < 1)
+		return false;
+
+	const WCHAR *lastslash = wcsrchr(filepath, '\\');
+
+	if (!lastslash)
+		return true;
+
+	filename = filepath;
+
+	filename = filename.substr(lastslash - filepath + 1);
+
+	return true;
 }
 
 bool 
@@ -424,7 +485,7 @@ get_file_directory(LPCWSTR filepath, std::wstring& dirpath)
 }
 
 DWORD
-get_file_information(CryptContext *con, LPCWSTR FileName, HANDLE handle, LPBY_HANDLE_FILE_INFORMATION pInfo)
+get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HANDLE handle, LPBY_HANDLE_FILE_INFORMATION pInfo)
 {
 	BOOL opened = FALSE;
 
@@ -435,6 +496,8 @@ get_file_information(CryptContext *con, LPCWSTR FileName, HANDLE handle, LPBY_HA
 	bool is_dir_iv = is_dir_iv_file(con, FileName);
 
 	bool is_virtual = is_virtual_file(con, FileName);
+
+	bool is_long = is_name_file(con, FileName);
 
 	try {
 
@@ -460,8 +523,8 @@ get_file_information(CryptContext *con, LPCWSTR FileName, HANDLE handle, LPBY_HA
 			HANDLE hDir = CreateFile(&dirpath[0], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 			if (hDir == INVALID_HANDLE_VALUE)
 				throw((int)GetLastError());
-			
-			BOOL bResult = GetFileInformationByHandle(handle, pInfo);
+
+			BOOL bResult = GetFileInformationByHandle(hDir, pInfo);
 
 			if (!bResult) {
 				DWORD lastErr = GetLastError();
@@ -476,6 +539,8 @@ get_file_information(CryptContext *con, LPCWSTR FileName, HANDLE handle, LPBY_HA
 			pInfo->nFileSizeHigh = 0;
 			pInfo->nFileSizeLow = DIR_IV_LEN;
 			pInfo->nNumberOfLinks = 1;
+
+		} else if (is_long) {
 
 		}  else if (!GetFileInformationByHandle(handle, pInfo)) {
 			

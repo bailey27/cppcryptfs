@@ -175,15 +175,25 @@ public:
 			m_tried = true;
 
 			try {
-				if (is_config_file(m_con, m_plain_path)) {
-					m_enc_path = m_con->GetConfig()->m_basedir + L"\\";
-					m_enc_path += REVERSE_CONFIG_NAME;
-				} else if (is_dir_iv_file(m_con, m_plain_path)) {
-					m_enc_path = m_con->GetConfig()->m_basedir + L"\\";
-					m_enc_path += DIR_IV_NAME;
-				} else if (m_con->GetConfig()->m_reverse) {
-					if (!decrypt_path(m_con, m_plain_path, m_enc_path)) {
-						throw(-1);
+				if (m_con->GetConfig()->m_reverse) {
+					if (is_config_file(m_con, m_plain_path)) {
+						m_enc_path = m_con->GetConfig()->m_basedir + L"\\";
+						m_enc_path += REVERSE_CONFIG_NAME;
+					} else if (is_virtual_file(m_con, m_plain_path)) {
+						std::wstring dirpath;
+						if (!get_file_directory(m_plain_path, dirpath))
+							throw(-1);
+						if (!decrypt_path(m_con, &dirpath[0], m_enc_path))
+							throw(-1);
+						m_enc_path += L"\\";
+						std::wstring filename;
+						if (!get_bare_filename(m_plain_path, filename))
+							throw(-1);
+						m_enc_path += filename;
+					} else {
+						if (!decrypt_path(m_con, m_plain_path, m_enc_path)) {
+							throw(-1);
+						}
 					}
 				} else {
 					if (!encrypt_path(m_con, m_plain_path, m_enc_path, m_actual_encrypted)) {
@@ -843,7 +853,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileInformation(
 
   DbgPrint(L"GetFileInfo : %s\n", FileName);
 
-  if (get_file_information(GetContext(), filePath, handle, HandleFileInformation) != 0) {
+  if (get_file_information(GetContext(), filePath, FileName, handle, HandleFileInformation) != 0) {
 	  DWORD error = GetLastError();
 	  DbgPrint(L"GetFileInfo failed(%d)\n", error);
 	  return ToNtStatus(error);
@@ -1088,7 +1098,7 @@ static NTSTATUS DOKAN_CALLBACK CryptSetAllocationSize(
   BY_HANDLE_FILE_INFORMATION finfo;
   DWORD error = 0;
   try {
-	  if (get_file_information(GetContext(), filePath, handle, &finfo) != 0) {
+	  if (get_file_information(GetContext(), filePath, FileName, handle, &finfo) != 0) {
 		  throw(-1);
 	  }
 	  fileSize.LowPart = finfo.nFileSizeLow;
