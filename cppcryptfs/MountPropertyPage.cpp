@@ -202,6 +202,10 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 		return CString(&error_mes[0]);
 	}
 
+	// otherwise if fs in root dir of the drive, we get "d:" displayed for the path instead of "d:\"
+	if (cpath.GetLength() == 2 && ((LPCWSTR)cpath)[1] == ':')
+		cpath += L"\\";
+
 	pList->SetItemText(nItem, PATH_INDEX, cpath);
 
 	RecentItems ritems(TEXT("Folders"), TEXT("LastDir"), m_numLastDirs);
