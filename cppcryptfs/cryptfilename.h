@@ -58,7 +58,7 @@ bool // used for reverse mode
 derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const char *type);
 
 const WCHAR * // returns UNICODE plaintext filename
-decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, std::wstring& storage);
+decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, std::wstring& storage);
 
 const WCHAR * // get decrypted path (used only in reverse mode)
 decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage);
@@ -73,3 +73,7 @@ bool write_encrypted_long_name(const WCHAR *filePath, const std::string& enc_dat
 
 bool
 derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const char *type);
+
+const WCHAR *
+decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path, const BYTE *dir_iv, std::wstring& decrypted_name);
+

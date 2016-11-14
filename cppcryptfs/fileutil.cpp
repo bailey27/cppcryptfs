@@ -164,7 +164,7 @@ get_dir_iv(CryptContext *con, const WCHAR *path, unsigned char *diriv)
 }
 
 static bool
-convert_fdata(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, WIN32_FIND_DATAW& fdata, std::string *actual_encrypted)
+convert_fdata(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, WIN32_FIND_DATAW& fdata, std::string *actual_encrypted)
 {
 
 	if (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))
@@ -393,7 +393,7 @@ get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_en
 	if (!get_bare_filename(FileName, encrypted_name))
 		return false;
 
-	encrypted_name = encrypted_name.substr(0, encrypted_name.length() - sizeof(LONGNAME_SUFFIX_W) / sizeof(WCHAR) - 1);
+	//encrypted_name = encrypted_name.substr(0, encrypted_name.length() - sizeof(LONGNAME_SUFFIX_W) / sizeof(WCHAR) - 1);
 
 	if (!decrypt_filename(con, dir_iv, &dirpath[0], &encrypted_name[0], decrypted_name))
 		return false;
@@ -541,6 +541,40 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 			pInfo->nNumberOfLinks = 1;
 
 		} else if (is_long) {
+			std::wstring enc_filename = inputPath;
+
+			size_t trunc = sizeof(LONGNAME_SUFFIX_W) / sizeof(WCHAR) - 1;
+			size_t len = enc_filename.length() - trunc;
+			enc_filename = enc_filename.substr(0, len);
+
+			std::wstring decrypted_name;
+
+			if (!decrypt_path(con, &enc_filename[0], decrypted_name))
+				throw((int)ERROR_ACCESS_DENIED);
+
+			HANDLE hFile = CreateFile(&decrypted_name[0], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+			if (hFile == INVALID_HANDLE_VALUE)
+				throw((int)GetLastError());
+
+			BOOL bResult = GetFileInformationByHandle(hFile, pInfo);
+
+			if (!bResult) {
+				DWORD lastErr = GetLastError();
+				CloseHandle(hFile);
+				throw((int)lastErr);
+			}
+
+			CloseHandle(hFile);
+
+			std::string actual_encrypted;
+
+			if (!get_actual_encrypted(con, &enc_filename[0], actual_encrypted))
+				throw((int)ERROR_ACCESS_DENIED);
+
+			pInfo->ftLastWriteTime = pInfo->ftCreationTime;
+			pInfo->nFileSizeHigh = 0;
+			pInfo->nFileSizeLow = (DWORD)actual_encrypted.length();
+			pInfo->nNumberOfLinks = 1;
 
 		}  else if (!GetFileInformationByHandle(handle, pInfo)) {
 			

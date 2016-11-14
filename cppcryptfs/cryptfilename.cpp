@@ -189,7 +189,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 
 
 const WCHAR * // returns UNICODE plaintext filename
-decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, std::wstring& storage)
+decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, std::wstring& storage)
 {
 	if (con->GetConfig()->m_PlaintextNames) {
 		storage = filename;
@@ -203,36 +203,43 @@ decrypt_filename(const CryptContext *con, const BYTE *dir_iv, const WCHAR *path,
 	std::wstring longname_storage;
 
 	if (!wcsncmp(filename, longname_prefix, sizeof(longname_prefix)/sizeof(longname_prefix[0])-1)) {
-		std::wstring fullpath = path;
-		if (fullpath[fullpath.size() - 1] != '\\')
-			fullpath.push_back('\\');
-		
-		fullpath += filename;
-		fullpath += longname_suffix;
+		if (con->GetConfig()->m_reverse) {
+			if (decrypt_reverse_longname(con, filename, path, dir_iv, storage))
+				return &storage[0];
+			else
+				return false;
+		} else {
+			std::wstring fullpath = path;
+			if (fullpath[fullpath.size() - 1] != '\\')
+				fullpath.push_back('\\');
 
-		HANDLE hFile = CreateFile(&fullpath[0], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+			fullpath += filename;
+			fullpath += longname_suffix;
 
-		if (hFile == INVALID_HANDLE_VALUE)
-			return NULL;
+			HANDLE hFile = CreateFile(&fullpath[0], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
-		DWORD nRead;
+			if (hFile == INVALID_HANDLE_VALUE)
+				return NULL;
 
-		if (!ReadFile(hFile, longname_buf, sizeof(longname_buf), &nRead, NULL)) {
+			DWORD nRead;
+
+			if (!ReadFile(hFile, longname_buf, sizeof(longname_buf), &nRead, NULL)) {
+				CloseHandle(hFile);
+				return NULL;
+			}
+
 			CloseHandle(hFile);
-			return NULL;
+
+			if (nRead < 1)
+				return NULL;
+
+			longname_buf[nRead] = '\0';
+
+			if (!utf8_to_unicode(longname_buf, longname_storage))
+				return NULL;
+
+			filename = &longname_storage[0];
 		}
-
-		CloseHandle(hFile);
-
-		if (nRead < 1)
-			return NULL;
-
-		longname_buf[nRead] = '\0';
-
-		if (!utf8_to_unicode(longname_buf, longname_storage))
-			return NULL;
-
-		filename = &longname_storage[0];
 	}
 
 	if (!base64_decode(filename, ctstorage))
@@ -283,10 +290,87 @@ extract_lfn_base64_hash(const WCHAR *lfn, std::wstring& storage)
 }	
 
 
+//decrypt_reverse_longname(con, &s[0], &storage[0], uni_plain_elem)
+const WCHAR *
+decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path, const BYTE *dir_iv, std::wstring& decrypted_name)
+{
+	HANDLE hFind = INVALID_HANDLE_VALUE;
+	bool found = false;
+
+	try {
+		
+		std::wstring storage = plain_path;
+
+		std::wstring base64_hash;
+		if (!extract_lfn_base64_hash(filename /* &s[0] */, base64_hash))
+			throw(-1);
+		std::wstring lfn_path;
+		if (con->m_lfn_cache.lookup(&base64_hash[0], lfn_path)) {
+			const WCHAR *ps = wcsrchr(&lfn_path[0], '\\');
+			decrypted_name /* uni_plain_elem */ = ps ? ps + 1 : &lfn_path[0];
+			found = true;
+		} else {
+			// go through all the files in the dir
+			// if the name is long enough to be a long file name (> 176 chars in utf8)
+			// then encrypt it and see if it matches the one we're looking for
+
+			// store any we generate in the lfn cache for later use
+
+			WIN32_FIND_DATA fdata;
+			std::wstring findspec = storage;
+			findspec += L"*";
+			hFind = FindFirstFile(&findspec[0], &fdata);
+			if (hFind == INVALID_HANDLE_VALUE)
+				throw(-1);
+			do {
+				std::string utf8name;
+
+				if (!unicode_to_utf8(fdata.cFileName, utf8name))
+					throw(-1);
+
+				if (utf8name.length() <= SHORT_NAME_MAX)
+					continue;
+
+				std::wstring find_enc;
+
+				if (!encrypt_filename(con, dir_iv, fdata.cFileName, find_enc, NULL))
+					throw(-1);
+
+				std::wstring find_base64_hash;
+				extract_lfn_base64_hash(&find_enc[0], find_base64_hash);
+				con->m_lfn_cache.store(&find_base64_hash[0], &(storage + fdata.cFileName)[0]);
+				if (find_base64_hash == base64_hash) {
+					decrypted_name /* uni_plain_elem */ = fdata.cFileName;
+					found = true;
+					break;
+				}
+			} while (FindNextFile(hFind, &fdata));
+
+			FindClose(hFind);
+			hFind = NULL;
+
+		}
+	} catch (...) {
+		found = false;
+	}
+
+	if (hFind && hFind != INVALID_HANDLE_VALUE)
+		FindClose(hFind);
+
+	if (found)
+		return &decrypted_name[0];
+	else
+		return NULL;
+
+}
+
 const WCHAR * // get decrypted path (used only in reverse mode)
 decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage)
 {
 	const WCHAR *rval = NULL;
+
+	if (wcslen(path) > 10)
+		atoi("1");
 
 	HANDLE hFind = NULL;
 
@@ -374,51 +458,8 @@ decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage)
 							throw(-1);
 						}
 					} else {
-						std::wstring base64_hash;
-						if (!extract_lfn_base64_hash(&s[0], base64_hash))
+						if (!decrypt_reverse_longname(con, &s[0], &storage[0], dir_iv, uni_plain_elem))
 							throw(-1);
-						std::wstring lfn_path;
-						if (con->m_lfn_cache.lookup(&base64_hash[0], lfn_path)) {
-							const WCHAR *ps = wcsrchr(&lfn_path[0], '\\');
-							uni_plain_elem = ps ? ps + 1 : &lfn_path[0];
-						} else {
-							// go through all the files in the dir
-							// if the name is long enough to be a long file name (> 176 chars in utf8)
-							// then encrypt it and see if it matches the one we're looking for
-
-							// store any we generate in the lfn cache for later use
-
-							WIN32_FIND_DATA fdata;
-							hFind = FindFirstFile(&storage[0], &fdata);
-							if (hFind == INVALID_HANDLE_VALUE)
-								throw(-1);
-							do {
-								std::string utf8name;
-
-								if (!unicode_to_utf8(fdata.cFileName, utf8name))
-									throw(-1);
-
-								if (utf8name.length() <= SHORT_NAME_MAX)
-									continue;
-
-								std::wstring find_enc;
-							
-								if (!encrypt_filename(con, dir_iv, fdata.cFileName, find_enc, NULL)) 
-									throw(-1);
-
-								std::wstring find_base64_hash;
-								extract_lfn_base64_hash(&find_enc[0], find_base64_hash);
-								con->m_lfn_cache.store(&find_base64_hash[0], &(storage + fdata.cFileName)[0]);
-								if (find_base64_hash == base64_hash) {
-									uni_plain_elem = fdata.cFileName;
-									break;
-								}
-							} while (FindNextFile(hFind, &fdata));
-
-							FindClose(hFind);
-							hFind = NULL;
-						
-						}
 					}
 
 					storage.append(uni_plain_elem);
@@ -476,7 +517,6 @@ encrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage, std::s
 
 
 			unsigned char dir_iv[DIR_IV_LEN];
-
 
 			if (!get_dir_iv(con, &storage[0], dir_iv))
 				throw(-1);
