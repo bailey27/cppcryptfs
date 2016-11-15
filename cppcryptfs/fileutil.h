@@ -75,17 +75,18 @@ delete_directory(CryptContext *con, LPCWSTR path);
 bool
 delete_file(const CryptContext *con, const WCHAR *filename);
 
+// tests that are true only in reverse mode (rt is forreverse-test)
 bool
-is_config_file(CryptContext *con, LPCWSTR FileName);
+rt_is_config_file(CryptContext *con, LPCWSTR FileName);
 
 bool
-is_dir_iv_file(CryptContext *con, LPCWSTR FileName);
+rt_is_dir_iv_file(CryptContext *con, LPCWSTR FileName);
 
 bool
-is_name_file(CryptContext *con, LPCWSTR FileName);
+rt_is_name_file(CryptContext *con, LPCWSTR FileName);
 
 bool
-is_virtual_file(CryptContext *con, LPCWSTR FileName);
+rt_is_virtual_file(CryptContext *con, LPCWSTR FileName);
 
 bool
 get_file_directory(LPCWSTR filepath, std::wstring& dirpath);

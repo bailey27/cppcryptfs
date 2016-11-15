@@ -176,10 +176,10 @@ public:
 
 			try {
 				if (m_con->GetConfig()->m_reverse) {
-					if (is_config_file(m_con, m_plain_path)) {
+					if (rt_is_config_file(m_con, m_plain_path)) {
 						m_enc_path = m_con->GetConfig()->m_basedir + L"\\";
 						m_enc_path += REVERSE_CONFIG_NAME;
-					} else if (is_virtual_file(m_con, m_plain_path)) {
+					} else if (rt_is_virtual_file(m_con, m_plain_path)) {
 						std::wstring dirpath;
 						if (!get_file_directory(m_plain_path, dirpath))
 							throw(-1);
@@ -365,7 +365,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   DWORD error = 0;
   SECURITY_ATTRIBUTES securityAttrib;
 
-  bool is_virtual = is_virtual_file(GetContext(), FileName);
+  bool is_virtual = rt_is_virtual_file(GetContext(), FileName);
 
   securityAttrib.nLength = sizeof(securityAttrib);
   securityAttrib.lpSecurityDescriptor =
@@ -695,7 +695,7 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 
 	DbgPrint(L"ReadFile : %s, %I64u, paging io = %u\n", FileName, (ULONGLONG)handle, DokanFileInfo->PagingIo);
 
-	bool is_virtual = is_virtual_file(GetContext(), FileName);
+	bool is_virtual = rt_is_virtual_file(GetContext(), FileName);
 
 	if (!handle || (!is_virtual && handle == INVALID_HANDLE_VALUE)) {
 		DbgPrint(L"\tinvalid handle, cleanuped?\n");
@@ -711,7 +711,7 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 
 	CryptFile *file = CryptFile::NewInstance(GetContext());
 
-	if (is_config_file(GetContext(), FileName)) {
+	if (rt_is_config_file(GetContext(), FileName)) {
 		LARGE_INTEGER l;
 		l.QuadPart = Offset;
 		if (SetFilePointerEx(handle, l, NULL, FILE_BEGIN)) {
@@ -1250,18 +1250,31 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
 
   DbgPrint(L"  Opening new handle with READ_CONTROL access\n");
 
-  bool is_virtual = is_virtual_file(GetContext(), filePath);
+  bool is_virtual = rt_is_virtual_file(GetContext(), FileName);
 
-  std::wstring dirpath;
+  std::wstring virt_path;
 
   if (is_virtual) {
-	if (!get_file_directory(filePath, dirpath)) {
-		return ToNtStatus(ERROR_ACCESS_DENIED);
-	}
+	  if (rt_is_dir_iv_file(GetContext(), FileName)) {
+		  if (!get_file_directory(filePath, virt_path)) {
+			  return ToNtStatus(ERROR_ACCESS_DENIED);
+		  }
+	  } else if (rt_is_name_file(GetContext(), FileName)) {
+		  std::wstring enc_filename = FileName;
+
+		  size_t trunc = sizeof(LONGNAME_SUFFIX_W) / sizeof(WCHAR) - 1;
+		  size_t len = enc_filename.length() - trunc;
+		  enc_filename = enc_filename.substr(0, len);
+
+		  if (!decrypt_path(GetContext(), &enc_filename[0], virt_path))
+			  return ToNtStatus(ERROR_ACCESS_DENIED);
+	  } else {
+		  return ToNtStatus(ERROR_ACCESS_DENIED);
+	  }
   }
 
   HANDLE handle = CreateFile(
-	  is_virtual ? &dirpath[0] : filePath,
+	  is_virtual ? &virt_path[0] : filePath,
 	  READ_CONTROL | (((*SecurityInformation & SACL_SECURITY_INFORMATION) ||
 		  (*SecurityInformation & BACKUP_SECURITY_INFORMATION))
 		  ? ACCESS_SYSTEM_SECURITY
@@ -1419,7 +1432,7 @@ CryptFindStreams(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
 
   DbgPrint(L"FindStreams :%s\n", FileName);
 
-  if (is_virtual_file(GetContext(), filePath)) {
+  if (rt_is_virtual_file(GetContext(), FileName)) {
 	  DbgPrint(L"FindStreams on virtual file returing 0\n");
 	  return 0;
   }

@@ -335,7 +335,7 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 }
 
 bool
-is_config_file(CryptContext *con, LPCWSTR FileName)
+rt_is_config_file(CryptContext *con, LPCWSTR FileName)
 {
 	if (!con->GetConfig()->m_reverse)
 		return false;
@@ -344,7 +344,7 @@ is_config_file(CryptContext *con, LPCWSTR FileName)
 }
 
 bool
-is_dir_iv_file(CryptContext *con, LPCWSTR FileName)
+rt_is_dir_iv_file(CryptContext *con, LPCWSTR FileName)
 {
 	CryptConfig *cfg = con->GetConfig();
 
@@ -359,7 +359,7 @@ is_dir_iv_file(CryptContext *con, LPCWSTR FileName)
 }
 
 bool 
-is_name_file(CryptContext *con, LPCWSTR FileName)
+rt_is_name_file(CryptContext *con, LPCWSTR FileName)
 {
 	CryptConfig *cfg = con->GetConfig();
 
@@ -374,9 +374,9 @@ is_name_file(CryptContext *con, LPCWSTR FileName)
 }
 
 bool
-is_virtual_file(CryptContext *con, LPCWSTR FileName)
+rt_is_virtual_file(CryptContext *con, LPCWSTR FileName)
 {
-	return is_dir_iv_file(con, FileName) || is_name_file(con, FileName);
+	return rt_is_dir_iv_file(con, FileName) || rt_is_name_file(con, FileName);
 }
 
 bool
@@ -411,7 +411,7 @@ get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_en
 bool
 read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset)
 {
-	if (is_dir_iv_file(con, FileName)) {
+	if (rt_is_dir_iv_file(con, FileName)) {
 		std::wstring dirpath;
 		if (!get_file_directory(FileName, dirpath))
 			return false;
@@ -426,7 +426,7 @@ read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD
 		memcpy(buf, dir_iv + offset, count);
 		*pNread = (DWORD)count;
 		return true;
-	} else if (is_name_file(con, FileName)) {
+	} else if (rt_is_name_file(con, FileName)) {
 		std::string actual_encrypted;
 		if (!get_actual_encrypted(con, FileName, actual_encrypted))
 			return false;
@@ -495,13 +495,13 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 
 	DWORD dwRet = 0;
 
-	bool is_config = is_config_file(con, inputPath);
+	bool is_config = rt_is_config_file(con, inputPath);
 
-	bool is_dir_iv = is_dir_iv_file(con, FileName);
+	bool is_dir_iv = rt_is_dir_iv_file(con, inputPath);
 
-	bool is_virtual = is_virtual_file(con, FileName);
+	bool is_virtual = rt_is_virtual_file(con, inputPath);
 
-	bool is_long = is_name_file(con, FileName);
+	bool is_long = rt_is_name_file(con, inputPath);
 
 	try {
 
