@@ -16,6 +16,11 @@ Current Status
 
 cppcryptfs is pre-alpha, or more accurately: EXPERIMENTAL.
 
+The developer has been using cppcryptfs in forward (normal) mode for several months and hasn't lost
+any data (yet).  At least one other person is using it.  There haven't been any serious issues reported.
+
+Reverse mode is brand new, and has undergone only limited testing.
+
 Testing
 -------
 
@@ -56,7 +61,11 @@ To make a new encrypted virtual fileystem, first click the "Create" tab.
 
 ![Alt text](/screenshots/screenshot_create.png?raw=true "Create tab")
 
-You need to find or create (you can create a directory in the directory selector in the UI) an empty directory to be the root of your filesystem.
+You need to find or create (you can create a directory in the directory selector in the UI) a directory to be the root of your filesystem.
+
+If you are using normal forward mode, then this directory must be empty.
+
+If you are using reverse mode, it need not be empty (see the section on Reverse Mode in this document which follows this section).
 
 It is strongly recommended that this directory reside on an NTFS filesystem.
 
@@ -64,7 +73,9 @@ Then you need to choose a (hopefully strong) password and repeat it.  The dialog
 
 You can choose to have your file names encryped using AES256-EME or not to encrypt the file names (plain text).
 
-You can choose between AES256-GCM or AES256-SIV (RFC 5297) for file data encryption.  The default is AES256-GCM which is recommended. GCM is about twice as fast as SIV for streaming reads and writes.  SIV was implemented in order to support a reverse mode in the future.
+You can choose between AES256-GCM or AES256-SIV (RFC 5297) for file data encryption.  The default is AES256-GCM which is recommended. GCM is about twice as fast as SIV for streaming reads and writes.  SIV was implemented in order to support a reverse mode.
+
+If check "reverse" then you will be creating a Reverse Mode filesystem.  See the next section in this document which is about Reverse Mode.
 
 When you click on the "Create" button, a gocryptfs.conf file will be created in the directory.  Unless you choose to use plain text file names, a gocryptfs.diriv will also be created there.  Be sure to back up these files in case they get lost or corrupted.  You won't be able to access any of your data if something happens to gocryptfs.conf.  gocryptfs.conf will never change for the life of your filesystem unless you change the volume label (see bellow).
 
@@ -95,6 +106,35 @@ Passwords and keys are locked in memory using VirtualLock(). When they are no lo
 
 If you close the cppcryptfs window, then it will hide itself in the system tray. To exit cppcryptfs, use the Exit button on the mount page or the context menu of the system tray icon.
 
+Reverse Mode
+------
+In reverse mode, the source (root) directory used for the filesystem consists of unencrypted files.  When this directory is mounted, then 
+the cppcryptfs drive letter gives an on-the-fly encrypted view of these files.
+
+Reverse mode fileystems are always mounted read-only.
+
+Reverse mode also gives a view of the config file (as gocryptfs.conf), and if encrypted file names are used, a goccryptfs.diriv file in each directory.  
+And if long file names are usedwith encrypted file names, then the special long file name files are also presented.
+
+If you mount a reverse filesystem and then copy the whole directory tree to some other location, you can then mount that copy (
+which contains encrypted files and 
+the normal mode config file and other support files) as a forward (normal) filesystem.
+
+Reverse mode is useful for when you want to back up a directory tree of unencrypted files, but you want the backup to be encrypted.
+
+Reverse mode uses the deterministic AES256-SIV mode of encryption for file data, and it also does the filename encryption deterministically.
+
+Therefore you can use a utility like rsync to back up your files, and it will backup only the files that have changed.  Also, if delta-syncing would
+work with the unencrypted data, then it will also work with the encrypted data in reverse mode.
+
+When you create a reverse mode fileystem, the root directory of the filesystem doesn't have to be empty (unlike in the case of creating a normal forward
+mode filesystem).  cppcryptfs will create the config file 
+in the root directory of the filesystem.  This is a hidden file called .gocryptfs.reverse.conf (instead of gocryptfs.conf which is used in 
+normal/forward mode).
+
+When you go to mount a filesystem, cppcryptfs first looks for .gocryptfs.reverse.conf, and if it finds it, then it will mount the filesystem
+in reverse mode.  If it doesn't find .gocryptfs.reverse.conf, then it will try to open gocryptfs.conf, and if it succeeds, then the filesysem will
+mounted in forward (normal) mode.
 
 Command Line Options
 ----
@@ -247,5 +287,4 @@ cppcryptfs can mount all filesystems created by gocryptfs v0.7 and higher. Likew
 
 The gocryptfs [compatability matrix](https://github.com/rfjakob/gocryptfs/wiki/Compatibility) provides more details. cppcryptfs *requires* the DirIV, EMENames and GCMIV128 feature flags. It *supports* LongNames and can create filesystems with the flag on and off.
 
-cppcryptfs does not currently have a reverse mode, while gocryptfs does.
 
