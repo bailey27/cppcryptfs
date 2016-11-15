@@ -164,13 +164,13 @@ get_dir_iv(CryptContext *con, const WCHAR *path, unsigned char *diriv)
 }
 
 static bool
-convert_fdata(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, WIN32_FIND_DATAW& fdata, std::string *actual_encrypted)
+convert_fdata(CryptContext *con, BOOL isRoot, const BYTE *dir_iv, const WCHAR *path, WIN32_FIND_DATAW& fdata, std::string *actual_encrypted)
 {
 
 	if (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))
 		return true;
 
-	bool isReverseConfig = con->GetConfig()->m_reverse && !wcscmp(fdata.cFileName, REVERSE_CONFIG_NAME);
+	bool isReverseConfig = isRoot && con->GetConfig()->m_reverse && !wcscmp(fdata.cFileName, REVERSE_CONFIG_NAME);
 
 	long long size = ((long long)fdata.nFileSizeHigh << 32) | fdata.nFileSizeLow;
 
@@ -293,7 +293,7 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 			}
 			if (!is_interesting_name(isRoot, fdata, con))
 				continue;
-			if (!convert_fdata(con, dir_iv, path, fdata, &actual_encrypted))
+			if (!convert_fdata(con, isRoot, dir_iv, path, fdata, &actual_encrypted))
 				continue;
 			fillData(&fdata, dokan_cb, dokan_ctx);
 			if (reverse && !plaintext_names && is_long_name(fdata.cFileName)) {
