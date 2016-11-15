@@ -65,7 +65,7 @@ You need to find or create (you can create a directory in the directory selector
 
 If you are using normal forward mode, then this directory must be empty.
 
-If you are using reverse mode, it need not be empty (see the section on Reverse Mode in this document which follows this section).
+If you are using reverse mode, then it need not be empty (see the section on Reverse Mode in this document which follows this section).
 
 It is strongly recommended that this directory reside on an NTFS filesystem.
 
