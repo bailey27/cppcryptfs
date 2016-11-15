@@ -19,7 +19,7 @@ cppcryptfs is pre-alpha, or more accurately: EXPERIMENTAL.
 The developer has been using cppcryptfs in forward (normal) mode for several months and hasn't lost
 any data (yet).  At least one other person is using it.  There haven't been any serious issues reported.
 
-Reverse mode is brand new, and has undergone only limited testing.
+Reverse mode is brand new and has undergone only limited testing.
 
 Testing
 -------
@@ -113,8 +113,7 @@ the cppcryptfs drive letter gives an on-the-fly encrypted view of these files.
 
 Reverse mode fileystems are always mounted read-only.
 
-Reverse mode also gives a view of the config file (as gocryptfs.conf), and if encrypted file names are used, a goccryptfs.diriv file in each directory.  
-And if long file names are usedwith encrypted file names, then the special long file name files are also presented.
+Reverse mode also gives a view of the config file (as gocryptfs.conf), and if encrypted file names are used, a goccryptfs.diriv file in each directory.  And if long file names are usedwith encrypted file names, then the special long file name files are also presented.
 
 If you mount a reverse filesystem and then copy the whole directory tree to some other location, you can then mount that copy (
 which contains encrypted files and 
@@ -122,9 +121,9 @@ the normal mode config file and other support files) as a forward (normal) files
 
 Reverse mode is useful for when you want to back up a directory tree of unencrypted files, but you want the backup to be encrypted.
 
-Reverse mode uses the deterministic AES256-SIV mode of encryption for file data, and it also does the filename encryption deterministically.
+Reverse mode uses a deterministic AES256-SIV mode of encryption for file data, and it also does the filename encryption deterministically.
 
-Therefore you can use a utility like rsync to back up your files, and it will backup only the files that have changed.  Also, if delta-syncing would
+Therefore you can use a utility like rsync to back up your files, and it will back up only the files that have changed.  Also, if delta-syncing would
 work with the unencrypted data, then it will also work with the encrypted data in reverse mode.
 
 When you create a reverse mode fileystem, the root directory of the filesystem doesn't have to be empty (unlike in the case of creating a normal forward
