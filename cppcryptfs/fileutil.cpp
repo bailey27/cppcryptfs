@@ -224,13 +224,17 @@ convert_fdata(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, WIN32_FI
 	return true;
 }
 
-static bool is_interesting_name(BOOL isRoot, const WIN32_FIND_DATAW& fdata, bool reverse)
+static bool is_interesting_name(BOOL isRoot, const WIN32_FIND_DATAW& fdata, CryptContext *con)
 {
+	bool reverse = con->GetConfig()->m_reverse;
+	bool plaintext = con->GetConfig()->m_PlaintextNames;
+	if (!reverse)
+		atoi("1");
 	if (isRoot && (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))) {
 		return false;
-	} else if ((!reverse && !wcscmp(fdata.cFileName, CONFIG_NAME)) || !wcscmp(fdata.cFileName, DIR_IV_NAME)) {
+	} else if ((!reverse && !wcscmp(fdata.cFileName, CONFIG_NAME)) || (!reverse && !plaintext && !wcscmp(fdata.cFileName, DIR_IV_NAME))) {
 		return false;
-	} else if (is_long_name_file(fdata.cFileName)) {
+	} else if (!plaintext && !reverse && is_long_name_file(fdata.cFileName)) {
 		return false;
 	} else {
 		return true;
@@ -287,7 +291,7 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 			if (reverse && !wcscmp(fdata.cFileName, L".")) {
 				fdata_dot = fdata;
 			}
-			if (!is_interesting_name(isRoot, fdata, reverse))
+			if (!is_interesting_name(isRoot, fdata, con))
 				continue;
 			if (!convert_fdata(con, dir_iv, path, fdata, &actual_encrypted))
 				continue;
@@ -491,7 +495,7 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 
 	DWORD dwRet = 0;
 
-	bool is_config = is_config_file(con, FileName);
+	bool is_config = is_config_file(con, inputPath);
 
 	bool is_dir_iv = is_dir_iv_file(con, FileName);
 
@@ -628,6 +632,9 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 			pInfo->nFileSizeHigh = l.HighPart;
 	
 		}
+
+		if (is_config)
+			pInfo->dwFileAttributes &= ~FILE_ATTRIBUTE_HIDDEN;
 
 
 	} catch (int err) {

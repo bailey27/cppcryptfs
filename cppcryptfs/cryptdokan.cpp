@@ -1249,8 +1249,19 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
   CryptCheckFlag(*SecurityInformation, UNPROTECTED_SACL_SECURITY_INFORMATION);
 
   DbgPrint(L"  Opening new handle with READ_CONTROL access\n");
+
+  bool is_virtual = is_virtual_file(GetContext(), filePath);
+
+  std::wstring dirpath;
+
+  if (is_virtual) {
+	if (!get_file_directory(filePath, dirpath)) {
+		return ToNtStatus(ERROR_ACCESS_DENIED);
+	}
+  }
+
   HANDLE handle = CreateFile(
-	  filePath,
+	  is_virtual ? &dirpath[0] : filePath,
 	  READ_CONTROL | (((*SecurityInformation & SACL_SECURITY_INFORMATION) ||
 		  (*SecurityInformation & BACKUP_SECURITY_INFORMATION))
 		  ? ACCESS_SYSTEM_SECURITY
@@ -1407,6 +1418,11 @@ CryptFindStreams(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
 
 
   DbgPrint(L"FindStreams :%s\n", FileName);
+
+  if (is_virtual_file(GetContext(), filePath)) {
+	  DbgPrint(L"FindStreams on virtual file returing 0\n");
+	  return 0;
+  }
 
   hFind = FindFirstStreamW(filePath, FindStreamInfoStandard, &findData, 0);
 
