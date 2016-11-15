@@ -73,7 +73,7 @@ Then you need to choose a (hopefully strong) password and repeat it.  The dialog
 
 You can choose to have your file names encryped using AES256-EME or not to encrypt the file names (plain text).
 
-You can choose between AES256-GCM or AES256-SIV (RFC 5297) for file data encryption.  The default is AES256-GCM which is recommended. GCM is about twice as fast as SIV for streaming reads and writes.  SIV was implemented in order to support a reverse mode. Note: the gocryptfs documentation refers to AES256-SIV as AES-512-SIV. It is called AES256-SIV here because the 512-bit SIV key is derived from the 256-bit master key.
+You can choose between AES256-GCM or AES256-SIV (RFC 5297) for file data encryption.  The default is AES256-GCM which is recommended. GCM is about twice as fast as SIV for streaming reads and writes.  SIV was implemented in order to support a reverse mode. Note: the gocryptfs documentation refers to AES256-SIV as AES-512-SIV. It is called AES256-SIV here because the 512-bit SIV key is derived from the 256-bit master key (as is the case with gocryptfs).
 
 If check "reverse" then you will be creating a Reverse Mode filesystem.  See the next section in this document which is about Reverse Mode.
 
@@ -121,7 +121,7 @@ Reverse mode is useful for when you want to back up a directory tree of unencryp
 
 Reverse mode uses a deterministic AES256-SIV mode of encryption for file data, and it also does the filename encryption deterministically.
 
-Note: when you mount a filesystem using AES256-SIV in forward mode, any new encryption is done non-deterministcally.
+Note: when you mount a filesystem using AES256-SIV in forward mode, any new encryption is done non-deterministcally (as is the case with gocryptfs).
 
 Therefore you can use a utility like rsync to back up your files, and it will back up only the files that have changed.  Also, if delta-syncing would
 work with the unencrypted data, then it will also work with the encrypted data in reverse mode.
