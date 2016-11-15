@@ -79,6 +79,11 @@ derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const ch
 
 	wpath = pathstr;
 
+	if (wpath.length() > 0) {
+		if (wpath[wpath.length() - 1] == '\\' || wpath[wpath.length()] - 1 == '/')
+			wpath.erase(wpath.length() - 1);
+	}
+
 	int i;
 	int len = (int)wpath.length();
 	for (i = 0; i < len; i++) {
@@ -428,8 +433,6 @@ decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage)
 				if (!derive_path_iv(con, &diriv_path[0], dir_iv, TYPE_DIRIV))
 					throw(-1);
 
-				diriv_path.push_back('/');
-
 				if (!con->GetConfig()->m_EMENames) {
 					// CBC names no longer supported
 					throw(-1);
@@ -462,6 +465,7 @@ decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage)
 					storage.append(uni_plain_elem);
 
 					if (*p) {
+						diriv_path.push_back(*p);
 						storage.push_back(*p++); // append slash
 
 						if (!derive_path_iv(con, &diriv_path[0], dir_iv, TYPE_DIRIV))
