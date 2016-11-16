@@ -109,7 +109,7 @@ If you close the cppcryptfs window, then it will hide itself in the system tray.
 Reverse Mode
 ------
 In reverse mode, the source (root) directory used for the filesystem consists of unencrypted files.  When this directory is mounted, then 
-the cppcryptfs drive letter gives an on-the-fly encrypted view of these files.
+the cppcryptfs drive letter provides an on-the-fly encrypted view of these files.
 
 Reverse mode fileystems are always mounted read-only.
 
