@@ -615,6 +615,13 @@ BOOL CryptFileReverse::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputP
 		return TRUE;
 	} 
 
+	// Here MakeBigEndianNative() is used to ensure that the version
+	// stored in the header is in big-endian format
+	// (it byte-swaps on a little-endian machine and
+	// does nothing on a big-endian machine).
+	//
+	// This is so we don't have to byte-swap it when reading
+	// from the virtual part of the file (the header).
 	m_header.version = MakeBigEndianNative((unsigned short)m_con->GetConfig()->m_Version);
 
 
