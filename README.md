@@ -113,17 +113,7 @@ the cppcryptfs drive letter gives an on-the-fly encrypted view of these files.
 
 Reverse mode fileystems are always mounted read-only.
 
-Reverse mode also gives a view of the config file (as gocryptfs.conf), and if encrypted file names are used, a goccryptfs.diriv file in each directory.  And if long file names are usedwith encrypted file names, then the special long file name files are also presented.
-
-If you mount a reverse filesystem and then copy the whole directory tree to some other location, you can then mount that copy (which contains encrypted files and the normal mode config file and other support files) as a forward (normal) filesystem.
-
-Reverse mode is useful for when you want to back up a directory tree of unencrypted files, but you want the backup to be encrypted.
-
-Reverse mode uses a deterministic AES256-SIV mode of encryption for file data, and it also does the filename encryption deterministically.
-
-Note: when you mount a filesystem using AES256-SIV in forward mode, any new encryption is done non-deterministcally (as is the case with gocryptfs).
-
-Therefore you can use a utility like rsync to back up your files, and it will copy only the files that have changed.  Also, if your backup utility supports delta-syncing (as rsync does) when working with the unencrypted data, then it will also do deleta-syncing with the encrypted data in reverse mode as long as the data is changed in-place. If data is inserted into a file, then a cascading change will appear in the encrypted file data from the point at which the data was inserted and that data will need to be copied again.
+Reverse mode also gives a view of the config file (as gocryptfs.conf), and if encrypted file names are used, a goccryptfs.diriv file in each directory.  And if long file names are used with encrypted file names, then the special long file name files are also presented.
 
 When you create a reverse mode fileystem, the root directory of the filesystem doesn't have to be empty (unlike in the case of creating a normal forward
 mode filesystem).  cppcryptfs will create the config file 
@@ -133,6 +123,17 @@ normal/forward mode).
 When you go to mount a filesystem, cppcryptfs first looks for .gocryptfs.reverse.conf, and if it finds it, then it will mount the filesystem
 in reverse mode.  If it doesn't find .gocryptfs.reverse.conf, then it will try to open gocryptfs.conf, and if it succeeds, then the filesysem will
 mounted in forward (normal) mode.
+
+If you mount a reverse filesystem and then copy the whole directory tree to some other location, you can then mount that copy (which contains encrypted files and the normal mode config file and other support files) as a forward (normal) filesystem.
+
+Reverse mode is useful for when you want to back up a directory tree of unencrypted files, but you want the backup to be encrypted.
+
+Reverse mode uses a deterministic AES256-SIV mode of encryption for file data, and it also does the file name encryption deterministically.
+
+Note: when you mount a filesystem using AES256-SIV in forward mode, any new encryption is done non-deterministcally (as is the case with gocryptfs).
+
+Because the encryption is deterministic, you can use a utility like rsync to back up your files, and it will copy only the files that have changed.  Also, if your backup utility supports delta-syncing (as rsync does) when working with the unencrypted data, then it will also do delta-syncing with the encrypted data in reverse mode as long as the data is changed in-place. If data is inserted into a file, then a cascading change will appear in the encrypted file data from the point at which the data was inserted (actually, starting with that whole encryption block) and that data from there will need to be copied again.
+
 
 Command Line Options
 ----
