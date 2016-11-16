@@ -269,7 +269,7 @@ void CCreatePropertyPage::OnClickedSelect()
 	if (cpath.GetLength() < 1)
 		return;
 
-	if (!can_delete_directory(cpath, TRUE)) {
+	if (!IsDlgButtonChecked(IDC_REVERSE) && !can_delete_directory(cpath, TRUE)) {
 		MessageBox(L"directory must be empty", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
 	}
