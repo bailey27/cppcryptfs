@@ -111,9 +111,9 @@ Reverse Mode
 In reverse mode, the source (root) directory used for the filesystem consists of unencrypted files.  When this directory is mounted, then 
 the cppcryptfs drive letter provides an on-the-fly encrypted view of these files.
 
-Reverse mode fileystems are always mounted read-only.
-
 Reverse mode also gives a view of the config file (as gocryptfs.conf), and if encrypted file names are used, a goccryptfs.diriv file in each directory.  And if long file names are used with encrypted file names, then the special long file name files are also presented.
+
+Reverse mode fileystems are always mounted read-only.
 
 When you create a reverse mode fileystem, the root directory of the filesystem doesn't have to be empty (unlike in the case of creating a normal forward
 mode filesystem).  cppcryptfs will create the config file 
