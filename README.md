@@ -73,7 +73,7 @@ Then you need to choose a (hopefully strong) password and repeat it.  The dialog
 
 You can choose to have your file names encryped using AES256-EME or not to encrypt the file names (plain text).
 
-You can choose between AES256-GCM or AES256-SIV (RFC 5297) for file data encryption.  The default is AES256-GCM which is recommended. GCM is about twice as fast as SIV for streaming reads and writes.  SIV was implemented in order to support reverse mode. Note: the gocryptfs documentation refers to AES256-SIV as AES-512-SIV. It is called AES256-SIV here because the 512-bit SIV key is derived from the 256-bit master key (as is the case with gocryptfs).
+You can choose between AES256-GCM or AES256-SIV (RFC 5297) for file data encryption.  The default is AES256-GCM which is recommended. GCM is about twice as fast as SIV for streaming reads and writes.  SIV was implemented in order to support reverse mode. Note: In the gocryptfs documentation, this mode is called AES-512-SIV, which is the proper name for this mode of operation. Howerver, it is called AES256-SIV in cppcryptfs because the 512-bit SIV key is derived from the 256-bit master key (as is the case with gocryptfs) and also because the developer of cppcryptfs doesn't want people to think this mode is more secure than AES256-GCM.
 
 If you check Reverse then you will be creating a Reverse Mode filesystem.  See the next section in this document which is about Reverse Mode.
 
