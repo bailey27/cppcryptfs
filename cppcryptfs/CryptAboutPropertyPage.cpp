@@ -544,7 +544,8 @@ static const WCHAR *licenses[] = {
 	// aes-siv
 
 	L"project url: github.com/arktronic/aes-siv\r\n\r\n"
-	L"cppcryptfs usage: code from this project was modified and incorporated into cppcryptfs (in the cppcryptfs/aes-siv directory).\r\n\r\n"
+	L"cppcryptfs usage: code from this project was modified and incorporated into cppcryptfs (in the cppcryptfs/aes-siv directory).  "
+	L"The low-level, third-party AES implementation included with aes-siv was replaced with a new implementation that uses OpenSSL.\r\n\r\n"
 	L"aes-siv copyright and license:\r\n\r\n"
 	L"This project is licensed under the OSI-approved ISC License:\r\n"
 	L"\r\n"
