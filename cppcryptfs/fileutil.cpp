@@ -232,7 +232,7 @@ static bool is_interesting_name(BOOL isRoot, const WIN32_FIND_DATAW& fdata, Cryp
 		atoi("1");
 	if (isRoot && (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))) {
 		return false;
-	} else if ((!reverse && !wcscmp(fdata.cFileName, CONFIG_NAME)) || (!reverse && !plaintext && !wcscmp(fdata.cFileName, DIR_IV_NAME))) {
+	} else if ((!reverse && isRoot && !wcscmp(fdata.cFileName, CONFIG_NAME)) || (!reverse && !plaintext && !wcscmp(fdata.cFileName, DIR_IV_NAME))) {
 		return false;
 	} else if (!plaintext && !reverse && is_long_name_file(fdata.cFileName)) {
 		return false;
