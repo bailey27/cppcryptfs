@@ -132,7 +132,7 @@ Reverse mode uses a deterministic AES256-SIV mode of encryption for file data, a
 
 Note: when you mount a filesystem using AES256-SIV in forward mode, any new encryption is done non-deterministcally (as is the case with gocryptfs).
 
-Because the encryption is deterministic, you can use a utility like rsync to back up your files, and it will copy only the files that have changed.  Also, if your backup utility supports delta-syncing (as rsync does) when working with the unencrypted data, then it will also do delta-syncing with the encrypted data in reverse mode as long as the data is changed in-place. If data is inserted into a file, then a cascading change will appear in the encrypted file data from the point at which the data was inserted (actually, starting with that whole encryption block) and that data from there will need to be copied again.
+Because the encryption is deterministic, you can use a utility like rsync to back up your files, and it will copy only the files that have changed.  Also, if your backup utility supports delta-syncing (as rsync does) when working with the unencrypted data, then it will also do delta-syncing with the encrypted data in reverse mode as long as the data is changed in-place. If data is inserted into a file, then a cascading change will appear in the encrypted file data from the point at which the data was inserted (actually, starting with that whole encryption block) and the data from there on will need to be copied again.
 
 
 Command Line Options
