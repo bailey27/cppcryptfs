@@ -98,16 +98,16 @@ derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const ch
 
 	bool bRet = true;
 
-	char *pbuf = NULL;
+	BYTE *pbuf = NULL;
 
 	try {
 		int typelen = (int)strlen(type);
 		int bufsize = (int)(utf8path.length() + 1 + typelen + 1);
-		pbuf = new char[bufsize];
+		pbuf = new BYTE[bufsize];
 		memcpy(pbuf, &utf8path[0], utf8path.length() + 1);
 		memcpy(pbuf + utf8path.length() + 1, type, typelen + 1);
-		unsigned char hash[SHA256_LEN];
-		if (!sha256((const BYTE*)pbuf, bufsize-1, hash))
+		BYTE hash[SHA256_LEN];
+		if (!sha256(pbuf, bufsize-1, hash))
 			throw(-1);
 
 		memcpy(iv, hash, DIR_IV_LEN);  // all iv's are 16 bytes (DIR_IV_LEN)
