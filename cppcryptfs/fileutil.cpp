@@ -236,6 +236,8 @@ static bool is_interesting_name(BOOL isRoot, const WIN32_FIND_DATAW& fdata, Cryp
 		return false;
 	} else if (!plaintext && !reverse && is_long_name_file(fdata.cFileName)) {
 		return false;
+	} else if (isRoot && reverse && plaintext && !wcscmp(fdata.cFileName, CONFIG_NAME)) {
+		return false;
 	} else {
 		return true;
 	}
