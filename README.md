@@ -123,8 +123,7 @@ Reverse mode uses a deterministic AES256-SIV mode of encryption for file data, a
 
 Note: when you mount a filesystem using AES256-SIV in forward mode, any new encryption is done non-deterministcally (as is the case with gocryptfs).
 
-Therefore you can use a utility like rsync to back up your files, and it will back up only the files that have changed.  Also, if delta-syncing would
-work with the unencrypted data, then it will also work with the encrypted data in reverse mode.
+Therefore you can use a utility like rsync to back up your files, and it will copy only the files that have changed.  Also, if your backup utility supports delta-syncing (as rsync does) when working with the unencrypted data, then it will also do deleta-syncing with the encrypted data in reverse mode as long as the data is changed in-place. If data is inserted into a file, then a cascading change will appear in the encrypted file data from the point at which the data was inserted and that data will need to be copied again.
 
 When you create a reverse mode fileystem, the root directory of the filesystem doesn't have to be empty (unlike in the case of creating a normal forward
 mode filesystem).  cppcryptfs will create the config file 
