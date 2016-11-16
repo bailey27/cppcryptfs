@@ -228,15 +228,15 @@ static bool is_interesting_name(BOOL isRoot, const WIN32_FIND_DATAW& fdata, Cryp
 {
 	bool reverse = con->GetConfig()->m_reverse;
 	bool plaintext = con->GetConfig()->m_PlaintextNames;
-	if (!reverse)
-		atoi("1");
+	bool isconfig = !lstrcmpi(fdata.cFileName, CONFIG_NAME);
+	
 	if (isRoot && (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))) {
 		return false;
-	} else if ((!reverse && isRoot && !wcscmp(fdata.cFileName, CONFIG_NAME)) || (!reverse && !plaintext && !wcscmp(fdata.cFileName, DIR_IV_NAME))) {
+	} else if ((!reverse && isRoot && isconfig) || (!reverse && !plaintext && !lstrcmpi(fdata.cFileName, DIR_IV_NAME))) {
 		return false;
 	} else if (!plaintext && !reverse && is_long_name_file(fdata.cFileName)) {
 		return false;
-	} else if (isRoot && reverse && plaintext && !wcscmp(fdata.cFileName, CONFIG_NAME)) {
+	} else if (isRoot && reverse && plaintext && isconfig) {
 		return false;
 	} else {
 		return true;
