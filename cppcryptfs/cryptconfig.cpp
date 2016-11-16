@@ -629,7 +629,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		if (m_reverse) {
 			if (PathFileExists(&config_path[0])) {
-				error_mes = config_path + L" (normally a hidden file) already exits.  Please remove it and try again.";
+				error_mes = config_path + L" (normally a hidden file) already exists.  Please remove it and try again.";
 				throw(-1);
 			}
 		} else {
