@@ -117,7 +117,7 @@ Reverse mode fileystems are always mounted read-only.
 
 When you create a reverse mode fileystem, the root directory of the filesystem doesn't have to be empty (unlike in the case of creating a normal forward
 mode filesystem).  cppcryptfs will create the config file 
-in the root directory of the filesystem.  This is a hidden file called .gocryptfs.reverse.conf (instead of an unhidden gocryptfs.conf which is used in 
+in the root directory of the filesystem.  This is a hidden file named .gocryptfs.reverse.conf (instead of an unhidden gocryptfs.conf which is used in 
 normal/forward mode).
 
 When you go to mount a filesystem, cppcryptfs first looks for .gocryptfs.reverse.conf, and if it finds it, then it will mount the filesystem
