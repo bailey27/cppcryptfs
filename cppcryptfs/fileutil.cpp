@@ -379,6 +379,18 @@ rt_is_virtual_file(CryptContext *con, LPCWSTR FileName)
 	return rt_is_dir_iv_file(con, FileName) || rt_is_name_file(con, FileName);
 }
 
+const WCHAR *
+remove_longname_suffix(const WCHAR *filepath, std::wstring& storage)
+{
+	storage = filepath;
+
+	size_t len = storage.length() - (sizeof(LONGNAME_SUFFIX_W) / sizeof(WCHAR) - 1);
+
+	storage = storage.substr(0, len);
+
+	return &storage[0];
+}
+
 bool
 get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_encrypted)
 {
@@ -501,7 +513,7 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 
 	bool is_virtual = rt_is_virtual_file(con, inputPath);
 
-	bool is_long = rt_is_name_file(con, inputPath);
+	bool is_name_file = rt_is_name_file(con, inputPath);
 
 	try {
 
@@ -544,12 +556,11 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 			pInfo->nFileSizeLow = DIR_IV_LEN;
 			pInfo->nNumberOfLinks = 1;
 
-		} else if (is_long) {
-			std::wstring enc_filename = inputPath;
+		} else if (is_name_file) {
 
-			size_t trunc = sizeof(LONGNAME_SUFFIX_W) / sizeof(WCHAR) - 1;
-			size_t len = enc_filename.length() - trunc;
-			enc_filename = enc_filename.substr(0, len);
+			std::wstring enc_filename;
+
+			remove_longname_suffix(inputPath, enc_filename);
 
 			std::wstring decrypted_name;
 

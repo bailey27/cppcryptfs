@@ -100,3 +100,6 @@ read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD
 bool
 get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_encrypted);
 
+const WCHAR *
+remove_longname_suffix(const WCHAR *filepath, std::wstring& storage);
+

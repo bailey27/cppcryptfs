@@ -585,8 +585,19 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 		  CreateDisposition == FILE_CREATE) 
 		  return STATUS_OBJECT_NAME_COLLISION; // File already exist because
 											   // GetFileAttributes found it
+
+	  bool is_reverse_config_pt = false;
+	  if (GetContext()->GetConfig()->m_reverse && GetContext()->GetConfig()->m_PlaintextNames) {
+			std::wstring rev_conf = L"\\";
+			rev_conf += REVERSE_CONFIG_NAME;
+
+			if (!lstrcmpi(FileName, &rev_conf[0])) {
+				is_reverse_config_pt = true;
+				SetLastError(ERROR_FILE_NOT_FOUND);
+			}
+	  }
 	 
-		handle = is_virtual ? INVALID_HANDLE_VALUE : CreateFile(
+	  handle = is_reverse_config_pt || is_virtual ? INVALID_HANDLE_VALUE : CreateFile(
 			filePath,
 			DesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
 			ShareAccess,
@@ -1260,13 +1271,12 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
 			  return ToNtStatus(ERROR_ACCESS_DENIED);
 		  }
 	  } else if (rt_is_name_file(GetContext(), FileName)) {
-		  std::wstring enc_filename = FileName;
+		  
+		  std::wstring enc_path;
 
-		  size_t trunc = sizeof(LONGNAME_SUFFIX_W) / sizeof(WCHAR) - 1;
-		  size_t len = enc_filename.length() - trunc;
-		  enc_filename = enc_filename.substr(0, len);
+		  remove_longname_suffix(FileName, enc_path);
 
-		  if (!decrypt_path(GetContext(), &enc_filename[0], virt_path))
+		  if (!decrypt_path(GetContext(), &enc_path[0], virt_path))
 			  return ToNtStatus(ERROR_ACCESS_DENIED);
 	  } else {
 		  return ToNtStatus(ERROR_ACCESS_DENIED);
