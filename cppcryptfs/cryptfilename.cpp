@@ -519,8 +519,6 @@ encrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage, std::s
 
 			unsigned char dir_iv[DIR_IV_LEN];
 
-			if (!wcscmp(path, L"foo\\gocryptfs.diriv"))
-				atoi("1");
 			if (!get_dir_iv(con, &storage[0], dir_iv))
 				throw(-1);
 
