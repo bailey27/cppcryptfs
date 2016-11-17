@@ -130,7 +130,7 @@ If you mount a reverse filesystem and then copy the whole directory tree to some
 
 Reverse mode is useful for when you want to back up a directory tree of unencrypted files, but you want the backup to be encrypted.
 
-Reverse mode uses a deterministic AES256-SIV mode of encryption for file data, and it also does the file name encryption deterministically.
+Reverse mode uses a deterministic AES256-SIV mode of encryption (really AES512-SIV but with the 512-bit SIV key derived from the 256-bit master key) for file data, and it also does the file name encryption deterministically.
 
 Note: when you mount a filesystem using AES256-SIV in forward mode, any new encryption is done non-deterministcally (as is the case with gocryptfs).
 
