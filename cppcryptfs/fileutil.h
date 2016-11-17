@@ -80,6 +80,9 @@ bool
 rt_is_config_file(CryptContext *con, LPCWSTR FileName);
 
 bool
+rt_is_reverse_config_file(CryptContext *con, LPCWSTR FIleName);
+
+bool
 rt_is_dir_iv_file(CryptContext *con, LPCWSTR FileName);
 
 bool
@@ -102,4 +105,3 @@ get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_en
 
 const WCHAR *
 remove_longname_suffix(const WCHAR *filepath, std::wstring& storage);
-

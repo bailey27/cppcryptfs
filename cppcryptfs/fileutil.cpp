@@ -342,7 +342,16 @@ rt_is_config_file(CryptContext *con, LPCWSTR FileName)
 	if (!con->GetConfig()->m_reverse)
 		return false;
 	else
-		return *FileName == '\\' && !wcscmp(FileName + 1, CONFIG_NAME);
+		return *FileName == '\\' && !lstrcmpi(FileName + 1, CONFIG_NAME);
+}
+
+bool
+rt_is_reverse_config_file(CryptContext *con, LPCWSTR FileName)
+{
+	if (!con->GetConfig()->m_reverse)
+		return false;
+	else
+		return *FileName == '\\' && !lstrcmpi(FileName + 1, REVERSE_CONFIG_NAME);
 }
 
 bool
@@ -357,7 +366,7 @@ rt_is_dir_iv_file(CryptContext *con, LPCWSTR FileName)
 
 	const WCHAR *str = last_slash ? last_slash + 1 : FileName;
 
-	return !wcscmp(str, DIR_IV_NAME);
+	return !lstrcmpi(str, DIR_IV_NAME);
 }
 
 bool 
