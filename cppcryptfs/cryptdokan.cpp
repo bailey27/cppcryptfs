@@ -367,6 +367,8 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
   bool is_virtual = rt_is_virtual_file(GetContext(), FileName);
 
+  bool is_reverse_config = rt_is_reverse_config_file(GetContext(), FileName);
+
   securityAttrib.nLength = sizeof(securityAttrib);
   securityAttrib.lpSecurityDescriptor =
       SecurityContext->AccessState.SecurityDescriptor;
@@ -420,6 +422,11 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   CryptCheckFlag(DesiredAccess, STANDARD_RIGHTS_READ);
   CryptCheckFlag(DesiredAccess, STANDARD_RIGHTS_WRITE);
   CryptCheckFlag(DesiredAccess, STANDARD_RIGHTS_EXECUTE);
+
+  if (is_reverse_config) {
+	  DbgPrint(L"Reverse Mode: failing attempt to open reverse config file %s\n", FileName);
+	  return ToNtStatus(ERROR_FILE_NOT_FOUND);
+  }
 
   // When filePath is a directory, needs to change the flag so that the file can
   // be opened.
@@ -586,32 +593,28 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 		  return STATUS_OBJECT_NAME_COLLISION; // File already exist because
 											   // GetFileAttributes found it
 
-	  bool is_reverse_config = false;
-	  if (GetContext()->GetConfig()->m_reverse) {
-			if (*FileName == '\\' && !lstrcmpi(FileName + 1, REVERSE_CONFIG_NAME)) {
-				is_reverse_config = true;
-				SetLastError(ERROR_FILE_NOT_FOUND);
-			} else if (is_virtual) {
-				SetLastError(0);
-			}
+	  if (is_virtual) {
+		  SetLastError(0);
+		  handle = INVALID_HANDLE_VALUE;
+	  } else {
+
+		  handle = CreateFile(
+			  filePath,
+			  DesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
+			  ShareAccess,
+			  &securityAttrib, // security attribute
+			  creationDisposition,
+			  fileAttributesAndFlags, // |FILE_FLAG_NO_BUFFERING,
+			  NULL);                  // template file handle
 	  }
-	 
-	  handle = is_reverse_config || is_virtual ? INVALID_HANDLE_VALUE : CreateFile(
-			filePath,
-			DesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
-			ShareAccess,
-			&securityAttrib, // security attribute
-			creationDisposition,
-			fileAttributesAndFlags, // |FILE_FLAG_NO_BUFFERING,
-			NULL);                  // template file handle
 	
-		status = ToNtStatus(GetLastError());
+	  status = ToNtStatus(GetLastError());
 
-    if (!is_virtual && handle == INVALID_HANDLE_VALUE) {
-      error = GetLastError();
-      DbgPrint(L"\terror code = %d\n\n", error);
+	if (!is_virtual && handle == INVALID_HANDLE_VALUE) {
+		  error = GetLastError();
+		  DbgPrint(L"\terror code = %d\n\n", error);
 
-      status = ToNtStatus(error);
+		  status = ToNtStatus(error);
     } else {
 
 		if (actual_encrypted.size() > 0) {
