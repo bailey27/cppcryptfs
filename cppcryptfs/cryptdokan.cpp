@@ -586,18 +586,17 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 		  return STATUS_OBJECT_NAME_COLLISION; // File already exist because
 											   // GetFileAttributes found it
 
-	  bool is_reverse_config_pt = false;
-	  if (GetContext()->GetConfig()->m_reverse && GetContext()->GetConfig()->m_PlaintextNames) {
-			std::wstring rev_conf = L"\\";
-			rev_conf += REVERSE_CONFIG_NAME;
-
-			if (!lstrcmpi(FileName, &rev_conf[0])) {
-				is_reverse_config_pt = true;
+	  bool is_reverse_config = false;
+	  if (GetContext()->GetConfig()->m_reverse) {
+			if (*FileName == '\\' && !lstrcmpi(FileName + 1, REVERSE_CONFIG_NAME)) {
+				is_reverse_config = true;
 				SetLastError(ERROR_FILE_NOT_FOUND);
+			} else if (is_virtual) {
+				SetLastError(0);
 			}
 	  }
 	 
-	  handle = is_reverse_config_pt || is_virtual ? INVALID_HANDLE_VALUE : CreateFile(
+	  handle = is_reverse_config || is_virtual ? INVALID_HANDLE_VALUE : CreateFile(
 			filePath,
 			DesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
 			ShareAccess,
