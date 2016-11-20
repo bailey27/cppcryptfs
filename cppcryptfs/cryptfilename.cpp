@@ -102,12 +102,12 @@ derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const ch
 
 	try {
 		int typelen = (int)strlen(type);
-		int bufsize = (int)(utf8path.length() + 1 + typelen + 1);
+		int bufsize = (int)(utf8path.length() + 1 + typelen);
 		pbuf = new BYTE[bufsize];
 		memcpy(pbuf, &utf8path[0], utf8path.length() + 1);
-		memcpy(pbuf + utf8path.length() + 1, type, typelen + 1);
+		memcpy(pbuf + utf8path.length() + 1, type, typelen);
 		BYTE hash[SHA256_LEN];
-		if (!sha256(pbuf, bufsize-1, hash))
+		if (!sha256(pbuf, bufsize, hash))
 			throw(-1);
 
 		memcpy(iv, hash, DIR_IV_LEN);  // all iv's are 16 bytes (DIR_IV_LEN)
@@ -295,7 +295,6 @@ extract_lfn_base64_hash(const WCHAR *lfn, std::wstring& storage)
 }	
 
 
-//decrypt_reverse_longname(con, &s[0], &storage[0], uni_plain_elem)
 const WCHAR *
 decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path, const BYTE *dir_iv, std::wstring& decrypted_name)
 {
@@ -312,7 +311,7 @@ decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path
 		std::wstring lfn_path;
 		if (con->m_lfn_cache.lookup(&base64_hash[0], lfn_path)) {
 			const WCHAR *ps = wcsrchr(&lfn_path[0], '\\');
-			decrypted_name /* uni_plain_elem */ = ps ? ps + 1 : &lfn_path[0];
+			decrypted_name = ps ? ps + 1 : &lfn_path[0];
 			found = true;
 		} else {
 			// go through all the files in the dir
@@ -406,8 +405,7 @@ decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage)
 						throw(-1);
 					}
 					std::wstring lfn_path;
-					if (con->m_lfn_cache.lookup(&base64_hash[0], lfn_path)) {
-						storage = lfn_path;
+					if (con->m_lfn_cache.lookup(&base64_hash[0], storage)) {
 						done = true;
 					}
 				}
