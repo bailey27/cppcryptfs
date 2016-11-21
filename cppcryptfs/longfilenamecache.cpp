@@ -109,7 +109,7 @@ bool LongFilenameCache::check_node_clean(LongFilenameCacheNode *node, const std:
 
 
 
-bool LongFilenameCache::lookup(LPCWSTR base64_hash, std::wstring& path)
+bool LongFilenameCache::lookup(LPCWSTR base64_hash, std::wstring *path, std::string *actual_encrypted)
 {
 
 	const WCHAR *key = base64_hash;
@@ -130,7 +130,10 @@ bool LongFilenameCache::lookup(LPCWSTR base64_hash, std::wstring& path)
 
 			// The entry not stale, so use it.
 
-			path = node->m_path;
+			if (path)
+				*path = node->m_path;
+			if (actual_encrypted)
+				*actual_encrypted = node->m_actual_encrypted;
 
 			// if node isn't already at front of list, remove
 			// it from wherever it was and put it at the front
@@ -170,7 +173,7 @@ bool LongFilenameCache::lookup(LPCWSTR base64_hash, std::wstring& path)
 }
 
 
-bool LongFilenameCache::store(LPCWSTR base64_hash, LPCWSTR path)
+bool LongFilenameCache::store(LPCWSTR base64_hash, LPCWSTR path, const char *actual_encrypted)
 {
 
 	bool rval = true;
@@ -213,6 +216,7 @@ bool LongFilenameCache::store(LPCWSTR base64_hash, LPCWSTR path)
 
 			node->m_key = &mp.first->first;
 			node->m_path = path;
+			node->m_actual_encrypted = actual_encrypted;
 #ifndef LFN_CACHE_NOTTL
 			node->m_timestap = GetTickCount64();
 #endif
@@ -221,6 +225,7 @@ bool LongFilenameCache::store(LPCWSTR base64_hash, LPCWSTR path)
 		} else {
 			// copy path to node at that base64_hash (key)
 			mp.first->second->m_path = path;
+			mp.first->second->m_actual_encrypted = actual_encrypted;
 #ifndef LFN_CACHE_NOTTL
 			mp.first->second->m_timestap = GetTickCount64();
 #endif

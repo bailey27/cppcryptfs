@@ -51,6 +51,7 @@ class LongFilenameCacheNode {
 public:
 	const std::wstring *m_key;
 	std::wstring  m_path;
+	std::string m_actual_encrypted;
 	std::list<LongFilenameCacheNode*>::iterator m_list_it;  // holds position in lru list
 #ifndef LFN_CACHE_NOTTL
 	ULONGLONG m_timestap; // milliseconds
@@ -87,9 +88,9 @@ public:
 
 	virtual ~LongFilenameCache();
 
-	bool lookup(LPCWSTR base64_hash, std::wstring& path);
+	bool lookup(LPCWSTR base64_hash, std::wstring *path, std::string *actual_encrypted);
 
-	bool store(LPCWSTR base64_hash, LPCWSTR path);
+	bool store(LPCWSTR base64_hash, LPCWSTR path, const char *actual_encrypted);
 
 	void remove(LPCWSTR base64_hash);
 	

@@ -309,7 +309,7 @@ decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path
 		if (!extract_lfn_base64_hash(filename /* &s[0] */, base64_hash))
 			throw(-1);
 		std::wstring lfn_path;
-		if (con->m_lfn_cache.lookup(&base64_hash[0], lfn_path)) {
+		if (con->m_lfn_cache.lookup(&base64_hash[0], &lfn_path, NULL)) {
 			const WCHAR *ps = wcsrchr(&lfn_path[0], '\\');
 			decrypted_name = ps ? ps + 1 : &lfn_path[0];
 			found = true;
@@ -337,12 +337,14 @@ decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path
 
 				std::wstring find_enc;
 
-				if (!encrypt_filename(con, dir_iv, fdata.cFileName, find_enc, NULL))
+				std::string actual_encrypted;
+
+				if (!encrypt_filename(con, dir_iv, fdata.cFileName, find_enc, &actual_encrypted))
 					throw(-1);
 
 				std::wstring find_base64_hash;
 				extract_lfn_base64_hash(&find_enc[0], find_base64_hash);
-				con->m_lfn_cache.store(&find_base64_hash[0], &(storage + fdata.cFileName)[0]);
+				con->m_lfn_cache.store(&find_base64_hash[0], &(storage + fdata.cFileName)[0], &actual_encrypted[0]);
 				if (find_base64_hash == base64_hash) {
 					decrypted_name /* uni_plain_elem */ = fdata.cFileName;
 					found = true;
@@ -405,7 +407,7 @@ decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage)
 						throw(-1);
 					}
 					std::wstring lfn_path;
-					if (con->m_lfn_cache.lookup(&base64_hash[0], storage)) {
+					if (con->m_lfn_cache.lookup(&base64_hash[0], &storage, NULL)) {
 						done = true;
 					}
 				}
@@ -680,9 +682,22 @@ remove_longname_suffix(const WCHAR *filepath, std::wstring& storage)
 bool
 get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_encrypted)
 {
-	std::wstring decrypted_name;
+	
 	std::wstring encrypted_name;
+
+	if (!get_bare_filename(FileName, encrypted_name))
+		return false;
+
+	std::wstring base64_hash;
+
+	if (extract_lfn_base64_hash(&encrypted_name[0], base64_hash)) {
+		if (con->m_lfn_cache.lookup(&base64_hash[0], NULL, &actual_encrypted)) {
+			return true;
+		}
+	}
+
 	std::wstring dirpath;
+	std::wstring decrypted_name;
 
 	BYTE dir_iv[DIR_IV_LEN];
 
@@ -690,9 +705,6 @@ get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_en
 		return false;
 
 	if (!derive_path_iv(con, &dirpath[0], dir_iv, TYPE_DIRIV))
-		return false;
-
-	if (!get_bare_filename(FileName, encrypted_name))
 		return false;
 
 	//encrypted_name = encrypted_name.substr(0, encrypted_name.length() - sizeof(LONGNAME_SUFFIX_W) / sizeof(WCHAR) - 1);
