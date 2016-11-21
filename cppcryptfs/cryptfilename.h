@@ -77,3 +77,30 @@ derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const ch
 const WCHAR *
 decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path, const BYTE *dir_iv, std::wstring& decrypted_name);
 
+// tests that are true only in reverse mode (rt is forreverse-test)
+bool
+rt_is_config_file(CryptContext *con, LPCWSTR FileName);
+
+bool
+rt_is_reverse_config_file(CryptContext *con, LPCWSTR FIleName);
+
+bool
+rt_is_dir_iv_file(CryptContext *con, LPCWSTR FileName);
+
+bool
+rt_is_name_file(CryptContext *con, LPCWSTR FileName);
+
+bool
+rt_is_virtual_file(CryptContext *con, LPCWSTR FileName);
+
+bool
+get_file_directory(LPCWSTR filepath, std::wstring& dirpath);
+
+bool
+get_bare_filename(LPCWSTR filepath, std::wstring& filename);
+
+bool
+get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_encrypted);
+
+const WCHAR *
+remove_longname_suffix(const WCHAR *filepath, std::wstring& storage);

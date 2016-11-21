@@ -336,100 +336,7 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 	return ret;
 }
 
-bool
-rt_is_config_file(CryptContext *con, LPCWSTR FileName)
-{
-	if (!con->GetConfig()->m_reverse)
-		return false;
-	else
-		return *FileName == '\\' && !lstrcmpi(FileName + 1, CONFIG_NAME);
-}
 
-bool
-rt_is_reverse_config_file(CryptContext *con, LPCWSTR FileName)
-{
-	if (!con->GetConfig()->m_reverse)
-		return false;
-	else
-		return *FileName == '\\' && !lstrcmpi(FileName + 1, REVERSE_CONFIG_NAME);
-}
-
-bool
-rt_is_dir_iv_file(CryptContext *con, LPCWSTR FileName)
-{
-	CryptConfig *cfg = con->GetConfig();
-
-	if (!cfg->m_reverse || cfg->m_PlaintextNames || !cfg->DirIV())
-		return false;
-
-	const WCHAR *last_slash = wcsrchr(FileName, '\\');
-
-	const WCHAR *str = last_slash ? last_slash + 1 : FileName;
-
-	return !lstrcmpi(str, DIR_IV_NAME);
-}
-
-bool 
-rt_is_name_file(CryptContext *con, LPCWSTR FileName)
-{
-	CryptConfig *cfg = con->GetConfig();
-
-	if (!cfg->m_reverse || cfg->m_PlaintextNames || !cfg->m_LongNames)
-		return false;
-
-	const WCHAR *last_slash = wcsrchr(FileName, '\\');
-
-	const WCHAR *str = last_slash ? last_slash + 1 : FileName;
-
-	return is_long_name_file(str);
-}
-
-bool
-rt_is_virtual_file(CryptContext *con, LPCWSTR FileName)
-{
-	return rt_is_dir_iv_file(con, FileName) || rt_is_name_file(con, FileName);
-}
-
-const WCHAR *
-remove_longname_suffix(const WCHAR *filepath, std::wstring& storage)
-{
-	storage = filepath;
-
-	size_t len = storage.length() - (sizeof(LONGNAME_SUFFIX_W) / sizeof(WCHAR) - 1);
-
-	storage = storage.substr(0, len);
-
-	return &storage[0];
-}
-
-bool
-get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_encrypted)
-{
-	std::wstring decrypted_name;
-	std::wstring encrypted_name;
-	std::wstring dirpath;
-	
-	BYTE dir_iv[DIR_IV_LEN];
-
-	if (!get_file_directory(FileName, dirpath))
-		return false;
-
-	if (!derive_path_iv(con, &dirpath[0], dir_iv, TYPE_DIRIV))
-		return false;
-
-	if (!get_bare_filename(FileName, encrypted_name))
-		return false;
-
-	//encrypted_name = encrypted_name.substr(0, encrypted_name.length() - sizeof(LONGNAME_SUFFIX_W) / sizeof(WCHAR) - 1);
-
-	if (!decrypt_filename(con, dir_iv, &dirpath[0], &encrypted_name[0], decrypted_name))
-		return false;
-
-	if (!encrypt_filename(con, dir_iv, &decrypted_name[0], encrypted_name, &actual_encrypted))
-		return false;
-
-	return true;
-}
 
 bool
 read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset)
@@ -466,50 +373,7 @@ read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD
 	}
 }
 
-bool
-get_bare_filename(LPCWSTR filepath, std::wstring& filename)
-{
-	size_t len = wcslen(filepath);
 
-	if (len < 1)
-		return false;
-
-	const WCHAR *lastslash = wcsrchr(filepath, '\\');
-
-	if (!lastslash)
-		return true;
-
-	filename = filepath;
-
-	filename = filename.substr(lastslash - filepath + 1);
-
-	return true;
-}
-
-bool 
-get_file_directory(LPCWSTR filepath, std::wstring& dirpath)
-{
-	size_t len = wcslen(filepath);
-
-	if (len < 1)
-		return false;
-
-	const WCHAR *lastslash = wcsrchr(filepath, '\\');
-
-	if (!lastslash)
-		return false;
-
-	if (lastslash == filepath) {
-		dirpath = L"\\";
-		return true;
-	} 
-
-	dirpath = filepath;
-
-	dirpath = dirpath.substr(0, lastslash - filepath);
-
-	return true;
-}
 
 DWORD
 get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HANDLE handle, LPBY_HANDLE_FILE_INFORMATION pInfo)
