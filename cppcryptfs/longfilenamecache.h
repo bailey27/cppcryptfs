@@ -33,8 +33,6 @@ THE SOFTWARE.
 #include <unordered_map>
 #include <list>
 
-#define SHA256_LEN 32
-
 #define LFN_CACHE_ENTRIES 5000
 
 #define LFN_CACHE_NOTTL 1
