@@ -326,27 +326,36 @@ decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path
 			hFind = FindFirstFile(&findspec[0], &fdata);
 			if (hFind == INVALID_HANDLE_VALUE)
 				throw(-1);
-			do {
-				std::string utf8name;
 
+			std::string utf8name;
+			std::wstring find_enc;
+			std::string actual_encrypted;
+			std::wstring find_base64_hash;
+			std::wstring find_path;
+
+			do {
+
+				if (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))
+					continue;
+				
 				if (!unicode_to_utf8(fdata.cFileName, utf8name))
 					throw(-1);
 
 				if (utf8name.length() <= SHORT_NAME_MAX)
-					continue;
-
-				std::wstring find_enc;
-
-				std::string actual_encrypted;
+					continue;				
 
 				if (!encrypt_filename(con, dir_iv, fdata.cFileName, find_enc, &actual_encrypted))
 					throw(-1);
-
-				std::wstring find_base64_hash;
+	
 				extract_lfn_base64_hash(&find_enc[0], find_base64_hash);
-				con->m_lfn_cache.store(&find_base64_hash[0], &(storage + fdata.cFileName)[0], &actual_encrypted[0]);
+
+				find_path = storage;
+				find_path += fdata.cFileName;
+
+				con->m_lfn_cache.store(&find_base64_hash[0], &find_path[0], &actual_encrypted[0]);
+
 				if (find_base64_hash == base64_hash) {
-					decrypted_name /* uni_plain_elem */ = fdata.cFileName;
+					decrypted_name = fdata.cFileName;
 					found = true;
 					break;
 				}
