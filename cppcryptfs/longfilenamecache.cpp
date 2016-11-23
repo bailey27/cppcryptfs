@@ -173,7 +173,7 @@ bool LongFilenameCache::lookup(LPCWSTR base64_hash, std::wstring *path, std::str
 }
 
 
-bool LongFilenameCache::store(LPCWSTR base64_hash, LPCWSTR path, const char *actual_encrypted)
+bool LongFilenameCache::store_if_not_there(LPCWSTR base64_hash, LPCWSTR path, const char *actual_encrypted)
 {
 
 	bool rval = true;
@@ -184,7 +184,10 @@ bool LongFilenameCache::store(LPCWSTR base64_hash, LPCWSTR path, const char *act
 
 	try {
 
-		// see if it's already there
+		// see if it's already there.  If it isn't, inser it.
+		
+		// If it is already there THEN DO NOTHING
+
 		auto mp = m_map.emplace(key, (LongFilenameCacheNode*)NULL);		
 
 		if (mp.second) {
@@ -222,15 +225,7 @@ bool LongFilenameCache::store(LPCWSTR base64_hash, LPCWSTR path, const char *act
 #endif
 			node->m_list_it = m_lru_list.insert(m_lru_list.begin(), node);
 			
-		} else {
-			// copy path to node at that base64_hash (key)
-			mp.first->second->m_path = path;
-			mp.first->second->m_actual_encrypted = actual_encrypted;
-#ifndef LFN_CACHE_NOTTL
-			mp.first->second->m_timestap = GetTickCount64();
-#endif
 		}
-		
 
 	} catch (...) {
 		rval = false;

@@ -352,7 +352,7 @@ decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path
 				find_path = storage;
 				find_path += fdata.cFileName;
 
-				con->m_lfn_cache.store(&find_base64_hash[0], &find_path[0], &actual_encrypted[0]);
+				con->m_lfn_cache.store_if_not_there(&find_base64_hash[0], &find_path[0], &actual_encrypted[0]);
 
 				if (find_base64_hash == base64_hash) {
 					decrypted_name = fdata.cFileName;

@@ -90,7 +90,7 @@ public:
 
 	bool lookup(LPCWSTR base64_hash, std::wstring *path, std::string *actual_encrypted);
 
-	bool store(LPCWSTR base64_hash, LPCWSTR path, const char *actual_encrypted);
+	bool store_if_not_there(LPCWSTR base64_hash, LPCWSTR path, const char *actual_encrypted);
 
 	void remove(LPCWSTR base64_hash);
 	
