@@ -411,7 +411,9 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 			if (!get_file_directory(FileName, dirpath))
 				throw((int)ERROR_ACCESS_DENIED);
 
-			HANDLE hDir = CreateFile(&dirpath[0], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+			HANDLE hDir = CreateFile(&dirpath[0], FILE_READ_ATTRIBUTES, 
+							FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 
+							NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 			if (hDir == INVALID_HANDLE_VALUE)
 				throw((int)GetLastError());
 
@@ -442,7 +444,9 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 			if (!decrypt_path(con, &enc_filename[0], decrypted_name))
 				throw((int)ERROR_ACCESS_DENIED);
 
-			HANDLE hFile = CreateFile(&decrypted_name[0], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+			HANDLE hFile = CreateFile(&decrypted_name[0], FILE_READ_ATTRIBUTES, 
+							FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 
+							NULL, OPEN_EXISTING, 0, NULL);
 			if (hFile == INVALID_HANDLE_VALUE)
 				throw((int)GetLastError());
 
