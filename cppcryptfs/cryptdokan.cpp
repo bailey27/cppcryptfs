@@ -878,7 +878,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileInformation(
 	  LARGE_INTEGER l;
 	  l.LowPart = HandleFileInformation->nFileSizeLow;
 	  l.HighPart = HandleFileInformation->nFileSizeHigh;
-	  DbgPrint(L"GetFileInformation %s, filesize = %I64d\n", FileName, l.QuadPart);
+	  DbgPrint(L"GetFileInformation %s, filesize = %I64d, attr = 0x%08u\n", FileName, l.QuadPart, HandleFileInformation->dwFileAttributes);
 	  return STATUS_SUCCESS;
   }
 
