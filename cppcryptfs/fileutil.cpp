@@ -42,7 +42,7 @@ THE SOFTWARE.
 // derive attributes for virtual reverse-mode diriv file from 
 // the attributes of its directory
 static DWORD 
-VirtualDirIvAttributes(DWORD attr)
+VirtualAttributesDirIv(DWORD attr)
 {
 	attr &= ~(FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_NORMAL);
 	attr |= FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_ARCHIVE;
@@ -52,7 +52,7 @@ VirtualDirIvAttributes(DWORD attr)
 // derive attributes for virtual reverse-mode longname name file
 // from the attributes of its related file or directory
 static DWORD
-VirtualNameFileAttributes(DWORD attr)
+VirtualAttributesNameFile(DWORD attr)
 {
 	bool bForDir = (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 	attr &= ~FILE_ATTRIBUTE_DIRECTORY;
@@ -322,7 +322,7 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 			fillData(&fdata, dokan_cb, dokan_ctx);
 			if (reverse && !plaintext_names && is_long_name(fdata.cFileName)) {
 				wcscat_s(fdata.cFileName, MAX_PATH, LONGNAME_SUFFIX_W);
-				fdata.dwFileAttributes = VirtualNameFileAttributes(fdata.dwFileAttributes);
+				fdata.dwFileAttributes = VirtualAttributesNameFile(fdata.dwFileAttributes);
 				fdata.ftLastWriteTime = fdata.ftCreationTime;
 				fdata.cAlternateFileName[0] = '\0';
 				fdata.nFileSizeHigh = 0;
@@ -342,7 +342,7 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 			fdata_dot.nFileSizeHigh = 0;
 			fdata_dot.nFileSizeLow = DIR_IV_LEN;
 			fdata_dot.ftLastWriteTime = fdata_dot.ftCreationTime;
-			fdata_dot.dwFileAttributes = VirtualDirIvAttributes(fdata_dot.dwFileAttributes);
+			fdata_dot.dwFileAttributes = VirtualAttributesDirIv(fdata_dot.dwFileAttributes);
 			fillData(&fdata_dot, dokan_cb, dokan_ctx);
 		}
 
@@ -451,8 +451,7 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 
 			CloseHandle(hDir);
 
-			pInfo->dwFileAttributes = VirtualDirIvAttributes(pInfo->dwFileAttributes);
-			pInfo->dwFileAttributes |= FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_ARCHIVE;
+			pInfo->dwFileAttributes = VirtualAttributesDirIv(pInfo->dwFileAttributes);
 			pInfo->ftLastWriteTime = pInfo->ftCreationTime;
 			pInfo->nFileSizeHigh = 0;
 			pInfo->nFileSizeLow = DIR_IV_LEN;
@@ -490,7 +489,7 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 			if (!get_actual_encrypted(con, &enc_filename[0], actual_encrypted))
 				throw((int)ERROR_ACCESS_DENIED);
 
-			pInfo->dwFileAttributes = VirtualNameFileAttributes(pInfo->dwFileAttributes);
+			pInfo->dwFileAttributes = VirtualAttributesNameFile(pInfo->dwFileAttributes);
 			pInfo->ftLastWriteTime = pInfo->ftCreationTime;
 			pInfo->nFileSizeHigh = 0;
 			pInfo->nFileSizeLow = (DWORD)actual_encrypted.length();
