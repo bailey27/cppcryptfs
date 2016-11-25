@@ -1690,9 +1690,6 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 			}
 		}
 
-		if (config->m_reverse)
-			dokanOptions->Options |= DOKAN_OPTION_WRITE_PROTECT;
-
 		if (config->m_AESSIV) {
 			try {
 				con->m_siv.SetKey(config->GetKey(), 32);
@@ -1707,20 +1704,33 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 
 		WCHAR fs_name[256];
 
+		DWORD fs_flags;
+
 		WCHAR rbuf[4];
 		rbuf[0] = config->get_base_drive_letter();
 		rbuf[1] = ':';
 		rbuf[2] = '\\';
 		rbuf[3] = '\0';
 
-		BOOL bGotVI = GetVolumeInformationW(rbuf, NULL, 0, NULL, NULL, NULL, fs_name, sizeof(fs_name) / sizeof(fs_name[0]) - 1);
+		BOOL bGotVI = GetVolumeInformationW(rbuf, NULL, 0, NULL, NULL, &fs_flags, fs_name, sizeof(fs_name) / sizeof(fs_name[0]) - 1);
 
 		if (bGotVI) {
-			size_t maxlength = (bGotVI && !wcscmp(fs_name, L"NTFS") ? MAX_VOLUME_NAME_LENGTH : MAX_FAT_VOLUME_NAME_LENGTH);
+
+			size_t maxlength = !wcscmp(fs_name, L"NTFS") ? MAX_VOLUME_NAME_LENGTH : MAX_FAT_VOLUME_NAME_LENGTH;
 
 			if (config->m_VolumeName.size() > maxlength)
 				config->m_VolumeName.erase(maxlength, std::wstring::npos);
+
+			if (fs_flags & FILE_READ_ONLY_VOLUME)
+				dokanOptions->Options |= DOKAN_OPTION_WRITE_PROTECT;
+
+		} else {
+			DWORD lasterr = GetLastError();
+			DbgPrint(L"GetVolumeInformation failed, lasterr = %u\n", lasterr);
 		}
+
+		if (config->m_reverse)
+			dokanOptions->Options |= DOKAN_OPTION_WRITE_PROTECT;
 
 
 		dokanOptions->GlobalContext = (ULONG64)con;
