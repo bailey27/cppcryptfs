@@ -193,7 +193,9 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	theApp.m_mountedDrives |= 1 << (*(const WCHAR*)cdl - 'A');
 
-	bool readonly = argReadOnly ? argReadOnly : IsDlgButtonChecked(IDC_READONLY) != 0;
+	// if non-zero dl is specified as arg, then use arg for readonly
+
+	bool readonly = argDriveLetter ? argReadOnly : IsDlgButtonChecked(IDC_READONLY) != 0;
 
 	theApp.DoWaitCursor(1);
 	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes, readonly);
@@ -211,7 +213,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 	pList->SetItemText(nItem, PATH_INDEX, cpath);
 
 	// update saved settings in registry only when the GUI is used (not command line)
-	if (argPassword == NULL) {
+	if (argDriveLetter) {
 
 		RecentItems ritems(TEXT("Folders"), TEXT("LastDir"), m_numLastDirs);
 		ritems.Add(cpath);
