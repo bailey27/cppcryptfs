@@ -1543,7 +1543,7 @@ static DWORD WINAPI CryptThreadProc(
 }
 
 
-int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes) 
+int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes, bool readonly) 
 {
 
 	if (driveletter < 'A' || driveletter > 'Z') {
@@ -1729,7 +1729,7 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 			DbgPrint(L"GetVolumeInformation failed, lasterr = %u\n", lasterr);
 		}
 
-		if (config->m_reverse)
+		if (config->m_reverse || readonly)
 			dokanOptions->Options |= DOKAN_OPTION_WRITE_PROTECT;
 
 

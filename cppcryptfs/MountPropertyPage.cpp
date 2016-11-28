@@ -69,7 +69,7 @@ void CMountPropertyPage::DefaultAction()
 		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 }
 
-CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR argPassword)
+CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR argPassword, bool argReadOnly)
 {
 	if (argDriveLetter != 0 && (argDriveLetter < 'A' || argDriveLetter > 'Z'))
 		return CString(L"invalid drive letter");
@@ -78,13 +78,13 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	CSecureEdit *pPass = &m_password;
 
-	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN+1);
+	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1);
 
 	if (!password.IsLocked()) {
 		return CString(L"unable to lock password buffer");
 	}
 
-	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN+1, argPassword ? argPassword : pPass->m_strRealText))
+	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN + 1, argPassword ? argPassword : pPass->m_strRealText))
 		return CString(L"unable to get password");
 
 	if (wcslen(password.m_buf) < 1)
@@ -101,7 +101,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 		return CString(L"unable to get selected entry");
 
 	int nItem = -1;
-	
+
 	if (argDriveLetter) {
 		LVFINDINFO fi;
 		memset(&fi, 0, sizeof(fi));
@@ -193,8 +193,10 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	theApp.m_mountedDrives |= 1 << (*(const WCHAR*)cdl - 'A');
 
+	bool readonly = argReadOnly ? argReadOnly : IsDlgButtonChecked(IDC_READONLY) != 0;
+
 	theApp.DoWaitCursor(1);
-	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes);
+	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes, readonly);
 	theApp.DoWaitCursor(-1);
 
 	if (result != 0) {
@@ -208,19 +210,25 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	pList->SetItemText(nItem, PATH_INDEX, cpath);
 
-	RecentItems ritems(TEXT("Folders"), TEXT("LastDir"), m_numLastDirs);
-	ritems.Add(cpath);
+	// update saved settings in registry only when the GUI is used (not command line)
+	if (argPassword == NULL) {
 
-	WCHAR dl[2];
-	dl[0] = *(const WCHAR *)cdl;
-	dl[1] = 0;
+		RecentItems ritems(TEXT("Folders"), TEXT("LastDir"), m_numLastDirs);
+		ritems.Add(cpath);
 
-	theApp.WriteProfileString(L"MountPoints", L"LastMountPoint", dl);
+		WCHAR dl[2];
+		dl[0] = *(const WCHAR *)cdl;
+		dl[1] = 0;
 
-	CString path_hash;
+		theApp.WriteProfileString(L"MountPoints", L"LastMountPoint", dl);
 
-	if (GetPathHash(cpath, path_hash)) {
-		theApp.WriteProfileString(L"MountPoints", path_hash, dl);
+		theApp.WriteProfileStringW(L"MountOptions", L"ReadOnly", readonly ? L"1" : L"0");
+
+		CString path_hash;
+
+		if (GetPathHash(cpath, path_hash)) {
+			theApp.WriteProfileString(L"MountPoints", path_hash, dl);
+		}
 	}
 		
 	return CString(L"");
@@ -341,6 +349,10 @@ BOOL CMountPropertyPage::OnInitDialog()
 	pList->InsertColumn(DL_INDEX, L"Drive", LVCFMT_LEFT, 48);
 
 	pList->InsertColumn(PATH_INDEX, L"Path", LVCFMT_LEFT, 393);
+
+	CString readonly = theApp.GetProfileString(L"MountOptions", L"ReadOnly", L"0");
+
+	CheckDlgButton(IDC_READONLY, readonly == L"1");
 
 	CString lastLetter = theApp.GetProfileString(L"MountPoints", L"LastMountPoint", L"");
 
@@ -810,9 +822,10 @@ static void usage()
 
 	fprintf(stderr, "Usage: cppcryptfs [OPTIONS]\n");
 	fprintf(stderr, "\nMounting:\n");
-	fprintf(stderr, "  -m, --mount=PATH\tmount filesystem locate at PATH\n");
+	fprintf(stderr, "  -m, --mount=PATH\tmount filesystem located at PATH\n");
 	fprintf(stderr, "  -d, --drive=D\t\tmount to drive letter D\n");
 	fprintf(stderr, "  -p, --password=PASS\tuse password PASS\n");
+	fprintf(stderr, "  -r, --readonly\tmount read-only\n");
 	fprintf(stderr, "\nUnmounting:\n");
 	fprintf(stderr, "  -u, --unmount=D\tumount drive letter D\n");
 	fprintf(stderr, "  -u, --umount=all\tunmount all drives\n");
@@ -862,6 +875,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	BOOL exit_if_no_mounted = FALSE;
 	BOOL hide_to_system_tray = FALSE;
 	BOOL do_list = FALSE;
+	bool readonly = false;
 
 	try {
 
@@ -871,6 +885,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			{L"drive",   required_argument,  0, 'd'},
 			{L"password", required_argument, 0, 'p'},
 			{L"unmount",  required_argument, 0, 'u'},
+			{L"readonly",  no_argument, 0, 'r'},
 			{L"tray",  no_argument, 0, 't'},
 			{L"exit",  no_argument, 0, 'x'},
 			{L"list",  no_argument, 0, 'l'},
@@ -883,7 +898,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 
 		while (1) {
 
-			c = getopt_long(argc, argv, L"m:d:p:u:hxtl", long_options, &option_index);
+			c = getopt_long(argc, argv, L"m:d:p:u:hxtlr", long_options, &option_index);
 
 			if (c == -1)
 				break;
@@ -891,6 +906,9 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			switch (c) {
 			case '?':
 				invalid_opt = TRUE;
+				break;
+			case 'r':
+				readonly = true;
 				break;
 			case 'm':
 				mount = TRUE;
@@ -966,7 +984,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	} else {
 		if (mount) {
 			if (driveletter)
-				errMes = Mount(path, driveletter, password.m_buf);
+				errMes = Mount(path, driveletter, password.m_buf, readonly);
 			else
 				errMes = L"drive letter must be specified";
 		} else if (dismount) {

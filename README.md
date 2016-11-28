@@ -98,6 +98,8 @@ just created the filesystem in.  Then enter the password and click on the "Mount
 
 Your will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is encrypted and saved in files in the folder you specified.
 
+If you check "Read-only", then the filesystem will be mounted read-only (write-protected).
+
 For technical details of the cryptographic design of gocryptfs, please visit
 the [gocryptfs project page](https://github.com/rfjakob/gocryptfs).
 
@@ -150,9 +152,10 @@ Passwords passed through the command line are not really secure.  cppcryptfs loc
 usage: cppcryptfs [OPTIONS]
 
 Mounting:
-  -m, --mount=PATH      mount filesystem locate at PATH
+  -m, --mount=PATH      mount filesystem located at PATH
   -d, --drive=D         mount to drive letter D
   -p, --password=PASS   use password PASS
+  -r, --readonly        mount read-only
 
 Unmounting:
   -u, --unmount=D       umount drive letter D

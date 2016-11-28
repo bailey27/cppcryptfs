@@ -56,7 +56,7 @@ public:
 
 	virtual void DeviceChange();
 
-	CString Mount(LPCWSTR argPath = NULL, WCHAR argDriveLetter = 0, LPCWSTR argPassword = NULL);
+	CString Mount(LPCWSTR argPath = NULL, WCHAR argDriveLetter = 0, LPCWSTR argPassword = NULL, bool argReadOnly = false);
 
 	CString Dismount(WCHAR argDriveLetter = 0);
 
@@ -87,4 +87,5 @@ public:
 	CSecureEdit m_password;
 	afx_msg void OnClickedExit();
 	afx_msg void OnCbnSelchangePath();
+	afx_msg void OnBnClickedCheck1();
 };
