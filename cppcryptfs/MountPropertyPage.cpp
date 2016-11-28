@@ -213,7 +213,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 	pList->SetItemText(nItem, PATH_INDEX, cpath);
 
 	// update saved settings in registry only when the GUI is used (not command line)
-	if (argDriveLetter) {
+	if (argDriveLetter == 0) {
 
 		RecentItems ritems(TEXT("Folders"), TEXT("LastDir"), m_numLastDirs);
 		ritems.Add(cpath);
