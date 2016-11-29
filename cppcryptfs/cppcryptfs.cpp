@@ -119,16 +119,18 @@ BOOL CcppcryptfsApp::InitInstance()
 				memset(&cd, 0, sizeof(cd));
 				cd.dwData = CPPCRYPTFS_COPYDATA_CMDLINE;
 				LPCWSTR cmdLine = GetCommandLineW();
-				size_t dataLen = (sizeof(CopyDataCmdLine) + wcslen(cmdLine)*sizeof(WCHAR)); // WCHAR in CmdLineCopyData accounts for null terminator
+				size_t cmdLineLen = wcslen(cmdLine);
+				size_t dataLen = sizeof(CopyDataCmdLine) + cmdLineLen*sizeof(WCHAR); // WCHAR in CmdLineCopyData accounts for null terminator
 				if (dataLen <= CPPCRYPTFS_COPYDATA_CMDLINE_MAXLEN) {
 					cd.cbData = (DWORD)dataLen;
 					LockZeroBuffer<BYTE> buf(cd.cbData);
 					if (buf.IsLocked()) {
 						CopyDataCmdLine *pcd = (CopyDataCmdLine*)buf.m_buf;
 						pcd->dwPid = getppid();
-						lstrcpy(pcd->szCmdLine, cmdLine);
 						cd.lpData = (PVOID)pcd;
-						SendMessageW(hWnd, WM_COPYDATA, NULL, (LPARAM)&cd);
+						if (wcscpy_s(pcd->szCmdLine, cmdLineLen + 1, cmdLine) == 0) {
+							SendMessageW(hWnd, WM_COPYDATA, NULL, (LPARAM)&cd);
+						}
 					} else {
 						ConsoleErrMes(L"unable to lock command line buffer in source");
 					}
