@@ -115,6 +115,7 @@ BOOL CcppcryptfsApp::InitInstance()
 
 		if (hWnd) {
 			if (have_args()) {
+				static_assert(sizeof(WCHAR) == sizeof(wchar_t), "sizeof(WCHAR) != sizeof(wchar_t).");
 				COPYDATASTRUCT cd;
 				memset(&cd, 0, sizeof(cd));
 				cd.dwData = CPPCRYPTFS_COPYDATA_CMDLINE;
