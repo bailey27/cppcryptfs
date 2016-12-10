@@ -159,6 +159,9 @@ CryptConfig::read(const WCHAR *config_file_path)
 
 	delete[] buf;
 
+	if (!d.IsObject())
+		return false;
+
 	bool bret = true;
 
 	try {
