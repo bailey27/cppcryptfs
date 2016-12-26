@@ -53,6 +53,7 @@ Please refer to the "INSTALL" file from the OpenSSL distribution in case these i
 First, clone OpenSSL.
 
 ```
+c:
 cd \git
 git clone https://github.com/openssl/openssl.git
 cd openssl
@@ -102,6 +103,7 @@ rapidjson
 rapidjson is used for parsing the config file gocryptfs.conf.  It consists of only header files, so there is no need to build it separately.
 
 ```
+c:
 cd \git
 git clone https://github.com/miloyip/rapidjson.git
 ```
@@ -111,6 +113,7 @@ cppcryptfs
 First, clone cppcryptfs.
 
 ```
+c:
 cd \git
 git clone https://github.com/bailey27/cppcryptfs.git
 ```
