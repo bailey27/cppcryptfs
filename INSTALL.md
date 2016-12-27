@@ -26,14 +26,14 @@ and unzip them.
 
 These instructions assume that you are using git.
 
-Everything will go easier if you put everything in C:\git, e.g.
+Whether or not you are using git, everything will go easier if you put everything in C:\git, e.g.
 
 ```
 c:
 cd \
 mkdir git
 cd git
-git clone ...
+git clone ... (or extract zip here)
 ```
 
 Dokany
