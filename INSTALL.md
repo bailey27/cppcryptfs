@@ -13,9 +13,13 @@ You need to install Visual Studio in such a way that you can compile C++ applica
 
 The professional edition should be fine if you already have that. The "Express" edition will not work due to its lack of support for MFC.
 
-In order to build OpenSSL, you will need perl.  The OpenSSL documentation recommends using the free ActiveState ActivePerl.
+In order to build OpenSSL, you will need perl and nasm.  
+
+For Perl, the OpenSSL documentation recommends using the free ActiveState ActivePerl.
 
 http://www.activestate.com/activeperl/downloads
+
+nasm (Netwide Assembler) is available from here http://www.nasm.us/
 
 For git, the git that comes with cygwin works well.  git is not selected in the cygwin install by default.  You will need to select it.
 
