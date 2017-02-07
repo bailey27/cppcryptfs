@@ -46,7 +46,7 @@ Unless you want to develop or debug Dokany, you should just install the Dokany r
 
 https://github.com/dokan-dev/dokany/releases
 
-Using DokanSetup_redist-VERSION.exe is probably the safest bet. Be sure to go into the installer options and select "install development files".
+Using DokanSetup_redist.exe is probably the safest bet. Be sure to go into the installer options and select "install development files".
 
 OpenSSL
 ---------
