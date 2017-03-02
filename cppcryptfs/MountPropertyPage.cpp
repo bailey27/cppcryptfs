@@ -197,8 +197,10 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	bool readonly = argDriveLetter ? argReadOnly : IsDlgButtonChecked(IDC_READONLY) != 0;
 
+	int nThreads = theApp.GetProfileInt(L"Settings", L"Threads", 1);
+
 	theApp.DoWaitCursor(1);
-	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes, readonly);
+	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes, readonly, nThreads);
 	theApp.DoWaitCursor(-1);
 
 	if (result != 0) {

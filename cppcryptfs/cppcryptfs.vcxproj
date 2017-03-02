@@ -238,6 +238,7 @@
     <ClInclude Include="RecentItems.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SecureEdit.h" />
+    <ClInclude Include="SettingsPropertyPage.h" />
     <ClInclude Include="siv.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -283,6 +284,7 @@
     <ClCompile Include="randombytes.cpp" />
     <ClCompile Include="RecentItems.cpp" />
     <ClCompile Include="SecureEdit.cpp" />
+    <ClCompile Include="SettingsPropertyPage.cpp" />
     <ClCompile Include="siv.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

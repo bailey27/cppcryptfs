@@ -112,6 +112,21 @@ Passwords and keys are locked in memory using VirtualLock(). When they are no lo
 
 If you close the cppcryptfs window, then it will hide itself in the system tray. To exit cppcryptfs, use the Exit button on the mount page or the context menu of the system tray icon.
 
+![Alt text](/screenshots/screenshot_settings.png?raw=true "Mount tab")
+
+There is also a settings tab.  It has only one setting "Per-filesystem threads".
+
+Early in cppycryptfs' development, Dokany (then version 0.9) had a problem if multiple threads were used to service requests on a single filesystem.
+
+Therefore the number of threads was hard-coded to 1 in cppcryptfs.
+
+It appears to be safe to use more than one thread per-filesystem now.
+
+The default number of per-filesystem threads is still 1.  Using 0 will cause Dokany to choose an appropriate number of threads.
+
+Changing this value affects all filesystems that are subsequently mounted.  Any filesystems that are already mounted will not be affected.
+
+
 Reverse Mode
 ------
 In reverse mode, the source (root) directory used for the filesystem consists of unencrypted files.  When this directory is mounted, then 

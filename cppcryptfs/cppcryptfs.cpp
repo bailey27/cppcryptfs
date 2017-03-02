@@ -37,6 +37,7 @@ THE SOFTWARE.
 #include "CryptPropertySheet.h"
 #include "MountPropertyPage.h"
 #include "CreatePropertyPage.h"
+#include "SettingsPropertyPage.h"
 #include "CryptAboutPropertyPage.h"
 #include "RecentItems.h"
 #include "TrayIcon.h"
@@ -208,6 +209,12 @@ BOOL CcppcryptfsApp::InitInstance()
 	ritems2.Populate(create.m_lastDirs, TEXT("C:\\"));
 
 	dlg.AddPage(&create);
+
+	CSettingsPropertyPage settings;
+
+	settings.m_psp.dwFlags &= ~PSP_HASHELP;
+
+	dlg.AddPage(&settings);
 
 	CCryptAboutPropertyPage about;
 

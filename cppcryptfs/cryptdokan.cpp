@@ -1543,7 +1543,7 @@ static DWORD WINAPI CryptThreadProc(
 }
 
 
-int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes, bool readonly) 
+int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes, bool readonly, int nThreads) 
 {
 
 	if (driveletter < 'A' || driveletter > 'Z') {
@@ -1629,14 +1629,11 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 		ZeroMemory(dokanOptions, sizeof(DOKAN_OPTIONS));
 		dokanOptions->Version = DOKAN_VERSION;
 
-		dokanOptions->ThreadCount = 0; // use default
+		dokanOptions->ThreadCount = nThreads; 
 
 #ifdef _DEBUG
 		dokanOptions->Timeout = 900000;
-		dokanOptions->ThreadCount = 1;
 		g_DebugMode = 1;
-#else
-		dokanOptions->ThreadCount = 1;  // even the mirror sample has problems launching some executables with default number of threads
 #endif
 
 
