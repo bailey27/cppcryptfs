@@ -120,7 +120,9 @@ Early in cppycryptfs' development, Dokany (then version 0.9) had a problem if mu
 
 Therefore the number of threads was hard-coded to 1 in cppcryptfs.
 
-It appears to be safe to use more than one thread per-filesystem now.
+It appears to be safe to use more than one thread per-filesystem now.  However, almost all testing and usage of cppcryptfs until now has been done with only one thread per filesystem.
+
+Using more than one thread for each filesystem may result in improved performance.
 
 The default number of per-filesystem threads is still 1.  Using 0 will cause Dokany to choose an appropriate number of threads.
 
