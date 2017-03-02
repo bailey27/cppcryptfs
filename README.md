@@ -114,7 +114,7 @@ If you close the cppcryptfs window, then it will hide itself in the system tray.
 
 ![Alt text](/screenshots/screenshot_settings.png?raw=true "Mount tab")
 
-There is also a settings tab.  It has only one setting "Per-filesystem threads".
+There is also a settings tab.  It has only one setting: "Per-filesystem threads".
 
 Early in cppycryptfs' development, Dokany (then version 0.9) had a problem if multiple threads were used to service requests on a single filesystem.
 
