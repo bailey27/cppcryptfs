@@ -118,7 +118,7 @@ There is also a settings tab.  It has only one setting "Per-filesystem threads".
 
 Early in cppycryptfs' development, Dokany (then version 0.9) had a problem if multiple threads were used to service requests on a single filesystem.
 
-Therefore the number of threads was hard-coded to 1 in cppcryptfs.
+Therefore the number of threads per-filesystem was hard-coded to 1 in cppcryptfs.
 
 It appears to be safe to use more than one thread per-filesystem now.  However, almost all testing and usage of cppcryptfs until now has been done with only one thread per filesystem.
 
