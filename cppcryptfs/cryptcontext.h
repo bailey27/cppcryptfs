@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include "randombytes.h"
 #include "dirivcache.h"
 #include "longfilenamecache.h"
+#include "fileidmanager.h"
 #include "siv.h"
 
 class CryptContext {
@@ -44,6 +45,7 @@ private:
 public:
 	RandomBytes *m_prand_bytes;
 	DirIvCache m_dir_iv_cache;
+	FileIdManager m_file_id_manager;
 	LongFilenameCache m_lfn_cache;
 	EmeCryptContext m_eme;
 	SivContext m_siv;

@@ -29,6 +29,9 @@ THE SOFTWARE.
 #pragma once
 
 #include <windows.h>
+
+#include <string>
+
 class CryptContext;
 
 typedef struct struct_FileHeader {
@@ -38,19 +41,16 @@ typedef struct struct_FileHeader {
 
 class CryptFile {
 public:
-	FileHeader m_header;
-
-	bool m_is_empty;
 
 	HANDLE m_handle;
 
-	long long m_real_file_size; // Associate() saves this so we don't need to get it again.
+	std::wstring m_path;
 
 	CryptContext *m_con;
 
 	static CryptFile *NewInstance(CryptContext *con);
 
-	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath) = 0;
+	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR ptPath, LPCWSTR encPath) = 0;
 
 	virtual BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset) = 0;
 
@@ -75,7 +75,7 @@ class CryptFileForward:  public CryptFile
 public:
 
 
-	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath);
+	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR ptPath, LPCWSTR encPath);
 
 	virtual BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset);
 
@@ -91,18 +91,20 @@ public:
 
 	~CryptFileForward();
 
-protected:
-	BOOL WriteVersionAndFileId();
+
 };
 
 class CryptFileReverse:  public CryptFile
 {
 private:
+	FileHeader m_header;
+	LONGLONG m_real_file_size;
+	bool m_is_empty;	
 	BYTE m_block0iv[BLOCK_SIV_LEN];
 public:
 
 
-	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath);
+	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR ptPath, LPCWSTR encPath);
 
 	virtual BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset);
 

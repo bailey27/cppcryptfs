@@ -46,10 +46,7 @@ CryptFile *CryptFile::NewInstance(CryptContext *con)
 CryptFile::CryptFile()
 {
 	m_handle = INVALID_HANDLE_VALUE;
-	m_is_empty = false;
 	m_con = NULL;
-	m_real_file_size = (long long)-1;
-	memset(&m_header, 0, sizeof(m_header));
 }
 
 
@@ -69,66 +66,14 @@ CryptFileForward::~CryptFileForward()
 }
 
 BOOL
-CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
+CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath, LPCWSTR encPath)
 {
-
-	static_assert(sizeof(m_header) == FILE_HEADER_LEN, "sizeof(m_header) != FILE_HEADER_LEN");
 
 	m_handle = hfile;
 
 	m_con = con;
 
-	LARGE_INTEGER l;
-
-	if (!GetFileSizeEx(hfile, &l)) {
-		DbgPrint(L"ASSOCIATE: failed to get size of file\n");
-		return FALSE;
-	}
-
-	m_real_file_size = l.QuadPart;
-
-	if (l.QuadPart == 0) {
-		m_header.version = CRYPT_VERSION;
-		m_is_empty = true;
-		return TRUE;
-	} else if (l.QuadPart < FILE_HEADER_LEN) {
-		DbgPrint(L"ASSOCIATE: missing file header\n");
-		return FALSE;
-	}
-
-	l.QuadPart = 0;
-
-	if (!SetFilePointerEx(hfile, l, NULL, FILE_BEGIN)) {
-		DbgPrint(L"ASSOCIATE: failed to seek\n");
-		return FALSE;
-	}
-
-
-	DWORD nread;
-
-	if (!ReadFile(hfile, &m_header, sizeof(m_header), &nread, NULL)) {
-		DbgPrint(L"ASSOCIATE: failed to read header\n");
-		return FALSE;
-	}
-
-	if (nread != FILE_HEADER_LEN) {
-		DbgPrint(L"ASSOCIATE: wrong number of bytes read when reading file header\n");
-		return FALSE;
-	}
-
-	m_header.version = MakeBigEndianNative(m_header.version);
-
-	if (m_header.version != CRYPT_VERSION) {
-		DbgPrint(L"ASSOCIATE: file version mismatch\n");
-		return FALSE;
-	}
-
-	static BYTE zerobytes[FILE_ID_LEN] = { 0 };
-
-	if (!memcmp(m_header.fileid, zerobytes, sizeof(m_header.fileid))) {
-		DbgPrint(L"ASSOCIATE: fileid is all zeroes\n");
-		return FALSE;
-	}
+	m_path = encPath;
 
 	return TRUE;
 }
@@ -137,8 +82,13 @@ CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
 BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset)
 {
 
-	if (m_real_file_size == (long long)-1)
+	unsigned char fileid[FILE_ID_LEN];
+	bool is_empty;
+	LONGLONG real_file_size;
+
+	if (!m_con->m_file_id_manager.get(m_path.c_str(), fileid, is_empty, real_file_size)) {
 		return FALSE;
+	}
 
 	if (!pNread || !buf)
 		return FALSE;
@@ -173,7 +123,7 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 			if (blockoff == 0 && bytesleft >= PLAIN_BS) {
 
-				advance = read_block(m_con, m_handle, m_header.fileid, blockno, p, context);
+				advance = read_block(m_con, m_handle, fileid, blockno, p, context);
 
 				if (advance < 0)
 					throw(-1);
@@ -185,7 +135,7 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 				unsigned char blockbuf[PLAIN_BS];
 
-				int blockbytes = read_block(m_con, m_handle, m_header.fileid, blockno, blockbuf, context);
+				int blockbytes = read_block(m_con, m_handle, fileid, blockno, blockbuf, context);
 
 				if (blockbytes < 0)
 					throw(-1);
@@ -219,61 +169,30 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 }
 
 
-// write version and fileid to empty file before writing to it
-
-BOOL CryptFileForward::WriteVersionAndFileId()
-{
-	if (m_real_file_size == (long long)-1)
-		return FALSE;
-
-	LARGE_INTEGER l;
-	l.QuadPart = 0;
-
-	if (!SetFilePointerEx(m_handle, l, NULL, FILE_BEGIN))
-		return FALSE;
-
-	if (!get_random_bytes(m_con, m_header.fileid, FILE_ID_LEN))
-		return FALSE;
-
-	unsigned short version = CRYPT_VERSION;
-
-	m_header.version = MakeBigEndian(version);
-
-	DWORD nWritten = 0;
-
-	if (!WriteFile(m_handle, &m_header, sizeof(m_header), &nWritten, NULL)) {
-		m_header.version = CRYPT_VERSION;
-		return FALSE;
-	}
-	
-	m_header.version = CRYPT_VERSION;
-
-	m_real_file_size = FILE_HEADER_LEN;
-
-	m_is_empty = false;
-
-	return nWritten == FILE_HEADER_LEN;
-}
 
 
 BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile, BOOL bPagingIo)
 {
+	unsigned char fileid[FILE_ID_LEN];
+	bool is_empty;
+	LONGLONG real_file_size;
 
-	if (m_real_file_size == (long long)-1)
+	if (!m_con->m_file_id_manager.get(m_path.c_str(), fileid, is_empty, real_file_size)) {
 		return FALSE;
+	}
 
 	BOOL bRet = TRUE;
 
 	if (bWriteToEndOfFile) {
 		LARGE_INTEGER l;
-		l.QuadPart = m_real_file_size;
+		l.QuadPart = real_file_size;
 		if (!adjust_file_offset_down(l))
 			return FALSE;
 		offset = l.QuadPart;
 	} else {
 		if (bPagingIo) {
 			LARGE_INTEGER l;
-			l.QuadPart = m_real_file_size;
+			l.QuadPart = real_file_size;
 			if (!adjust_file_offset_down(l))
 				return FALSE;
 
@@ -298,12 +217,13 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 	if (buflen < 1)
 		return TRUE;
 
-	if (m_is_empty) {
-		if (!WriteVersionAndFileId())
-			return FALSE;	
+	if (is_empty) {
+		if (!m_con->m_file_id_manager.write(m_con, m_path.c_str(), m_handle, fileid)) {
+			return FALSE;
+		}
 	} else {
 		LARGE_INTEGER size_down;
-		size_down.QuadPart = m_real_file_size;
+		size_down.QuadPart = real_file_size;
 		adjust_file_offset_down(size_down);
 		// if creating a hole, call this->SetEndOfFile() to deal with last block if necessary
 		if (offset > size_down.QuadPart && (size_down.QuadPart % PLAIN_BS)) {
@@ -341,7 +261,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 			if (blockoff == 0 && bytesleft >= PLAIN_BS) { // overwriting whole blocks
 
-				advance = write_block(m_con, cipher_buf, m_handle, m_header.fileid, blockno, p, PLAIN_BS, context);
+				advance = write_block(m_con, cipher_buf, m_handle, fileid, blockno, p, PLAIN_BS, context);
 
 				if (advance != PLAIN_BS)
 					throw(-1);
@@ -352,7 +272,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 				memset(blockbuf, 0, sizeof(blockbuf));
 
-				int blockbytes = read_block(m_con, m_handle, m_header.fileid, blockno, blockbuf, context);
+				int blockbytes = read_block(m_con, m_handle, fileid, blockno, blockbuf, context);
 
 				if (blockbytes < 0) {
 					bRet = FALSE;
@@ -368,7 +288,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 				int blockwrite = max(blockoff + blockcpy, blockbytes);
 
-				int nWritten = write_block(m_con, cipher_buf, m_handle, m_header.fileid, blockno, blockbuf, blockwrite, context);
+				int nWritten = write_block(m_con, cipher_buf, m_handle, fileid, blockno, blockbuf, blockwrite, context);
 
 				advance = blockcpy;
 
@@ -392,6 +312,10 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 	if (context)
 		free_crypt_context(context);
 
+	if (!m_con->m_file_id_manager.update_file_size(m_path.c_str(), offset + *pNwritten, false)) {
+		return FALSE;
+	}
+
 	return bRet;
 	
 }
@@ -399,8 +323,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 BOOL
 CryptFileForward::LockFile(LONGLONG ByteOffset, LONGLONG Length)
 {
-	if (m_real_file_size == (long long)-1)
-		return FALSE;
+
 
 	long long start_block = ByteOffset / PLAIN_BS;
 
@@ -425,8 +348,6 @@ CryptFileForward::LockFile(LONGLONG ByteOffset, LONGLONG Length)
 BOOL
 CryptFileForward::UnlockFile(LONGLONG ByteOffset, LONGLONG Length)
 {
-	if (m_real_file_size == (long long)-1)
-		return FALSE;
 
 	long long start_block = ByteOffset / PLAIN_BS;
 
@@ -449,25 +370,8 @@ CryptFileForward::UnlockFile(LONGLONG ByteOffset, LONGLONG Length)
 }
 
 
-// used ONLY by CryptFileForward::SetEndOfFile()
-static bool
-adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l)
-{
-	long long offset = l.QuadPart;
 
-	if (offset < 0)
-		return false;
 
-	if (offset == 0) // truncate zero-length file to 0 bytes
-		return true;
-
-	long long blocks = (offset + PLAIN_BS - 1) / PLAIN_BS;
-	offset += blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD;
-
-	l.QuadPart = offset;
-
-	return true;
-}
 
 // re-writes last block of necessary to account for file growing or shrinking
 // if bSet is TRUE (the default), actually calls SetEndOfFile()
@@ -475,20 +379,26 @@ BOOL
 CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 {
 
-	if (m_real_file_size == (long long)-1)
-		return FALSE;
 
 	if (m_handle == NULL || m_handle == INVALID_HANDLE_VALUE)
 		return FALSE;
 
-	if (m_is_empty && offset != 0) {
-		if (!WriteVersionAndFileId())
+	unsigned char fileid[FILE_ID_LEN];
+	bool is_empty;
+	LONGLONG real_file_size;
+
+	if (!m_con->m_file_id_manager.get(m_path.c_str(), fileid, is_empty, real_file_size)) {
+		return FALSE;
+	}
+
+	if (is_empty && offset != 0) {
+		if (!m_con->m_file_id_manager.write(m_con, m_path.c_str(), m_handle, fileid))
 			return FALSE;
 	}
 
 	LARGE_INTEGER size_down;
 	
-	size_down.QuadPart = m_real_file_size;
+	size_down.QuadPart = real_file_size;
 
 	if (!adjust_file_offset_down(size_down)) {
 		return FALSE;
@@ -543,7 +453,7 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 		context = NULL;
 	}
 
-	int nread = read_block(m_con, m_handle, m_header.fileid, last_block, buf, context);
+	int nread = read_block(m_con, m_handle, fileid, last_block, buf, context);
 
 	if (nread < 0) {
 		free_crypt_context(context);
@@ -565,7 +475,7 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 	
 	BYTE cipher_buf[CIPHER_BS];
 
-	int nwritten = write_block(m_con, cipher_buf, m_handle, m_header.fileid, last_block, buf, to_write, context);
+	int nwritten = write_block(m_con, cipher_buf, m_handle, fileid, last_block, buf, to_write, context);
 
 	free_crypt_context(context);
 
@@ -575,7 +485,9 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 	if (bSet) {
 		if (!SetFilePointerEx(m_handle, up_off, NULL, FILE_BEGIN))
 			return FALSE;
-
+		if (!m_con->m_file_id_manager.update_file_size(m_path.c_str(), offset, true)) {
+			return FALSE;
+		}
 		return ::SetEndOfFile(m_handle);
 	} else {
 		return TRUE;
@@ -585,6 +497,9 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 
 CryptFileReverse::CryptFileReverse()
 {
+	memset(&m_header, 0, sizeof(m_header));
+	m_real_file_size = -1;
+	m_is_empty = true;
 	memset(m_block0iv, 0, sizeof(m_block0iv));
 }
 
@@ -594,7 +509,7 @@ CryptFileReverse::~CryptFileReverse()
 }
 
 
-BOOL CryptFileReverse::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
+BOOL CryptFileReverse::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath, LPCWSTR encPath)
 {
 	m_handle = hfile;
 

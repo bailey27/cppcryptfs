@@ -226,6 +226,7 @@
     <ClInclude Include="CryptPropertySheet.h" />
     <ClInclude Include="dirivcache.h" />
     <ClInclude Include="eme.h" />
+    <ClInclude Include="fileidmanager.h" />
     <ClInclude Include="fileutil.h" />
     <ClInclude Include="FolderDialog.h" />
     <ClInclude Include="getopt.h" />
@@ -264,6 +265,7 @@
     <ClCompile Include="CryptPropertySheet.cpp" />
     <ClCompile Include="dirivcache.cpp" />
     <ClCompile Include="eme.cpp" />
+    <ClCompile Include="fileidmanager.cpp" />
     <ClCompile Include="fileutil.cpp" />
     <ClCompile Include="FolderDialog.cpp" />
     <ClCompile Include="cryptdokan.cpp">

@@ -111,6 +111,25 @@ bool adjust_file_size_up(LARGE_INTEGER& l)
 	return adjust_file_offset_up(l);
 }
 
+bool
+adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l)
+{
+	long long offset = l.QuadPart;
+
+	if (offset < 0)
+		return false;
+
+	if (offset == 0) // truncate zero-length file to 0 bytes
+		return true;
+
+	long long blocks = (offset + PLAIN_BS - 1) / PLAIN_BS;
+	offset += blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD;
+
+	l.QuadPart = offset;
+
+	return true;
+}
+
 static bool
 read_dir_iv(const TCHAR *path, unsigned char *diriv, FILETIME& LastWriteTime)
 {
