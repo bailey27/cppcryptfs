@@ -166,7 +166,7 @@ write_block(CryptContext *con, unsigned char *cipher_buf, HANDLE hfile, const un
 	if (!siv)
 		memcpy(cipher_buf + BLOCK_IV_LEN + ctlen, tag, sizeof(tag));
 
-	if (!con->GetConfig()->m_reverse) {
+	if (!con->GetConfig()->m_reverse && hfile != INVALID_HANDLE_VALUE) {
 
 		DWORD nWritten = 0;
 

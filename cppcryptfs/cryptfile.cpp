@@ -169,7 +169,31 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 }
 
 
+static void // throws on error 
+flushoutput(LONGLONG& beginblock, HANDLE handle, BYTE *outputbuf, int& outputbytes)
+{
+	long long outputoffset = FILE_HEADER_LEN + beginblock*CIPHER_BS;
 
+	LARGE_INTEGER l;
+
+	l.QuadPart = outputoffset;
+
+	if (!SetFilePointerEx(handle, l, NULL, FILE_BEGIN)) {
+		throw(-1);
+	}
+
+	DWORD outputwritten;
+
+	if (!WriteFile(handle, outputbuf, outputbytes, &outputwritten, NULL)) {
+		throw(-1);
+	}
+	if (outputwritten != outputbytes) {
+		throw(-1);
+	}
+
+	outputbytes = 0;
+	beginblock = 0;
+}
 
 BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile, BOOL bPagingIo)
 {
@@ -248,7 +272,17 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 		context = NULL;
 	}
 
+	BYTE *outputbuf = NULL;
+	int outputbytes = 0;
+	int outputbuflen = 0;
+	LONGLONG beginblock;
+
 	try {
+
+		if (buflen > PLAIN_BS*2) {
+			outputbuflen = min(128*CIPHER_BS, ((buflen + PLAIN_BS - 1) / PLAIN_BS)*CIPHER_BS);
+			outputbuf = new BYTE[outputbuflen];
+		}
 
 		BYTE cipher_buf[CIPHER_BS];
 
@@ -259,14 +293,38 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 			int advance;
 
+			if (outputbuf && outputbytes == outputbuflen) {
+				flushoutput(beginblock, m_handle, outputbuf, outputbytes);
+			}
+
 			if (blockoff == 0 && bytesleft >= PLAIN_BS) { // overwriting whole blocks
 
-				advance = write_block(m_con, cipher_buf, m_handle, fileid, blockno, p, PLAIN_BS, context);
+				if (outputbuf) {
+					if (outputbytes == 0)
+						beginblock = blockno;
 
-				if (advance != PLAIN_BS)
-					throw(-1);
+					advance = write_block(m_con, outputbuf + outputbytes, INVALID_HANDLE_VALUE, fileid, blockno, p, PLAIN_BS, context);
+					
+					if (advance == CIPHER_BS) {
+						advance = PLAIN_BS;
+					} else {
+						throw(-1);
+					}
+					outputbytes += CIPHER_BS;
+				} else {
+					advance = write_block(m_con, cipher_buf, m_handle, fileid, blockno, p, PLAIN_BS, context);
+
+					if (advance != PLAIN_BS)
+						throw(-1);
+				} 
+	
+
 
 			} else { // else read-modify-write 
+
+				if (outputbuf && outputbytes > 0) {
+					flushoutput(beginblock, m_handle, outputbuf, outputbytes);
+				}
 
 				unsigned char blockbuf[PLAIN_BS];
 
@@ -303,11 +361,19 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 			*pNwritten += advance;
 
 		}
+
+		if (outputbuf && outputbytes > 0) {
+			flushoutput(beginblock, m_handle, outputbuf, outputbytes);
+		}
+
 	} catch (...) {
 		bRet = FALSE;
 	}
 
 	*pNwritten = min(*pNwritten, buflen);
+
+	if (outputbuf)
+		delete[] outputbuf;
 
 	if (context)
 		free_crypt_context(context);
