@@ -37,7 +37,7 @@ THE SOFTWARE.
 
 
 int
-read_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigned long long block, unsigned char *ptbuf, void *openssl_crypt_context)
+read_block(CryptContext *con, HANDLE hfile, const BYTE *inputbuf, int& nbytes, const unsigned char *fileid, unsigned long long block, unsigned char *ptbuf, void *openssl_crypt_context)
 {
 	static_assert(BLOCK_IV_LEN == BLOCK_SIV_LEN, "BLOCK_IV_LEN != BLOCK_SIV_LEN.");
 	static_assert(BLOCK_SIV_LEN == BLOCK_TAG_LEN, "BLOCK_SIV_LEN != BLOCK_TAG_LEN.");
@@ -48,8 +48,10 @@ read_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigne
 
 	l.QuadPart = offset;
 
-	if (!SetFilePointerEx(hfile, l, NULL, FILE_BEGIN)) {
-		return -1;
+	if (hfile != INVALID_HANDLE_VALUE) {
+		if (!SetFilePointerEx(hfile, l, NULL, FILE_BEGIN)) {
+			return -1;
+		}
 	}
 
 	unsigned long long be_block = MakeBigEndian(block);
@@ -64,9 +66,16 @@ read_block(CryptContext *con, HANDLE hfile, const unsigned char *fileid, unsigne
 
 	DWORD nread = 0;
 
-	if (!ReadFile(hfile, buf, sizeof(buf), &nread, NULL)) {
-		DWORD error = GetLastError();
-		return -1;
+	if (hfile == INVALID_HANDLE_VALUE && inputbuf) {
+		int to_consume = min(CIPHER_BS, nbytes);
+		nbytes = to_consume;
+		memcpy(buf, inputbuf, to_consume);
+		nread = to_consume;
+	} else {
+		if (!ReadFile(hfile, buf, sizeof(buf), &nread, NULL)) {
+			DWORD error = GetLastError();
+			return -1;
+		}
 	}
 
 	if (nread == 0)

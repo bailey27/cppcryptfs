@@ -209,7 +209,7 @@ bool FileIdManager::get(LPCWSTR path, unsigned char *fileid, bool& is_empty, LON
 }
 
 
-bool FileIdManager::write(CryptContext *con, LPCWSTR path, HANDLE h, unsigned char *fileid)
+bool FileIdManager::writeheader(CryptContext *con, LPCWSTR path, HANDLE h, unsigned char *fileid)
 {
 	std::wstring key = path;
 

@@ -51,7 +51,7 @@ public:
 	bool get(LPCWSTR path, unsigned char *fileid, bool& is_empty, LONGLONG& real_file_size);
 
 	// should be called the first time an empty file is written to
-	bool write(CryptContext *con, LPCWSTR path, HANDLE h, unsigned char *fileid);
+	bool writeheader(CryptContext *con, LPCWSTR path, HANDLE h, unsigned char *fileid);
 
 	// called if the file is truncated to zero, resets empty to true
 	bool truncated_to_zero(LPCWSTR path);
