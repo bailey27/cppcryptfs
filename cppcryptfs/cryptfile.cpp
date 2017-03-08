@@ -242,7 +242,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 		return TRUE;
 
 	if (is_empty) {
-		if (!m_con->m_file_id_manager.write(m_con, m_path.c_str(), m_handle, fileid)) {
+		if (!m_con->m_file_id_manager.writeheader(m_con, m_path.c_str(), m_handle, fileid)) {
 			return FALSE;
 		}
 	} else {
@@ -279,8 +279,8 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 	try {
 
-		if (buflen > PLAIN_BS*2) {
-			outputbuflen = min(128*CIPHER_BS, ((buflen + PLAIN_BS - 1) / PLAIN_BS)*CIPHER_BS);
+		if (buflen > PLAIN_BS*2 && m_con->m_bufferblocks > 1) {
+			outputbuflen = min(m_con->m_bufferblocks*CIPHER_BS, ((buflen + PLAIN_BS - 1) / PLAIN_BS)*CIPHER_BS);
 			outputbuf = new BYTE[outputbuflen];
 		}
 
@@ -458,7 +458,7 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 	}
 
 	if (is_empty && offset != 0) {
-		if (!m_con->m_file_id_manager.write(m_con, m_path.c_str(), m_handle, fileid))
+		if (!m_con->m_file_id_manager.writeheader(m_con, m_path.c_str(), m_handle, fileid))
 			return FALSE;
 	}
 

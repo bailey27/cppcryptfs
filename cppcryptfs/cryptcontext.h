@@ -49,6 +49,7 @@ public:
 	LongFilenameCache m_lfn_cache;
 	EmeCryptContext m_eme;
 	SivContext m_siv;
+	int m_bufferblocks;
 
 	HANDLE m_mountEvent;
 
