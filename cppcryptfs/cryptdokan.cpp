@@ -441,6 +441,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 	  DbgPrint(L"\tadded FILE_READ_DATA to desired access\n");
 	  DesiredAccess |= FILE_READ_DATA;
   }
+
   if (!(bHasDirAttr || (CreateOptions & FILE_DIRECTORY_FILE)) && 
 	  (ShareAccess & FILE_SHARE_WRITE)) {
 	  DbgPrint(L"\tadded FILE_SHARE_READ to share access\n");
@@ -629,7 +630,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
       DokanFileInfo->Context =
           (ULONG64)handle; // save the file handle in Context
 
-	  if (handle != INVALID_HANDLE_VALUE) {
+	  if (handle != INVALID_HANDLE_VALUE && ((DesiredAccess & GENERIC_READ) || (DesiredAccess & FILE_READ_DATA))) {
 		  GetContext()->m_file_id_manager.openfile(filePath, handle);
 	  }
 
@@ -659,7 +660,7 @@ static void DOKAN_CALLBACK CryptCloseFile(LPCWSTR FileName,
     DbgPrint(L"\terror : not cleanuped file\n\n");
 	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE) {
 		if (!DokanFileInfo->IsDirectory) {
-			GetContext()->m_file_id_manager.closefile(filePath, (HANDLE)DokanFileInfo->Context);
+			GetContext()->m_file_id_manager.closefile((HANDLE)DokanFileInfo->Context);
 		}
 		CloseHandle((HANDLE)DokanFileInfo->Context);
 	}
@@ -678,7 +679,7 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
     DbgPrint(L"Cleanup: %s, %x\n\n", FileName, (DWORD)DokanFileInfo->Context);
 	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE) {
 		if (!DokanFileInfo->IsDirectory) {
-			GetContext()->m_file_id_manager.closefile(filePath, (HANDLE)DokanFileInfo->Context);
+			GetContext()->m_file_id_manager.closefile((HANDLE)DokanFileInfo->Context);
 		}
 		CloseHandle((HANDLE)DokanFileInfo->Context);
 	}
@@ -719,6 +720,7 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 	NTSTATUS ret_status = STATUS_SUCCESS;
 
 	DbgPrint(L"ReadFile : %s, %I64u, paging io = %u\n", FileName, (ULONGLONG)handle, DokanFileInfo->PagingIo);
+	DbgPrint(L"ReadFile : attempting to read %u bytes from offset %ld\n", BufferLength, Offset);
 
 	bool is_virtual = rt_is_virtual_file(GetContext(), FileName);
 
@@ -731,6 +733,8 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 			DbgPrint(L"\tCreateFile error : %d\n\n", error);
 			return ToNtStatus(error);
 		}
+		DbgPrint(L"opening ad-hoc handle %08lx for read\n", (LONGLONG)handle);
+		GetContext()->m_file_id_manager.openfile(filePath, handle);
 		opened = TRUE;
 	}
 
@@ -764,14 +768,18 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 			ret_status = ToNtStatus(error);
 		}
 
+		DbgPrint(L"file->Read read %u bytes\n", *ReadLength);
+
     } else {
 		ret_status = STATUS_ACCESS_DENIED;
     }
 
 	delete file;
 
-    if (opened)
-      CloseHandle(handle);
+	if (opened) {
+		GetContext()->m_file_id_manager.closefile(handle);
+		CloseHandle(handle);
+	}
 
     return ret_status;
 }
@@ -805,13 +813,15 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
   // reopen the file
   if (!handle || handle == INVALID_HANDLE_VALUE) {
     DbgPrint(L"\tinvalid handle, cleanuped?\n");
-    handle = CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL,
+    handle = CreateFile(filePath, GENERIC_WRITE | GENERIC_READ, FILE_SHARE_WRITE, NULL,
                         OPEN_EXISTING, 0, NULL);
     if (handle == INVALID_HANDLE_VALUE) {
       DWORD error = GetLastError();
       DbgPrint(L"\tCreateFile error : %d\n\n", error);
       return ToNtStatus(error);
     }
+	DbgPrint(L"opening ad-hoc handle %08lx for write\n", (LONGLONG)handle);
+	GetContext()->m_file_id_manager.openfile(filePath, handle);
     opened = TRUE;
   }
 #if 0 // this code is useful for debugging sometimes
@@ -844,9 +854,10 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
   delete file;
 
   // close the file when it is reopened
-  if (opened)
-    CloseHandle(handle);
-
+  if (opened) {
+	  GetContext()->m_file_id_manager.closefile(handle);
+	  CloseHandle(handle);
+  }
   return ret_status;
 }
 
@@ -1555,7 +1566,7 @@ static DWORD WINAPI CryptThreadProc(
 }
 
 
-int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes, bool readonly, int nThreads) 
+int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes, bool readonly, int nThreads, int nBufferBlocks) 
 {
 
 	if (driveletter < 'A' || driveletter > 'Z') {
@@ -1633,6 +1644,8 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 
 
 		CryptContext *con = &tdata->con;
+
+		con->m_bufferblocks = min(256, max(1, nBufferBlocks));
 
 		CryptConfig *config = con->GetConfig();
 

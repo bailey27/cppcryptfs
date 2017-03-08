@@ -131,7 +131,7 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 			l.QuadPart = blockoff;
 
 			if (!SetFilePointerEx(m_handle, l, NULL, FILE_BEGIN)) {
-				return -1;
+				 throw(-1);
 			}
 			
 		}
@@ -155,13 +155,12 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 			if (blockoff == 0 && bytesleft >= PLAIN_BS) {
 
 				if (inputbuf) {
-					int consumed = bytesinbuf;
-					advance = read_block(m_con, INVALID_HANDLE_VALUE, inputbuf + inputbufpos, consumed, fileid, blockno, p, context);
+					int consumed = 0;
+					advance = read_block(m_con, INVALID_HANDLE_VALUE, inputbuf + inputbufpos, bytesinbuf, &consumed, fileid, blockno, p, context);
 					inputbufpos += consumed;
 					bytesinbuf -= consumed;
 				} else {
-					int consumed = 0;
-					advance = read_block(m_con, m_handle, NULL, consumed, fileid, blockno, p, context);
+					advance = read_block(m_con, m_handle, NULL, 0, NULL, fileid, blockno, p, context);
 				}
 
 				if (advance < 0)
@@ -177,13 +176,12 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 				int blockbytes = 0;
 
 				if (inputbuf) {
-					int consumed = bytesinbuf;
-					blockbytes = read_block(m_con, INVALID_HANDLE_VALUE, inputbuf + inputbufpos, consumed, fileid, blockno, p, context);
+					int consumed = 0;
+					blockbytes = read_block(m_con, INVALID_HANDLE_VALUE, inputbuf + inputbufpos, bytesinbuf, &consumed, fileid, blockno, p, context);
 					inputbufpos += consumed;
 					bytesinbuf -= consumed;
 				} else {
-					int consumed = 0;
-					blockbytes = read_block(m_con, m_handle, NULL, consumed, fileid, blockno, blockbuf, context);
+					blockbytes = read_block(m_con, m_handle, NULL, 0, NULL, fileid, blockno, blockbuf, context);
 				}
 
 				if (blockbytes < 0)
@@ -382,8 +380,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 				memset(blockbuf, 0, sizeof(blockbuf));
 
-				int cosumed = 0;
-				int blockbytes = read_block(m_con, m_handle, NULL, cosumed, fileid, blockno, blockbuf, context);
+				int blockbytes = read_block(m_con, m_handle, NULL, 0, NULL, fileid, blockno, blockbuf, context);
 
 				if (blockbytes < 0) {
 					bRet = FALSE;
@@ -572,8 +569,7 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 		context = NULL;
 	}
 
-	int consumed = 0;
-	int nread = read_block(m_con, m_handle, NULL, consumed, fileid, last_block, buf, context);
+	int nread = read_block(m_con, m_handle, NULL, 0, NULL, fileid, last_block, buf, context);
 
 	if (nread < 0) {
 		free_crypt_context(context);

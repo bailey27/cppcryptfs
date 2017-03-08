@@ -47,7 +47,7 @@ public:
 
 	// these are called when a file is opened or closed.  increment/decrement ref count
 	bool openfile(LPCWSTR path, HANDLE h); // encrypted path
-	void closefile(LPCWSTR path, HANDLE h);
+	void closefile(HANDLE h);
 
 	bool getencfilename(HANDLE h, std::wstring& enc_filename);
 

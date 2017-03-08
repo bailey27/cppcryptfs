@@ -37,11 +37,13 @@ void FileIdManager::normalize_key(std::wstring& key)
 
 void FileIdManager::lock()
 {
+	DbgPrint(L"fileidmanager lock\n");
 	EnterCriticalSection(&m_crit);
 }
 
 void FileIdManager::unlock()
 {
+	DbgPrint(L"fileidmanager unlock\n");
 	LeaveCriticalSection(&m_crit);
 }
 
@@ -59,6 +61,9 @@ bool FileIdManager::openfile(LPCWSTR path, HANDLE hfile)
 		FileIdNode *node = it->second;
 		
 		node->m_refcount++;
+
+		m_handle_to_enc_filename_map.insert(std::make_pair((long long)hfile, path));
+		DbgPrint(L"inserting path %s for handle 0x%08lx\n", path, hfile);
 
 		unlock();
 
@@ -82,6 +87,8 @@ bool FileIdManager::openfile(LPCWSTR path, HANDLE hfile)
 		node->m_is_empty = true;
 		node->m_refcount++;
 		m_map.insert(std::make_pair(key, node));
+		m_handle_to_enc_filename_map.insert(std::make_pair((long long)hfile, path));
+		DbgPrint(L"inserting path %s for handle 0x%08lx\n", path, hfile);
 		unlock();
 		return true;
 	} else if (l.QuadPart < FILE_HEADER_LEN) {
@@ -142,20 +149,30 @@ bool FileIdManager::openfile(LPCWSTR path, HANDLE hfile)
 	m_map.insert(std::make_pair(key, node));
 
 	m_handle_to_enc_filename_map.insert(std::make_pair((long long)hfile, path));
+	DbgPrint(L"inserting path %s for handle 0x%08lx\n", path, hfile);
 
 	unlock();
 
 	return true;
 }
 
-void FileIdManager::closefile(LPCWSTR path, HANDLE h)
+void FileIdManager::closefile(HANDLE h)
 {
 
-	std::wstring key = path;
+	lock();
+
+	auto ith = m_handle_to_enc_filename_map.find((long long)h);
+
+	if (ith == m_handle_to_enc_filename_map.end()) {
+		unlock();
+		return;
+	}
+
+	std::wstring key = ith->second;
 
 	normalize_key(key);
 
-	lock();
+	m_handle_to_enc_filename_map.erase(ith);
 
 	auto it = m_map.find(key);
 
@@ -165,13 +182,12 @@ void FileIdManager::closefile(LPCWSTR path, HANDLE h)
 		node->m_refcount--;
 
 		if (node->m_refcount == 0) {
+			DbgPrint(L"fileidmanager deleting entry for key %s\n", key.c_str());
 			m_map.erase(key);
 			delete node;
 		}
 
 	}
-
-	m_handle_to_enc_filename_map.erase((long long)h);
 
 	unlock();
 }

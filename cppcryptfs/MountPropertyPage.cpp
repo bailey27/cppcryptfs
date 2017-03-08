@@ -199,8 +199,10 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	int nThreads = theApp.GetProfileInt(L"Settings", L"Threads", 1);
 
+	int bufferblocks = theApp.GetProfileInt(L"Settings", L"BufferBlocks", 1);
+
 	theApp.DoWaitCursor(1);
-	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes, readonly, nThreads);
+	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes, readonly, nThreads, bufferblocks);
 	theApp.DoWaitCursor(-1);
 
 	if (result != 0) {

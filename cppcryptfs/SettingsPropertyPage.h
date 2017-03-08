@@ -24,4 +24,5 @@ protected:
 public:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSelchangeThreads();
+	afx_msg void OnSelchangeBuffersize();
 };

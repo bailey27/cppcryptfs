@@ -37,7 +37,7 @@ THE SOFTWARE.
 
 
 int
-read_block(CryptContext *con, HANDLE hfile, const BYTE *inputbuf, int& nbytes, const unsigned char *fileid, unsigned long long block, unsigned char *ptbuf, void *openssl_crypt_context)
+read_block(CryptContext *con, HANDLE hfile, BYTE *inputbuf, int bytesinbuf, int *bytes_consumed, const unsigned char *fileid, unsigned long long block, unsigned char *ptbuf, void *openssl_crypt_context)
 {
 	static_assert(BLOCK_IV_LEN == BLOCK_SIV_LEN, "BLOCK_IV_LEN != BLOCK_SIV_LEN.");
 	static_assert(BLOCK_SIV_LEN == BLOCK_TAG_LEN, "BLOCK_SIV_LEN != BLOCK_TAG_LEN.");
@@ -67,9 +67,9 @@ read_block(CryptContext *con, HANDLE hfile, const BYTE *inputbuf, int& nbytes, c
 	DWORD nread = 0;
 
 	if (hfile == INVALID_HANDLE_VALUE && inputbuf) {
-		int to_consume = min(CIPHER_BS, nbytes);
-		nbytes = to_consume;
-		memcpy(buf, inputbuf, to_consume);
+		int to_consume = min(CIPHER_BS, bytesinbuf);
+		if (bytes_consumed != NULL)
+			*bytes_consumed = to_consume;
 		nread = to_consume;
 	} else {
 		if (!ReadFile(hfile, buf, sizeof(buf), &nread, NULL)) {
@@ -84,11 +84,11 @@ read_block(CryptContext *con, HANDLE hfile, const BYTE *inputbuf, int& nbytes, c
 	int ptlen;
 	
 	if (con->GetConfig()->m_AESSIV) {
-		ptlen = decrypt_siv(buf + BLOCK_IV_LEN + BLOCK_SIV_LEN, nread - BLOCK_IV_LEN * 2, auth_data, sizeof(auth_data), 
-			buf + BLOCK_IV_LEN, con->GetConfig()->GetKey(), buf, ptbuf, &con->m_siv);	
+		ptlen = decrypt_siv((inputbuf ? inputbuf : buf) + BLOCK_IV_LEN + BLOCK_SIV_LEN, nread - BLOCK_IV_LEN * 2, auth_data, sizeof(auth_data), 
+			(inputbuf ? inputbuf : buf) + BLOCK_IV_LEN, con->GetConfig()->GetKey(), (inputbuf ? inputbuf : buf), ptbuf, &con->m_siv);	
 	} else {
-		ptlen = decrypt(buf + BLOCK_IV_LEN, nread - BLOCK_IV_LEN - BLOCK_TAG_LEN, auth_data, sizeof(auth_data),
-			buf + nread - BLOCK_TAG_LEN, con->GetConfig()->GetKey(), buf, ptbuf, openssl_crypt_context);
+		ptlen = decrypt((inputbuf ? inputbuf : buf) + BLOCK_IV_LEN, nread - BLOCK_IV_LEN - BLOCK_TAG_LEN, auth_data, sizeof(auth_data),
+			(inputbuf ? inputbuf : buf) + nread - BLOCK_TAG_LEN, con->GetConfig()->GetKey(), (inputbuf ? inputbuf : buf), ptbuf, openssl_crypt_context);
 	}
 
 	if (ptlen < 0) {  // return all zeros for un-authenticated blocks (might exist if file was resized without writing)
