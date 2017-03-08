@@ -42,6 +42,10 @@ typedef struct struct_FileHeader {
 class CryptFile {
 public:
 
+	FileHeader m_header;
+	LONGLONG m_real_file_size;
+	bool m_is_empty;	
+
 	HANDLE m_handle;
 
 	std::wstring m_path;
@@ -91,15 +95,15 @@ public:
 
 	~CryptFileForward();
 
+protected:
+	BOOL WriteVersionAndFileId();
+
 
 };
 
 class CryptFileReverse:  public CryptFile
 {
 private:
-	FileHeader m_header;
-	LONGLONG m_real_file_size;
-	bool m_is_empty;	
 	BYTE m_block0iv[BLOCK_SIV_LEN];
 public:
 

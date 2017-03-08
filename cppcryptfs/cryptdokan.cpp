@@ -630,10 +630,6 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
       DokanFileInfo->Context =
           (ULONG64)handle; // save the file handle in Context
 
-	  if (handle != INVALID_HANDLE_VALUE && ((DesiredAccess & GENERIC_READ) || (DesiredAccess & FILE_READ_DATA))) {
-		  GetContext()->m_file_id_manager.openfile(filePath, handle);
-	  }
-
       if (creationDisposition == OPEN_ALWAYS ||
           creationDisposition == CREATE_ALWAYS) {
         error = GetLastError();
@@ -659,9 +655,6 @@ static void DOKAN_CALLBACK CryptCloseFile(LPCWSTR FileName,
     DbgPrint(L"CloseFile: %s, %x\n", FileName, (DWORD)DokanFileInfo->Context);
     DbgPrint(L"\terror : not cleanuped file\n\n");
 	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE) {
-		if (!DokanFileInfo->IsDirectory) {
-			GetContext()->m_file_id_manager.closefile((HANDLE)DokanFileInfo->Context);
-		}
 		CloseHandle((HANDLE)DokanFileInfo->Context);
 	}
     DokanFileInfo->Context = 0;
@@ -678,9 +671,6 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
   if (DokanFileInfo->Context) {
     DbgPrint(L"Cleanup: %s, %x\n\n", FileName, (DWORD)DokanFileInfo->Context);
 	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE) {
-		if (!DokanFileInfo->IsDirectory) {
-			GetContext()->m_file_id_manager.closefile((HANDLE)DokanFileInfo->Context);
-		}
 		CloseHandle((HANDLE)DokanFileInfo->Context);
 	}
     DokanFileInfo->Context = 0;
@@ -733,8 +723,6 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 			DbgPrint(L"\tCreateFile error : %d\n\n", error);
 			return ToNtStatus(error);
 		}
-		DbgPrint(L"opening ad-hoc handle %08lx for read\n", (LONGLONG)handle);
-		GetContext()->m_file_id_manager.openfile(filePath, handle);
 		opened = TRUE;
 	}
 
@@ -777,7 +765,6 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 	delete file;
 
 	if (opened) {
-		GetContext()->m_file_id_manager.closefile(handle);
 		CloseHandle(handle);
 	}
 
@@ -820,8 +807,7 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
       DbgPrint(L"\tCreateFile error : %d\n\n", error);
       return ToNtStatus(error);
     }
-	DbgPrint(L"opening ad-hoc handle %08lx for write\n", (LONGLONG)handle);
-	GetContext()->m_file_id_manager.openfile(filePath, handle);
+	
     opened = TRUE;
   }
 #if 0 // this code is useful for debugging sometimes
@@ -855,7 +841,6 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
 
   // close the file when it is reopened
   if (opened) {
-	  GetContext()->m_file_id_manager.closefile(handle);
 	  CloseHandle(handle);
   }
   return ret_status;
