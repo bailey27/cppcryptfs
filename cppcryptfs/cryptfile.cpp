@@ -66,14 +66,15 @@ CryptFileForward::~CryptFileForward()
 }
 
 BOOL
-CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath, LPCWSTR encPath)
+CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
 {
 
 	m_handle = hfile;
 
 	m_con = con;
 
-	m_path = encPath;
+	if (!m_con->m_file_id_manager.getencfilename(m_handle, m_path))
+		return FALSE;
 
 	return TRUE;
 }
@@ -628,7 +629,7 @@ CryptFileReverse::~CryptFileReverse()
 }
 
 
-BOOL CryptFileReverse::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath, LPCWSTR encPath)
+BOOL CryptFileReverse::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
 {
 	m_handle = hfile;
 

@@ -659,7 +659,7 @@ static void DOKAN_CALLBACK CryptCloseFile(LPCWSTR FileName,
     DbgPrint(L"\terror : not cleanuped file\n\n");
 	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE) {
 		if (!DokanFileInfo->IsDirectory) {
-			GetContext()->m_file_id_manager.closefile(filePath);
+			GetContext()->m_file_id_manager.closefile(filePath, (HANDLE)DokanFileInfo->Context);
 		}
 		CloseHandle((HANDLE)DokanFileInfo->Context);
 	}
@@ -676,8 +676,12 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
 
   if (DokanFileInfo->Context) {
     DbgPrint(L"Cleanup: %s, %x\n\n", FileName, (DWORD)DokanFileInfo->Context);
-	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE)
+	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE) {
+		if (!DokanFileInfo->IsDirectory) {
+			GetContext()->m_file_id_manager.closefile(filePath, (HANDLE)DokanFileInfo->Context);
+		}
 		CloseHandle((HANDLE)DokanFileInfo->Context);
+	}
     DokanFileInfo->Context = 0;
 
     if (DokanFileInfo->DeleteOnClose) {
@@ -751,7 +755,7 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 				error, BufferLength, *ReadLength);
 			ret_status = ToNtStatus(error);
 		}
-	} else if (file->Associate(GetContext(), handle, FileName, filePath)) {
+	} else if (file->Associate(GetContext(), handle, FileName)) {
 
 		if (!file->Read((unsigned char *)Buffer, BufferLength, ReadLength, Offset)) {
 			DWORD error = GetLastError();
@@ -823,7 +827,7 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
   }
 #endif
   CryptFile *file = CryptFile::NewInstance(GetContext());
-  if (file->Associate(GetContext(), handle, FileName, filePath)) {
+  if (file->Associate(GetContext(), handle, FileName)) {
 	  if (!file->Write((const unsigned char *)Buffer, NumberOfBytesToWrite, NumberOfBytesWritten, Offset, DokanFileInfo->WriteToEndOfFile, DokanFileInfo->PagingIo)) {
 		  DWORD error = GetLastError();
 		  DbgPrint(L"\twrite error = %u, buffer length = %d, write length = %d\n",
@@ -1062,7 +1066,7 @@ static NTSTATUS DOKAN_CALLBACK CryptLockFile(LPCWSTR FileName,
 
   CryptFile *file = CryptFile::NewInstance(GetContext());
 
-  if (file->Associate(GetContext(), handle, FileName, filePath)) {
+  if (file->Associate(GetContext(), handle, FileName)) {
 
 	  if (!file->LockFile(ByteOffset, Length)) {
 		  DWORD error = GetLastError();
@@ -1097,7 +1101,7 @@ static NTSTATUS DOKAN_CALLBACK CryptSetEndOfFile(
 
   CryptFile *file = CryptFile::NewInstance(GetContext());
 
-  if (file->Associate(GetContext(), handle, FileName, filePath)) {
+  if (file->Associate(GetContext(), handle, FileName)) {
 	  if (!file->SetEndOfFile(ByteOffset)) {
 		  DWORD error = GetLastError();
 		  DbgPrint(L"\tSetEndOfFile error code = %d\n\n", error);
@@ -1140,7 +1144,7 @@ static NTSTATUS DOKAN_CALLBACK CryptSetAllocationSize(
 	  if (AllocSize < fileSize.QuadPart) {
 		fileSize.QuadPart = AllocSize;
 		CryptFile * file = CryptFile::NewInstance(GetContext());
-		if (!file->Associate(GetContext(), handle, FileName, filePath)) {
+		if (!file->Associate(GetContext(), handle, FileName)) {
 			delete file;
 			throw(-1);
 		}
@@ -1226,7 +1230,7 @@ CryptUnlockFile(LPCWSTR FileName, LONGLONG ByteOffset, LONGLONG Length,
 
   CryptFile *file = CryptFile::NewInstance(GetContext());
 
-  if (file->Associate(GetContext(), handle, FileName, filePath)) {
+  if (file->Associate(GetContext(), handle, FileName)) {
 
 	  if (!file->UnlockFile(ByteOffset, Length)) {
 		  DWORD error = GetLastError();

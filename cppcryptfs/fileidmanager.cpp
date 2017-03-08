@@ -141,12 +141,14 @@ bool FileIdManager::openfile(LPCWSTR path, HANDLE hfile)
 
 	m_map.insert(std::make_pair(key, node));
 
+	m_handle_to_enc_filename_map.insert(std::make_pair((long long)hfile, path));
+
 	unlock();
 
 	return true;
 }
 
-void FileIdManager::closefile(LPCWSTR path)
+void FileIdManager::closefile(LPCWSTR path, HANDLE h)
 {
 
 	std::wstring key = path;
@@ -169,7 +171,27 @@ void FileIdManager::closefile(LPCWSTR path)
 
 	}
 
+	m_handle_to_enc_filename_map.erase((long long)h);
+
 	unlock();
+}
+
+bool FileIdManager::getencfilename(HANDLE h, std::wstring& enc_filename)
+{
+	lock();
+
+	auto it = m_handle_to_enc_filename_map.find((long long)h);
+
+	bool bRet = false;
+
+	if (it != m_handle_to_enc_filename_map.end()) {
+		enc_filename = it->second;
+		bRet = true;
+	}
+
+	unlock();
+
+	return bRet;
 }
 
 

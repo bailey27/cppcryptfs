@@ -42,7 +42,7 @@ CryptContext::CryptContext()
 {
 	m_mountEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-	m_bufferblocks = 1;
+	m_bufferblocks = 256;
 
 	if (!m_mountEvent)
 		throw((int)GetLastError());

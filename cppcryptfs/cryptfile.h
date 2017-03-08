@@ -50,7 +50,7 @@ public:
 
 	static CryptFile *NewInstance(CryptContext *con);
 
-	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR ptPath, LPCWSTR encPath) = 0;
+	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR ptPath) = 0;
 
 	virtual BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset) = 0;
 
@@ -75,7 +75,7 @@ class CryptFileForward:  public CryptFile
 public:
 
 
-	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR ptPath, LPCWSTR encPath);
+	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR ptPath);
 
 	virtual BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset);
 
@@ -104,7 +104,7 @@ private:
 public:
 
 
-	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR ptPath, LPCWSTR encPath);
+	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR ptPath);
 
 	virtual BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset);
 

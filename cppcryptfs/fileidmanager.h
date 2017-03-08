@@ -29,6 +29,8 @@ private:
 
 	std::unordered_map<std::wstring, FileIdNode*> m_map;
 
+	std::unordered_map<long long, std::wstring> m_handle_to_enc_filename_map;
+
 	CRITICAL_SECTION m_crit;
 
 	long long m_lookups;
@@ -45,7 +47,9 @@ public:
 
 	// these are called when a file is opened or closed.  increment/decrement ref count
 	bool openfile(LPCWSTR path, HANDLE h); // encrypted path
-	void closefile(LPCWSTR path);
+	void closefile(LPCWSTR path, HANDLE h);
+
+	bool getencfilename(HANDLE h, std::wstring& enc_filename);
 
 	// get returns the fileid and whether the file is empty
 	bool get(LPCWSTR path, unsigned char *fileid, bool& is_empty, LONGLONG& real_file_size);
