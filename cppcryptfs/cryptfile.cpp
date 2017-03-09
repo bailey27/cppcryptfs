@@ -145,9 +145,6 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 	if (!pNread || !buf)
 		return FALSE;
 
-	if (buflen == 9047)
-		atoi("1");
-
 	*pNread = 0;
 
 	LONGLONG bytesleft = buflen;
