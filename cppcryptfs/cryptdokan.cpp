@@ -2,7 +2,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016 - Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2017 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -654,9 +654,8 @@ static void DOKAN_CALLBACK CryptCloseFile(LPCWSTR FileName,
   if (DokanFileInfo->Context) {
     DbgPrint(L"CloseFile: %s, %x\n", FileName, (DWORD)DokanFileInfo->Context);
     DbgPrint(L"\terror : not cleanuped file\n\n");
-	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE) {
+	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE) 
 		CloseHandle((HANDLE)DokanFileInfo->Context);
-	}
     DokanFileInfo->Context = 0;
   } else {
     DbgPrint(L"Close (no handle): %s\n\n", FileName);
@@ -670,9 +669,8 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
 
   if (DokanFileInfo->Context) {
     DbgPrint(L"Cleanup: %s, %x\n\n", FileName, (DWORD)DokanFileInfo->Context);
-	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE) {
+	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE)
 		CloseHandle((HANDLE)DokanFileInfo->Context);
-	}
     DokanFileInfo->Context = 0;
 
     if (DokanFileInfo->DeleteOnClose) {
@@ -764,9 +762,8 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 
 	delete file;
 
-	if (opened) {
+	if (opened)
 		CloseHandle(handle);
-	}
 
     return ret_status;
 }
@@ -800,7 +797,7 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
   // reopen the file
   if (!handle || handle == INVALID_HANDLE_VALUE) {
     DbgPrint(L"\tinvalid handle, cleanuped?\n");
-    handle = CreateFile(filePath, GENERIC_WRITE | GENERIC_READ, FILE_SHARE_WRITE, NULL,
+    handle = CreateFile(filePath, GENERIC_WRITE | GENERIC_READ, FILE_SHARE_WRITE | FILE_SHARE_READ, NULL,
                         OPEN_EXISTING, 0, NULL);
     if (handle == INVALID_HANDLE_VALUE) {
       DWORD error = GetLastError();
@@ -840,9 +837,9 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
   delete file;
 
   // close the file when it is reopened
-  if (opened) {
+  if (opened)
 	  CloseHandle(handle);
-  }
+
   return ret_status;
 }
 

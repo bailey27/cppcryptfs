@@ -232,7 +232,6 @@
     <ClInclude Include="LockZeroBuffer.h" />
     <ClInclude Include="longfilenamecache.h" />
     <ClInclude Include="MountPropertyPage.h" />
-    <ClInclude Include="numbers.h" />
     <ClInclude Include="pad16.h" />
     <ClInclude Include="randombytes.h" />
     <ClInclude Include="RecentItems.h" />

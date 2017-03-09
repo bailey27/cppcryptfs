@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016 - Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2017 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -71,6 +71,8 @@ CryptFileForward::~CryptFileForward()
 BOOL
 CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
 {
+
+	static_assert(sizeof(m_header) == FILE_HEADER_LEN, "sizeof(m_header) != FILE_HEADER_LEN");
 
 	m_handle = hfile;
 
@@ -516,7 +518,8 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 BOOL
 CryptFileForward::LockFile(LONGLONG ByteOffset, LONGLONG Length)
 {
-
+	if (m_real_file_size == (long long)-1)
+		return FALSE;
 
 	long long start_block = ByteOffset / PLAIN_BS;
 
@@ -541,6 +544,8 @@ CryptFileForward::LockFile(LONGLONG ByteOffset, LONGLONG Length)
 BOOL
 CryptFileForward::UnlockFile(LONGLONG ByteOffset, LONGLONG Length)
 {
+	if (m_real_file_size == (long long)-1)
+		return FALSE;
 
 	long long start_block = ByteOffset / PLAIN_BS;
 
@@ -682,9 +687,6 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 
 CryptFileReverse::CryptFileReverse()
 {
-	memset(&m_header, 0, sizeof(m_header));
-	m_real_file_size = -1;
-	m_is_empty = true;
 	memset(m_block0iv, 0, sizeof(m_block0iv));
 }
 

@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016 - Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2017 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -67,11 +67,11 @@ END_MESSAGE_MAP()
 
 
 static const WCHAR * components[] = {
-	L"cppcryptfs - Copyright (C) 2016 Bailey Brown. All Rights Reserved.",
-	L"OpenSSL - Copyright 2002-2016 The OpenSSL Project Authors. All Rights Reserved.",
+	L"cppcryptfs - Copyright (C) 2016-2017 Bailey Brown. All Rights Reserved.",
+	L"OpenSSL - Copyright 1998-2017 The OpenSSL Project Authors. All Rights Reserved.",
 	L"RapidJSON - Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip. All rights reserved.",
-	L"Dokany (mirror) - Copyright (C) 2015 - 2016 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
-	L"Dokany (library) - Copyright (C) 2015 - 2016 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
+	L"Dokany (mirror) - Copyright (C) 2015 - 2017 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
+	L"Dokany (library) - Copyright (C) 2015 - 2017 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
 	L"100% free Secure Edit control MFC class - Copyright (c) 2003 Dominik Reichl",
 	L"win-c (getopt) - Windows Console Library Copyright (c) 2015 Koji Takami",
 	L"aes-siv - Copyright (c) 2015 ARKconcepts / Sasha Kotlyar",
@@ -81,7 +81,7 @@ static const WCHAR * components[] = {
 static const WCHAR *licenses[] = {
 
 	// cppcryptfs
-	L"cppcryptfs - Copyright (C) 2016 Bailey Brown. All rights reserved.\r\n\r\n"
+	L"cppcryptfs - Copyright (C) 2016-2017 Bailey Brown. All rights reserved.\r\n\r\n"
 	L"project url: github.com/bailey27/cppcryptfs\r\n\r\n"
 	L"cppcryptfs is a user-mode cryptographic virtual overlay filesystem\r\n\r\n"
 	L"cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)\r\n\r\n"
@@ -130,7 +130,7 @@ static const WCHAR *licenses[] = {
 	L"  ---------------\r\n"
 	L"\r\n"
 	L"/* ====================================================================\r\n"
-	L" * Copyright (c) 1998-2016 The OpenSSL Project.  All rights reserved.\r\n"
+	L" * Copyright (c) 1998-2017 The OpenSSL Project.  All rights reserved.\r\n"
 	L" *\r\n"
 	L" * Redistribution and use in source and binary forms, with or without\r\n"
 	L" * modification, are permitted provided that the following conditions\r\n"
@@ -310,7 +310,7 @@ static const WCHAR *licenses[] = {
 	L"project url: github.com/dokan-dev/dokany\r\n\r\n"
 	L"cppcryptfs usage: code from the mirror.c sample program from Dokany was used in modifed form in cppcryptfs (in cryptdokan.cpp).\r\n\r\n"
 	L"Dokany mirror.c copyright and license (MIT license):\r\n\r\n"
-	L"Copyright (C) 2015 - 2016 Adrien J. <liryna.stark@gmail.com> and Maxime C. <maxime@islog.com>\r\n"
+	L"Copyright (C) 2015 - 2017 Adrien J. <liryna.stark@gmail.com> and Maxime C. <maxime@islog.com>\r\n"
 	L"Copyright (C) 2007 - 2011 Hiroki Asakawa <info@dokan-dev.net>\r\n"
 	L"\r\n"
 	L"Permission is hereby granted, free of charge, to any person obtaining a copy\r\n"
@@ -336,7 +336,7 @@ static const WCHAR *licenses[] = {
 	L"project url: github.com/dokan-dev/dokany\r\n\r\n"
 	L"cppcryptfs usage: dynamically linked library\r\n\r\n"
 	L"Dokany library copyright and license (GNU LGPL):\r\n\r\n"
-	L"Copyright (C) 2015 - 2016 Adrien J. <liryna.stark@gmail.com> and Maxime C. <maxime@islog.com>\r\n"
+	L"Copyright (C) 2015 - 2017 Adrien J. <liryna.stark@gmail.com> and Maxime C. <maxime@islog.com>\r\n"
 	L"Copyright (C) 2007 - 2011 Hiroki Asakawa <info@dokan-dev.net>\r\n\r\n"
 	L" GNU LESSER GENERAL PUBLIC LICENSE\r\n"
 	L"                       Version 3, 29 June 2007\r\n"
@@ -577,7 +577,7 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 
 	std::wstring prod = L"cppryptfs";
 	std::wstring ver = L"1.0";
-	std::wstring copyright = L"Copyright (C) 2016 - Bailey Brown.  All Rights Reserved.";
+	std::wstring copyright = L"Copyright (C) 2016-2017 Bailey Brown.  All Rights Reserved.";
 
 	GetProductVersionInfo(prod, ver, copyright);
 

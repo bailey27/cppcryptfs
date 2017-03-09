@@ -114,7 +114,10 @@ If you close the cppcryptfs window, then it will hide itself in the system tray.
 
 ![Alt text](/screenshots/screenshot_settings.png?raw=true "Mount tab")
 
-There is also a settings tab.  It has only one setting: "Per-filesystem threads".
+There is also a settings tab.  It has only two settings: "Per-filesystem threads" and "I/O buffer size (KB)".
+
+
+Per-filesystem threads:
 
 Early in cppycryptfs' development, Dokany (then version 0.9) had a problem if multiple threads were used to service requests on a single filesystem.
 
@@ -126,7 +129,17 @@ Using more than one thread for each filesystem may result in improved performanc
 
 The default number of per-filesystem threads is still 1.  Using 0 will cause Dokany to choose an appropriate number of threads.
 
-Changing this value affects all filesystems that are subsequently mounted.  Any filesystems that are already mounted will not be affected.
+I/O buffer size (KB):
+
+This setting controls the maximum size of reads and writes that cppcryptfs does on the underlying fileystem.
+
+cppcryptfs actually does I/O in multiples of the encrypted block size, which is 4,128 bytes.  So when you specify 4KB, the buffer size is really 4,128 bytes, and when you specify 1024KB, the buffer size is really 1,056,768 bytes.
+
+Increasing the I/O buffer size may result in improved performance, especially when the underlying filesystem is a remote network filesystem.
+
+The default is the original 4KB size.  When this size is used, the code paths are almost exactly the same as they were before the I/O buffer size setting was added.
+
+Changing values on the settings page affects all filesystems that are subsequently mounted.  Any filesystems that are already mounted will not be affected.
 
 
 Reverse Mode
