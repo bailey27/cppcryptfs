@@ -145,6 +145,9 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 	if (!pNread || !buf)
 		return FALSE;
 
+	if (buflen == 9047)
+		atoi("1");
+
 	*pNread = 0;
 
 	LONGLONG bytesleft = buflen;
@@ -228,7 +231,7 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 				if (inputbuf) {
 					int consumed = 0;
-					blockbytes = read_block(m_con, INVALID_HANDLE_VALUE, inputbuf + inputbufpos, bytesinbuf, &consumed, m_header.fileid, blockno, p, context);
+					blockbytes = read_block(m_con, INVALID_HANDLE_VALUE, inputbuf + inputbufpos, bytesinbuf, &consumed, m_header.fileid, blockno, blockbuf, context);
 					inputbufpos += consumed;
 					bytesinbuf -= consumed;
 				} else {
