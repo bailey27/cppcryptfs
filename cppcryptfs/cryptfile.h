@@ -96,6 +96,7 @@ public:
 	~CryptFileForward();
 
 protected:
+	BOOL FlushOutput(LONGLONG& beginblock, BYTE *outputbuf, int& outputbytes); 
 	BOOL WriteVersionAndFileId();
 
 
