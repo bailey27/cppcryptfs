@@ -211,6 +211,7 @@
     <ClInclude Include="aes-siv\aes256-ctr.h" />
     <ClInclude Include="aes-siv\aes256-siv.h" />
     <ClInclude Include="aes.h" />
+    <ClInclude Include="CaseCache.h" />
     <ClInclude Include="cppcryptfs.h" />
     <ClInclude Include="CreatePropertyPage.h" />
     <ClInclude Include="crypt.h" />
@@ -250,6 +251,7 @@
     <ClCompile Include="aes-siv\aes256-ctr.cpp" />
     <ClCompile Include="aes-siv\aes256-siv.cpp" />
     <ClCompile Include="aes.cpp" />
+    <ClCompile Include="CaseCache.cpp" />
     <ClCompile Include="cppcryptfs.cpp" />
     <ClCompile Include="CreatePropertyPage.cpp" />
     <ClCompile Include="crypt.cpp" />
