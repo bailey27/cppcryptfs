@@ -37,6 +37,9 @@ class CSettingsPropertyPage : public CCryptPropertyPage
 	DECLARE_DYNAMIC(CSettingsPropertyPage)
 
 public:
+
+	bool m_bCaseInsensitive;
+
 	CSettingsPropertyPage();
 	virtual ~CSettingsPropertyPage();
 
@@ -53,4 +56,6 @@ public:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSelchangeThreads();
 	afx_msg void OnSelchangeBuffersize();
+	afx_msg void OnBnClickedCaseinsensitive();
+	afx_msg void OnCbnSelchangeCachettl();
 };

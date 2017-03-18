@@ -59,12 +59,18 @@ void CSettingsPropertyPage::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)
 	ON_CBN_SELCHANGE(IDC_THREADS, &CSettingsPropertyPage::OnSelchangeThreads)
 	ON_CBN_SELCHANGE(IDC_BUFFERSIZE, &CSettingsPropertyPage::OnSelchangeBuffersize)
+	ON_BN_CLICKED(IDC_CASEINSENSITIVE, &CSettingsPropertyPage::OnBnClickedCaseinsensitive)
+	ON_CBN_SELCHANGE(IDC_CACHETTL, &CSettingsPropertyPage::OnCbnSelchangeCachettl)
 END_MESSAGE_MAP()
 
 
 // CSettingsPropertyPage message handlers
 
 static int buffer_sizes[] = { 4, 8, 16, 32, 64, 128, 256, 512, 1024 };
+
+static int ttls[] = { 0, 1, 2, 5, 10, 15, 30, 45, 60, 90, 120, 300, 600, 900, 1800, 3600};
+
+static const WCHAR* ttl_strings[] = { L"infinite", L"1 sec", L"2 sec", L"5 sec", L"10 sec", L"15 sec", L"30 sec", L"45 sec", L"1 min", L"90 sec", L"2 min", L"5 min", L"10 min", L"15 min", L"30 min", L"1 hour" };
 
 BOOL CSettingsPropertyPage::OnInitDialog()
 {
@@ -76,6 +82,10 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 
 	int bufferblocks = theApp.GetProfileInt(L"Settings", L"BufferBlocks", 1);
 
+	int cachettl = theApp.GetProfileInt(L"Settings", L"CacheTTL", 10);
+
+	m_bCaseInsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", 0) != 0;
+
 	int i;
 
 	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_THREADS);
@@ -84,8 +94,14 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 		return FALSE;
 
 	for (i = 0; i < 15; i++) {
-		WCHAR buf[4];
-		wsprintf(buf, L"%d", i);
+		WCHAR buf[64];
+		if (i == 0) {
+			lstrcpy(buf, L"Dokany default (5)");
+		} else if (i == 1) {
+			lstrcpy(buf, L"1 (cppcryptfs default)");
+		} else {
+			wsprintf(buf, L"%d", i);
+		}
 		pBox->AddString(buf);
 	}
 
@@ -111,6 +127,28 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 	}
 
 	pBox->SetCurSel(bits-1);
+
+	pBox = (CComboBox*)GetDlgItem(IDC_CACHETTL);
+
+	if (!pBox)
+		return FALSE;
+
+	static_assert(sizeof(ttls) / sizeof(ttls[0]) == sizeof(ttl_strings) / sizeof(ttl_strings[0]), "mismatch in sizes of ttls/ttl_strings");
+
+	int selitem = 0;
+
+	for (i = 0; i < sizeof(ttls) / sizeof(ttls[0]); i++) {
+		WCHAR buf[64];
+		wsprintf(buf, ttl_strings[i]);
+		pBox->AddString(buf);
+		if (cachettl == ttls[i]) {
+			selitem = i;
+		}
+	}
+
+	pBox->SetCurSel(selitem);
+
+	CheckDlgButton(IDC_CASEINSENSITIVE, m_bCaseInsensitive ? 1 : 0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
@@ -147,3 +185,33 @@ void CSettingsPropertyPage::OnSelchangeBuffersize()
 
 	theApp.WriteProfileInt(L"Settings",  L"BufferBlocks", nBlocks);
 }
+
+void CSettingsPropertyPage::OnCbnSelchangeCachettl()
+{
+	// TODO: Add your control notification handler code here
+
+	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_BUFFERSIZE);
+
+	if (!pBox)
+		return;
+
+	int selIndex = pBox->GetCurSel();
+
+	int cachettl = ttls[selIndex];
+
+	theApp.WriteProfileInt(L"Settings",  L"CacheTTL", cachettl);
+}
+
+
+void CSettingsPropertyPage::OnBnClickedCaseinsensitive()
+{
+	// TODO: Add your control notification handler code here
+
+	m_bCaseInsensitive = !m_bCaseInsensitive;
+
+	CheckDlgButton(IDC_CASEINSENSITIVE, m_bCaseInsensitive ? 1 : 0);
+
+	theApp.WriteProfileInt(L"Settings", L"CaseInsensitive", m_bCaseInsensitive ? 1 : 0);
+}
+
+
