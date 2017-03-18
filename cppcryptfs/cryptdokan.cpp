@@ -196,9 +196,24 @@ public:
 						}
 					}
 				} else {
-					if (!encrypt_path(m_con, m_plain_path, m_enc_path, m_actual_encrypted)) {
-						throw(-1);
+					LPCWSTR plain_path = m_plain_path;
+					std::wstring correct_case_path;
+					if (m_con->IsCaseInsensitive()) {
+						int status = m_con->m_case_cache.lookup(m_plain_path, correct_case_path);
+						if (status == CASE_CACHE_FOUND) {
+							plain_path = correct_case_path.c_str();
+						} else if (status == CASE_CACHE_MISS) {
+							if (m_con->m_case_cache.loaddir(m_con, m_plain_path)) {
+								status = m_con->m_case_cache.lookup(m_plain_path, correct_case_path);
+								if (status == CASE_CACHE_FOUND) {
+									plain_path = correct_case_path.c_str();
+								} 
+							}
+						}
 					}
+					if (!encrypt_path(m_con, plain_path, m_enc_path, m_actual_encrypted)) {
+						throw(-1);
+					}			
 				}
 			} 
 			catch (...) {
@@ -355,6 +370,8 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
                  ACCESS_MASK DesiredAccess, ULONG FileAttributes,
                  ULONG ShareAccess, ULONG CreateDisposition,
                  ULONG CreateOptions, PDOKAN_FILE_INFO DokanFileInfo) {
+
+
   std::string actual_encrypted;
   FileNameEnc filePath(GetContext(), FileName, &actual_encrypted);
   HANDLE handle = NULL;

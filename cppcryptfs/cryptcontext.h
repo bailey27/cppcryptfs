@@ -36,6 +36,7 @@ THE SOFTWARE.
 #include "dirivcache.h"
 #include "longfilenamecache.h"
 #include "siv.h"
+#include "CaseCache.h"
 
 class CryptContext {
 private:
@@ -45,10 +46,15 @@ public:
 	RandomBytes *m_prand_bytes;
 	DirIvCache m_dir_iv_cache;
 	LongFilenameCache m_lfn_cache;
+	CaseCache m_case_cache;
 	EmeCryptContext m_eme;
 	SivContext m_siv;
 	int m_bufferblocks;
+private:
+	bool m_caseinsensitive;
+public:
 
+	bool IsCaseInsensitive() { return m_caseinsensitive && !m_config->m_reverse && !m_config->m_PlaintextNames;  }
 	HANDLE m_mountEvent;
 
 	void InitEme(const BYTE *key);

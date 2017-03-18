@@ -88,3 +88,5 @@ void ConsoleErrMes(LPCWSTR err, DWORD pid = 0);
 bool
 GetProductVersionInfo(std::wstring& strProductName, std::wstring& strProductVersion,
 	std::wstring& strLegalCopyright);
+
+bool touppercase(LPCWSTR in, std::wstring& out);

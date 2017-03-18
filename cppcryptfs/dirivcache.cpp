@@ -46,7 +46,7 @@ THE SOFTWARE.
 DirIvCacheNode::DirIvCacheNode()
 {
 	m_key = NULL;
-	m_timestap = 0;
+	m_timestamp = 0;
 	m_last_write_time = { 0 , 0 };
 }
 
@@ -101,7 +101,7 @@ void DirIvCache::unlock()
 bool DirIvCache::check_node_clean(DirIvCacheNode *node, const std::wstring& path)
 {
 
-	if (GetTickCount64() - node->m_timestap < DIR_IV_CACHE_TTL)
+	if (GetTickCount64() - node->m_timestamp < DIR_IV_CACHE_TTL)
 		return true;
 
 	std::wstring filepath = path;
@@ -127,7 +127,7 @@ bool DirIvCache::check_node_clean(DirIvCacheNode *node, const std::wstring& path
 	bResult = !memcmp(&node->m_last_write_time, &LastWriteTime, sizeof(FILETIME));
 
 	if (bResult)
-		node->m_timestap = GetTickCount64();
+		node->m_timestamp = GetTickCount64();
 
 	return bResult != 0;
 }
@@ -245,14 +245,14 @@ bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv, const FILETIME
 
 			node->m_key = &mp.first->first;
 			memcpy(node->m_dir_iv, dir_iv, DIR_IV_LEN);
-			node->m_timestap = GetTickCount64();
+			node->m_timestamp = GetTickCount64();
 			node->m_last_write_time = last_write_time;
 			node->m_list_it = m_lru_list.insert(m_lru_list.begin(), node);
 			
 		} else {
 			// copy dir_iv to node at that path (key)
 			memcpy(mp.first->second->m_dir_iv, dir_iv, DIR_IV_LEN);
-			mp.first->second->m_timestap = GetTickCount64();
+			mp.first->second->m_timestamp = GetTickCount64();
 			mp.first->second->m_last_write_time = last_write_time;
 		}
 		
