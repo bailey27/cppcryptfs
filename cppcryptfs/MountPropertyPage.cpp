@@ -201,8 +201,12 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	int bufferblocks = theApp.GetProfileInt(L"Settings", L"BufferBlocks", 1);
 
+	int cachettl = theApp.GetProfileInt(L"Settings", L"CacheTTL", 1);
+
+	bool bCaseInsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", 0) != 0;
+
 	theApp.DoWaitCursor(1);
-	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes, readonly, nThreads, bufferblocks);
+	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes, readonly, nThreads, bufferblocks, cachettl, bCaseInsensitive);
 	theApp.DoWaitCursor(-1);
 
 	if (result != 0) {

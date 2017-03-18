@@ -3,8 +3,6 @@
 #include <unordered_map>
 #include <string>
 
-#define CASE_CACHE_TTL 30*10000 // milliseconds
-
 #define CASE_CACHE_ENTRIES 100
 
 class CaseCacheNode {
@@ -30,7 +28,7 @@ class CryptContext;
 class CaseCache
 {
 private:
-	int m_max_entries;
+	ULONGLONG m_ttl;
 	std::unordered_map<std::wstring, CaseCacheNode *> m_map;
 	std::list<CaseCacheNode*> m_lru_list;
 
@@ -43,6 +41,7 @@ private:
 	void unlock();
 	void remove_node(std::unordered_map<std::wstring, CaseCacheNode *>::iterator it);
 public:
+	void SetTTL(int nSecs) { m_ttl = (ULONGLONG)nSecs * 1000; };
 
 	bool store(LPCWSTR dirpath, std::list<std::wstring>& files);
 	bool store(LPCWSTR dirpath, LPCWSTR file);

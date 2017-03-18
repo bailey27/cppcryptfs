@@ -52,13 +52,13 @@ public:
 	int m_bufferblocks;
 private:
 	bool m_caseinsensitive;
-	CRITICAL_SECTION m_case_cache_createfile_crit;
+	CRITICAL_SECTION m_case_insensitive_createfile_crit;
 public:
 
-	bool IsCaseInsensitive() { return m_caseinsensitive && !m_config->m_reverse && !m_config->m_PlaintextNames;  }
-
-	void LockCaseCacheCreateFile() { if (IsCaseInsensitive()) EnterCriticalSection(&m_case_cache_createfile_crit); };
-	void UnlockCaseCacheCreateFile() { if (IsCaseInsensitive()) LeaveCriticalSection(&m_case_cache_createfile_crit);  };
+	bool IsCaseInsensitive() { return m_caseinsensitive && !m_config->m_reverse && !m_config->m_PlaintextNames; };
+	void SetCaseSensitive(bool bCaseSensitive) { m_caseinsensitive = bCaseSensitive; };
+	void LockCaseInsensitiveCreateFile() { if (IsCaseInsensitive()) EnterCriticalSection(&m_case_insensitive_createfile_crit); };
+	void UnlockCaseInsensitiveCreateFile() { if (IsCaseInsensitive()) LeaveCriticalSection(&m_case_insensitive_createfile_crit);  };
 
 	HANDLE m_mountEvent;
 

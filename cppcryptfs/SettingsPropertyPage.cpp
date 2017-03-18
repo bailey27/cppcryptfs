@@ -70,7 +70,7 @@ static int buffer_sizes[] = { 4, 8, 16, 32, 64, 128, 256, 512, 1024 };
 
 static int ttls[] = { 0, 1, 2, 5, 10, 15, 30, 45, 60, 90, 120, 300, 600, 900, 1800, 3600};
 
-static const WCHAR* ttl_strings[] = { L"infinite", L"1 sec", L"2 sec", L"5 sec", L"10 sec", L"15 sec", L"30 sec", L"45 sec", L"1 min", L"90 sec", L"2 min", L"5 min", L"10 min", L"15 min", L"30 min", L"1 hour" };
+static const WCHAR* ttl_strings[] = { L"infinite", L"1 second", L"2 seconds", L"5 seconds", L"10 seconds", L"15 seconds", L"30 seconds", L"45 seconds", L"60 seconds", L"90 seconds", L"2 minutes", L"5 minutes", L"10 minutes", L"15 minutes", L"30 minutes", L"1 hour" };
 
 BOOL CSettingsPropertyPage::OnInitDialog()
 {
@@ -82,7 +82,7 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 
 	int bufferblocks = theApp.GetProfileInt(L"Settings", L"BufferBlocks", 1);
 
-	int cachettl = theApp.GetProfileInt(L"Settings", L"CacheTTL", 10);
+	int cachettl = theApp.GetProfileInt(L"Settings", L"CacheTTL", 1);
 
 	m_bCaseInsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", 0) != 0;
 
@@ -93,8 +93,9 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 	if (!pBox)
 		return FALSE;
 
+	WCHAR buf[80];
+
 	for (i = 0; i < 15; i++) {
-		WCHAR buf[64];
 		if (i == 0) {
 			lstrcpy(buf, L"Dokany default (5)");
 		} else if (i == 1) {
@@ -113,7 +114,6 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 		return FALSE;
 
 	for (i = 0; i < sizeof(buffer_sizes)/sizeof(buffer_sizes[0]); i++) {
-		WCHAR buf[8];
 		wsprintf(buf, L"%d", buffer_sizes[i]);
 		pBox->AddString(buf);
 	}
@@ -138,7 +138,6 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 	int selitem = 0;
 
 	for (i = 0; i < sizeof(ttls) / sizeof(ttls[0]); i++) {
-		WCHAR buf[64];
 		wsprintf(buf, ttl_strings[i]);
 		pBox->AddString(buf);
 		if (cachettl == ttls[i]) {

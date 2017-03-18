@@ -370,12 +370,12 @@ static BOOL AddSeSecurityNamePrivilege() {
 
 #define GetContext() ((CryptContext*)DokanFileInfo->DokanOptions->GlobalContext)
 
-class CaseCacheCreateFileLock {
+class CaseInSensitiveCreateFileLock {
 private:
 	CryptContext *m_con;
 public:
-	CaseCacheCreateFileLock(CryptContext *con) { m_con = con; if (m_con) m_con->LockCaseCacheCreateFile(); };
-	virtual ~CaseCacheCreateFileLock() { if (m_con) m_con->UnlockCaseCacheCreateFile(); };
+	CaseInSensitiveCreateFileLock(CryptContext *con) { m_con = con; if (m_con) m_con->LockCaseInsensitiveCreateFile(); };
+	virtual ~CaseInSensitiveCreateFileLock() { if (m_con) m_con->UnlockCaseInsensitiveCreateFile(); };
 };
 
 static NTSTATUS DOKAN_CALLBACK
@@ -385,7 +385,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
                  ULONG CreateOptions, PDOKAN_FILE_INFO DokanFileInfo) {
 
 
-  CaseCacheCreateFileLock case_cache_create_file_lock(GetContext());
+  CaseInSensitiveCreateFileLock case_cache_create_file_lock(GetContext());
 
   std::string actual_encrypted;
   FileNameEnc filePath(GetContext(), FileName, &actual_encrypted);
@@ -1626,7 +1626,7 @@ static DWORD WINAPI CryptThreadProc(
 }
 
 
-int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes, bool readonly, int nThreads, int nBufferBlocks) 
+int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes, bool readonly, int nThreads, int nBufferBlocks, int cachettl, bool caseinsensitve) 
 {
 
 	if (driveletter < 'A' || driveletter > 'Z') {
@@ -1706,6 +1706,11 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 		CryptContext *con = &tdata->con;
 
 		con->m_bufferblocks = min(256, max(1, nBufferBlocks));
+
+		con->m_dir_iv_cache.SetTTL(cachettl);
+		con->m_case_cache.SetTTL(cachettl);
+
+		con->SetCaseSensitive(caseinsensitve);
 
 		CryptConfig *config = con->GetConfig();
 

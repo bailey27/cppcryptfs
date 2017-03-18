@@ -21,7 +21,9 @@ CaseCacheNode::~CaseCacheNode()
 
 CaseCache::CaseCache()
 {
-	m_max_entries = CASE_CACHE_ENTRIES;
+	m_ttl = 0;
+
+	m_map.reserve(CASE_CACHE_ENTRIES);
 
 	InitializeCriticalSection(&m_crit);
 }
@@ -220,7 +222,7 @@ int CaseCache::lookup(LPCWSTR path, std::wstring& result_path)
 
 		CaseCacheNode *node = it->second;
 
-		if (GetTickCount64() - node->m_timestamp > CASE_CACHE_TTL) {
+		if (m_ttl && (GetTickCount64() - node->m_timestamp > m_ttl)) {
 			remove_node(it);
 			DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw((int)CASE_CACHE_MISS);

@@ -61,7 +61,7 @@ DirIvCache::DirIvCache()
 
 	m_lookups = 0;
 	m_hits = 0;
-
+	m_ttl = 0;
 	m_map.reserve(DIR_IV_CACHE_ENTRIES);
 
 	InitializeCriticalSection(&m_crit);
@@ -101,7 +101,7 @@ void DirIvCache::unlock()
 bool DirIvCache::check_node_clean(DirIvCacheNode *node, const std::wstring& path)
 {
 
-	if (GetTickCount64() - node->m_timestamp < DIR_IV_CACHE_TTL)
+	if (!m_ttl || (GetTickCount64() - node->m_timestamp < m_ttl))
 		return true;
 
 	std::wstring filepath = path;
