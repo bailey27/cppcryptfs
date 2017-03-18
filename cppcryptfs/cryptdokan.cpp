@@ -697,6 +697,11 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
         if (!delete_directory(GetContext(), filePath)) {
           DbgPrint(L"error code = %d\n\n", GetLastError());
         } else {
+		  if (GetContext()->IsCaseInsensitive()) {
+			  if (!GetContext()->m_case_cache.purge(FileName)) {
+				  DbgPrint(L"delete failed to purge dir %s\n", FileName);
+			  }
+		  }
           DbgPrint(L"success\n\n");
         }
       } else {
@@ -704,6 +709,11 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
         if (!delete_file(GetContext(), filePath)) {
           DbgPrint(L" error code = %d\n\n", GetLastError());
         } else {
+		  if (GetContext()->IsCaseInsensitive()) {
+			  if (!GetContext()->m_case_cache.remove(FileName)) {
+				  DbgPrint(L"delete failed to remove %s from case cache\n", FileName);
+			  }
+		  }
           DbgPrint(L"success\n\n");
         }
       }
@@ -1053,6 +1063,13 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 			  DWORD error = GetLastError();
 			  DbgPrint(L"\tMoveFile failed2 code = %d\n", error);
 			  return ToNtStatus(error);
+		  }
+	  }
+
+	  if (GetContext()->IsCaseInsensitive()) {
+		  GetContext()->m_case_cache.remove(FileName);
+		  if (!GetContext()->m_case_cache.store(NewFileName)) {
+			  DbgPrint(L"move unable to store new filename %s", NewFileName);
 		  }
 	  }
       return STATUS_SUCCESS;

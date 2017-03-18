@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <string>
 
-#define CASE_CACHE_TTL 10000 // milliseconds
+#define CASE_CACHE_TTL 30*10000 // milliseconds
 
 #define CASE_CACHE_ENTRIES 100
 

@@ -98,6 +98,7 @@ bool CaseCache::store(LPCWSTR dirpath, std::list<std::wstring>& files)
 			std::wstring ucfile;
 			for (auto it = files.begin(); it != files.end(); it++) {
 				if (!touppercase(it->c_str(), ucfile)) {
+					DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 					throw(-1);
 				}
 				node->m_files.insert(std::make_pair(ucfile, *it));
@@ -111,6 +112,7 @@ bool CaseCache::store(LPCWSTR dirpath, std::list<std::wstring>& files)
 			std::wstring ucfile;
 			for (auto it = files.begin(); it != files.end(); it++) {
 				if (!touppercase(it->c_str(), ucfile)) {
+					DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 					throw(-1);
 				}
 				mp.first->second->m_files.insert(std::make_pair(ucfile, *it));
@@ -143,6 +145,7 @@ bool CaseCache::store(LPCWSTR dirpath, LPCWSTR file)
 		auto it = m_map.find(key);
 
 		if (it == m_map.end()) {
+			DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw(-1);
 		}
 
@@ -151,6 +154,7 @@ bool CaseCache::store(LPCWSTR dirpath, LPCWSTR file)
 		std::wstring ucfile;
 
 		if (!touppercase(file, ucfile)) {
+			DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw(-1);
 		}
 
@@ -180,6 +184,12 @@ bool CaseCache::store(LPCWSTR filepath)
 
 int CaseCache::lookup(LPCWSTR path, std::wstring& result_path)
 {
+
+	if (!wcscmp(path, L"\\") || !wcscmp(path, L"\\*")) {
+		result_path = path;
+		return CASE_CACHE_FOUND;
+	}
+
 	int ret = CASE_CACHE_FOUND;
 
 	std::wstring dir;
@@ -203,20 +213,25 @@ int CaseCache::lookup(LPCWSTR path, std::wstring& result_path)
 
 		auto it = m_map.find(ucdir);
 
-		if (it == m_map.end())
+		if (it == m_map.end()) {
+			DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw((int)CASE_CACHE_MISS);
+		}
 
 		CaseCacheNode *node = it->second;
 
 		if (GetTickCount64() - node->m_timestamp > CASE_CACHE_TTL) {
 			remove_node(it);
+			DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw((int)CASE_CACHE_MISS);
 		}
 
 		auto nit = node->m_files.find(ucfile);
 
-		if (nit == node->m_files.end())
+		if (nit == node->m_files.end()) {
+			DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw((int)CASE_CACHE_NOT_FOUND);
+		}
 
 		result_path = node->m_path + L"\\" + nit->second;
 	
@@ -250,15 +265,19 @@ bool CaseCache::remove(LPCWSTR path, LPCWSTR file)
 
 		auto it = m_map.find(ucdir);
 
-		if (it == m_map.end())
+		if (it == m_map.end()) {
+			DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw(-1);
+		}
 
 		CaseCacheNode *node = it->second;
 
 		auto nit = node->m_files.find(ucfile);
 
-		if (nit == node->m_files.end())
+		if (nit == node->m_files.end()) {
+			DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw(-1);
+		}
 
 		node->m_files.erase(nit);
 	
@@ -288,6 +307,8 @@ void CaseCache::remove_node(std::unordered_map<std::wstring, CaseCacheNode *>::i
 
 	m_map.erase(it);
 
+	m_lru_list.erase(node->m_list_it);
+
 	node->m_files.clear();
 
 	m_spare_node_list.push_front(node);
@@ -309,8 +330,10 @@ bool CaseCache::purge(LPCWSTR path)
 	
 		auto it = m_map.find(ucpath);
 
-		if (it == m_map.end())
+		if (it == m_map.end()) {
+			DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw(-1);
+		}
 
 		remove_node(it);
 
