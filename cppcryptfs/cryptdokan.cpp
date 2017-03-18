@@ -371,6 +371,7 @@ static BOOL AddSeSecurityNamePrivilege() {
 #define GetContext() ((CryptContext*)DokanFileInfo->DokanOptions->GlobalContext)
 
 class CaseCacheCreateFileLock {
+private:
 	CryptContext *m_con;
 public:
 	CaseCacheCreateFileLock(CryptContext *con) { m_con = con; if (m_con) m_con->LockCaseCacheCreateFile(); };
