@@ -164,9 +164,11 @@ private:
 	CryptContext *m_con;
 	bool m_tried;
 	bool m_failed;
-	
+	bool m_file_existed;  // valid only if case cache is used
 
 public:
+	bool FileExisted() { return m_file_existed; };
+
 	operator const WCHAR *()
 	{
 	
@@ -201,11 +203,13 @@ public:
 					if (m_con->IsCaseInsensitive()) {
 						int status = m_con->m_case_cache.lookup(m_plain_path, correct_case_path);
 						if (status == CASE_CACHE_FOUND) {
+							m_file_existed = true;
 							plain_path = correct_case_path.c_str();
 						} else if (status == CASE_CACHE_MISS) {
 							if (m_con->m_case_cache.loaddir(m_con, m_plain_path)) {
 								status = m_con->m_case_cache.lookup(m_plain_path, correct_case_path);
 								if (status == CASE_CACHE_FOUND) {
+									m_file_existed = true;
 									plain_path = correct_case_path.c_str();
 								} 
 							}
@@ -242,6 +246,7 @@ FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *act
 	m_actual_encrypted = actual_encrypted;
 	m_tried = false;
 	m_failed = false;
+	m_file_existed = false;
 }
 
 FileNameEnc::~FileNameEnc()
@@ -548,6 +553,16 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 				  RemoveDirectory(filePath);
 			  }
 		  }
+
+		  if (GetContext()->IsCaseInsensitive()) {
+			  std::list<std::wstring> files;
+			  if (wcscmp(FileName, L"\\")) {
+				  files.push_front(L"..");
+				  files.push_front(L".");
+			  }
+			  GetContext()->m_case_cache.store(FileName, files);
+		  }
+
 	  }
     } else if (creationDisposition == OPEN_ALWAYS) {
 
@@ -574,6 +589,15 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 				  status = ToNtStatus(error);
 				  RemoveDirectory(filePath);
 			  }
+		  }
+
+		  if (GetContext()->IsCaseInsensitive()) {
+			  std::list<std::wstring> files;
+			  if (wcscmp(FileName, L"\\")) {
+				  files.push_front(L"..");
+				  files.push_front(L".");
+			  }
+			  GetContext()->m_case_cache.store(FileName, files);
 		  }
 	  }
     }
@@ -607,9 +631,13 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
 	  if (fileAttr != INVALID_FILE_ATTRIBUTES &&
 		  (fileAttr & FILE_ATTRIBUTE_DIRECTORY) &&
-		  CreateDisposition == FILE_CREATE) 
+		  CreateDisposition == FILE_CREATE) {
+		  if (GetContext()->IsCaseInsensitive() && handle != INVALID_HANDLE_VALUE && !filePath.FileExisted()) {
+			  GetContext()->m_case_cache.store(FileName);
+		  }
 		  return STATUS_OBJECT_NAME_COLLISION; // File already exist because
 											   // GetFileAttributes found it
+	  }
 
 	  if (is_virtual) {
 		  SetLastError(0);
@@ -654,6 +682,9 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
           DbgPrint(L"\tOpen an already existing file\n");
 		  // Open succeed but we need to inform the driver
 		  // that the file open and not created by returning STATUS_OBJECT_NAME_COLLISION
+		  if (GetContext()->IsCaseInsensitive() && handle != INVALID_HANDLE_VALUE && !filePath.FileExisted()) {
+			  GetContext()->m_case_cache.store(FileName);
+		  }
 		  return STATUS_OBJECT_NAME_COLLISION;
         }
       }
@@ -661,6 +692,9 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   }
   DbgPrint(L"handle = %I64x", (ULONGLONG)handle);
   DbgPrint(L"\n");
+  if (GetContext()->IsCaseInsensitive() && handle != INVALID_HANDLE_VALUE && !filePath.FileExisted()) {
+	  GetContext()->m_case_cache.store(FileName);
+  }
   return status;
 }
 
