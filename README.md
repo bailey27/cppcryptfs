@@ -130,7 +130,7 @@ It appears to be safe to use more than one thread per-filesystem now.  However, 
 
 Using more than one thread for each filesystem may result in improved performance.
 
-The default number of per-filesystem threads is still 1.  Using 0 will cause Dokany to choose an appropriate number of threads.
+The default number of per-filesystem threads is still 1.  Using "Dokany default" will cause Dokany to choose an appropriate number of threads.  It currently uses five threads.
 
 **I/O buffer size (KB):**
 
