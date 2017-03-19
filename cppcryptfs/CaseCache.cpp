@@ -361,7 +361,7 @@ static int WINAPI casecache_fill_find_data(PWIN32_FIND_DATAW fdata, void * dokan
 bool CaseCache::loaddir(CryptContext *con, LPCWSTR filepath)
 {
 
-	if (con->GetConfig()->m_PlaintextNames || con->GetConfig()->m_reverse)
+	if (!con->IsCaseInsensitive())
 		return true;
 
 	std::wstring dir;
