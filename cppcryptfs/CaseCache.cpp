@@ -365,14 +365,31 @@ bool CaseCache::loaddir(CryptContext *con, LPCWSTR filepath)
 		return true;
 
 	std::wstring dir;
-
+	
 	if (!get_dir_and_file_from_path(filepath, &dir, NULL)) {
 		return false;
 	}
 
+	std::wstring case_dir;
+
+	int status = lookup(dir.c_str(), case_dir);
+
+	if (status != CASE_CACHE_MISS  && status != CASE_CACHE_FOUND)
+		return false;
+
+	if (status == CASE_CACHE_MISS) {
+		if (!loaddir(con, dir.c_str()))
+			return false;
+
+		status = lookup(dir.c_str(), case_dir);
+	}  
+
+	if (status != CASE_CACHE_FOUND)
+		return false;
+
 	std::wstring enc_dir;
 	
-	if (!encrypt_path(con, dir.c_str(), enc_dir)) {
+	if (!encrypt_path(con, case_dir.c_str(), enc_dir)) {
 		return false;
 	}
 
