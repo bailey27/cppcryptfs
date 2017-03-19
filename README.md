@@ -114,10 +114,13 @@ If you close the cppcryptfs window, then it will hide itself in the system tray.
 
 ![Alt text](/screenshots/screenshot_settings.png?raw=true "Mount tab")
 
-There is also a settings tab.  It has only two settings: "Per-filesystem threads" and "I/O buffer size (KB)".
+There is also a settings tab.  
 
+Changing values on the settings page affects all filesystems that are subsequently mounted.  Any filesystems that are already mounted will not be affected.
 
-Per-filesystem threads:
+The settings tab has the following setings:
+
+**Per-filesystem threads:**
 
 Early in cppycryptfs' development, Dokany (then version 0.9) had a problem if multiple threads were used to service requests on a single filesystem.
 
@@ -129,7 +132,7 @@ Using more than one thread for each filesystem may result in improved performanc
 
 The default number of per-filesystem threads is still 1.  Using 0 will cause Dokany to choose an appropriate number of threads.
 
-I/O buffer size (KB):
+**I/O buffer size (KB):**
 
 This setting controls the maximum size of reads and writes that cppcryptfs does on the underlying fileystem.
 
@@ -139,8 +142,39 @@ Increasing the I/O buffer size may result in improved performance, especially wh
 
 The default is the original 4KB size.  When this size is used, the code paths are almost exactly the same as they were before the I/O buffer size setting was added.
 
-Changing values on the settings page affects all filesystems that are subsequently mounted.  Any filesystems that are already mounted will not be affected.
+**Cache time to live:**
 
+cppcryptfs caches information about the filesystem.  If an entry in the cache is older than the time to live, then that entry
+is re-validated before it is used.
+
+Increasing the caceh time to live or setting it to infinite will result in better performance.
+
+However, if you are constantly syncing your cppcryptfs filesystem with another copy of the filesystem that is on a another machine running
+under another instance of cppcryptfs or gocryptfs, then setting the time to live to too high of a value may result in errors
+if the filesystem is modified on the other machine.
+
+If you are not syncing the filesystem between two concurrently running instances of cppcryptfs/gocryptfs, then there is no
+reason to not set the cache time to live to a high value or to infinite.
+
+**Case insensitive:**
+
+This option has effect only in forward mode and only when encrypted filenames are used.
+
+Normally, cppcryptfs requires that files and directories be opened using the same case that was used when the files and directories were created.
+
+If this option is checked, then cppcryptfs will ignore the case of file and directory names.  This is how the Windows API 
+normally operates.
+
+See the section on "Case Sensitivity" for more information.
+
+Therea are also two buttons "Defaults" which changes all settings to the original cppcryptfs defaults, and "Recommended" which sets
+the currently recommended settings.
+
+When "Defaults" is used, then cppcryptfs will behave as it has from the beginning.  These are the safest settings which have
+undergone the most testing.
+
+When "Recommended" is used, then cppcryptfs will use settings that result in improved performance and functionality at the
+expense of possibly running into new bugs.
 
 Reverse Mode
 ------
@@ -294,10 +328,11 @@ Case Sensitivity
 Windows filesystems are not case-sensitive, but they are case-preserving.  The gocryptfs filesystem with encrypted filenames is case-senstitive.
 
 The way the file name encryption works means that if you create a file as Foo.txt and then try
-to open it as foo.txt, it will not be found.  However, on a regular Windows filesystem, it would be found.  This is not normally a problem because files are usually opened using the same case that was
-used when they were created.  So far, the only software that has been observed creating files with one case and then trying to open them with another case is Microsoft Visual Studio.
+to open it as foo.txt, it will not be found (unless the new "Case insensitive" setting is on).  However, on a regular Windows filesystem, it would be found.  This is not normally a problem because files are usually opened using the same case that was
+used when they were created.  Microsoft Visual Studio has been observed creating files with one case and then trying to open them with another case.  Also, in Windows 10, File Explorer converts all paths to upercase when trying to open images and videos to make thumbnails of them.
 
-Currently, the only solution to this problem is to use plain text file names.
+If you turn on "Case insensitive" on the settings page, then cppcryptfs will ignore the case of file and directory names as Windows does.  The option takes effect only when
+a filesystem is subsequently mounted.  It does not change the behavior of an already-mounted filesystem on-the-fly.
 
 Performance
 ------
