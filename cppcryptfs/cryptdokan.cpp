@@ -373,13 +373,6 @@ static BOOL AddSeSecurityNamePrivilege() {
 
 #define GetContext() ((CryptContext*)DokanFileInfo->DokanOptions->GlobalContext)
 
-class CaseInSensitiveCreateFileLock {
-private:
-	CryptContext *m_con;
-public:
-	CaseInSensitiveCreateFileLock(CryptContext *con) { m_con = con; if (m_con) m_con->LockCaseInsensitiveCreateFile(); };
-	virtual ~CaseInSensitiveCreateFileLock() { if (m_con) m_con->UnlockCaseInsensitiveCreateFile(); };
-};
 
 static NTSTATUS DOKAN_CALLBACK
 CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
@@ -387,8 +380,6 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
                  ULONG ShareAccess, ULONG CreateDisposition,
                  ULONG CreateOptions, PDOKAN_FILE_INFO DokanFileInfo) {
 
-
-  CaseInSensitiveCreateFileLock case_cache_create_file_lock(GetContext());
 
   std::string actual_encrypted;
   FileNameEnc filePath(GetContext(), FileName, &actual_encrypted);

@@ -44,8 +44,6 @@ CryptContext::CryptContext()
 
 	m_caseinsensitive = true;
 
-	InitializeCriticalSection(&m_case_insensitive_createfile_crit);
-
 	m_bufferblocks = 1;
 
 	if (!m_mountEvent)
