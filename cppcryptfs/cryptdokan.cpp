@@ -198,6 +198,8 @@ public:
 						}
 					}
 				} else {
+					if (wcslen(m_plain_path) > 4)
+						atoi("1");
 					LPCWSTR plain_path = m_plain_path;
 					std::wstring correct_case_path;
 					if (m_con->IsCaseInsensitive()) {

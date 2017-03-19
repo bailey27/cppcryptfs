@@ -848,9 +848,13 @@ get_dir_and_file_from_path(LPCWSTR path, std::wstring *dir, std::wstring *file)
 	}
 
 	if (dir) {
-		*pLastSlash = '\0';
-		*dir = path;
-		*pLastSlash = '\\';
+		if (pLastSlash != path) {
+			*pLastSlash = '\0';
+			*dir = path;
+			*pLastSlash = '\\';
+		} else {
+			*dir = L"\\";
+		}
 	}
 
 	return true;

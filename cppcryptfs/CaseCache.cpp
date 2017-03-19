@@ -230,12 +230,14 @@ int CaseCache::lookup(LPCWSTR path, std::wstring& result_path)
 
 		auto nit = node->m_files.find(ucfile);
 
+		bool isRoot = wcscmp(node->m_path.c_str(), L"\\") == 0;
+
 		if (nit != node->m_files.end()) {
 			ret = CASE_CACHE_FOUND;
-			result_path = node->m_path + L"\\" + nit->second;
+			result_path = node->m_path + (isRoot ? L"" : L"\\") + nit->second;
 		} else {
 			ret  = CASE_CACHE_NOT_FOUND;
-			result_path = node->m_path + L"\\" + file;
+			result_path = node->m_path + (isRoot ? L"" : L"\\") + file;
 		}
 	
 	} catch (int err) {
@@ -396,9 +398,9 @@ bool CaseCache::loaddir(CryptContext *con, LPCWSTR filepath)
 
 	std::list<std::wstring> list;
 
-	if (find_files(con, dir.c_str(), enc_dir.c_str(), casecache_fill_find_data, NULL, &list) != 0) {
+	if (find_files(con, case_dir.c_str(), enc_dir.c_str(), casecache_fill_find_data, NULL, &list) != 0) {
 		return false;
 	}
 
-	return store(dir.c_str(), list);
+	return store(case_dir.c_str(), list);
 }

@@ -189,7 +189,7 @@ void CSettingsPropertyPage::OnCbnSelchangeCachettl()
 {
 	// TODO: Add your control notification handler code here
 
-	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_BUFFERSIZE);
+	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_CACHETTL);
 
 	if (!pBox)
 		return;
