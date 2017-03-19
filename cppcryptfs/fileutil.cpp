@@ -828,6 +828,14 @@ bool delete_file(const CryptContext *con, const WCHAR *filename)
 bool
 get_dir_and_file_from_path(LPCWSTR path, std::wstring *dir, std::wstring *file)
 {
+
+	if (!wcscmp(path, L"\\")) {
+		if (dir)
+			*dir = L"\\";
+		if (file)
+			*file = L"";
+		return true;
+	}
 	
 	LPWSTR pLastSlash = wcsrchr((LPWSTR)path, '\\');
 
