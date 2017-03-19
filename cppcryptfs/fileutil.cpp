@@ -798,9 +798,9 @@ delete_directory(CryptContext *con, LPCWSTR path)
 	return bret;
 }
 
-bool delete_file(const CryptContext *con, const WCHAR *filename)
+bool delete_file(const CryptContext *con, const WCHAR *filename, bool cleanup_longname_file_only)
 {
-	if (PathFileExists(filename) && !PathIsDirectory(filename)) {
+	if (!cleanup_longname_file_only && PathFileExists(filename)) {
 		if (!DeleteFile(filename))
 			return false;
 	}

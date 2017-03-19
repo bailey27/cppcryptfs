@@ -1099,7 +1099,7 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 	  return ToNtStatus(error);
   } else {
 	  // clean up any longname
-	  if (!delete_file(GetContext(), filePath)) {
+	  if (!delete_file(GetContext(), filePath, true)) {
 		  DWORD error = GetLastError();
 		  DbgPrint(L"\tMoveFile failed code = %d\n", error);
 		  return ToNtStatus(error);
