@@ -47,7 +47,9 @@ public:
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_SETTINGS };
 #endif
-
+protected:
+	BOOL SetControls(int nThreads, int nBufferBlocks, int nCacheTTL, bool bCaseInsensitive);
+	void SaveSettings();
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
@@ -58,4 +60,6 @@ public:
 	afx_msg void OnSelchangeBuffersize();
 	afx_msg void OnBnClickedCaseinsensitive();
 	afx_msg void OnCbnSelchangeCachettl();
+	afx_msg void OnBnClickedDefaults();
+	afx_msg void OnBnClickedRecommended();
 };

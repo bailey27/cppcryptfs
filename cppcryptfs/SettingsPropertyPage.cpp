@@ -44,7 +44,7 @@ IMPLEMENT_DYNAMIC(CSettingsPropertyPage, CCryptPropertyPage)
 CSettingsPropertyPage::CSettingsPropertyPage()
 	: CCryptPropertyPage(IDD_SETTINGS)
 {
-
+	m_bCaseInsensitive = false;
 }
 
 CSettingsPropertyPage::~CSettingsPropertyPage()
@@ -62,6 +62,8 @@ BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)
 	ON_CBN_SELCHANGE(IDC_BUFFERSIZE, &CSettingsPropertyPage::OnSelchangeBuffersize)
 	ON_BN_CLICKED(IDC_CASEINSENSITIVE, &CSettingsPropertyPage::OnBnClickedCaseinsensitive)
 	ON_CBN_SELCHANGE(IDC_CACHETTL, &CSettingsPropertyPage::OnCbnSelchangeCachettl)
+	ON_BN_CLICKED(IDC_DEFAULTS, &CSettingsPropertyPage::OnBnClickedDefaults)
+	ON_BN_CLICKED(IDC_RECOMMENDED, &CSettingsPropertyPage::OnBnClickedRecommended)
 END_MESSAGE_MAP()
 
 
@@ -85,7 +87,16 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 
 	int cachettl = theApp.GetProfileInt(L"Settings", L"CacheTTL", CACHETTL_DEFAULT);
 
-	m_bCaseInsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", CASEINSENSITIVE_DEFAULT) != 0;
+	bool bCaseInsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", CASEINSENSITIVE_DEFAULT) != 0;
+
+	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive);
+}
+
+
+BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, bool bCaseInsensitive)
+{
+
+	m_bCaseInsensitive =  bCaseInsensitive;
 
 	int i;
 
@@ -214,4 +225,34 @@ void CSettingsPropertyPage::OnBnClickedCaseinsensitive()
 	theApp.WriteProfileInt(L"Settings", L"CaseInsensitive", m_bCaseInsensitive ? 1 : 0);
 }
 
+
+void CSettingsPropertyPage::SaveSettings()
+{
+	OnSelchangeThreads();
+	OnSelchangeBuffersize();
+	OnCbnSelchangeCachettl();
+
+	m_bCaseInsensitive = !m_bCaseInsensitive; // OnBnClickedCaseinsensitive() flips it
+
+	OnBnClickedCaseinsensitive();
+}
+
+void CSettingsPropertyPage::OnBnClickedDefaults()
+{
+	// TODO: Add your control notification handler code here
+
+	SetControls(PER_FILESYSTEM_THREADS_DEFAULT, BUFFERBLOCKS_DEFAULT, CACHETTL_DEFAULT, CASEINSENSITIVE_DEFAULT);
+
+	SaveSettings();
+}
+
+
+void CSettingsPropertyPage::OnBnClickedRecommended()
+{
+	// TODO: Add your control notification handler code here
+
+	SetControls(PER_FILESYSTEM_THREADS_RECOMMENDED, BUFFERBLOCKS_RECOMMENDED, CACHETTL_RECOMMENDED, CASEINSENSITIVE_RECOMMENDED);
+
+	SaveSettings();
+}
 
