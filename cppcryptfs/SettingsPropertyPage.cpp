@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "SettingsPropertyPage.h"
 #include "afxdialogex.h"
 #include "cppcryptfs.h"
+#include "cryptdefaults.h"
 
 
 // CSettingsPropertyPage dialog
@@ -78,13 +79,13 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 
 	// TODO:  Add extra initialization here
 
-	int nThreads = theApp.GetProfileInt(L"Settings", L"Threads", 1);
+	int nThreads = theApp.GetProfileInt(L"Settings", L"Threads", PER_FILESYSTEM_THREADS_DEFAULT);
 
-	int bufferblocks = theApp.GetProfileInt(L"Settings", L"BufferBlocks", 1);
+	int bufferblocks = theApp.GetProfileInt(L"Settings", L"BufferBlocks", BUFFERBLOCKS_DEFAULT);
 
-	int cachettl = theApp.GetProfileInt(L"Settings", L"CacheTTL", 1);
+	int cachettl = theApp.GetProfileInt(L"Settings", L"CacheTTL", CACHETTL_DEFAULT);
 
-	m_bCaseInsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", 0) != 0;
+	m_bCaseInsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", CASEINSENSITIVE_DEFAULT) != 0;
 
 	int i;
 

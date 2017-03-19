@@ -42,6 +42,7 @@ THE SOFTWARE.
 #include "crypt.h"
 #include "util.h"
 #include "getopt.h"
+#include "cryptdefaults.h"
 
 // CMountPropertyPage dialog
 
@@ -197,13 +198,13 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	bool readonly = argDriveLetter ? argReadOnly : IsDlgButtonChecked(IDC_READONLY) != 0;
 
-	int nThreads = theApp.GetProfileInt(L"Settings", L"Threads", 1);
+	int nThreads = theApp.GetProfileInt(L"Settings", L"Threads", PER_FILESYSTEM_THREADS_DEFAULT);
 
-	int bufferblocks = theApp.GetProfileInt(L"Settings", L"BufferBlocks", 1);
+	int bufferblocks = theApp.GetProfileInt(L"Settings", L"BufferBlocks", BUFFERBLOCKS_DEFAULT);
 
-	int cachettl = theApp.GetProfileInt(L"Settings", L"CacheTTL", 1);
+	int cachettl = theApp.GetProfileInt(L"Settings", L"CacheTTL", CACHETTL_DEFAULT);
 
-	bool bCaseInsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", 0) != 0;
+	bool bCaseInsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", CASEINSENSITIVE_DEFAULT) != 0;
 
 	theApp.DoWaitCursor(1);
 	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes, readonly, nThreads, bufferblocks, cachettl, bCaseInsensitive);
