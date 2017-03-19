@@ -800,7 +800,7 @@ delete_directory(CryptContext *con, LPCWSTR path)
 
 bool delete_file(const CryptContext *con, const WCHAR *filename)
 {
-	if (PathFileExists(filename)) {
+	if (PathFileExists(filename) && !PathIsDirectory(filename)) {
 		if (!DeleteFile(filename))
 			return false;
 	}

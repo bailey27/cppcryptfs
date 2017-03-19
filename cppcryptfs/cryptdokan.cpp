@@ -165,7 +165,7 @@ private:
 	bool m_tried;
 	bool m_failed;
 	bool m_file_existed;  // valid only if case cache is used
-
+	bool m_ignore_case_cache;
 public:
 	bool FileExisted() { return m_file_existed; };
 
@@ -202,7 +202,7 @@ public:
 						atoi("1");
 					LPCWSTR plain_path = m_plain_path;
 					std::wstring correct_case_path;
-					if (m_con->IsCaseInsensitive()) {
+					if (m_con->IsCaseInsensitive() && !m_ignore_case_cache) {
 						int status = m_con->m_case_cache.lookup(m_plain_path, correct_case_path);
 						if (status == CASE_CACHE_FOUND || status == CASE_CACHE_NOT_FOUND) {
 							m_file_existed = status == CASE_CACHE_FOUND;
@@ -237,11 +237,11 @@ public:
 
 		return rs;
 	};
-	FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted = NULL);
+	FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted = NULL, bool ignorecasecache = false);
 	virtual ~FileNameEnc();
 };
 
-FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted)
+FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted, bool ignorecasecache)
 {
 	m_con = con;
 	m_plain_path = fname;
@@ -249,6 +249,7 @@ FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *act
 	m_tried = false;
 	m_failed = false;
 	m_file_existed = false;
+	m_ignore_case_cache = ignorecasecache;
 }
 
 FileNameEnc::~FileNameEnc()
@@ -1044,7 +1045,7 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 
   std::string actual_encrypted;
   FileNameEnc filePath(GetContext(), FileName);
-  FileNameEnc newFilePath(GetContext(), NewFileName, &actual_encrypted);
+  FileNameEnc newFilePath(GetContext(), NewFileName, &actual_encrypted, true);
 
   DbgPrint(L"MoveFile %s -> %s\n\n", FileName, NewFileName);
 
