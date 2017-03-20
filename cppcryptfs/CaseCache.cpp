@@ -486,7 +486,7 @@ bool CaseCache::rename(LPCWSTR oldpath, LPCWSTR newpath)
 		}
 
 		for (auto it : toinsert) {
-			m_map.insert(std::make_pair(it.first, it.second));
+			m_map.insert(it);
 		}
 	
 	} catch (...) {
