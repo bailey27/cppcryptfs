@@ -125,7 +125,6 @@ bool CaseCache::store(LPCWSTR dirpath, std::list<std::wstring>& files)
 
 			node->m_key = &mp.first->first;
 			node->m_path = dirpath;
-			node->m_files.empty();
 			std::wstring ucfile;
 			for (auto it = files.begin(); it != files.end(); it++) {
 				if (!touppercase(it->c_str(), ucfile)) {
