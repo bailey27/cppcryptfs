@@ -107,6 +107,7 @@ bool CaseCache::store(LPCWSTR dirpath, std::list<std::wstring>& files)
 				node = m_lru_list.back();
 				m_lru_list.pop_back();
 				m_map.erase(*node->m_key);
+				node->m_files.clear();
 			}
 
 			// re-use node if we removed one, otherwise get one from spare list, otherwise make a new one
@@ -244,7 +245,6 @@ int CaseCache::lookup(LPCWSTR path, std::wstring& result_path)
 		auto it = m_map.find(ucdir);
 
 		if (it == m_map.end()) {
-			DbgPrint(L"CaseCache.cpp thread %u MISS at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw((int)CASE_CACHE_MISS);
 		}
 
@@ -252,7 +252,6 @@ int CaseCache::lookup(LPCWSTR path, std::wstring& result_path)
 
 		if (m_ttl && (GetTickCount64() - node->m_timestamp > m_ttl)) {
 			remove_node(it);
-			DbgPrint(L"CaseCache.cpp thread %u MISS-ttl at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw((int)CASE_CACHE_MISS);
 		}
 
