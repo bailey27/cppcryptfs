@@ -1107,7 +1107,12 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 	  if (GetContext()->IsCaseInsensitive()) {
 		  GetContext()->m_case_cache.remove(FileName);
 		  if (!GetContext()->m_case_cache.store(NewFileName)) {
-			  DbgPrint(L"move unable to store new filename %s", NewFileName);
+			  DbgPrint(L"move unable to store new filename %s in case cache\n", NewFileName);
+		  }
+		  if (DokanFileInfo->IsDirectory) {
+			  if (!GetContext()->m_case_cache.rename(FileName, NewFileName)) {
+				  DbgPrint(L"move unable to rename directory %s in case cache\n", NewFileName);
+			  }
 		  }
 	  }
       return STATUS_SUCCESS;

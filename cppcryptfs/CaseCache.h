@@ -78,6 +78,7 @@ public:
 	bool remove(LPCWSTR path, LPCWSTR file);
 	bool remove(LPCWSTR path);
 	bool purge(LPCWSTR path);
+	bool rename(LPCWSTR oldpath, LPCWSTR newpath);
 
 	// used to load dir into cache if there is a miss
 	bool loaddir(CryptContext *con, LPCWSTR filepath);

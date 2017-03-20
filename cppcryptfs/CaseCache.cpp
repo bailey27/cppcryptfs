@@ -432,3 +432,68 @@ bool CaseCache::loaddir(CryptContext *con, LPCWSTR filepath)
 
 	return store(case_dir.c_str(), list);
 }
+
+// when a directory is renamed, do a search and replace in the cache
+
+bool CaseCache::rename(LPCWSTR oldpath, LPCWSTR newpath)
+{
+	bool bRet = true;
+
+	std::wstring ucold;
+
+	if (!touppercase(oldpath, ucold))
+		return false;
+
+	std::wstring ucnew;
+
+	if (!touppercase(newpath, ucnew))
+		return false;
+
+	size_t oldlen = ucold.length();
+
+	size_t newlen = ucnew.length();
+
+	std::wstring newkey;
+
+	std::list<std::wstring> toerase;
+
+	std::list<std::pair<std::wstring, CaseCacheNode *>> toinsert;
+
+	lock();
+
+	try {
+
+		for (auto it : m_map) {
+			size_t keylen = it.first.length();
+
+			if (keylen < oldlen)
+				continue;
+
+			if (wcsncmp(ucold.c_str(), it.first.c_str(), oldlen)) 
+				continue;
+
+			newkey = ucnew + it.first.substr(oldlen);
+
+			it.second->m_path = newpath + it.second->m_path.substr(oldlen);
+
+			toerase.push_back(it.first);
+
+			toinsert.push_back(std::make_pair(newkey, it.second));
+		} 
+
+		for (auto it : toerase) {
+			m_map.erase(it);
+		}
+
+		for (auto it : toinsert) {
+			m_map.insert(std::make_pair(it.first, it.second));
+		}
+	
+	} catch (...) {
+		bRet = false;
+	}
+
+	unlock();
+
+	return bRet;
+}
