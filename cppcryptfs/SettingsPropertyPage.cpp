@@ -105,6 +105,8 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	if (!pBox)
 		return FALSE;
 
+	pBox->ResetContent();
+
 	WCHAR buf[80];
 
 	for (i = 0; i < 15; i++) {
@@ -125,6 +127,8 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	if (!pBox)
 		return FALSE;
 
+	pBox->ResetContent();
+
 	for (i = 0; i < sizeof(buffer_sizes)/sizeof(buffer_sizes[0]); i++) {
 		wsprintf(buf, L"%d", buffer_sizes[i]);
 		pBox->AddString(buf);
@@ -144,6 +148,8 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	if (!pBox)
 		return FALSE;
+
+	pBox->ResetContent();
 
 	static_assert(sizeof(ttls) / sizeof(ttls[0]) == sizeof(ttl_strings) / sizeof(ttl_strings[0]), "mismatch in sizes of ttls/ttl_strings");
 
