@@ -107,13 +107,12 @@ bool CaseCache::check_node_clean(CaseCacheNode *node)
 
 	bResult = CompareFileTime(&node->m_filetime, &LastWriteTime) >= 0;
 
-	if (bResult)
+	if (bResult) {
 		node->m_timestamp = GetTickCount64();
-	
-	if (bResult)
 		return true;
-	else
+	} else {
 		return false;
+	}
 }
 
 void CaseCache::update_lru(CaseCacheNode *node)

@@ -126,13 +126,12 @@ bool DirIvCache::check_node_clean(DirIvCacheNode *node, const std::wstring& path
 
 	bResult = CompareFileTime(&node->m_last_write_time, &LastWriteTime) >= 0;
 
-	if (bResult)
+	if (bResult) {
 		node->m_timestamp = GetTickCount64();
-
-	if (bResult)
 		return true;
-	else
+	} else {
 		return false;
+	}
 }
 
 void DirIvCache::update_lru(DirIvCacheNode *node)
