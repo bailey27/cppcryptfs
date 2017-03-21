@@ -162,8 +162,7 @@ This option has effect only in forward mode and only when encrypted filenames ar
 
 Normally, cppcryptfs requires that files and directories be opened using the same case that was used when the files and directories were created.
 
-If this option is checked, then cppcryptfs will ignore the case of file and directory names.  This is how the Windows API 
-normally operates.
+If this option is checked, then cppcryptfs will ignore the case of file and directory names.  This is how the Windows API normally operates.  Also, performance will be a little slower. 
 
 See the section on "Case Sensitivity" for more information.
 
