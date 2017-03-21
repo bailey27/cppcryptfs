@@ -109,8 +109,11 @@ bool CaseCache::check_node_clean(CaseCacheNode *node)
 
 	if (bResult)
 		node->m_timestamp = GetTickCount64();
-
-	return bResult != 0;
+	
+	if (bResult)
+		return true;
+	else
+		return false;
 }
 
 void CaseCache::update_lru(CaseCacheNode *node)

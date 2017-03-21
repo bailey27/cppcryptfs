@@ -129,7 +129,10 @@ bool DirIvCache::check_node_clean(DirIvCacheNode *node, const std::wstring& path
 	if (bResult)
 		node->m_timestamp = GetTickCount64();
 
-	return bResult != 0;
+	if (bResult)
+		return true;
+	else
+		return false;
 }
 
 void DirIvCache::update_lru(DirIvCacheNode *node)
