@@ -73,7 +73,7 @@ private:
 	void unlock();
 
 	bool check_node_clean(DirIvCacheNode *node, const std::wstring& path);
-
+	void update_lru(DirIvCacheNode *node);
 public:
 	DirIvCache();
 

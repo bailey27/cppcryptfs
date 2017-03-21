@@ -109,7 +109,7 @@ bool DirIvCache::check_node_clean(DirIvCacheNode *node, const std::wstring& path
 	// already normalized with trailing slash
 	filepath += DIR_IV_NAME;
 
-	HANDLE hFile = CreateFile(&filepath[0], GENERIC_READ, FILE_SHARE_READ, NULL,
+	HANDLE hFile = CreateFile(&filepath[0], FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
 		OPEN_EXISTING, 0, NULL);
 
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -124,7 +124,7 @@ bool DirIvCache::check_node_clean(DirIvCacheNode *node, const std::wstring& path
 	if (!bResult)
 		return false;
 
-	bResult = !memcmp(&node->m_last_write_time, &LastWriteTime, sizeof(FILETIME));
+	bResult = CompareFileTime(&node->m_last_write_time, &LastWriteTime) >= 0;
 
 	if (bResult)
 		node->m_timestamp = GetTickCount64();
@@ -132,7 +132,17 @@ bool DirIvCache::check_node_clean(DirIvCacheNode *node, const std::wstring& path
 	return bResult != 0;
 }
 
+void DirIvCache::update_lru(DirIvCacheNode *node)
+{
+	// if node isn't already at front of list, remove
+	// it from wherever it was and put it at the front
 
+	if (node->m_list_it != m_lru_list.begin()) {
+		m_lru_list.erase(node->m_list_it);
+		m_lru_list.push_front(node);
+		node->m_list_it = m_lru_list.begin();
+	}
+}
 
 bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 {
@@ -162,14 +172,7 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 
 			memcpy(dir_iv, node->m_dir_iv, DIR_IV_LEN);
 
-			// if node isn't already at front of list, remove
-			// it from wherever it was and put it at the front
-
-			if (node->m_list_it != m_lru_list.begin()) {
-				m_lru_list.erase(node->m_list_it);
-				m_lru_list.push_front(node);
-				node->m_list_it = m_lru_list.begin();
-			}
+			update_lru(node);
 			found = true;
 			m_hits++;
 
@@ -254,6 +257,9 @@ bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv, const FILETIME
 			memcpy(mp.first->second->m_dir_iv, dir_iv, DIR_IV_LEN);
 			mp.first->second->m_timestamp = GetTickCount64();
 			mp.first->second->m_last_write_time = last_write_time;
+
+			update_lru(mp.first->second);
+			
 		}
 		
 
