@@ -166,7 +166,7 @@ private:
 	bool m_tried;
 	bool m_failed;
 	bool m_file_existed;  // valid only if case cache is used
-	bool m_force_case_cache_miss;
+	bool m_force_case_cache_notfound;
 public:
 	LPCWSTR CorrectCasePath() { return m_correct_case_path.c_str(); };
 	bool FileExisted() { return m_file_existed; };
@@ -204,13 +204,13 @@ public:
 					LPCWSTR plain_path = m_plain_path;
 					int cache_status = CASE_CACHE_NOTUSED;
 					if (m_con->IsCaseInsensitive()) {
-						cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_miss);
+						cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_notfound);
 						if (cache_status == CASE_CACHE_FOUND || cache_status == CASE_CACHE_NOT_FOUND) {
 							m_file_existed = cache_status == CASE_CACHE_FOUND;
 							plain_path = m_correct_case_path.c_str();
 						} else if (cache_status == CASE_CACHE_MISS) {
 							if (m_con->m_case_cache.loaddir(m_plain_path)) {
-								cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_miss);
+								cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_notfound);
 								if (cache_status == CASE_CACHE_FOUND || cache_status == CASE_CACHE_NOT_FOUND) {
 									m_file_existed = cache_status == CASE_CACHE_FOUND;
 									plain_path = m_correct_case_path.c_str();
@@ -242,7 +242,7 @@ public:
 	virtual ~FileNameEnc();
 };
 
-FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted, bool forceCaseCacheMiss)
+FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted, bool forceCaseCacheNotFound)
 {
 	m_con = con;
 	m_plain_path = fname;
@@ -250,7 +250,7 @@ FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *act
 	m_tried = false;
 	m_failed = false;
 	m_file_existed = false;
-	m_force_case_cache_miss = forceCaseCacheMiss;
+	m_force_case_cache_notfound = forceCaseCacheNotFound;
 }
 
 FileNameEnc::~FileNameEnc()
