@@ -38,12 +38,11 @@ CaseCacheNode::CaseCacheNode()
 	m_timestamp = 0;
 	m_key = NULL;
 
+	memset(&m_filetime, 0, sizeof(m_filetime));
 }
 
 CaseCacheNode::~CaseCacheNode() 
 {
-	m_timestamp = 0;
-	m_key = NULL;
 
 }
 
@@ -78,6 +77,52 @@ void CaseCache::lock()
 void CaseCache::unlock()
 {
 	LeaveCriticalSection(&m_crit);
+}
+
+bool CaseCache::check_node_clean(CaseCacheNode *node)
+{
+
+	if (!m_ttl || (GetTickCount64() - node->m_timestamp < m_ttl))
+		return true;
+
+	std::wstring enc_path;
+
+	if (!encrypt_path(m_con, node->m_path.c_str(), enc_path, NULL)) 
+		return false;
+
+	HANDLE hFile = CreateFile(enc_path.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
+		OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+
+	if (hFile == INVALID_HANDLE_VALUE)
+		return false;
+
+	FILETIME LastWriteTime;
+
+	BOOL bResult = GetFileTime(hFile, NULL, NULL, &LastWriteTime);
+
+	CloseHandle(hFile);
+
+	if (!bResult)
+		return false;
+
+	bResult = CompareFileTime(&node->m_filetime, &LastWriteTime) >= 0;
+
+	if (bResult)
+		node->m_timestamp = GetTickCount64();
+
+	return bResult != 0;
+}
+
+void CaseCache::update_lru(CaseCacheNode *node)
+{
+	// if node isn't already at front of list, remove
+	// it from wherever it was and put it at the front
+
+	if (node->m_list_it != m_lru_list.begin()) {
+		m_lru_list.erase(node->m_list_it);
+		m_lru_list.push_front(node);
+		node->m_list_it = m_lru_list.begin();
+	}
 }
 
 bool CaseCache::store(LPCWSTR dirpath, std::list<std::wstring>& files)
@@ -134,11 +179,12 @@ bool CaseCache::store(LPCWSTR dirpath, std::list<std::wstring>& files)
 				node->m_files.insert(std::make_pair(ucfile, *it));
 			}
 			node->m_timestamp = GetTickCount64();
+			GetSystemTimeAsFileTime(&node->m_filetime);
 			node->m_list_it = m_lru_list.insert(m_lru_list.begin(), node);
 
 		} else {
 			
-			mp.first->second->m_files.empty();
+			mp.first->second->m_files.clear();
 			std::wstring ucfile;
 			for (auto it = files.begin(); it != files.end(); it++) {
 				if (!touppercase(it->c_str(), ucfile)) {
@@ -149,6 +195,9 @@ bool CaseCache::store(LPCWSTR dirpath, std::list<std::wstring>& files)
 			}
 			mp.first->second->m_path = dirpath;
 			mp.first->second->m_timestamp = GetTickCount64();
+			GetSystemTimeAsFileTime(&mp.first->second->m_filetime);
+
+			update_lru(mp.first->second);
 		}
 	} catch(...) {
 		bRet = false;
@@ -244,26 +293,30 @@ int CaseCache::lookup(LPCWSTR path, std::wstring& result_path)
 		auto it = m_map.find(ucdir);
 
 		if (it == m_map.end()) {
-			throw((int)CASE_CACHE_MISS);
-		}
-
-		CaseCacheNode *node = it->second;
-
-		if (m_ttl && (GetTickCount64() - node->m_timestamp > m_ttl)) {
-			remove_node(it);
-			throw((int)CASE_CACHE_MISS);
-		}
-
-		auto nit = node->m_files.find(ucfile);
-
-		bool isRoot = wcscmp(node->m_path.c_str(), L"\\") == 0;
-
-		if (nit != node->m_files.end()) {
-			ret = CASE_CACHE_FOUND;
-			result_path = node->m_path + (isRoot ? L"" : L"\\") + nit->second;
+			ret = CASE_CACHE_MISS;
 		} else {
-			ret  = CASE_CACHE_NOT_FOUND;
-			result_path = node->m_path + (isRoot ? L"" : L"\\") + file;
+
+			CaseCacheNode *node = it->second;
+
+			if (!check_node_clean(node)) {
+				remove_node(it);
+				ret = CASE_CACHE_MISS;
+			} else {
+
+				update_lru(node);
+
+				auto nit = node->m_files.find(ucfile);
+
+				bool isRoot = wcscmp(node->m_path.c_str(), L"\\") == 0;
+
+				if (nit != node->m_files.end()) {
+					ret = CASE_CACHE_FOUND;
+					result_path = node->m_path + (isRoot ? L"" : L"\\") + nit->second;
+				} else {
+					ret = CASE_CACHE_NOT_FOUND;
+					result_path = node->m_path + (isRoot ? L"" : L"\\") + file;
+				}
+			}
 		}
 	
 	} catch (int err) {
@@ -387,10 +440,10 @@ static int WINAPI casecache_fill_find_data(PWIN32_FIND_DATAW fdata, void * dokan
 	return 0;
 }
 
-bool CaseCache::loaddir(CryptContext *con, LPCWSTR filepath)
+bool CaseCache::loaddir(LPCWSTR filepath)
 {
 
-	if (!con->IsCaseInsensitive())
+	if (!m_con->IsCaseInsensitive())
 		return true;
 
 	std::wstring dir;
@@ -407,7 +460,7 @@ bool CaseCache::loaddir(CryptContext *con, LPCWSTR filepath)
 		return false;
 
 	if (status == CASE_CACHE_MISS) {
-		if (!loaddir(con, dir.c_str()))
+		if (!loaddir(dir.c_str()))
 			return false;
 
 		status = lookup(dir.c_str(), case_dir);
@@ -418,13 +471,13 @@ bool CaseCache::loaddir(CryptContext *con, LPCWSTR filepath)
 
 	std::wstring enc_dir;
 	
-	if (!encrypt_path(con, case_dir.c_str(), enc_dir)) {
+	if (!encrypt_path(m_con, case_dir.c_str(), enc_dir)) {
 		return false;
 	}
 
 	std::list<std::wstring> list;
 
-	if (find_files(con, case_dir.c_str(), enc_dir.c_str(), casecache_fill_find_data, NULL, &list) != 0) {
+	if (find_files(m_con, case_dir.c_str(), enc_dir.c_str(), casecache_fill_find_data, NULL, &list) != 0) {
 		return false;
 	}
 

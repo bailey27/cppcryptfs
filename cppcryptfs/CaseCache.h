@@ -40,7 +40,8 @@ public:
 	std::wstring m_path; // correct-case path of directory
 	std::unordered_map<std::wstring, std::wstring> m_files;  // map of uppercase filenames to correct-case names
 	std::list<CaseCacheNode*>::iterator m_list_it;  // holds position in lru list
-	long long m_timestamp; 
+	LONGLONG m_timestamp; 
+	FILETIME m_filetime;
 	CaseCacheNode();
 	virtual ~CaseCacheNode();
 };
@@ -63,11 +64,15 @@ private:
 	std::list<CaseCacheNode*> m_spare_node_list;
 
 	CRITICAL_SECTION m_crit;
+public:
+	CryptContext *m_con;
 
 private:
 	void lock();
 	void unlock();
 	void remove_node(std::unordered_map<std::wstring, CaseCacheNode *>::iterator it);
+	bool check_node_clean(CaseCacheNode *node);
+	void update_lru(CaseCacheNode *node);
 public:
 	void SetTTL(int nSecs) { m_ttl = (ULONGLONG)nSecs * 1000; };
 
@@ -81,7 +86,7 @@ public:
 	bool rename(LPCWSTR oldpath, LPCWSTR newpath);
 
 	// used to load dir into cache if there is a miss
-	bool loaddir(CryptContext *con, LPCWSTR filepath);
+	bool loaddir(LPCWSTR filepath);
 
 	CaseCache();
 	virtual ~CaseCache();

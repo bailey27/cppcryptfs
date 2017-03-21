@@ -52,6 +52,8 @@ CryptContext::CryptContext()
 	m_config = new CryptConfig;
 
 	m_prand_bytes = &random_bytes;
+
+	m_case_cache.m_con = this;
 }
 
 CryptContext::~CryptContext()

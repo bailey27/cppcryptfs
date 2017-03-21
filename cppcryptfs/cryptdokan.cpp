@@ -208,7 +208,7 @@ public:
 							m_file_existed = status == CASE_CACHE_FOUND;
 							plain_path = correct_case_path.c_str();
 						} else if (status == CASE_CACHE_MISS) {
-							if (m_con->m_case_cache.loaddir(m_con, m_plain_path)) {
+							if (m_con->m_case_cache.loaddir(m_plain_path)) {
 								status = m_con->m_case_cache.lookup(m_plain_path, correct_case_path);
 								if (status == CASE_CACHE_FOUND || status == CASE_CACHE_NOT_FOUND) {
 									m_file_existed = status == CASE_CACHE_FOUND;
