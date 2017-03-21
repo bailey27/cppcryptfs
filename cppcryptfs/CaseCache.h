@@ -51,6 +51,7 @@ public:
 #define CASE_CACHE_NOT_FOUND 1
 #define CASE_CACHE_MISS -2
 #define CASE_CACHE_ERROR -3
+#define CASE_CACHE_NOTUSED -4
 
 class CryptContext;
 
@@ -79,7 +80,7 @@ public:
 	bool store(LPCWSTR dirpath, std::list<std::wstring>& files);
 	bool store(LPCWSTR dirpath, LPCWSTR file);
 	bool store(LPCWSTR filepath);
-	int lookup(LPCWSTR path, std::wstring& result_path);
+	int lookup(LPCWSTR path, std::wstring& result_path, bool force_miss = false);
 	bool remove(LPCWSTR path, LPCWSTR file);
 	bool remove(LPCWSTR path);
 	bool purge(LPCWSTR path);

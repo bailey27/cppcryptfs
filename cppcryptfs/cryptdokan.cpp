@@ -159,14 +159,16 @@ void DbgPrint(LPCWSTR format, ...) {
 class FileNameEnc {
 private:
 	std::wstring m_enc_path;
+	std::wstring m_correct_case_path;
 	std::string *m_actual_encrypted;
 	const WCHAR *m_plain_path;
 	CryptContext *m_con;
 	bool m_tried;
 	bool m_failed;
 	bool m_file_existed;  // valid only if case cache is used
-	bool m_ignore_case_cache;
+	bool m_force_case_cache_miss;
 public:
+	LPCWSTR CorrectCasePath() { return m_correct_case_path.c_str(); };
 	bool FileExisted() { return m_file_existed; };
 
 	operator const WCHAR *()
@@ -198,21 +200,20 @@ public:
 						}
 					}
 				} else {
-					if (wcslen(m_plain_path) > 4)
-						atoi("1");
+					
 					LPCWSTR plain_path = m_plain_path;
-					std::wstring correct_case_path;
-					if (m_con->IsCaseInsensitive() && !m_ignore_case_cache) {
-						int status = m_con->m_case_cache.lookup(m_plain_path, correct_case_path);
-						if (status == CASE_CACHE_FOUND || status == CASE_CACHE_NOT_FOUND) {
-							m_file_existed = status == CASE_CACHE_FOUND;
-							plain_path = correct_case_path.c_str();
-						} else if (status == CASE_CACHE_MISS) {
+					int cache_status = CASE_CACHE_NOTUSED;
+					if (m_con->IsCaseInsensitive()) {
+						cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_miss);
+						if (cache_status == CASE_CACHE_FOUND || cache_status == CASE_CACHE_NOT_FOUND) {
+							m_file_existed = cache_status == CASE_CACHE_FOUND;
+							plain_path = m_correct_case_path.c_str();
+						} else if (cache_status == CASE_CACHE_MISS) {
 							if (m_con->m_case_cache.loaddir(m_plain_path)) {
-								status = m_con->m_case_cache.lookup(m_plain_path, correct_case_path);
-								if (status == CASE_CACHE_FOUND || status == CASE_CACHE_NOT_FOUND) {
-									m_file_existed = status == CASE_CACHE_FOUND;
-									plain_path = correct_case_path.c_str();
+								cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_miss);
+								if (cache_status == CASE_CACHE_FOUND || cache_status == CASE_CACHE_NOT_FOUND) {
+									m_file_existed = cache_status == CASE_CACHE_FOUND;
+									plain_path = m_correct_case_path.c_str();
 								} 
 							}
 						}
@@ -241,7 +242,7 @@ public:
 	virtual ~FileNameEnc();
 };
 
-FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted, bool ignorecasecache)
+FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted, bool forceCaseCacheMiss)
 {
 	m_con = con;
 	m_plain_path = fname;
@@ -249,7 +250,7 @@ FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *act
 	m_tried = false;
 	m_failed = false;
 	m_file_existed = false;
-	m_ignore_case_cache = ignorecasecache;
+	m_force_case_cache_miss = forceCaseCacheMiss;
 }
 
 FileNameEnc::~FileNameEnc()
@@ -564,7 +565,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 				  files.push_front(L"..");
 				  files.push_front(L".");
 			  }
-			  GetContext()->m_case_cache.store(FileName, files);
+			  GetContext()->m_case_cache.store(filePath.CorrectCasePath(), files);
 		  }
 
 	  }
@@ -601,7 +602,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 				  files.push_front(L"..");
 				  files.push_front(L".");
 			  }
-			  GetContext()->m_case_cache.store(FileName, files);
+			  GetContext()->m_case_cache.store(filePath.CorrectCasePath(), files);
 		  }
 	  }
     }
@@ -637,7 +638,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 		  (fileAttr & FILE_ATTRIBUTE_DIRECTORY) &&
 		  CreateDisposition == FILE_CREATE) {
 		  if (GetContext()->IsCaseInsensitive() && handle != INVALID_HANDLE_VALUE && !filePath.FileExisted()) {
-			  GetContext()->m_case_cache.store(FileName);
+			  GetContext()->m_case_cache.store(filePath.CorrectCasePath());
 		  }
 		  return STATUS_OBJECT_NAME_COLLISION; // File already exist because
 											   // GetFileAttributes found it
@@ -687,7 +688,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 		  // Open succeed but we need to inform the driver
 		  // that the file open and not created by returning STATUS_OBJECT_NAME_COLLISION
 		  if (GetContext()->IsCaseInsensitive() && handle != INVALID_HANDLE_VALUE && !filePath.FileExisted()) {
-			  GetContext()->m_case_cache.store(FileName);
+			  GetContext()->m_case_cache.store(filePath.CorrectCasePath());
 		  }
 		  return STATUS_OBJECT_NAME_COLLISION;
         }
@@ -697,7 +698,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   DbgPrint(L"handle = %I64x", (ULONGLONG)handle);
   DbgPrint(L"\n");
   if (GetContext()->IsCaseInsensitive() && handle != INVALID_HANDLE_VALUE && !filePath.FileExisted()) {
-	  GetContext()->m_case_cache.store(FileName);
+	  GetContext()->m_case_cache.store(filePath.CorrectCasePath());
   }
   return status;
 }

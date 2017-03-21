@@ -263,7 +263,7 @@ bool CaseCache::store(LPCWSTR filepath)
 }
 
 
-int CaseCache::lookup(LPCWSTR path, std::wstring& result_path)
+int CaseCache::lookup(LPCWSTR path, std::wstring& result_path, bool force_miss)
 {
 
 	if (!wcscmp(path, L"\\") || !wcscmp(path, L"\\*")) {
@@ -307,16 +307,16 @@ int CaseCache::lookup(LPCWSTR path, std::wstring& result_path)
 
 				update_lru(node);
 
-				auto nit = node->m_files.find(ucfile);
+				auto nit = force_miss ? node->m_files.end() :  node->m_files.find(ucfile);
 
 				bool isRoot = wcscmp(node->m_path.c_str(), L"\\") == 0;
 
 				if (nit != node->m_files.end()) {
-					ret = CASE_CACHE_FOUND;
 					result_path = node->m_path + (isRoot ? L"" : L"\\") + nit->second;
+					ret = CASE_CACHE_FOUND;
 				} else {
-					ret = CASE_CACHE_NOT_FOUND;
 					result_path = node->m_path + (isRoot ? L"" : L"\\") + file;
+					ret = CASE_CACHE_NOT_FOUND;
 				}
 			}
 		}
