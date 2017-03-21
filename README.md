@@ -116,7 +116,7 @@ If you close the cppcryptfs window, then it will hide itself in the system tray.
 
 There is also a settings tab.  
 
-Changing values on the settings page affects all filesystems that are subsequently mounted.  Any filesystems that are already mounted will not be affected.
+Changing values on the settings tab affects all filesystems that are subsequently mounted.  Any filesystems that are already mounted will not be affected.
 
 The settings tab has the following setings:
 
@@ -144,10 +144,10 @@ The default is the original 4KB size.  When this size is used, the code paths ar
 
 **Cache time to live:**
 
-cppcryptfs caches information about the filesystem.  If an entry in the cache is older than the time to live, then that entry
+cppcryptfs caches information about the filesystem.  If an entry in a cache is older than the time to live, then that entry
 is re-validated before it is used.
 
-Increasing the caceh time to live or setting it to infinite will result in better performance.
+Increasing the cache time to live or setting it to infinite will result in better performance.
 
 However, if you are constantly syncing your cppcryptfs filesystem with another copy of the filesystem that is on a another machine running
 under another instance of cppcryptfs or gocryptfs, then setting the time to live to too high of a value may result in errors
@@ -166,7 +166,7 @@ If this option is checked, then cppcryptfs will ignore the case of file and dire
 
 See the section on "Case Sensitivity" for more information.
 
-Therea are also two buttons "Defaults" which changes all settings to the original cppcryptfs defaults, and "Recommended" which sets
+There are also two buttons "Defaults" which changes all settings to the original cppcryptfs defaults, and "Recommended" which sets
 the currently recommended settings.
 
 When "Defaults" is used, then cppcryptfs will behave as it has from the beginning.  These are the safest settings which have
