@@ -342,12 +342,12 @@ Windows Defender realtime scanning was disabled during the tests because it seve
 cppcryptfs performs about the same as the mirror sample program from Dokany which doesn't do encryption.  The SSD is rated for 250 MB/sec streaming write performance.
 
 ```
-								cppcryptfs		native NTFS		Dokany mirror
-								
-Streaming Write					168 MB/s		224 MB/s		181 MB/s
-Extract linux-3.0.tar.gz			1m36.412s		0m21.291s		1m34.125s	
-ls -lR linux-3.0				1m1.979s		0m2.983s		1m11.618s
-Delete linux-3.0 				1m28.749s		0m10.144s		1m24.677s
+                                cppcryptfs      native NTFS     Dokany mirror
+
+Streaming Write                 168 MB/s        224 MB/s        181 MB/s
+Extract linux-3.0.tar.gz        1m36.412s       0m21.291s       1m34.125s	
+ls -lR linux-3.0                1m1.979s        0m2.983s        1m11.618s
+Delete linux-3.0                1m28.749s       0m10.144s       1m24.677s
 
 ```
 
