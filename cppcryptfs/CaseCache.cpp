@@ -175,7 +175,6 @@ bool CaseCache::store(LPCWSTR dirpath, const std::list<std::wstring>& files)
 			std::wstring ucfile;
 			for (auto it = files.begin(); it != files.end(); it++) {
 				if (!touppercase(it->c_str(), ucfile)) {
-					DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 					throw(-1);
 				}
 				node->m_files.insert(std::make_pair(ucfile, *it));
@@ -190,7 +189,6 @@ bool CaseCache::store(LPCWSTR dirpath, const std::list<std::wstring>& files)
 			std::wstring ucfile;
 			for (auto it = files.begin(); it != files.end(); it++) {
 				if (!touppercase(it->c_str(), ucfile)) {
-					DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 					throw(-1);
 				}
 				mp.first->second->m_files.insert(std::make_pair(ucfile, *it));
@@ -226,7 +224,6 @@ bool CaseCache::store(LPCWSTR dirpath, LPCWSTR file)
 		auto it = m_map.find(key);
 
 		if (it == m_map.end()) {
-			DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw(-1);
 		}
 
@@ -235,7 +232,6 @@ bool CaseCache::store(LPCWSTR dirpath, LPCWSTR file)
 		std::wstring ucfile;
 
 		if (!touppercase(file, ucfile)) {
-			DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw(-1);
 		}
 
@@ -396,7 +392,6 @@ bool CaseCache::remove(LPCWSTR path, LPCWSTR file)
 		auto it = m_map.find(ucdir);
 
 		if (it == m_map.end()) {
-			DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw(-1);
 		}
 
@@ -405,7 +400,6 @@ bool CaseCache::remove(LPCWSTR path, LPCWSTR file)
 		auto nit = node->m_files.find(ucfile);
 
 		if (nit == node->m_files.end()) {
-			DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw(-1);
 		}
 
@@ -461,7 +455,6 @@ bool CaseCache::purge(LPCWSTR path)
 		auto it = m_map.find(ucpath);
 
 		if (it == m_map.end()) {
-			DbgPrint(L"CaseCache.cpp thread %u exception at line %d\n",  GetCurrentThreadId(), __LINE__);
 			throw(-1);
 		}
 
