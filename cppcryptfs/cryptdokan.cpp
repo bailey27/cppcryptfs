@@ -749,7 +749,7 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
           DbgPrint(L" error code = %d\n\n", GetLastError());
         } else {
 		  if (GetContext()->IsCaseInsensitive()) {
-			  if (!GetContext()->m_case_cache.remove(FileName)) {
+			  if (!GetContext()->m_case_cache.remove(filePath.CorrectCasePath())) {
 				  DbgPrint(L"delete failed to remove %s from case cache\n", FileName);
 			  }
 		  }
@@ -1106,13 +1106,13 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 	  }
 
 	  if (GetContext()->IsCaseInsensitive()) {
-		  GetContext()->m_case_cache.remove(FileName);
-		  if (!GetContext()->m_case_cache.store(NewFileName)) {
-			  DbgPrint(L"move unable to store new filename %s in case cache\n", NewFileName);
+		  GetContext()->m_case_cache.remove(filePath.CorrectCasePath());
+		  if (!GetContext()->m_case_cache.store(newFilePath.CorrectCasePath())) {
+			  DbgPrint(L"move unable to store new filename %s in case cache\n", newFilePath.CorrectCasePath());
 		  }
 		  if (DokanFileInfo->IsDirectory) {
-			  if (!GetContext()->m_case_cache.rename(FileName, NewFileName)) {
-				  DbgPrint(L"move unable to rename directory %s in case cache\n", NewFileName);
+			  if (!GetContext()->m_case_cache.rename(filePath.CorrectCasePath(), newFilePath.CorrectCasePath)) {
+				  DbgPrint(L"move unable to rename directory %s -> %s in case cache\n", filePath.CorrectCasePath(), newFilePath.CorrectCasePath());
 			  }
 		  }
 	  }
