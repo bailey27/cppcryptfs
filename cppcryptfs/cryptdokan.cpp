@@ -1036,6 +1036,8 @@ CryptDeleteDirectory(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
 
 }
 
+// see comment in CryptMoveFile() about what the repair stuff is for
+
 static NTSTATUS
 CryptMoveFileInternal(LPCWSTR FileName, // existing file name
                LPCWSTR NewFileName, BOOL ReplaceIfExisting,
