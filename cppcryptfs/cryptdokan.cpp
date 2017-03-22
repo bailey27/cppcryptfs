@@ -1030,14 +1030,16 @@ CryptDeleteDirectory(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
 
 }
 
-static NTSTATUS DOKAN_CALLBACK
-CryptMoveFile(LPCWSTR FileName, // existing file name
+static NTSTATUS
+CryptMoveFileInternal(LPCWSTR FileName, // existing file name
                LPCWSTR NewFileName, BOOL ReplaceIfExisting,
-               PDOKAN_FILE_INFO DokanFileInfo) {
+               PDOKAN_FILE_INFO DokanFileInfo, bool& needRepair, bool repairName) {
+
+  needRepair = false;
 
   std::string actual_encrypted;
   FileNameEnc filePath(GetContext(), FileName);
-  FileNameEnc newFilePath(GetContext(), NewFileName, &actual_encrypted, true);
+  FileNameEnc newFilePath(GetContext(), NewFileName, &actual_encrypted, repairName);
 
   DbgPrint(L"MoveFile %s -> %s\n\n", FileName, NewFileName);
 
@@ -1090,6 +1092,24 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 	  DbgPrint(L"\tMoveFile failed status = %d, code = %d\n", result, error);
 	  return ToNtStatus(error);
   } else {
+
+	  if (GetContext()->IsCaseInsensitive() && !repairName) {
+
+		  if (newFilePath.FileExisted()) {
+			  std::wstring existing_file_name;
+			  std::wstring new_file_name;
+
+			  if (get_dir_and_file_from_path(newFilePath.CorrectCasePath(), NULL, &existing_file_name) &&
+					get_dir_and_file_from_path(NewFileName, NULL, &new_file_name)) {
+					if (wcscmp(existing_file_name.c_str(), new_file_name.c_str())) {
+						needRepair = true;
+					} 
+			  } else {
+				  DbgPrint(L"movefile get_dir_and_filename failed\n");
+			  }
+		  }
+	  }
+
 	  // clean up any longname
 	  if (!delete_file(GetContext(), filePath, true)) {
 		  DWORD error = GetLastError();
@@ -1111,13 +1131,42 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 			  DbgPrint(L"move unable to store new filename %s in case cache\n", newFilePath.CorrectCasePath());
 		  }
 		  if (DokanFileInfo->IsDirectory) {
-			  if (!GetContext()->m_case_cache.rename(filePath.CorrectCasePath(), newFilePath.CorrectCasePath)) {
+			  if (!GetContext()->m_case_cache.rename(filePath.CorrectCasePath(), newFilePath.CorrectCasePath())) {
 				  DbgPrint(L"move unable to rename directory %s -> %s in case cache\n", filePath.CorrectCasePath(), newFilePath.CorrectCasePath());
 			  }
 		  }
 	  }
       return STATUS_SUCCESS;
   }
+}
+
+static NTSTATUS DOKAN_CALLBACK
+CryptMoveFile(LPCWSTR FileName, // existing file name
+	LPCWSTR NewFileName, BOOL ReplaceIfExisting,
+	PDOKAN_FILE_INFO DokanFileInfo) {
+
+	/*
+	
+	If we are case insensitive, then we need special handling if you have a situation like as follows:
+
+		files boo.txt and foo.txt already exitsts, and you do
+
+		move boo.txt FOO.TXT
+
+		In that case, we need to move boo.txt to foo.txt, then rename foo.txt to FOO.TXT
+
+		The second step (the rename) is called "repair" here.
+	*/
+
+	bool needRepair = false;
+
+	NTSTATUS status = CryptMoveFileInternal(FileName, NewFileName, ReplaceIfExisting, DokanFileInfo, needRepair, false);
+
+	if (GetContext()->IsCaseInsensitive() && status == 0 && needRepair) {
+		status = CryptMoveFileInternal(NewFileName, NewFileName, TRUE, DokanFileInfo, needRepair, true);
+	}
+
+	return status;
 }
 
 static NTSTATUS DOKAN_CALLBACK CryptLockFile(LPCWSTR FileName,
