@@ -127,7 +127,7 @@ void CaseCache::update_lru(CaseCacheNode *node)
 	}
 }
 
-bool CaseCache::store(LPCWSTR dirpath, std::list<std::wstring>& files)
+bool CaseCache::store(LPCWSTR dirpath, const std::list<std::wstring>& files)
 {
 	bool bRet = true;
 
@@ -277,16 +277,16 @@ int CaseCache::lookup(LPCWSTR path, std::wstring& result_path, bool force_not_fo
 	std::wstring file;
 
 	if (!get_dir_and_file_from_path(path, &dir, &file))
-		return false;
+		return CASE_CACHE_ERROR;
 
 	std::wstring ucdir;
 	std::wstring ucfile;
 
 	if (!touppercase(dir.c_str(), ucdir))
-		return false;
+		return CASE_CACHE_ERROR;
 
 	if (!touppercase(file.c_str(), ucfile))
-		return false;
+		return CASE_CACHE_ERROR;
 
 	lock();
 
@@ -330,6 +330,50 @@ int CaseCache::lookup(LPCWSTR path, std::wstring& result_path, bool force_not_fo
 	unlock();
 
 	return ret;
+}
+
+bool CaseCache::lookup(LPCWSTR path, std::list<std::wstring> &files)
+{
+
+	std::wstring ucdir;
+
+	bool bRet = true;
+
+	if (!touppercase(path, ucdir))
+		return false;
+
+	lock();
+
+	try {
+
+		auto it = m_map.find(ucdir);
+
+		if (it == m_map.end()) {
+			bRet = false;
+		} else {
+
+			CaseCacheNode *node = it->second;
+
+			if (!check_node_clean(node)) {
+				remove_node(it);
+				bRet = false;
+			} else {
+
+				update_lru(node);
+
+				for (auto it: node->m_files) {
+					files.push_back(it.second);
+				}
+			}
+		}
+
+	} catch (...) {
+		bRet = false;
+	}
+
+	unlock();
+
+	return bRet;
 }
 
 bool CaseCache::remove(LPCWSTR path, LPCWSTR file)
@@ -432,13 +476,9 @@ bool CaseCache::purge(LPCWSTR path)
 	return bRet;
 }
 
-// use our own callback so rest of the code doens't need to know about Dokany internals
+// use our own callback so rest of the code doesn't need to know about Dokany internals
 static int WINAPI casecache_fill_find_data(PWIN32_FIND_DATAW fdata, void * dokan_cb, void * dokan_ctx)
 {
-	std::list<std::wstring> *plist = (std::list<std::wstring> *)dokan_ctx;
-
-	plist->push_back(fdata->cFileName);
-
 	return 0;
 }
 
@@ -477,13 +517,13 @@ bool CaseCache::loaddir(LPCWSTR filepath)
 		return false;
 	}
 
-	std::list<std::wstring> list;
+	// find_files will store results in cache
 
-	if (find_files(m_con, case_dir.c_str(), enc_dir.c_str(), casecache_fill_find_data, NULL, &list) != 0) {
+	if (find_files(m_con, case_dir.c_str(), enc_dir.c_str(), casecache_fill_find_data, NULL, NULL) != 0) {
 		return false;
 	}
 
-	return store(case_dir.c_str(), list);
+	return true;
 }
 
 // when a directory is renamed, do a search and replace in the cache

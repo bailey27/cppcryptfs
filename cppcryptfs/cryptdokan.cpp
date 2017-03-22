@@ -168,10 +168,15 @@ private:
 	bool m_file_existed;  // valid only if case cache is used
 	bool m_force_case_cache_notfound;
 public:
-	LPCWSTR CorrectCasePath() { return m_correct_case_path.c_str(); };
-	bool FileExisted() { return m_file_existed; };
+	LPCWSTR CorrectCasePath() { Convert(); return m_correct_case_path.c_str(); };
+	bool FileExisted() { Convert(); return m_file_existed; };
 
 	operator const WCHAR *()
+	{
+		return Convert();
+	}
+private:
+	const WCHAR *Convert()
 	{
 	
 		if (!m_tried) {
@@ -238,6 +243,7 @@ public:
 
 		return rs;
 	};
+public:
 	FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted = NULL, bool ignorecasecache = false);
 	virtual ~FileNameEnc();
 };
@@ -955,7 +961,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileInformation(
 
 }
 
-// use our own callback so rest of the code doens't need to know about Dokany internals
+// use our own callback so rest of the code doesn't need to know about Dokany internals
 static int WINAPI crypt_fill_find_data(PWIN32_FIND_DATAW fdata, void * dokan_cb, void * dokan_ctx)
 {
 	return ((PFillFindData)dokan_cb)(fdata, (PDOKAN_FILE_INFO)dokan_ctx);
@@ -976,7 +982,7 @@ CryptFindFiles(LPCWSTR FileName,
 
 
 
-  if (find_files(GetContext(), FileName, filePath, crypt_fill_find_data, (void *)FillFindData, (void *)DokanFileInfo) != 0) {
+  if (find_files(GetContext(), filePath.CorrectCasePath(), filePath, crypt_fill_find_data, (void *)FillFindData, (void *)DokanFileInfo) != 0) {
 	  error = GetLastError();
 	  DbgPrint(L"\tFindNextFile error. Error is %u\n\n", error);
 	  return ToNtStatus(error);
