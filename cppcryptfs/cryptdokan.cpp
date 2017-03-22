@@ -1149,7 +1149,7 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 	
 	If we are case insensitive, then we need special handling if you have a situation like as follows:
 
-		files boo.txt and foo.txt already exitsts, and you do
+		files boo.txt and foo.txt already exitst, and you do
 
 		move boo.txt FOO.TXT
 
