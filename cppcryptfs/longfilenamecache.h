@@ -37,7 +37,7 @@ THE SOFTWARE.
 
 // There's no reason to have a TTL on the lfn cache entries because
 // each entry maps a 256bit sha hash to some data that it's the hash of.
-// So it's impossible for the the data to be stale.
+// So it's impossible for the data to be stale.
 
 #define LFN_CACHE_NOTTL 1
 
