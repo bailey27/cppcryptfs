@@ -845,7 +845,7 @@ get_dir_and_file_from_path(LPCWSTR path, std::wstring *dir, std::wstring *file)
 		return true;
 	}
 	
-	LPWSTR pLastSlash = wcsrchr((LPWSTR)path, '\\');
+	LPCWSTR pLastSlash = wcsrchr(path, '\\');
 
 	if (!pLastSlash) {
 		return false;
@@ -857,9 +857,8 @@ get_dir_and_file_from_path(LPCWSTR path, std::wstring *dir, std::wstring *file)
 
 	if (dir) {
 		if (pLastSlash != path) {
-			*pLastSlash = '\0';
 			*dir = path;
-			*pLastSlash = '\\';
+			*dir = dir->substr(0, pLastSlash - path);
 		} else {
 			*dir = L"\\";
 		}
