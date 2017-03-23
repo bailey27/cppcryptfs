@@ -166,6 +166,8 @@ If this option is checked, then cppcryptfs will ignore the case of file and dire
 
 See the section on "Case Sensitivity" for more information.
 
+**Defaults and Recommended**
+
 There are also two buttons "Defaults" which changes all settings to the original cppcryptfs defaults, and "Recommended" which sets
 the currently recommended settings.
 
