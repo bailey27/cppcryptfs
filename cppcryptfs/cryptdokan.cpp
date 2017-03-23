@@ -982,7 +982,7 @@ CryptFindFiles(LPCWSTR FileName,
 
 
 
-  if (find_files(GetContext(), filePath.CorrectCasePath(), filePath, crypt_fill_find_data, (void *)FillFindData, (void *)DokanFileInfo) != 0) {
+  if (find_files(GetContext(), GetContext()->IsCaseInsensitive() ? filePath.CorrectCasePath() : FileName, filePath, crypt_fill_find_data, (void *)FillFindData, (void *)DokanFileInfo) != 0) {
 	  error = GetLastError();
 	  DbgPrint(L"\tFindNextFile error. Error is %u\n\n", error);
 	  return ToNtStatus(error);
