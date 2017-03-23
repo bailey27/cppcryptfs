@@ -171,8 +171,7 @@ private:
 	bool m_force_case_cache_notfound;
 public:
 	LPCWSTR CorrectCasePath() 
-	{
-		
+	{	
 		if (m_con->IsCaseInsensitive()) {
 			Convert();
 			return m_correct_case_path.c_str();
@@ -188,72 +187,8 @@ public:
 		return Convert();
 	};
 private:
-	const WCHAR *Convert()
-	{
+	const WCHAR *Convert();
 	
-		if (!m_tried) {
-
-			m_tried = true;
-
-			try {
-				if (m_con->GetConfig()->m_reverse) {
-					if (rt_is_config_file(m_con, m_plain_path)) {
-						m_enc_path = m_con->GetConfig()->m_basedir + L"\\";
-						m_enc_path += REVERSE_CONFIG_NAME;
-					} else if (rt_is_virtual_file(m_con, m_plain_path)) {
-						std::wstring dirpath;
-						if (!get_file_directory(m_plain_path, dirpath))
-							throw(-1);
-						if (!decrypt_path(m_con, &dirpath[0], m_enc_path))
-							throw(-1);
-						m_enc_path += L"\\";
-						std::wstring filename;
-						if (!get_bare_filename(m_plain_path, filename))
-							throw(-1);
-						m_enc_path += filename;
-					} else {
-						if (!decrypt_path(m_con, m_plain_path, m_enc_path)) {
-							throw(-1);
-						}
-					}
-				} else {
-					
-					LPCWSTR plain_path = m_plain_path;
-					int cache_status = CASE_CACHE_NOTUSED;
-					if (m_con->IsCaseInsensitive()) {
-						cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_notfound);
-						if (cache_status == CASE_CACHE_FOUND || cache_status == CASE_CACHE_NOT_FOUND) {
-							m_file_existed = cache_status == CASE_CACHE_FOUND;
-							plain_path = m_correct_case_path.c_str();
-						} else if (cache_status == CASE_CACHE_MISS) {
-							if (m_con->m_case_cache.load_dir(m_plain_path)) {
-								cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_notfound);
-								if (cache_status == CASE_CACHE_FOUND || cache_status == CASE_CACHE_NOT_FOUND) {
-									m_file_existed = cache_status == CASE_CACHE_FOUND;
-									plain_path = m_correct_case_path.c_str();
-								} 
-							}
-						}
-					}
-					if (!encrypt_path(m_con, plain_path, m_enc_path, m_actual_encrypted)) {
-						throw(-1);
-					}			
-				}
-			} catch (...) {
-				m_failed = true;
-			}
-		}
-
-		const WCHAR *rs = !m_failed ? &m_enc_path[0] : NULL;
-
-		if (rs) {
-			DbgPrint(L"\tconverted filename %s => %s\n", m_plain_path, rs);
-		} else {
-			DbgPrint(L"\terror converting filename %s\n", m_plain_path);
-		}
-
-		return rs;
-	};
 public:
 	FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted = NULL, bool ignorecasecache = false);
 	virtual ~FileNameEnc();
@@ -273,6 +208,73 @@ FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *act
 FileNameEnc::~FileNameEnc()
 {
 
+}
+
+const WCHAR *FileNameEnc::Convert()
+{
+
+	if (!m_tried) {
+
+		m_tried = true;
+
+		try {
+			if (m_con->GetConfig()->m_reverse) {
+				if (rt_is_config_file(m_con, m_plain_path)) {
+					m_enc_path = m_con->GetConfig()->m_basedir + L"\\";
+					m_enc_path += REVERSE_CONFIG_NAME;
+				} else if (rt_is_virtual_file(m_con, m_plain_path)) {
+					std::wstring dirpath;
+					if (!get_file_directory(m_plain_path, dirpath))
+						throw(-1);
+					if (!decrypt_path(m_con, &dirpath[0], m_enc_path))
+						throw(-1);
+					m_enc_path += L"\\";
+					std::wstring filename;
+					if (!get_bare_filename(m_plain_path, filename))
+						throw(-1);
+					m_enc_path += filename;
+				} else {
+					if (!decrypt_path(m_con, m_plain_path, m_enc_path)) {
+						throw(-1);
+					}
+				}
+			} else {
+
+				LPCWSTR plain_path = m_plain_path;
+				int cache_status = CASE_CACHE_NOTUSED;
+				if (m_con->IsCaseInsensitive()) {
+					cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_notfound);
+					if (cache_status == CASE_CACHE_FOUND || cache_status == CASE_CACHE_NOT_FOUND) {
+						m_file_existed = cache_status == CASE_CACHE_FOUND;
+						plain_path = m_correct_case_path.c_str();
+					} else if (cache_status == CASE_CACHE_MISS) {
+						if (m_con->m_case_cache.load_dir(m_plain_path)) {
+							cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_notfound);
+							if (cache_status == CASE_CACHE_FOUND || cache_status == CASE_CACHE_NOT_FOUND) {
+								m_file_existed = cache_status == CASE_CACHE_FOUND;
+								plain_path = m_correct_case_path.c_str();
+							} 
+						}
+					}
+				}
+				if (!encrypt_path(m_con, plain_path, m_enc_path, m_actual_encrypted)) {
+					throw(-1);
+				}			
+			}
+		} catch (...) {
+			m_failed = true;
+		}
+	}
+
+	const WCHAR *rs = !m_failed ? &m_enc_path[0] : NULL;
+
+	if (rs) {
+		DbgPrint(L"\tconverted filename %s => %s\n", m_plain_path, rs);
+	} else {
+		DbgPrint(L"\terror converting filename %s\n", m_plain_path);
+	}
+
+	return rs;
 }
 
 
