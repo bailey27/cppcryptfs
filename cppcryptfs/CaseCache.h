@@ -81,7 +81,6 @@ public:
 	bool store(LPCWSTR dirpath, LPCWSTR file);
 	bool store(LPCWSTR filepath);
 	int lookup(LPCWSTR path, std::wstring& result_path, bool force_not_found = false);
-	bool lookup(LPCWSTR path, std::list<std::wstring>& files);
 	bool remove(LPCWSTR path, LPCWSTR file);
 	bool remove(LPCWSTR path);
 	bool purge(LPCWSTR path);

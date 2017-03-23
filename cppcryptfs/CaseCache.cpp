@@ -350,50 +350,6 @@ int CaseCache::lookup(LPCWSTR path, std::wstring& result_path, bool force_not_fo
 	return ret;
 }
 
-bool CaseCache::lookup(LPCWSTR path, std::list<std::wstring> &files)
-{
-
-	std::wstring ucdir;
-
-	bool bRet = true;
-
-	if (!touppercase(path, ucdir))
-		return false;
-
-	lock();
-
-	try {
-
-		auto it = m_map.find(ucdir);
-
-		if (it == m_map.end()) {
-			bRet = false;
-		} else {
-
-			CaseCacheNode *node = it->second;
-
-			if (!check_node_clean(node)) {
-				remove_node(it);
-				bRet = false;
-			} else {
-
-				update_lru(node);
-
-				for (auto it: node->m_files) {
-					files.push_back(it.second);
-				}
-			}
-		}
-
-	} catch (...) {
-		bRet = false;
-	}
-
-	unlock();
-
-	return bRet;
-}
-
 bool CaseCache::remove(LPCWSTR path, LPCWSTR file)
 {
 	std::wstring ucdir;
