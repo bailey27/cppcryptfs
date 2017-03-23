@@ -41,7 +41,7 @@ THE SOFTWARE.
 
 	Then the (correct-case) path is encrypted before use.
 
-	When a directory is renamed, then all the paths that contain it must be modified.
+	When a directory is renamed, then all the paths in the cache that contain it must be modified.
 
 	The information is stored per-directory.  A whole directory is either present or not present.
 
