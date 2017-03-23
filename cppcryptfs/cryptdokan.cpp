@@ -170,7 +170,8 @@ private:
 	bool m_file_existed;  // valid only if case cache is used
 	bool m_force_case_cache_notfound;
 public:
-	LPCWSTR CorrectCasePath() {
+	LPCWSTR CorrectCasePath() 
+	{
 		
 		if (m_con->IsCaseInsensitive()) {
 			Convert();
@@ -180,12 +181,12 @@ public:
 		}
 	};
 
-	bool FileExisted() { assert(m_con->IsCaseInsensitive());  Convert(); return m_file_existed; };
+	bool FileExisted() { _ASSERT(m_con->IsCaseInsensitive());  Convert(); return m_file_existed; };
 
 	operator const WCHAR *()
 	{
 		return Convert();
-	}
+	};
 private:
 	const WCHAR *Convert()
 	{
@@ -238,8 +239,7 @@ private:
 						throw(-1);
 					}			
 				}
-			} 
-			catch (...) {
+			} catch (...) {
 				m_failed = true;
 			}
 		}
