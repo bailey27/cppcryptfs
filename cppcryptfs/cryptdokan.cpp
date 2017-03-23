@@ -65,6 +65,8 @@ THE SOFTWARE.
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
 
+#include <assert.h>
+
 #include "cryptfilename.h"
 #include "cryptconfig.h"
 #include "cryptcontext.h"
@@ -168,8 +170,17 @@ private:
 	bool m_file_existed;  // valid only if case cache is used
 	bool m_force_case_cache_notfound;
 public:
-	LPCWSTR CorrectCasePath() { Convert(); return m_correct_case_path.c_str(); };
-	bool FileExisted() { Convert(); return m_file_existed; };
+	LPCWSTR CorrectCasePath() {
+		
+		if (m_con->IsCaseInsensitive()) {
+			Convert();
+			return m_correct_case_path.c_str();
+		} else {
+			return m_plain_path;
+		}
+	};
+
+	bool FileExisted() { assert(m_con->IsCaseInsensitive());  Convert(); return m_file_existed; };
 
 	operator const WCHAR *()
 	{
@@ -982,7 +993,7 @@ CryptFindFiles(LPCWSTR FileName,
 
 
 
-  if (find_files(GetContext(), GetContext()->IsCaseInsensitive() ? filePath.CorrectCasePath() : FileName, filePath, crypt_fill_find_data, (void *)FillFindData, (void *)DokanFileInfo) != 0) {
+  if (find_files(GetContext(), filePath.CorrectCasePath(), filePath, crypt_fill_find_data, (void *)FillFindData, (void *)DokanFileInfo) != 0) {
 	  error = GetLastError();
 	  DbgPrint(L"\tFindNextFile error. Error is %u\n\n", error);
 	  return ToNtStatus(error);
