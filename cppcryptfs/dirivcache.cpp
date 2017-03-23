@@ -46,7 +46,7 @@ THE SOFTWARE.
 DirIvCacheNode::DirIvCacheNode()
 {
 	m_key = NULL;
-	m_timestap = 0;
+	m_timestamp = 0;
 	m_last_write_time = { 0 , 0 };
 }
 
@@ -61,7 +61,7 @@ DirIvCache::DirIvCache()
 
 	m_lookups = 0;
 	m_hits = 0;
-
+	m_ttl = 0;
 	m_map.reserve(DIR_IV_CACHE_ENTRIES);
 
 	InitializeCriticalSection(&m_crit);
@@ -101,7 +101,7 @@ void DirIvCache::unlock()
 bool DirIvCache::check_node_clean(DirIvCacheNode *node, const std::wstring& path)
 {
 
-	if (GetTickCount64() - node->m_timestap < DIR_IV_CACHE_TTL)
+	if (!m_ttl || (GetTickCount64() - node->m_timestamp < m_ttl))
 		return true;
 
 	std::wstring filepath = path;
@@ -109,7 +109,7 @@ bool DirIvCache::check_node_clean(DirIvCacheNode *node, const std::wstring& path
 	// already normalized with trailing slash
 	filepath += DIR_IV_NAME;
 
-	HANDLE hFile = CreateFile(&filepath[0], GENERIC_READ, FILE_SHARE_READ, NULL,
+	HANDLE hFile = CreateFile(&filepath[0], FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
 		OPEN_EXISTING, 0, NULL);
 
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -124,15 +124,27 @@ bool DirIvCache::check_node_clean(DirIvCacheNode *node, const std::wstring& path
 	if (!bResult)
 		return false;
 
-	bResult = !memcmp(&node->m_last_write_time, &LastWriteTime, sizeof(FILETIME));
+	bResult = CompareFileTime(&node->m_last_write_time, &LastWriteTime) >= 0;
 
-	if (bResult)
-		node->m_timestap = GetTickCount64();
-
-	return bResult != 0;
+	if (bResult) {
+		node->m_timestamp = GetTickCount64();
+		return true;
+	} else {
+		return false;
+	}
 }
 
+void DirIvCache::update_lru(DirIvCacheNode *node)
+{
+	// if node isn't already at front of list, remove
+	// it from wherever it was and put it at the front
 
+	if (node->m_list_it != m_lru_list.begin()) {
+		m_lru_list.erase(node->m_list_it);
+		m_lru_list.push_front(node);
+		node->m_list_it = m_lru_list.begin();
+	}
+}
 
 bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 {
@@ -162,14 +174,7 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 
 			memcpy(dir_iv, node->m_dir_iv, DIR_IV_LEN);
 
-			// if node isn't already at front of list, remove
-			// it from wherever it was and put it at the front
-
-			if (node->m_list_it != m_lru_list.begin()) {
-				m_lru_list.erase(node->m_list_it);
-				m_lru_list.push_front(node);
-				node->m_list_it = m_lru_list.begin();
-			}
+			update_lru(node);
 			found = true;
 			m_hits++;
 
@@ -245,15 +250,18 @@ bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv, const FILETIME
 
 			node->m_key = &mp.first->first;
 			memcpy(node->m_dir_iv, dir_iv, DIR_IV_LEN);
-			node->m_timestap = GetTickCount64();
+			node->m_timestamp = GetTickCount64();
 			node->m_last_write_time = last_write_time;
 			node->m_list_it = m_lru_list.insert(m_lru_list.begin(), node);
 			
 		} else {
 			// copy dir_iv to node at that path (key)
 			memcpy(mp.first->second->m_dir_iv, dir_iv, DIR_IV_LEN);
-			mp.first->second->m_timestap = GetTickCount64();
+			mp.first->second->m_timestamp = GetTickCount64();
 			mp.first->second->m_last_write_time = last_write_time;
+
+			update_lru(mp.first->second);
+			
 		}
 		
 

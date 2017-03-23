@@ -28,38 +28,14 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "CryptPropertyPage.h"
+#define PER_FILESYSTEM_THREADS_DEFAULT 1
+#define PER_FILESYSTEM_THREADS_RECOMMENDED 0
 
-// CSettingsPropertyPage dialog
+#define BUFFERBLOCKS_DEFAULT 1
+#define BUFFERBLOCKS_RECOMMENDED 16
 
-class CSettingsPropertyPage : public CCryptPropertyPage
-{
-	DECLARE_DYNAMIC(CSettingsPropertyPage)
+#define CACHETTL_DEFAULT 1
+#define CACHETTL_RECOMMENDED 10
 
-public:
-
-	bool m_bCaseInsensitive;
-
-	CSettingsPropertyPage();
-	virtual ~CSettingsPropertyPage();
-
-// Dialog Data
-#ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_SETTINGS };
-#endif
-protected:
-	BOOL SetControls(int nThreads, int nBufferBlocks, int nCacheTTL, bool bCaseInsensitive);
-	void SaveSettings();
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
-	DECLARE_MESSAGE_MAP()
-public:
-	virtual BOOL OnInitDialog();
-	afx_msg void OnSelchangeThreads();
-	afx_msg void OnSelchangeBuffersize();
-	afx_msg void OnBnClickedCaseinsensitive();
-	afx_msg void OnCbnSelchangeCachettl();
-	afx_msg void OnBnClickedDefaults();
-	afx_msg void OnBnClickedRecommended();
-};
+#define CASEINSENSITIVE_DEFAULT 0
+#define CASEINSENSITIVE_RECOMMENDED 1

@@ -76,8 +76,10 @@ bool
 delete_directory(CryptContext *con, LPCWSTR path);
 
 bool
-delete_file(const CryptContext *con, const WCHAR *filename);
+delete_file(const CryptContext *con, const WCHAR *filename, bool cleanup_longname_file_only = false);
 
 bool
 read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset);
 
+bool
+get_dir_and_file_from_path(LPCWSTR path, std::wstring *dir, std::wstring *file);

@@ -562,3 +562,41 @@ GetProductVersionInfo(std::wstring& strProductName, std::wstring& strProductVers
 		return false;
 	}
 }
+
+
+bool touppercase(LPCWSTR in, std::wstring& out)
+{
+	WCHAR sbuf[256];
+	WCHAR *hbuf = NULL;
+	WCHAR *buf;
+
+	bool bRet = true;
+
+	try {
+
+		size_t len = wcslen(in);
+
+		if (len < sizeof(sbuf) / sizeof(sbuf[0])) {
+			buf = sbuf;
+		} else {
+
+			hbuf = new WCHAR[len + 1];
+
+			buf = hbuf;
+		}
+
+		lstrcpy(buf, in);
+
+		CharUpperBuff(buf, (DWORD)len);
+
+		out = buf;
+
+	} catch (...) {
+		bRet = false;
+	}
+
+	if (hbuf)
+		delete[] hbuf;
+
+	return bRet;
+}

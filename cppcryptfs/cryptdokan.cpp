@@ -159,15 +159,24 @@ void DbgPrint(LPCWSTR format, ...) {
 class FileNameEnc {
 private:
 	std::wstring m_enc_path;
+	std::wstring m_correct_case_path;
 	std::string *m_actual_encrypted;
 	const WCHAR *m_plain_path;
 	CryptContext *m_con;
 	bool m_tried;
 	bool m_failed;
-	
-
+	bool m_file_existed;  // valid only if case cache is used
+	bool m_force_case_cache_notfound;
 public:
+	LPCWSTR CorrectCasePath() { Convert(); return m_correct_case_path.c_str(); };
+	bool FileExisted() { Convert(); return m_file_existed; };
+
 	operator const WCHAR *()
+	{
+		return Convert();
+	}
+private:
+	const WCHAR *Convert()
 	{
 	
 		if (!m_tried) {
@@ -196,9 +205,27 @@ public:
 						}
 					}
 				} else {
-					if (!encrypt_path(m_con, m_plain_path, m_enc_path, m_actual_encrypted)) {
-						throw(-1);
+					
+					LPCWSTR plain_path = m_plain_path;
+					int cache_status = CASE_CACHE_NOTUSED;
+					if (m_con->IsCaseInsensitive()) {
+						cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_notfound);
+						if (cache_status == CASE_CACHE_FOUND || cache_status == CASE_CACHE_NOT_FOUND) {
+							m_file_existed = cache_status == CASE_CACHE_FOUND;
+							plain_path = m_correct_case_path.c_str();
+						} else if (cache_status == CASE_CACHE_MISS) {
+							if (m_con->m_case_cache.load_dir(m_plain_path)) {
+								cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_notfound);
+								if (cache_status == CASE_CACHE_FOUND || cache_status == CASE_CACHE_NOT_FOUND) {
+									m_file_existed = cache_status == CASE_CACHE_FOUND;
+									plain_path = m_correct_case_path.c_str();
+								} 
+							}
+						}
 					}
+					if (!encrypt_path(m_con, plain_path, m_enc_path, m_actual_encrypted)) {
+						throw(-1);
+					}			
 				}
 			} 
 			catch (...) {
@@ -216,17 +243,20 @@ public:
 
 		return rs;
 	};
-	FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted = NULL);
+public:
+	FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted = NULL, bool ignorecasecache = false);
 	virtual ~FileNameEnc();
 };
 
-FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted)
+FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted, bool forceCaseCacheNotFound)
 {
 	m_con = con;
 	m_plain_path = fname;
 	m_actual_encrypted = actual_encrypted;
 	m_tried = false;
 	m_failed = false;
+	m_file_existed = false;
+	m_force_case_cache_notfound = forceCaseCacheNotFound;
 }
 
 FileNameEnc::~FileNameEnc()
@@ -350,11 +380,14 @@ static BOOL AddSeSecurityNamePrivilege() {
 
 #define GetContext() ((CryptContext*)DokanFileInfo->DokanOptions->GlobalContext)
 
+
 static NTSTATUS DOKAN_CALLBACK
 CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
                  ACCESS_MASK DesiredAccess, ULONG FileAttributes,
                  ULONG ShareAccess, ULONG CreateDisposition,
                  ULONG CreateOptions, PDOKAN_FILE_INFO DokanFileInfo) {
+
+
   std::string actual_encrypted;
   FileNameEnc filePath(GetContext(), FileName, &actual_encrypted);
   HANDLE handle = NULL;
@@ -531,6 +564,16 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 				  RemoveDirectory(filePath);
 			  }
 		  }
+
+		  if (GetContext()->IsCaseInsensitive()) {
+			  std::list<std::wstring> files;
+			  if (wcscmp(FileName, L"\\")) {
+				  files.push_front(L"..");
+				  files.push_front(L".");
+			  }
+			  GetContext()->m_case_cache.store(filePath.CorrectCasePath(), files);
+		  }
+
 	  }
     } else if (creationDisposition == OPEN_ALWAYS) {
 
@@ -557,6 +600,15 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 				  status = ToNtStatus(error);
 				  RemoveDirectory(filePath);
 			  }
+		  }
+
+		  if (GetContext()->IsCaseInsensitive()) {
+			  std::list<std::wstring> files;
+			  if (wcscmp(FileName, L"\\")) {
+				  files.push_front(L"..");
+				  files.push_front(L".");
+			  }
+			  GetContext()->m_case_cache.store(filePath.CorrectCasePath(), files);
 		  }
 	  }
     }
@@ -590,9 +642,13 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
 	  if (fileAttr != INVALID_FILE_ATTRIBUTES &&
 		  (fileAttr & FILE_ATTRIBUTE_DIRECTORY) &&
-		  CreateDisposition == FILE_CREATE) 
+		  CreateDisposition == FILE_CREATE) {
+		  if (GetContext()->IsCaseInsensitive() && handle != INVALID_HANDLE_VALUE && !filePath.FileExisted()) {
+			  GetContext()->m_case_cache.store(filePath.CorrectCasePath());
+		  }
 		  return STATUS_OBJECT_NAME_COLLISION; // File already exist because
 											   // GetFileAttributes found it
+	  }
 
 	  if (is_virtual) {
 		  SetLastError(0);
@@ -637,6 +693,9 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
           DbgPrint(L"\tOpen an already existing file\n");
 		  // Open succeed but we need to inform the driver
 		  // that the file open and not created by returning STATUS_OBJECT_NAME_COLLISION
+		  if (GetContext()->IsCaseInsensitive() && handle != INVALID_HANDLE_VALUE && !filePath.FileExisted()) {
+			  GetContext()->m_case_cache.store(filePath.CorrectCasePath());
+		  }
 		  return STATUS_OBJECT_NAME_COLLISION;
         }
       }
@@ -644,6 +703,9 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   }
   DbgPrint(L"handle = %I64x", (ULONGLONG)handle);
   DbgPrint(L"\n");
+  if (GetContext()->IsCaseInsensitive() && handle != INVALID_HANDLE_VALUE && !filePath.FileExisted()) {
+	  GetContext()->m_case_cache.store(filePath.CorrectCasePath());
+  }
   return status;
 }
 
@@ -680,6 +742,11 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
         if (!delete_directory(GetContext(), filePath)) {
           DbgPrint(L"error code = %d\n\n", GetLastError());
         } else {
+		  if (GetContext()->IsCaseInsensitive()) {
+			  if (!GetContext()->m_case_cache.purge(FileName)) {
+				  DbgPrint(L"delete failed to purge dir %s\n", FileName);
+			  }
+		  }
           DbgPrint(L"success\n\n");
         }
       } else {
@@ -687,6 +754,11 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
         if (!delete_file(GetContext(), filePath)) {
           DbgPrint(L" error code = %d\n\n", GetLastError());
         } else {
+		  if (GetContext()->IsCaseInsensitive()) {
+			  if (!GetContext()->m_case_cache.remove(filePath.CorrectCasePath())) {
+				  DbgPrint(L"delete failed to remove %s from case cache\n", FileName);
+			  }
+		  }
           DbgPrint(L"success\n\n");
         }
       }
@@ -889,7 +961,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileInformation(
 
 }
 
-// use our own callback so rest of the code doens't need to know about Dokany internals
+// use our own callback so rest of the code doesn't need to know about Dokany internals
 static int WINAPI crypt_fill_find_data(PWIN32_FIND_DATAW fdata, void * dokan_cb, void * dokan_ctx)
 {
 	return ((PFillFindData)dokan_cb)(fdata, (PDOKAN_FILE_INFO)dokan_ctx);
@@ -910,7 +982,7 @@ CryptFindFiles(LPCWSTR FileName,
 
 
 
-  if (find_files(GetContext(), FileName, filePath, crypt_fill_find_data, (void *)FillFindData, (void *)DokanFileInfo) != 0) {
+  if (find_files(GetContext(), filePath.CorrectCasePath(), filePath, crypt_fill_find_data, (void *)FillFindData, (void *)DokanFileInfo) != 0) {
 	  error = GetLastError();
 	  DbgPrint(L"\tFindNextFile error. Error is %u\n\n", error);
 	  return ToNtStatus(error);
@@ -964,14 +1036,18 @@ CryptDeleteDirectory(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
 
 }
 
-static NTSTATUS DOKAN_CALLBACK
-CryptMoveFile(LPCWSTR FileName, // existing file name
+// see comment in CryptMoveFile() about what the repair stuff is for
+
+static NTSTATUS
+CryptMoveFileInternal(LPCWSTR FileName, // existing file name
                LPCWSTR NewFileName, BOOL ReplaceIfExisting,
-               PDOKAN_FILE_INFO DokanFileInfo) {
+               PDOKAN_FILE_INFO DokanFileInfo, bool& needRepair, bool repairName) {
+
+  needRepair = false;
 
   std::string actual_encrypted;
   FileNameEnc filePath(GetContext(), FileName);
-  FileNameEnc newFilePath(GetContext(), NewFileName, &actual_encrypted);
+  FileNameEnc newFilePath(GetContext(), NewFileName, &actual_encrypted, repairName);
 
   DbgPrint(L"MoveFile %s -> %s\n\n", FileName, NewFileName);
 
@@ -1024,8 +1100,26 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 	  DbgPrint(L"\tMoveFile failed status = %d, code = %d\n", result, error);
 	  return ToNtStatus(error);
   } else {
+
+	  if (GetContext()->IsCaseInsensitive() && !repairName) {
+
+		  if (newFilePath.FileExisted()) {
+			  std::wstring existing_file_name;
+			  std::wstring new_file_name;
+
+			  if (get_dir_and_file_from_path(newFilePath.CorrectCasePath(), NULL, &existing_file_name) &&
+					get_dir_and_file_from_path(NewFileName, NULL, &new_file_name)) {
+					if (wcscmp(existing_file_name.c_str(), new_file_name.c_str())) {
+						needRepair = true;
+					} 
+			  } else {
+				  DbgPrint(L"movefile get_dir_and_filename failed\n");
+			  }
+		  }
+	  }
+
 	  // clean up any longname
-	  if (!delete_file(GetContext(), filePath)) {
+	  if (!delete_file(GetContext(), filePath, true)) {
 		  DWORD error = GetLastError();
 		  DbgPrint(L"\tMoveFile failed code = %d\n", error);
 		  return ToNtStatus(error);
@@ -1038,8 +1132,49 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 			  return ToNtStatus(error);
 		  }
 	  }
+
+	  if (GetContext()->IsCaseInsensitive()) {
+		  GetContext()->m_case_cache.remove(filePath.CorrectCasePath());
+		  if (!GetContext()->m_case_cache.store(newFilePath.CorrectCasePath())) {
+			  DbgPrint(L"move unable to store new filename %s in case cache\n", newFilePath.CorrectCasePath());
+		  }
+		  if (DokanFileInfo->IsDirectory) {
+			  if (!GetContext()->m_case_cache.rename(filePath.CorrectCasePath(), newFilePath.CorrectCasePath())) {
+				  DbgPrint(L"move unable to rename directory %s -> %s in case cache\n", filePath.CorrectCasePath(), newFilePath.CorrectCasePath());
+			  }
+		  }
+	  }
       return STATUS_SUCCESS;
   }
+}
+
+static NTSTATUS DOKAN_CALLBACK
+CryptMoveFile(LPCWSTR FileName, // existing file name
+	LPCWSTR NewFileName, BOOL ReplaceIfExisting,
+	PDOKAN_FILE_INFO DokanFileInfo) {
+
+	/*
+	
+	If we are case insensitive, then we need special handling if you have a situation like as follows:
+
+		files boo.txt and foo.txt already exitst, and you do
+
+		move boo.txt FOO.TXT
+
+		In that case, we need to move boo.txt to foo.txt, then rename foo.txt to FOO.TXT
+
+		The second step (the rename) is called "repair" here.
+	*/
+
+	bool needRepair = false;
+
+	NTSTATUS status = CryptMoveFileInternal(FileName, NewFileName, ReplaceIfExisting, DokanFileInfo, needRepair, false);
+
+	if (GetContext()->IsCaseInsensitive() && status == 0 && needRepair) {
+		status = CryptMoveFileInternal(NewFileName, NewFileName, TRUE, DokanFileInfo, needRepair, true);
+	}
+
+	return status;
 }
 
 static NTSTATUS DOKAN_CALLBACK CryptLockFile(LPCWSTR FileName,
@@ -1548,7 +1683,7 @@ static DWORD WINAPI CryptThreadProc(
 }
 
 
-int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes, bool readonly, int nThreads, int nBufferBlocks) 
+int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes, bool readonly, int nThreads, int nBufferBlocks, int cachettl, bool caseinsensitve) 
 {
 
 	if (driveletter < 'A' || driveletter > 'Z') {
@@ -1628,6 +1763,11 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 		CryptContext *con = &tdata->con;
 
 		con->m_bufferblocks = min(256, max(1, nBufferBlocks));
+
+		con->m_dir_iv_cache.SetTTL(cachettl);
+		con->m_case_cache.SetTTL(cachettl);
+
+		con->SetCaseSensitive(caseinsensitve);
 
 		CryptConfig *config = con->GetConfig();
 

@@ -294,6 +294,8 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 
 	bool plaintext_names = con->GetConfig()->m_PlaintextNames;
 
+	std::list<std::wstring> files; // used only if case-insensitive
+
 	try {
 
 		std::wstring enc_path_search = path;
@@ -348,6 +350,9 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 				fdata.nFileSizeLow = (DWORD)actual_encrypted.length();
 				fillData(&fdata, dokan_cb, dokan_ctx);
 			}
+			if (con->IsCaseInsensitive()) {
+				files.push_back(fdata.cFileName);
+			}
 		} while (FindNextFile(hfind, &fdata));
 
 		DWORD err = GetLastError();
@@ -375,6 +380,9 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 
 	if (hfind != INVALID_HANDLE_VALUE)
 		FindClose(hfind);
+
+	if (ret == 0 && con->IsCaseInsensitive())
+		con->m_case_cache.store(pt_path, files);
 
 	return ret;
 }
@@ -798,9 +806,9 @@ delete_directory(CryptContext *con, LPCWSTR path)
 	return bret;
 }
 
-bool delete_file(const CryptContext *con, const WCHAR *filename)
+bool delete_file(const CryptContext *con, const WCHAR *filename, bool cleanup_longname_file_only)
 {
-	if (PathFileExists(filename)) {
+	if (!cleanup_longname_file_only && PathFileExists(filename)) {
 		if (!DeleteFile(filename))
 			return false;
 	}
@@ -825,4 +833,37 @@ bool delete_file(const CryptContext *con, const WCHAR *filename)
 
 }
 
+bool
+get_dir_and_file_from_path(LPCWSTR path, std::wstring *dir, std::wstring *file)
+{
 
+	if (!wcscmp(path, L"\\")) {
+		if (dir)
+			*dir = L"\\";
+		if (file)
+			*file = L"";
+		return true;
+	}
+	
+	LPWSTR pLastSlash = wcsrchr((LPWSTR)path, '\\');
+
+	if (!pLastSlash) {
+		return false;
+	}
+
+	if (file) {
+		*file = pLastSlash + 1;
+	}
+
+	if (dir) {
+		if (pLastSlash != path) {
+			*pLastSlash = '\0';
+			*dir = path;
+			*pLastSlash = '\\';
+		} else {
+			*dir = L"\\";
+		}
+	}
+
+	return true;
+}

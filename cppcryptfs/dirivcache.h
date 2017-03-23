@@ -40,7 +40,7 @@ public:
 	const std::wstring *m_key;
 	unsigned char m_dir_iv[DIR_IV_LEN];
 	std::list<DirIvCacheNode*>::iterator m_list_it;  // holds position in lru list
-	ULONGLONG m_timestap; // milliseconds
+	ULONGLONG m_timestamp; // milliseconds
 	FILETIME m_last_write_time;
 	DirIvCacheNode();
 	virtual ~DirIvCacheNode();
@@ -49,12 +49,12 @@ public:
 
 #define DIR_IV_CACHE_ENTRIES 100
 
-#define DIR_IV_CACHE_TTL 1000 // milliseconds
 
 class DirIvCache {
 
 private:
 
+	ULONGLONG m_ttl;
 
 	std::unordered_map<std::wstring, DirIvCacheNode*> m_map;
 
@@ -73,11 +73,13 @@ private:
 	void unlock();
 
 	bool check_node_clean(DirIvCacheNode *node, const std::wstring& path);
-
+	void update_lru(DirIvCacheNode *node);
 public:
 	DirIvCache();
 
 	virtual ~DirIvCache();
+
+	void SetTTL(int nSecs) { m_ttl = (ULONGLONG)nSecs * 1000; };
 
 	bool lookup(LPCWSTR path, unsigned char *dir_iv);
 
