@@ -120,7 +120,7 @@ Changing values on the settings tab affects all filesystems that are subsequentl
 
 The settings tab has the following setings:
 
-**Per-filesystem threads:**
+**Per-filesystem threads**
 
 Early in cppycryptfs' development, Dokany (then version 0.9) had a problem if multiple threads were used to service requests on a single filesystem.
 
@@ -132,7 +132,7 @@ Using more than one thread for each filesystem may result in improved performanc
 
 The default number of per-filesystem threads is still 1.  Using "Dokany default" will cause Dokany to choose an appropriate number of threads.  It currently uses five threads.
 
-**I/O buffer size (KB):**
+**I/O buffer size (KB)**
 
 This setting controls the maximum size of reads and writes that cppcryptfs does on the underlying fileystem.
 
@@ -142,7 +142,7 @@ Increasing the I/O buffer size may result in improved performance, especially wh
 
 The default is the original 4KB size.  When this size is used, the code paths are almost exactly the same as they were before the I/O buffer size setting was added.
 
-**Cache time to live:**
+**Cache time to live**
 
 cppcryptfs caches information about the filesystem.  If an entry in a cache is older than the time to live, then that entry
 is re-validated before it is used.
@@ -156,7 +156,7 @@ if the filesystem is modified on the other machine.
 If you are not syncing the filesystem between two concurrently running instances of cppcryptfs/gocryptfs, then there is no
 reason to not set the cache time to live to a high value or to infinite.
 
-**Case insensitive:**
+**Case insensitive**
 
 This option has effect only in forward mode and only when encrypted filenames are used.
 
