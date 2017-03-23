@@ -214,7 +214,7 @@ private:
 							m_file_existed = cache_status == CASE_CACHE_FOUND;
 							plain_path = m_correct_case_path.c_str();
 						} else if (cache_status == CASE_CACHE_MISS) {
-							if (m_con->m_case_cache.loaddir(m_plain_path)) {
+							if (m_con->m_case_cache.load_dir(m_plain_path)) {
 								cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_notfound);
 								if (cache_status == CASE_CACHE_FOUND || cache_status == CASE_CACHE_NOT_FOUND) {
 									m_file_existed = cache_status == CASE_CACHE_FOUND;

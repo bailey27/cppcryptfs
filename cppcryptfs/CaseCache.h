@@ -88,7 +88,7 @@ public:
 	bool rename(LPCWSTR oldpath, LPCWSTR newpath);
 
 	// used to load dir into cache if there is a miss
-	bool loaddir(LPCWSTR filepath);
+	bool load_dir(LPCWSTR filepath);
 
 	CaseCache();
 	virtual ~CaseCache();

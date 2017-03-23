@@ -496,7 +496,7 @@ static int WINAPI casecache_fill_find_data(PWIN32_FIND_DATAW fdata, void * dokan
 	return 0;
 }
 
-bool CaseCache::loaddir(LPCWSTR filepath)
+bool CaseCache::load_dir(LPCWSTR filepath)
 {
 
 	if (!m_con->IsCaseInsensitive())
@@ -516,7 +516,7 @@ bool CaseCache::loaddir(LPCWSTR filepath)
 		return false;
 
 	if (status == CASE_CACHE_MISS) {
-		if (!loaddir(dir.c_str()))
+		if (!load_dir(dir.c_str()))
 			return false;
 
 		status = lookup(dir.c_str(), case_dir);
