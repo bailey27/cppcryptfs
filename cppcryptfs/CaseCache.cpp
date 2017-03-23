@@ -224,18 +224,19 @@ bool CaseCache::store(LPCWSTR dirpath, LPCWSTR file)
 		auto it = m_map.find(key);
 
 		if (it == m_map.end()) {
-			throw(-1);
+			bRet = false;
+		} else {
+
+			CaseCacheNode *node = it->second;
+
+			std::wstring ucfile;
+
+			if (!touppercase(file, ucfile)) {
+				throw(-1);
+			}
+
+			node->m_files.insert_or_assign(ucfile, file);
 		}
-
-		CaseCacheNode *node = it->second;
-
-		std::wstring ucfile;
-
-		if (!touppercase(file, ucfile)) {
-			throw(-1);
-		}
-
-		node->m_files.insert_or_assign(ucfile, file);
 
 	} catch (...) {
 		bRet = false;
@@ -392,18 +393,18 @@ bool CaseCache::remove(LPCWSTR path, LPCWSTR file)
 		auto it = m_map.find(ucdir);
 
 		if (it == m_map.end()) {
-			throw(-1);
+			bRet = false;
+		} else {
+			CaseCacheNode *node = it->second;
+
+			auto nit = node->m_files.find(ucfile);
+
+			if (nit == node->m_files.end()) {
+				bRet = false;
+			} else {
+				node->m_files.erase(nit);
+			}
 		}
-
-		CaseCacheNode *node = it->second;
-
-		auto nit = node->m_files.find(ucfile);
-
-		if (nit == node->m_files.end()) {
-			throw(-1);
-		}
-
-		node->m_files.erase(nit);
 	
 	} catch (...) {
 		bRet = false;
@@ -455,11 +456,10 @@ bool CaseCache::purge(LPCWSTR path)
 		auto it = m_map.find(ucpath);
 
 		if (it == m_map.end()) {
-			throw(-1);
+			bRet = false;
+		} else {
+			remove_node(it);
 		}
-
-		remove_node(it);
-
 	} catch (...) {
 		bRet = false;
 	}
