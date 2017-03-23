@@ -26,6 +26,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* 
+
+	When we are in case-insensitive mode, the case cache is used as follows:
+
+	Input paths are converted to all uppercase.  
+
+	The uppercase directory part of the path is used as the key to look up in the case cache.  
+
+	If the directory is found, then the uppercase filename is used to lookup in the map of filenames
+	for that directory.  Then the proper case path is returned.  If the file is not found,
+	then the filename as passed by the caller is appeneded to the correct-case
+	directory path.
+
+	Then the (correct-case) path is encrypted before use.
+
+	When a directory is renamed, then all the paths that contain it must be modified.
+
+	The information is stored per-directory.  A whole directory is either present or not present.
+
+*/
+
 #include "stdafx.h"
 #include "CaseCache.h"
 #include "util.h"
