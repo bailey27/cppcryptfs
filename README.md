@@ -160,11 +160,11 @@ reason to not set the cache time to live to a high value or to infinite.
 
 **Case insensitive**
 
-This option has effect only in forward mode and only when encrypted filenames are used.
+This option has effect only in forward mode and only when encrypted file names are used.  Reverse-mode filesystems are always case-sensitive, and filesystems with plaintext file names are always case-insensitive.
 
-Normally, cppcryptfs requires that files and directories be opened using the same case that was used when the files and directories were created.
+Normally, when file name encryption is used, cppcryptfs requires that files and directories be opened using the same case that was used when the files and directories were created.
 
-If this option is checked, then cppcryptfs will ignore the case of file and directory names.  This is how the Windows API normally operates.  Also, performance will be a little slower. 
+If the case insensitive option is checked, then cppcryptfs will ignore the case of file and directory names, in forward mode, even when file name encryption is used.  This is how the Windows API normally operates.  Also, performance will be a little slower. 
 
 See the section on "Case Sensitivity" for more information.
 
@@ -328,7 +328,7 @@ A lot of Windows progams, including File Explorer that comes with Windows, have 
 
 Case Sensitivity
 -----
-Windows filesystems are not case-sensitive, but they are case-preserving.  The gocryptfs filesystem with encrypted filenames is case-senstitive.
+Windows filesystems are not case-sensitive, but they are case-preserving.  The gocryptfs filesystem with encrypted file names is case-senstitive.
 
 The way the file name encryption works means that if you create a file as Foo.txt and then try
 to open it as foo.txt, it will not be found (unless the new "Case insensitive" setting is on).  However, on a regular Windows filesystem, it would be found.  This is not normally a problem because files are usually opened using the same case that was
