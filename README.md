@@ -112,9 +112,12 @@ Passwords and keys are locked in memory using VirtualLock(). When they are no lo
 
 If you close the cppcryptfs window, then it will hide itself in the system tray. To exit cppcryptfs, use the Exit button on the mount page or the context menu of the system tray icon.
 
+Settings
+---------
+There is also a settings tab.  
+
 ![Alt text](/screenshots/screenshot_settings.png?raw=true "Mount tab")
 
-There is also a settings tab.  
 
 Changing values on the settings tab affects all filesystems that are subsequently mounted.  Any filesystems that are already mounted will not be affected.
 
@@ -126,7 +129,7 @@ Early in cppycryptfs' development, Dokany (then version 0.9) had a problem if mu
 
 Therefore the number of threads per-filesystem was hard-coded to 1 in cppcryptfs.
 
-It appears to be safe to use more than one thread per-filesystem now.  However, almost all testing and usage of cppcryptfs until now has been done with only one thread per filesystem.
+It appears to be safe to use more than one thread per-filesystem with now.  However, almost all testing and usage of cppcryptfs until now has been done with only one thread per filesystem.
 
 Using more than one thread for each filesystem may result in improved performance.
 
