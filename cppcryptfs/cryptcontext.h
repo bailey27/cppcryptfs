@@ -36,7 +36,7 @@ THE SOFTWARE.
 #include "dirivcache.h"
 #include "longfilenamecache.h"
 #include "siv.h"
-#include "CaseCache.h"
+#include "casecache.h"
 
 class CryptContext {
 private:
