@@ -9,6 +9,8 @@ The free Microsoft Visual Studio 2017 Community Edition is recommended
 
 https://www.visualstudio.com/vs/community/
 
+The professional edition should be fine if you already have that. The "Express" edition will not work due to its lack of support for MFC.
+
 You need to install Visual Studio in such a way that you can compile C++ applications with support for Microsoft Foundation Classes (MFC).  
 
 When installing Visual Studio 2017, select "Desktop development with C++", and be sure to also check "MFC and ATL support (x86 and x64)".
@@ -16,8 +18,6 @@ When installing Visual Studio 2017, select "Desktop development with C++", and b
 Here is a screenshot that shows what to select when installing Visual Studio.
 
 [Visual Studio install screenshot](/screenshots/visual_studio_2017_install.png?raw=true") 
-
-The professional edition should be fine if you already have that. The "Express" edition will not work due to its lack of support for MFC.
 
 In order to build OpenSSL, you will need perl and nasm.  
 
