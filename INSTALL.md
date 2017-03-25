@@ -143,7 +143,7 @@ Here are links to screenshots:
 
 [Visual Studio library paths screenshot](/screenshots/library_paths.png?raw=true") 
 
-Note: the screenshots were made when 1.0.2 was the current Dokany version.  It is no longer the current Dokany version.
+The screenshots were made when Dokany 1.0.2 was the Dokany version that cppcryptfs was expecting to use, but Dokany 1.0.3 was installed.
 
 
 The default (master) branch of cppcryptfs is for building with the Dokany binary release.  
