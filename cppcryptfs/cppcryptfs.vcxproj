@@ -99,7 +99,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>C:\Program Files\Dokan\Dokan Library-1.0.2\x86\lib\dokan1.lib;version.lib;C:\Program Files (X86)\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>C:\Program Files\Dokan\Dokan Library-1.0.3\x86\lib\dokan1.lib;version.lib;C:\Program Files (X86)\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
     <Midl>
@@ -126,7 +126,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>C:\Program Files\Dokan\Dokan Library-1.0.2\lib\dokan1.lib;version.lib;C:\Program Files\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>C:\Program Files\Dokan\Dokan Library-1.0.3\lib\dokan1.lib;version.lib;C:\Program Files\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
@@ -157,7 +157,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>C:\Program Files\Dokan\Dokan Library-1.0.2\x86\lib\dokan1.lib;version.lib;C:\Program Files (X86)\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>C:\Program Files\Dokan\Dokan Library-1.0.3\x86\lib\dokan1.lib;version.lib;C:\Program Files (X86)\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
     <Midl>
@@ -180,14 +180,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.2\include;c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.3\include;c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>C:\Program Files\Dokan\Dokan Library-1.0.2\lib\dokan1.lib;version.lib;C:\Program Files\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>C:\Program Files\Dokan\Dokan Library-1.0.3\lib\dokan1.lib;version.lib;C:\Program Files\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
