@@ -9,7 +9,7 @@ The free Microsoft Visual Studio 2017 Community Edition is recommended
 
 https://www.visualstudio.com/vs/community/
 
-The professional edition should be fine if you already have that.
+The professional edition or the enterprise edition should be fine if you already have either of those.
 
 You need to install Visual Studio in such a way that you can compile C++ applications with support for Microsoft Foundation Classes (MFC).  
 
