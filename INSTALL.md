@@ -121,7 +121,7 @@ Then change the build configuration to "Release" and the build target to"x64".
 
 Here is a screenshot that shows where to do that (see the red underlines).
 
-[build configuration and target screenshot](/screenshots/build_targets.png?raw=true") 
+[build configuration and target screenshot](/screenshots/build_config_and_target.png?raw=true") 
 
 Then do Build -> Build Solution, or just press the F7 key.
 
