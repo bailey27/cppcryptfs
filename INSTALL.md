@@ -117,7 +117,9 @@ git clone https://github.com/bailey27/cppcryptfs.git
 
 Then go to c:\\git\\cppcryptfs in Windows Explorer and double-click on cppcryptfs.sln.  This will load the project into Visual Studio.
 
-Then change the build configuration to "Release" and the build target to"x64".  Here is a screenshot that shows where to do that (see the red underlines).
+Then change the build configuration to "Release" and the build target to"x64".
+
+Here is a screenshot that shows where to do that (see the red underlines).
 
 [build configuration and target screenshot](/screenshots/build_targets.png?raw=true") 
 
