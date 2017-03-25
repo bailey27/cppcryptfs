@@ -111,13 +111,13 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	for (i = 0; i < 15; i++) {
 		if (i == 0) {
-			wcscpy_s(buf, L"Dokany default (5)");
+			pBox->AddString(L"Dokany default (5)");
 		} else if (i == 1) {
-			wcscpy_s(buf, L"1 (cppcryptfs default)");
+			pBox->AddString(L"1 (cppcryptfs default)");
 		} else {
 			swprintf_s(buf, L"%d", i);
+			pBox->AddString(buf);
 		}
-		pBox->AddString(buf);
 	}
 
 	pBox->SetCurSel(nThreads);
