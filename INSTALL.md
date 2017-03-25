@@ -25,7 +25,7 @@ For Perl, the OpenSSL documentation recommends using the free ActiveState Active
 
 http://www.activestate.com/activeperl/downloads
 
-nasm (Netwide Assembler) is available from here http://www.nasm.us/
+nasm (The Netwide Assembler) is available from here http://www.nasm.us/
 
 For git, the git that comes with cygwin works well.  git is not selected in the cygwin install by default.  You will need to select it.
 
