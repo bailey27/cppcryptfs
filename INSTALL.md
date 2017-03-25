@@ -133,7 +133,7 @@ A 32-bit build should work.  However, it has not been tested in a while.
 
 Whenever Dokany releases a new version, they install their header files in a directory that has the Dokany version number in its name.  Therefore, if cppcryptfs gets behind the current Dokany version, even a minor one, then you will need to change the include paths in the cppcryptfs Visual Studio project.  To do this, in Visual Studio, right click on "cppcryptfs" in the Solution Explorer pane.  Then select Properties and go to "C/C++" then "General".  Then edit "Additional Include Directories" so that the current Dokany version is there in the path for the Dokany header files.  Make sure you have selected the Configuration and Platform that you are actually building on when you do this.
 
-Here is a link to a screenshot showing this: (/screenshots/include_paths.png?raw=true")
+Here is a link to a screenshot showing this: [include paths](/screenshots/include_paths.png?raw=true")
 
 
 The default (master) branch of cppcryptfs is for building with the Dokany binary release.  
