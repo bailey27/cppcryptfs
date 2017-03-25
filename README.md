@@ -119,7 +119,7 @@ There is also a settings tab.
 ![Alt text](/screenshots/screenshot_settings.png?raw=true "Mount tab")
 
 
-Changing values on the settings tab affects all filesystems that are subsequently mounted.  Any filesystems that are already mounted will not be affected.  The current settings are stored in the windows registry and will be used the next time a filesystem is mounted, even from the command line.
+Changing values on the settings tab affects all filesystems that are subsequently mounted.  Any filesystems that are already mounted will not be affected.  The current settings are stored in the Windows registry and will be used the next time a filesystem is mounted, even from the command line.
 
 The settings tab has the following setings:
 
