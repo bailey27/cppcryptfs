@@ -5,11 +5,15 @@ You will need the following software to build cppcryptfs:
 
 Microsoft Visual Studio, perl, and git.
 
-The free Microsoft Visual Studio 2015 Community Edition is recommended
+The free Microsoft Visual Studio 2017 Community Edition is recommended
 
 https://www.visualstudio.com/vs/community/
 
 You need to install Visual Studio in such a way that you can compile C++ applications with support for Microsoft Foundation Classes (MFC).  
+
+When installing Visual Studio 2017, select "Deskto development with C++" and be sure to check "MFC and ATL support (x86 and x64)".
+
+[Visual Studio install screenshot](/screenshots/visual_studio_2017_install.png?raw=true") 
 
 The professional edition should be fine if you already have that. The "Express" edition will not work due to its lack of support for MFC.
 
@@ -66,27 +70,14 @@ cd openssl
 Then run the batch file that comes with Visual Studio to set up the environment variables for compiling from the command line, e.g.
 
 ```
-"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x64
-```
-
-Use "x86" in place of "x64" if you are doing a 32-bit build.
-
-If you've installed the Windows SDK and/or the DDK, then you might need  to set these include 
-and lib paths.  If you are building with the Dokany binary release libs and headers, then you shouldn't
-need to install the Windows SDK or DDK.  They are needed only if you are building Dokany from source.
-
-So these "set" commands probably won't be needed, but here they are just in case.
+"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
 
 ```
-set include=C:\Program Files (x86)\Windows Kits\10\Include\10.0.10586.0\um;%include%
-set include=C:\Program Files (x86)\Windows Kits\10\Include\10.0.10586.0\shared;%include%
-set include=C:\Program Files (x86)\Windows Kits\10\Include\10.0.10586.0\ucrt;%include%
 
-set lib=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.10586.0\um\x64;%lib%
-set lib=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.10586.0\ucrt\x64;%lib%
-```
+Use "x86" in place of "amd64" if you are doing a 32-bit build.
 
-Use "x86" in place of "x64" in the above lib vars if you are doing a 32-bit build.
+This vcvarsall.bat file from Visual Studio 2017 does not work in a TCC LE command prompt.  You must use a Windows CMD.exe command prompt.
+
 
 Then run (ActiveState) perl to configure OpenSSL for a Visual Studio AMD64/X86_64 static build.  
 Use "VC-WIN32" instead of  "VC-WIN64A" if you're doing a 32-bit build
@@ -97,9 +88,9 @@ perl Configure VC-WIN64A no-shared
 
 Then run "nmake" to build OpenSSL.
 
-Then run "nmake install" to install it.  nmake install must be run from an elevated (adminstrator) command prompt in order for it to work.
+Then run "nmake install" to install it.  nmake install must be run from an elevated (adminstrator) command prompt in order for it to work.  If you built openssl from a non-elevated command prompt, then start an elevated one and be sure to invoke vcvarsall.bat as shown above again in the elevated command prompt before running nmake install in it.
 
-There might be some errors about installing the OpenSSL documentation.  They won't affect your ability to build cppcryptfs.
+There might be errors about installing the OpenSSL documentation.  They won't affect your ability to build cppcryptfs.
 
 rapidjson
 ------
@@ -143,13 +134,6 @@ Here are links to screenshots:
 
 [Visual Studio library paths screenshot](/screenshots/library_paths.png?raw=true") 
 
-The screenshots were made when Dokany 1.0.2 was the Dokany version that cppcryptfs was expecting to use, but Dokany 1.0.3 was installed.
+The screenshots were made with Visual Studio 2015 when Dokany 1.0.2 was the Dokany version that cppcryptfs was expecting to use, but Dokany 1.0.3 was installed.  The UI for changing these things in Visual Studio 2017 is the same.
 
 
-The default (master) branch of cppcryptfs is for building with the Dokany binary release.  
-
-If you would like to build cppcryptfs with the current Dokany source, then after you clone cppcryptfs you need to switch to the current_dokany branch of cppcryptfs. 
-
-
-
-		git checkout current_dokany
