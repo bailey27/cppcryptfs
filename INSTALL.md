@@ -119,7 +119,7 @@ Then go to c:\\git\\cppcryptfs in Windows Explorer and double-click on cppcryptf
 
 Then change the build configuration to "Release" and the build target to"x64".
 
-Here is a screenshot that shows where to do that (see the red underlines).
+Here is a screenshot that shows where to set the build configuration and target (see the red underlines).
 
 [build configuration and target screenshot](/screenshots/build_config_and_target.png?raw=true") 
 
