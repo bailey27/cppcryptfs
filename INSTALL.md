@@ -138,8 +138,11 @@ To change the include path in Visual Studio, right click on "cppcryptfs" in the 
 To change the library path, go to "Linker" and then "Input" and edit "Additional Dependencies".
 
 Here are links to screenshots: 
+
 [Visual Studio include paths screenshot](/screenshots/include_paths.png?raw=true") 
-[Visual Studio library paths screenshot](/screenshots/library_paths.png?raw=true"). 
+
+[Visual Studio library paths screenshot](/screenshots/library_paths.png?raw=true") 
+
 Note: the screenshots were made when 1.0.2 was the current Dokany version.  It is no longer the current Dokany version.
 
 
