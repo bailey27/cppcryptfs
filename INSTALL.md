@@ -11,7 +11,7 @@ https://www.visualstudio.com/vs/community/
 
 You need to install Visual Studio in such a way that you can compile C++ applications with support for Microsoft Foundation Classes (MFC).  
 
-When installing Visual Studio 2017, select "Deskto development with C++" and be sure to check "MFC and ATL support (x86 and x64)".
+When installing Visual Studio 2017, select "Desktop development with C++" and be sure to check "MFC and ATL support (x86 and x64)".
 
 [Visual Studio install screenshot](/screenshots/visual_studio_2017_install.png?raw=true") 
 
