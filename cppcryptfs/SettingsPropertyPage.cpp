@@ -111,11 +111,11 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	for (i = 0; i < 15; i++) {
 		if (i == 0) {
-			lstrcpy(buf, L"Dokany default (5)");
+			wcscpy_s(buf, L"Dokany default (5)");
 		} else if (i == 1) {
-			lstrcpy(buf, L"1 (cppcryptfs default)");
+			wcscpy_s(buf, L"1 (cppcryptfs default)");
 		} else {
-			wsprintf(buf, L"%d", i);
+			swprintf_s(buf, L"%d", i);
 		}
 		pBox->AddString(buf);
 	}
@@ -130,7 +130,7 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	pBox->ResetContent();
 
 	for (i = 0; i < sizeof(buffer_sizes)/sizeof(buffer_sizes[0]); i++) {
-		wsprintf(buf, L"%d", buffer_sizes[i]);
+		swprintf_s(buf, L"%d", buffer_sizes[i]);
 		pBox->AddString(buf);
 	}
 
@@ -156,8 +156,7 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	int selitem = 0;
 
 	for (i = 0; i < sizeof(ttls) / sizeof(ttls[0]); i++) {
-		wsprintf(buf, ttl_strings[i]);
-		pBox->AddString(buf);
+		pBox->AddString(ttl_strings[i]);
 		if (cachettl == ttls[i]) {
 			selitem = i;
 		}

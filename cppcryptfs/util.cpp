@@ -585,7 +585,7 @@ bool touppercase(LPCWSTR in, std::wstring& out)
 			buf = hbuf;
 		}
 
-		lstrcpy(buf, in);
+		wcscpy_s(buf, len+1, in);
 
 		CharUpperBuff(buf, (DWORD)len);
 
