@@ -94,7 +94,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.2\include;c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.3\include;c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -120,7 +120,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.2\include;c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.3\include;c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <Link>
@@ -150,7 +150,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.2\include;c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.3\include;c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
