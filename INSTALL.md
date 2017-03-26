@@ -60,7 +60,7 @@ cppcryptfs uses OpenSSL for doing the actual encrypting and decrypting of data.
 
 Please refer to the "INSTALL" file from the OpenSSL distribution if these instructions don't work.
 
-First, clone OpenSSL.
+After installing nasm, git and ActiveState perl, clone OpenSSL.
 
 ```
 c:
