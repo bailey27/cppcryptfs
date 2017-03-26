@@ -121,7 +121,7 @@ Then change the build configuration to "Release" and the target platform to"x64"
 
 Here is a screenshot that shows where to set the build configuration and target platform (see the red underlines).
 
-[build configuration and target platform screenshot](/screenshots/build_config_and_target.png?raw=true") 
+[Visual Studio build configuration and target platform screenshot](/screenshots/build_config_and_target.png?raw=true") 
 
 Then do Build -> Build Solution, or just press the F7 key.
 
