@@ -25,7 +25,7 @@ For Perl, the OpenSSL documentation recommends using the free ActiveState Active
 
 http://www.activestate.com/activeperl/downloads
 
-nasm (The Netwide Assembler) is available from here http://www.nasm.us/
+nasm (The Netwide Assembler) is available from here http://www.nasm.us/.  There should be a link to the latest version in the middle of page.  Using the nasm installer is recommended if you want to be able to follow these build instructions verbatim. 
 
 Git is available from https://git-scm.com/downloads
 
@@ -60,7 +60,7 @@ cppcryptfs uses OpenSSL for doing the actual encrypting and decrypting of data.
 
 Please refer to the "INSTALL" file from the OpenSSL distribution if these instructions don't work.
 
-After installing nasm, git and ActiveState perl, open a new Windows command prompt (cmd.exe) and clone OpenSSL.
+After installing Visual Studio, nasm, git and ActiveState perl, open a new Windows command prompt (cmd.exe) and clone OpenSSL.
 
 ```
 c:
@@ -68,6 +68,14 @@ cd \git
 git clone https://github.com/openssl/openssl.git
 cd openssl
 ```
+
+Run this command to put nasm in your path (assuming you used the nasm installer).
+
+
+```
+set PATH=%LOCALAPPDATA%\NASM;%PATH%
+```
+
 
 Then run the batch file that comes with Visual Studio to set up the environment variables for compiling from the command line.
 
