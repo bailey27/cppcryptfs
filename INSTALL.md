@@ -133,7 +133,7 @@ Here is a screenshot that shows where to set the build configuration and target 
 
 Then do Build -> Build Solution, or just press the F7 key.
 
-There is no installation program for cppcryptfs.  You will need to copy cppcryptfs.exe (e.g. C:\\git\\cppcryptfs\\x64\\Release\\cppcryptfs.exe) to some directory in your path.
+There is no installation program for cppcryptfs.  You will need to copy cppcryptfs.exe (e.g. C:\\git\\cppcryptfs\\x64\\Release\\cppcryptfs.exe) to some directory in your path or onto your desktop.
 
 
 A 32-bit build should work.  However, it has not been tested in a while.
