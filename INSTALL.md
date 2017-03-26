@@ -27,9 +27,9 @@ http://www.activestate.com/activeperl/downloads
 
 nasm (The Netwide Assembler) is available from here http://www.nasm.us/
 
-For git, the git that comes with cygwin works well.  git is not selected in the cygwin install by default.  You will need to select it.
+Git is available from https://git-scm.com/downloads
 
-https://www.cygwin.com/
+The git that comes with cygwin also works.  
 
 You don't need git if you download the source zip files from github
 and unzip them.
@@ -78,7 +78,7 @@ Then run the batch file that comes with Visual Studio to set up the environment 
 
 Use "x86" in place of "amd64" if you are doing a 32-bit build.
 
-This vcvarsall.bat file from Visual Studio 2017 does not work in a TCC LE command prompt.  You must use a Windows CMD.exe command prompt.
+This vcvarsall.bat file from Visual Studio 2017 does not work in a TCC LE command prompt.  You must use a normal Windows cmd.exe command prompt.
 
 
 Then run (ActiveState) perl to configure OpenSSL for a Visual Studio AMD64/X86_64 static build.  
