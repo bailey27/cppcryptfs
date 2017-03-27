@@ -45,7 +45,7 @@ void
 RecentItems::AppendIndex(CString& str, int index)
 {
 	TCHAR buf[16];
-	wsprintf(buf, TEXT("%d"), index+1);
+	swprintf_s(buf, L"%d", index+1);
 	str = m_base;
 	str += buf;
 }

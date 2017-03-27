@@ -279,7 +279,7 @@ BOOL CMountPropertyPage::GetPathHash(LPCWSTR path, CString& hashstr)
 
 	for (i = 0; i < 8; i++) {
 		WCHAR buf[3];
-		wsprintf(buf, L"%02x", sum[i]);
+		swprintf_s(buf, L"%02x", sum[i]);
 		hashstr += buf;
 	}
 
