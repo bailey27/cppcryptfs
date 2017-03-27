@@ -30,7 +30,7 @@ cppcryptfs seems to work.  It passes 171/171 of the tests in [winfstest](https:/
 Build Requirements
 -----
 	
-	Microsoft Visual Studio 2017 Community Edition
+	Microsoft Visual Studio 2017 Community Edition (free)
 	OpenSSL - https://github.com/openssl/openssl (static build recommended)
 	RapidJSON - https://github.com/miloyip/rapidjson (for parsing gocryptfs.conf)
 	Dokany - https://github.com/dokan-dev/dokany
