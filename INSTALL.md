@@ -19,7 +19,7 @@ Here is a screenshot that shows what to select when installing Visual Studio.
 
 [Visual Studio install screenshot](/screenshots/visual_studio_2017_install.png?raw=true") 
 
-In order to build OpenSSL, you will need perl and nasm.  
+In order to build OpenSSL, you will also need perl and nasm.  
 
 For Perl, the OpenSSL documentation recommends using the free ActiveState ActivePerl.
 
