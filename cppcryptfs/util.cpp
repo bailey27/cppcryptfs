@@ -566,7 +566,7 @@ GetProductVersionInfo(std::wstring& strProductName, std::wstring& strProductVers
 
 bool touppercase(LPCWSTR in, std::wstring& out)
 {
-	WCHAR sbuf[256];
+	WCHAR sbuf[MAX_PATH]; // if longer then use heap
 	WCHAR *hbuf = NULL;
 	WCHAR *buf;
 
