@@ -3,7 +3,7 @@ cppcryptfs Build and Installation
 
 You will need the following software, all available for free, to build cppcryptfs:
 
-Microsoft Visual Studio, perl, nasm, and git. git is optional.
+Microsoft Visual Studio 2017, perl, nasm, and git. git is optional.
 
 The free Microsoft Visual Studio 2017 Community Edition is recommended
 
@@ -25,7 +25,7 @@ For Perl, the OpenSSL documentation recommends using the free ActiveState Active
 
 http://www.activestate.com/activeperl/downloads
 
-nasm (The Netwide Assembler) is available from here http://www.nasm.us/.  There should be a link to the latest version in the middle of page.  Using the nasm installer is recommended if you want to be able to follow these build instructions verbatim. 
+nasm (The Netwide Assembler) is available from here http://www.nasm.us/.  There should be a link to the latest stable version in the middle of page.  Using the nasm installer is recommended if you want to be able to follow these build instructions verbatim. 
 
 Git is available from https://git-scm.com/downloads
 
