@@ -250,10 +250,7 @@ convert_fdata(CryptContext *con, BOOL isRoot, const BYTE *dir_iv, const WCHAR *p
 		if (!dname)
 			return false;
 
-		if (wcslen(dname) < MAX_PATH) {
-			if (wcscpy_s(fdata.cFileName, dname))
-				return false;
-		} else {
+		if (wcscpy_s(fdata.cFileName, dname)) {
 			return false;
 		}
 	}
