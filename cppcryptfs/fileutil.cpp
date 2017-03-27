@@ -251,10 +251,9 @@ convert_fdata(CryptContext *con, BOOL isRoot, const BYTE *dir_iv, const WCHAR *p
 			return false;
 
 		if (wcslen(dname) < MAX_PATH) {
-			if (wcscpy_s(fdata.cFileName, MAX_PATH, dname))
+			if (wcscpy_s(fdata.cFileName, dname))
 				return false;
-		}
-		else {
+		} else {
 			return false;
 		}
 	}
@@ -362,7 +361,7 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 
 		if (reverse && !plaintext_names) {
 			fdata_dot.cAlternateFileName[0] = '\0';
-			wcscpy_s(fdata_dot.cFileName, MAX_PATH, DIR_IV_NAME);
+			wcscpy_s(fdata_dot.cFileName, DIR_IV_NAME);
 			fdata_dot.nFileSizeHigh = 0;
 			fdata_dot.nFileSizeLow = DIR_IV_LEN;
 			fdata_dot.ftLastWriteTime = fdata_dot.ftCreationTime;
