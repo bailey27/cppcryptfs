@@ -24,7 +24,13 @@ Reverse mode is new and has undergone only limited testing.
 Testing
 -------
 
-cppcryptfs seems to work.  It passes 171/171 of the tests in [winfstest](https://github.com/dimov-cz/winfstest).
+cppcryptfs seems to work.  
+
+It was passing  171/171 of the tests in [winfstest](https://github.com/dimov-cz/winfstest).  It still passes 171/171 in the old version of winfstest, even without being run as administrator.
+
+winfstest has been updated to have 192 base tests (even though the main winfstest project page still says 171 tests).  When run as administrator, cppcryptfs passes 192/192.  Without administrator privileges, it passes 186/192.  The failed tests appear to have to do with DACL_SECURITY_INFORMATION.  cppcryptfs must be run with administator privileges for those operations to work.  Running without administrator privileges doesn't seem to affect the normal usage of cppcryptfs.
+
+winfstest also now has many addtitional tests of alternate data streams.  cppcryptfs fails almost all of them. So currently, alternate data streams are not supported.  Support may be added later.  The lack of support for alternate data streams does not seem to affect normal usage.
 
 
 Build Requirements
