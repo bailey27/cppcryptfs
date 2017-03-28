@@ -150,7 +150,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 	if (con->GetConfig()->m_EMENames) {
 
 		int paddedLen = 0;
-		BYTE *padded = pad16((BYTE*)&utf8_str[0], (int)utf8_str.size(), paddedLen);
+		BYTE *padded = pad16((BYTE*)utf8_str.c_str(), (int)utf8_str.size(), paddedLen);
 
 		if (!padded)
 			return NULL;
@@ -174,7 +174,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 
 	if (con->GetConfig()->m_LongNames && storage.size() > MAX_FILENAME_LEN) {
 		std::string utf8;
-		if (!unicode_to_utf8(&storage[0], utf8))
+		if (!unicode_to_utf8(storage.c_str(), utf8))
 			return NULL;
 		if (actual_encrypted) {
 			*actual_encrypted = utf8;
