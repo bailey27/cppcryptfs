@@ -755,11 +755,14 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
 	FileNameEnc filePath(GetContext(), FileName);
  
 
-  if (DokanFileInfo->Context) {
-    DbgPrint(L"Cleanup: %s, %x\n\n", FileName, (DWORD)DokanFileInfo->Context);
-	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE)
-		CloseHandle((HANDLE)(DokanFileInfo->Context));
-    DokanFileInfo->Context = 0;
+	if (DokanFileInfo->Context) {
+		DbgPrint(L"Cleanup: %s, %x\n\n", FileName, (DWORD)DokanFileInfo->Context);
+		if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE)
+			CloseHandle((HANDLE)(DokanFileInfo->Context));
+		DokanFileInfo->Context = 0;
+	} else {
+		DbgPrint(L"Cleanup: %s\n\tinvalid handle\n\n", FileName);
+	}
 
     if (DokanFileInfo->DeleteOnClose) {
       DbgPrint(L"\tDeleteOnClose\n");
@@ -790,9 +793,7 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
       }
     }
 
-  } else {
-    DbgPrint(L"Cleanup: %s\n\tinvalid handle\n\n", FileName);
-  }
+  
 }
 
 static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
@@ -1044,7 +1045,7 @@ CryptDeleteFile(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
   FileNameEnc filePath(GetContext(), FileName);
   HANDLE	handle = (HANDLE)DokanFileInfo->Context;
 
-  DbgPrint(L"DeleteFile %s - %d\n", filePath, DokanFileInfo->DeleteOnClose);
+  DbgPrint(L"DeleteFile %s - %d\n", FileName, DokanFileInfo->DeleteOnClose);
 
 
   if (can_delete_file(filePath)) {
@@ -1081,7 +1082,7 @@ CryptDeleteDirectory(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
 
   FileNameEnc filePath(GetContext(), FileName);
 
-  DbgPrint(L"DeleteDirectory %s - %d\n", filePath,
+  DbgPrint(L"DeleteDirectory %s - %d\n", FileName,
 	  DokanFileInfo->DeleteOnClose);
 
   if (!DokanFileInfo->DeleteOnClose) {
