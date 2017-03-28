@@ -130,12 +130,10 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 
 	const WCHAR *rs = NULL;
 
-
 	if (con->GetConfig()->m_PlaintextNames) {
 		storage = filename;
 		return &storage[0];
 	}
-
 
 	LPCWSTR pStreamColon = wcschr(filename, ':');
 
@@ -149,7 +147,6 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 			return NULL;
 	}
 	
-
 	if (con->GetConfig()->m_EMENames) {
 
 		int paddedLen = 0;
@@ -168,22 +165,11 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 
 		rs = base64_encode(ct, paddedLen, storage);
 
-		if (pStreamColon) {
-			storage += pStreamColon;
-			rs = storage.c_str();
-		}
-
 		delete[] ct;
 
-
-
 	} else {
-
 		// CBC names no longer supported
-
-		return NULL;
-		
-		
+		return NULL;	
 	}
 
 	if (con->GetConfig()->m_LongNames && storage.size() > MAX_FILENAME_LEN) {
@@ -202,11 +188,12 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 		storage = longname_prefix;
 		storage += base64_sum;
 
-		if (pStreamColon) {
-			storage += pStreamColon;
-		}
+		rs = storage.c_str();
+	}
 
-		rs = &storage[0];
+	if (pStreamColon && rs) {
+		storage += pStreamColon;
+		rs = storage.c_str();
 	}
 
 	return rs;
