@@ -98,6 +98,7 @@ THE SOFTWARE.
 
 BOOL g_UseStdErr;
 BOOL g_DebugMode; 
+BOOL g_HasSeSecurityPrivilege;
 
 struct struct_CryptThreadData {
 	DOKAN_OPERATIONS operations;
@@ -410,6 +411,8 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   DWORD fileAttributesAndFlags;
   DWORD error = 0;
   SECURITY_ATTRIBUTES securityAttrib;
+  ACCESS_MASK genericDesiredAccess;
+
 
   bool is_virtual = rt_is_virtual_file(GetContext(), FileName);
 
@@ -423,7 +426,6 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   DokanMapKernelToUserCreateFileFlags(
       FileAttributes, CreateOptions, CreateDisposition, &fileAttributesAndFlags,
       &creationDisposition);
-
 
 
   DbgPrint(L"CreateFile : %s\n", FileName);
@@ -446,7 +448,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   CryptCheckFlag(ShareAccess, FILE_SHARE_WRITE);
   CryptCheckFlag(ShareAccess, FILE_SHARE_DELETE);
 
-  DbgPrint(L"\tAccessMode = 0x%x\n", DesiredAccess);
+  DbgPrint(L"DesiredAccess = 0x%x\n", DesiredAccess);
 
   CryptCheckFlag(DesiredAccess, GENERIC_READ);
   CryptCheckFlag(DesiredAccess, GENERIC_WRITE);
@@ -487,6 +489,8 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 	  DbgPrint(L"\tadded FILE_READ_DATA to desired access\n");
 	  DesiredAccess |= FILE_READ_DATA;
   }
+
+  genericDesiredAccess = DokanMapStandardToGenericAccess(DesiredAccess);
 
   if (!(bHasDirAttr || (CreateOptions & FILE_DIRECTORY_FILE)) && 
 	  (ShareAccess & FILE_SHARE_WRITE)) {
@@ -627,9 +631,18 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
     }
 
     if (status == STATUS_SUCCESS) {
+	  //Check first if we're trying to open a file as a directory.
+	  if (fileAttr != INVALID_FILE_ATTRIBUTES &&
+			!(fileAttr & FILE_ATTRIBUTE_DIRECTORY) &&
+			(CreateOptions & FILE_DIRECTORY_FILE)) {
+			return STATUS_NOT_A_DIRECTORY;
+	   }
+
       // FILE_FLAG_BACKUP_SEMANTICS is required for opening directory handles
-		handle = CreateFile(
-			filePath, DesiredAccess, ShareAccess, &securityAttrib, OPEN_EXISTING,
+		handle =
+			CreateFile(filePath, genericDesiredAccess, ShareAccess,
+				&securityAttrib, OPEN_EXISTING,
+
 			fileAttributesAndFlags | FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
       if (handle == INVALID_HANDLE_VALUE) {
@@ -670,7 +683,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
 		  handle = CreateFile(
 			  filePath,
-			  DesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
+			  genericDesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
 			  ShareAccess,
 			  &securityAttrib, // security attribute
 			  creationDisposition,
@@ -745,7 +758,7 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
   if (DokanFileInfo->Context) {
     DbgPrint(L"Cleanup: %s, %x\n\n", FileName, (DWORD)DokanFileInfo->Context);
 	if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE)
-		CloseHandle((HANDLE)DokanFileInfo->Context);
+		CloseHandle((HANDLE)(DokanFileInfo->Context));
     DokanFileInfo->Context = 0;
 
     if (DokanFileInfo->DeleteOnClose) {
@@ -960,17 +973,37 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileInformation(
 
   DbgPrint(L"GetFileInfo : %s\n", FileName);
 
+  if (!handle || handle == INVALID_HANDLE_VALUE) {
+	  DbgPrint(L"\tinvalid handle, cleanuped?\n");
+	  handle = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
+		  OPEN_EXISTING, 0, NULL);
+	  if (handle == INVALID_HANDLE_VALUE) {
+		  DWORD error = GetLastError();
+		  DbgPrint(L"\tCreateFile error : %d\n\n", error);
+		  return DokanNtStatusFromWin32(error);
+	  }
+	  opened = TRUE;
+  }
+
+
+  NTSTATUS status;
+
   if (get_file_information(GetContext(), filePath, FileName, handle, HandleFileInformation) != 0) {
 	  DWORD error = GetLastError();
 	  DbgPrint(L"GetFileInfo failed(%d)\n", error);
-	  return ToNtStatus(error);
+	  status = ToNtStatus(error);
   } else {
 	  LARGE_INTEGER l;
 	  l.LowPart = HandleFileInformation->nFileSizeLow;
 	  l.HighPart = HandleFileInformation->nFileSizeHigh;
 	  DbgPrint(L"GetFileInformation %s, filesize = %I64d, attr = 0x%08u\n", FileName, l.QuadPart, HandleFileInformation->dwFileAttributes);
-	  return STATUS_SUCCESS;
+	  status = STATUS_SUCCESS;
   }
+
+  if (opened)
+	  CloseHandle(handle);
+
+  return status;
 
 }
 
@@ -1009,9 +1042,10 @@ CryptDeleteFile(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
   
 
   FileNameEnc filePath(GetContext(), FileName);
-  // HANDLE	handle = (HANDLE)DokanFileInfo->Context;
+  HANDLE	handle = (HANDLE)DokanFileInfo->Context;
 
-  DbgPrint(L"DeleteFile %s\n", FileName);
+  DbgPrint(L"DeleteFile %s - %d\n", filePath, DokanFileInfo->DeleteOnClose);
+
 
   if (can_delete_file(filePath)) {
 
@@ -1021,9 +1055,19 @@ CryptDeleteFile(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
 		  (dwAttrib & FILE_ATTRIBUTE_DIRECTORY))
 		  return STATUS_ACCESS_DENIED;
 
+	  if (handle && handle != INVALID_HANDLE_VALUE) {
+		  FILE_DISPOSITION_INFO fdi;
+		  fdi.DeleteFile = DokanFileInfo->DeleteOnClose;
+		  if (!SetFileInformationByHandle(handle, FileDispositionInfo, &fdi,
+			  sizeof(FILE_DISPOSITION_INFO)))
+			  return DokanNtStatusFromWin32(GetLastError());
+	  }
+
 	  return STATUS_SUCCESS;
   } else {
 	  DWORD error = GetLastError();
+	  if (error == 0)
+		  error = ERROR_ACCESS_DENIED;
 	  DbgPrint(L"\tDeleteFile error code = %d\n\n", error);
 	  return ToNtStatus(error);
   }
@@ -1037,7 +1081,14 @@ CryptDeleteDirectory(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
 
   FileNameEnc filePath(GetContext(), FileName);
 
-  DbgPrint(L"DeleteDirectory %s\n", FileName);
+  DbgPrint(L"DeleteDirectory %s - %d\n", filePath,
+	  DokanFileInfo->DeleteOnClose);
+
+  if (!DokanFileInfo->DeleteOnClose) {
+	  //Dokan notify that the file is requested not to be deleted.
+	  return STATUS_SUCCESS;
+  }
+
 
   if (can_delete_directory(filePath)) {
 	  return STATUS_SUCCESS;
@@ -1251,6 +1302,7 @@ static NTSTATUS DOKAN_CALLBACK CryptSetEndOfFile(
 	  }
   } else {
 	  delete file;
+	  DbgPrint(L"\tSetEndOfFile unable to associate\n");
 	  return STATUS_ACCESS_DENIED;
   }
 
@@ -1395,6 +1447,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
     PULONG LengthNeeded, PDOKAN_FILE_INFO DokanFileInfo) {
   FileNameEnc filePath(GetContext(), FileName);
 
+  BOOLEAN requestingSaclInfo;
 
   DbgPrint(L"GetFileSecurity %s, context handle = %I64x\n", FileName, DokanFileInfo->Context);
 
@@ -1413,6 +1466,16 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
   CryptCheckFlag(*SecurityInformation, PROTECTED_SACL_SECURITY_INFORMATION);
   CryptCheckFlag(*SecurityInformation, UNPROTECTED_DACL_SECURITY_INFORMATION);
   CryptCheckFlag(*SecurityInformation, UNPROTECTED_SACL_SECURITY_INFORMATION);
+
+  requestingSaclInfo = ((*SecurityInformation & SACL_SECURITY_INFORMATION) ||
+	  (*SecurityInformation & BACKUP_SECURITY_INFORMATION));
+
+  if (!g_HasSeSecurityPrivilege) {
+	  *SecurityInformation &= ~SACL_SECURITY_INFORMATION;
+	  *SecurityInformation &= ~BACKUP_SECURITY_INFORMATION;
+  }
+
+
 
   DbgPrint(L"  Opening new handle with READ_CONTROL access\n");
 
@@ -1440,8 +1503,8 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
 
   HANDLE handle = CreateFile(
 	  is_virtual ? &virt_path[0] : filePath,
-	  READ_CONTROL | (((*SecurityInformation & SACL_SECURITY_INFORMATION) ||
-		  (*SecurityInformation & BACKUP_SECURITY_INFORMATION))
+	  READ_CONTROL | ((requestingSaclInfo && g_HasSeSecurityPrivilege)
+
 		  ? ACCESS_SYSTEM_SECURITY
 		  : 0),
 	  FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE,
@@ -2057,6 +2120,7 @@ BOOL have_security_name_privilege()
 	if (!bCheckedName) {
 		bHaveName = AddSeSecurityNamePrivilege();
 		bCheckedName = TRUE;
+		g_HasSeSecurityPrivilege = bHaveName;
 	}
 
 	return bHaveName;
