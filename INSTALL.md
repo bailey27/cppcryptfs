@@ -77,7 +77,7 @@ set PATH=%LOCALAPPDATA%\NASM;%PATH%
 ```
 
 
-Then run the batch file that comes with Visual Studio to set up the environment variables for compiling from the command line.
+Then run the batch file that comes with Visual Studio that sets up the environment variables for compiling from the command line.
 
 ```
 "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
