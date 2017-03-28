@@ -132,7 +132,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 
 	if (con->GetConfig()->m_PlaintextNames) {
 		storage = filename;
-		return &storage[0];
+		return storage.c_str();
 	}
 
 	LPCWSTR pStreamColon = wcschr(filename, ':');
