@@ -56,7 +56,7 @@ Use
 cppcryptfs doesn't require administrator privileges to run, but
 if it is not running as administrator, then it won't be able
 to acquire the SE_SECURITY_NAME privilege.  SE_SECURITY_NAME is
-needed for reading all of the security attributes of files.
+needed for some operations on the security attributes of files.
 
 cppcryptfs seems to work without SE_SECURITY_NAME.  If you do
 run into problems, then you can try running cppcryptfs as adminstrator and see if that helps.
