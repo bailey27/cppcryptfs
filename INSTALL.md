@@ -60,7 +60,15 @@ cppcryptfs uses OpenSSL for doing the actual encrypting and decrypting of data.
 
 Please refer to the "INSTALL" file from the OpenSSL distribution if these instructions don't work.
 
-After installing Visual Studio, nasm, git, and ActiveState perl, open a new Windows command prompt (cmd.exe) and clone OpenSSL.
+After installing Visual Studio, nasm, git, and ActiveState perl, open a new Windows command prompt (cmd.exe).
+
+You will need an elevated (administrator) command prompt for running the command that installs OpenSSL.  You can build it in a normal command prompt, though.
+
+To start an elevated command prompt in Windows 10, right-click on the Windows logo at the bottom left of the screen and select "Command Prompt (Admin)".  Below is a screenshot.
+
+[how to start an elevated command prompt screenshot](/screenshots/cmd_as_administrator.png?raw=true")
+
+First, clone OpenSSL.
 
 ```
 c:
@@ -98,11 +106,7 @@ perl Configure VC-WIN64A no-shared
 
 Then run "nmake" to build OpenSSL.
 
-Then run "nmake install" to install it.  nmake install must be run from an elevated (administrator) command prompt in order for it to work.  If you built openssl from a non-elevated command prompt, then start an elevated one, cd to c:\git\openssl, and be sure to invoke vcvarsall.bat as shown above again in the elevated command prompt before running nmake install in it.
-
-To start an elevated command prompt in Windows 10, right-click on the Windows logo at the bottom left of the screen and select "Command Prompt (Admin)".  Below is a screenshot.
-
-[how to start an elevated command prompt screenshot](/screenshots/cmd_as_administrator.png?raw=true") 
+Then run "nmake install" to install it.  nmake install must be run from an elevated (administrator) command prompt in order for it to work.  If you built openssl from a non-elevated command prompt, then start an elevated one, cd to c:\git\openssl, and be sure to invoke vcvarsall.bat as shown above again in the elevated command prompt before running nmake install in it. 
 
 There might be errors about installing the OpenSSL documentation.  They won't affect your ability to build cppcryptfs.
 
