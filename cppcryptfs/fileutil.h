@@ -83,3 +83,7 @@ read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD
 
 bool
 get_dir_and_file_from_path(LPCWSTR path, std::wstring *dir, std::wstring *file);
+
+		  // extracts the stream part if any and puts it with the colon in stream,
+bool	  // and puts the file name without the stream decoration in file
+get_file_stream(LPCWSTR filename, std::wstring *file, std::wstring *stream);

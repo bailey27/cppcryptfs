@@ -862,3 +862,27 @@ get_dir_and_file_from_path(LPCWSTR path, std::wstring *dir, std::wstring *file)
 
 	return true;
 }
+
+
+bool	  
+get_file_stream(LPCWSTR filename, std::wstring *file, std::wstring *stream)
+{
+
+	LPCWSTR pStreamColon = wcschr(filename, ':');
+
+	if (pStreamColon) { // have stream
+		if (file) {
+			*file = filename;
+			file->erase(pStreamColon - filename);
+		}
+		if (stream)
+			*stream = pStreamColon;
+		return true;
+	} else {
+		if (file)
+			*file = filename;
+		if (stream)
+			*stream = L"";
+		return false;
+	}
+}

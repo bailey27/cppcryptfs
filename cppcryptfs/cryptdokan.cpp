@@ -665,7 +665,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
     }
   } else {
 	  // It is a create file request
-
+	 
 	  if (fileAttr != INVALID_FILE_ATTRIBUTES &&
 		  (fileAttr & FILE_ATTRIBUTE_DIRECTORY) &&
 		  CreateDisposition == FILE_CREATE) {
@@ -732,6 +732,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   if (GetContext()->IsCaseInsensitive() && handle != INVALID_HANDLE_VALUE && !filePath.FileExisted()) {
 	  GetContext()->m_case_cache.store(filePath.CorrectCasePath());
   }
+
   return status;
 }
 

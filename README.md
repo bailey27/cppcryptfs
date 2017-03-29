@@ -347,16 +347,6 @@ If you turn on "Case insensitive" on the settings page, then cppcryptfs will ign
 a filesystem is subsequently mounted.  It does not change the behavior of an already-mounted filesystem on-the-fly.
 
 
-NTFS Alternate Data Streams
-----
-cppcryptfs supports NTFS Alternate Data Streams.  It passes all the new stream tests in winfstest. 
-
-However, the names of alternate data streams are always case-sensitive, even when the case-insensitive option (for directory and file names) is enabled, if file name encryption is used.
-
-Support may be added in the future for treating the names of alternate data streams in a case-insensitive fashion when file name encryption is used.  However, until recently, cppcryptfs didn't support alternate data streams at all with file name encryption and nobody noticed.
-
-If plain text file names are used, then cppcryptfs treats stream names as case-insenstive, just as Windows does.
-
 Performance
 ------
 Below are some benchmark results.  The tests were conducted using the cygwin utilities under Windows 10 64-bit running on an Intel i5-4200U cpu with a Crucial M500 240GB ssd.  With cppcryptfs, AES256-GCM was used for encrypting file data and encrypted file names and long file names were used.
