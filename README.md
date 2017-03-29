@@ -349,7 +349,7 @@ a filesystem is subsequently mounted.  It does not change the behavior of an alr
 
 NTFS Alternate Data Streams
 ----
-cppcryptfs does support NTFS Alternate Data Streams.  It passes all the new stream tests in winfstest. 
+cppcryptfs supports NTFS Alternate Data Streams.  It passes all the new stream tests in winfstest. 
 
 However, the names of alternate data streams are always case-sensitive, even when the case-insensitive option (for directory and file names) is enabled, if file name encryption is used.
 
