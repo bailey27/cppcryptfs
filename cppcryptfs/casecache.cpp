@@ -252,11 +252,15 @@ bool CaseCache::store(LPCWSTR dirpath, LPCWSTR file)
 
 			std::wstring ucfile;
 
-			if (!touppercase(file, ucfile)) {
+			std::wstring file_without_stream;
+
+			get_file_stream(file, &file_without_stream, NULL);
+
+			if (!touppercase(file_without_stream.c_str(), ucfile)) {
 				throw(-1);
 			}
 
-			node->m_files.insert_or_assign(ucfile, file);
+			node->m_files.insert_or_assign(ucfile, file_without_stream.c_str());
 		}
 
 	} catch (...) {
@@ -297,13 +301,18 @@ int CaseCache::lookup(LPCWSTR path, std::wstring& result_path, bool force_not_fo
 	if (!get_dir_and_file_from_path(path, &dir, &file))
 		return CASE_CACHE_ERROR;
 
+	std::wstring file_without_stream;
+	std::wstring stream;
+
+	get_file_stream(file.c_str(), &file_without_stream, &stream);
+
 	std::wstring ucdir;
 	std::wstring ucfile;
 
 	if (!touppercase(dir.c_str(), ucdir))
 		return CASE_CACHE_ERROR;
 
-	if (!touppercase(file.c_str(), ucfile))
+	if (!touppercase(file_without_stream.c_str(), ucfile))
 		return CASE_CACHE_ERROR;
 
 	lock();
@@ -330,10 +339,10 @@ int CaseCache::lookup(LPCWSTR path, std::wstring& result_path, bool force_not_fo
 				bool isRoot = wcscmp(node->m_path.c_str(), L"\\") == 0;
 
 				if (nit != node->m_files.end()) {
-					result_path = node->m_path + (isRoot ? L"" : L"\\") + nit->second;
+					result_path = node->m_path + (isRoot ? L"" : L"\\") + nit->second + stream;
 					ret = CASE_CACHE_FOUND;
 				} else {
-					result_path = node->m_path + (isRoot ? L"" : L"\\") + file;
+					result_path = node->m_path + (isRoot ? L"" : L"\\") + file + stream;
 					ret = CASE_CACHE_NOT_FOUND;
 				}
 			}
@@ -358,7 +367,11 @@ bool CaseCache::remove(LPCWSTR path, LPCWSTR file)
 	if (!touppercase(path, ucdir))
 		return false;
 
-	if (!touppercase(file, ucfile))
+	std::wstring file_without_stream;
+
+	get_file_stream(file, &file_without_stream, NULL);
+
+	if (!touppercase(file_without_stream.c_str(), ucfile))
 		return false;
 
 	bool bRet = true;
