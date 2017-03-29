@@ -172,7 +172,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 		return NULL;	
 	}
 
-	if (con->GetConfig()->m_LongNames && storage.size() > MAX_FILENAME_LEN) {
+	if (con->GetConfig()->m_LongNames && storage.length() > MAX_FILENAME_LEN) {
 		std::string utf8;
 		if (!unicode_to_utf8(storage.c_str(), utf8))
 			return NULL;
