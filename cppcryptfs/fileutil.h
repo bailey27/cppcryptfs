@@ -83,3 +83,6 @@ read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD
 
 bool
 get_dir_and_file_from_path(LPCWSTR path, std::wstring *dir, std::wstring *file);
+
+bool 
+get_file_stream(LPCWSTR filename, std::wstring* file_without_stream, std::wstring* stream);
