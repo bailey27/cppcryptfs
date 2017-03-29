@@ -355,7 +355,7 @@ However, the names of alternate data streams are always case-sensitive, even whe
 
 Support may be added in the future for treating the names of alternate data streams in a case-insensitive fashion when file name encryption is used.  However, until recently, cppcryptfs didn't support alternate data streams at all with file name encryption and nobody noticed.
 
-If plain text file names are used, then stream names are case-insensitve just like in Windows.
+If plain text file names are used, then cppcryptsf treats stream names as case-insenstive, just as Windows does.
 
 Performance
 ------
