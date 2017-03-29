@@ -28,7 +28,7 @@ cppcryptfs seems to work.
 
 It was passing  171/171 of the tests in [winfstest](https://github.com/dimov-cz/winfstest).  It still passes 171/171 in the old version of winfstest, even without being run as administrator.
 
-winfstest has been updated and now has 492 tests (even though the main winfstest project page still says 171 tests).  When run as administrator, cppcryptfs passes 492/492.  Without administrator privileges, it passes 486/492.  The failed tests have to do with operations on security descriptors.  cppcryptfs must be run as administator for these operations to work.  Running without administrator privileges doesn't seem to affect the normal usage of cppcryptfs.
+winfstest has been updated and now has 492 tests (even though the main winfstest project page still says 171 tests).  When run as administrator, cppcryptfs passes 492/492.  Without administrator privileges, it passes 486/492.  The failed tests have to do with operations on DACLs (Discretionary Access Control Lists).  cppcryptfs must be run as administator for these operations to work.  Running without administrator privileges doesn't seem to affect the normal usage of cppcryptfs.
 
 
 Build Requirements
@@ -56,7 +56,7 @@ Use
 cppcryptfs doesn't require administrator privileges to run, but
 if it is not running as administrator, then it won't be able
 to acquire the SE_SECURITY_NAME privilege.  SE_SECURITY_NAME is
-needed for some operations on the security attributes of files.
+needed for some operations performed by the Windows API functions SetFileSecurity() and GetFileSecurity().
 
 cppcryptfs seems to work without SE_SECURITY_NAME.  If you do
 run into problems, then you can try running cppcryptfs as adminstrator and see if that helps.
