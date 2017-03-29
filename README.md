@@ -35,7 +35,7 @@ Build Requirements
 -----
 	
 	Microsoft Visual Studio 2017 Community Edition, perl, nasm, and git (all free)
-	OpenSSL - https://github.com/openssl/openssl (static build recommended)
+	OpenSSL - https://github.com/openssl/openssl (static build required)
 	RapidJSON - https://github.com/miloyip/rapidjson (for parsing gocryptfs.conf)
 	Dokany - https://github.com/dokan-dev/dokany
 
