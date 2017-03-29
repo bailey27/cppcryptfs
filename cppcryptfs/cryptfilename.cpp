@@ -135,17 +135,14 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 		return storage.c_str();
 	}
 
-	LPCWSTR pStreamColon = wcschr(filename, ':');
+	std::wstring name_without_stream;
 
-	if (pStreamColon) { // have stream
-		std::wstring name_without_stream = filename;
-		name_without_stream.erase(pStreamColon - filename);
-		if (!unicode_to_utf8(name_without_stream.c_str(), utf8_str))
-			return NULL;
-	} else {
-		if (!unicode_to_utf8(filename, utf8_str))
-			return NULL;
-	}
+	std::wstring stream;
+
+	bool have_stream = get_file_stream(filename, &name_without_stream, &stream);
+	
+	if (!unicode_to_utf8(name_without_stream.c_str(), utf8_str))
+		return NULL;
 	
 	if (con->GetConfig()->m_EMENames) {
 
@@ -191,8 +188,8 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 		rs = storage.c_str();
 	}
 
-	if (pStreamColon && rs) {
-		storage += pStreamColon;
+	if (have_stream && rs) {
+		storage += stream;
 		rs = storage.c_str();
 	}
 
