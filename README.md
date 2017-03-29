@@ -26,9 +26,9 @@ Testing
 
 cppcryptfs seems to work.  
 
-It was passing  171/171 of the tests in [winfstest](https://github.com/dimov-cz/winfstest).  It still passes 171/171 in the old version of winfstest, even without being run as administrator.
+It passes 492/492 tests in [winfstest](https://github.com/dimov-cz/winfstest) when run as administrator.  Without administrator privileges, cppcryptfs passes 486/492 tests.  The winftest main project page still says there are 171 tests, but there are actually 492 tests now.
 
-winfstest has been updated and now has 492 tests (even though the main winfstest project page still says 171 tests).  When run as administrator, cppcryptfs passes 492/492.  Without administrator privileges, it passes 486/492.  The failed tests have to do with operations on DACLs (Discretionary Access Control Lists).  cppcryptfs must be run as administator for these operations to work.  Running without administrator privileges doesn't seem to affect the normal usage of cppcryptfs.
+The tests that cppcryptfs fails when run without administrator privileges have to do with operations on DACLs (Discretionary Access Control Lists).  cppcryptfs must be run as administrator for these operations to work.  Running without administrator privileges doesn't seem to affect the normal usage of cppcryptfs.
 
 
 Build Requirements
