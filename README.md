@@ -341,7 +341,7 @@ Windows filesystems are not case-sensitive, but they are case-preserving.  The g
 
 The way the file name encryption works means that if you create a file as Foo.txt and then try
 to open it as foo.txt, it will not be found (unless the new "Case insensitive" setting is on).  However, on a regular Windows filesystem, it would be found.  This is not normally a problem because files are usually opened using the same case that was
-used when they were created.  Microsoft Visual Studio has been observed creating files with one case and then trying to open them with another case.  Also, in Windows 10, File Explorer converts all paths to upercase when trying to open images and videos to make thumbnails of them.
+used when they were created.  Microsoft Visual Studio has been observed creating files with one case and then trying to open them with another case.  Also, in Windows 10, File Explorer converts all paths to uppercase when trying to open images and videos to make thumbnails of them.
 
 If you turn on "Case insensitive" on the settings page, then cppcryptfs will ignore the case of file and directory names as Windows does.  The option takes effect only when
 a filesystem is subsequently mounted.  It does not change the behavior of an already-mounted filesystem on-the-fly.
