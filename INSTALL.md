@@ -100,6 +100,10 @@ Then run "nmake" to build OpenSSL.
 
 Then run "nmake install" to install it.  nmake install must be run from an elevated (administrator) command prompt in order for it to work.  If you built openssl from a non-elevated command prompt, then start an elevated one, cd to c:\git\openssl, and be sure to invoke vcvarsall.bat as shown above again in the elevated command prompt before running nmake install in it.
 
+To start an elevated command prompt, type "cmd" in the Windows search bar, then right-click on "Command Prompt" and select "Run as administrator".
+
+[how to start an elevated command command prompt screenshot](/screenshots/cmd_as_administrator.png?raw=true") 
+
 There might be errors about installing the OpenSSL documentation.  They won't affect your ability to build cppcryptfs.
 
 rapidjson
