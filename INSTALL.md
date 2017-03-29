@@ -94,7 +94,7 @@ Then run the batch file that comes with Visual Studio that sets up the environme
 
 Use "x86" in place of "amd64" if you are doing a 32-bit build.
 
-The vcvarsall.bat from Visual Studio 2017 does not work in a TCC LE command prompt.  You must use a normal Windows cmd.exe command prompt.
+The vcvarsall.bat from Visual Studio 2017 does not work in a TCC LE command prompt.  You must use a Windows cmd.exe command prompt.
 
 
 Then run (ActiveState) perl to configure OpenSSL for a Visual Studio AMD64/X86_64 static build.  
