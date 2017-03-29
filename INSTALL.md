@@ -102,7 +102,7 @@ Then run "nmake install" to install it.  nmake install must be run from an eleva
 
 To start an elevated command prompt, type "cmd" in the Windows search bar, then right-click on "Command Prompt" and select "Run as administrator".
 
-[how to start an elevated command command prompt screenshot](/screenshots/cmd_as_administrator.png?raw=true") 
+[how to start an elevated command prompt screenshot](/screenshots/cmd_as_administrator.png?raw=true") 
 
 There might be errors about installing the OpenSSL documentation.  They won't affect your ability to build cppcryptfs.
 
