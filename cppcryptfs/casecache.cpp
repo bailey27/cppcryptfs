@@ -365,14 +365,14 @@ int CaseCache::lookup(LPCWSTR path, std::wstring& result_path, bool force_not_fo
 
 bool CaseCache::remove(LPCWSTR path, LPCWSTR file)
 {
+	if (get_file_stream(file, NULL, NULL))
+		return true;
+
 	std::wstring ucdir;
 	std::wstring ucfile;
 
 	if (!touppercase(path, ucdir))
 		return false;
-
-	if (get_file_stream(file, NULL, NULL))
-		return true;
 
 	if (!touppercase(file, ucfile))
 		return false;
