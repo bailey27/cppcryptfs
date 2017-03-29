@@ -34,7 +34,7 @@ winfstest has been updated and now has 492 tests (even though the main winfstest
 Build Requirements
 -----
 	
-	Microsoft Visual Studio 2017 Community Edition (free)
+	Microsoft Visual Studio 2017 Community Edition, perl, nasm, and git (all free)
 	OpenSSL - https://github.com/openssl/openssl (static build recommended)
 	RapidJSON - https://github.com/miloyip/rapidjson (for parsing gocryptfs.conf)
 	Dokany - https://github.com/dokan-dev/dokany
