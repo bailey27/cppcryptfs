@@ -104,3 +104,9 @@ get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_en
 
 const WCHAR *
 remove_longname_suffix(const WCHAR *filepath, std::wstring& storage);
+
+const WCHAR * // returns base64-encoded, encrypted stream name.  input stream name is expected to start with colon
+encrypt_stream_name(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *stream, std::wstring& storage);
+
+const WCHAR * // returns UNICODE plaintext stream name.  input stream name is expected to start with colon
+decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *stream, std::wstring& storage);

@@ -188,8 +188,15 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 	}
 
 	if (have_stream && rs) {
-		storage += stream;
-		rs = storage.c_str();
+		std::wstring enc_stream;
+		if (encrypt_stream_name(con, dir_iv, stream.c_str(), enc_stream)) {
+			storage += enc_stream;
+			rs = storage.c_str();
+		} else {
+			storage += L":"; // if failure use invalid empty stream name
+			rs = storage.c_str();
+		}
+		
 	}
 
 	return rs;
@@ -774,4 +781,69 @@ get_file_directory(LPCWSTR filepath, std::wstring& dirpath)
 	dirpath = dirpath.substr(0, lastslash - filepath);
 
 	return true;
+}
+
+const WCHAR * // returns base64-encoded, encrypted stream name.  input stream name is expected to start with colon
+encrypt_stream_name(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *stream, std::wstring& storage)
+{
+
+	if (!stream || stream[0] != ':')
+		return NULL;
+
+	std::wstring undec_stream;
+	std::wstring dec;
+
+	if (!remove_stream_decoration(stream, undec_stream, dec))
+		return false;
+
+	LPCWSTR rs;
+	
+	if (undec_stream.length() > 1) {
+		rs = encrypt_filename(con, dir_iv, undec_stream.c_str() + 1, storage, NULL);
+	} else {
+		storage = L"";
+		rs = storage.c_str();
+	}
+
+	if (!rs) 
+		return NULL;
+
+	if (is_long_name(rs))
+		return NULL;
+
+	storage = L":" + storage + dec;
+
+	return storage.c_str();
+}
+
+const WCHAR * // returns UNICODE plaintext stream name.  input stream name is expected to start with colon
+decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *stream, std::wstring& storage)
+{
+	if (!stream || stream[0] != ':')
+		return NULL;
+
+	if (is_long_name(stream + 1))
+		return NULL;
+
+	std::wstring undec_stream;
+	std::wstring dec;
+
+	if (!remove_stream_decoration(stream, undec_stream, dec))
+		return false;
+
+	LPCWSTR rs;
+		
+	if (undec_stream.length() > 1) {
+		rs = decrypt_filename(con, dir_iv, path, undec_stream.c_str() + 1, storage);
+	} else {
+		storage = L"";
+		rs = storage.c_str();
+	}
+
+	if (!rs)
+		return NULL;
+
+	storage = L":" + storage + dec;
+
+	return storage.c_str();
 }

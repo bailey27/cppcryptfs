@@ -1675,10 +1675,26 @@ CryptFindStreams(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
     return ToNtStatus(error);
   }
 
+  DbgPrint(L"found stream %s\n", findData.cStreamName);
+
+  if (!convert_find_stream_data(GetContext(), FileName, filePath, findData)) {
+	  error = GetLastError();
+	  DbgPrint(L"\tconvert_find_stream_data returned false. Error is %u\n\n", error);
+	  FindClose(hFind);
+	  return ToNtStatus(error);
+  }
+
   FillFindStreamData(&findData, DokanFileInfo);
   count++;
 
   while (FindNextStreamW(hFind, &findData) != 0) {
+	DbgPrint(L"found stream %s\n", findData.cStreamName);
+	if (!convert_find_stream_data(GetContext(), FileName, filePath, findData)) {
+		  error = GetLastError();
+		  DbgPrint(L"\tconvert_find_stream_data returned false (loop). Error is %u\n\n", error);
+		  FindClose(hFind);
+		  return ToNtStatus(error);
+	}
     FillFindStreamData(&findData, DokanFileInfo);
     count++;
   }
