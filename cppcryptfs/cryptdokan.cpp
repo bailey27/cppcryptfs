@@ -975,7 +975,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileInformation(
 
   DbgPrint(L"GetFileInfo : %s\n", FileName);
 
-  if (!handle || handle == INVALID_HANDLE_VALUE && !rt_is_virtual_file(GetContext(), FileName)) {
+  if (!handle || (handle == INVALID_HANDLE_VALUE && !rt_is_virtual_file(GetContext(), FileName))) {
 	  DbgPrint(L"\tinvalid handle, cleanuped?\n");
 	  handle = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
 		  OPEN_EXISTING, 0, NULL);
