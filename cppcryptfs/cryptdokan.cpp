@@ -1677,7 +1677,7 @@ CryptFindStreams(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
 
   DbgPrint(L"found stream %s\n", findData.cStreamName);
 
-  if (!convert_find_stream_data(GetContext(), filePath, findData)) {
+  if (!convert_find_stream_data(GetContext(), FileName, filePath, findData)) {
 	  error = GetLastError();
 	  DbgPrint(L"\tconvert_find_stream_data returned false. Error is %u\n\n", error);
 	  FindClose(hFind);
@@ -1689,7 +1689,7 @@ CryptFindStreams(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
 
   while (FindNextStreamW(hFind, &findData) != 0) {
 	DbgPrint(L"found stream %s\n", findData.cStreamName);
-	if (!convert_find_stream_data(GetContext(), filePath, findData)) {
+	if (!convert_find_stream_data(GetContext(), FileName, filePath, findData)) {
 		  error = GetLastError();
 		  DbgPrint(L"\tconvert_find_stream_data returned false (loop). Error is %u\n\n", error);
 		  FindClose(hFind);

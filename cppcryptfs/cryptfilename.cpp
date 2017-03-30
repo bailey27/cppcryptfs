@@ -68,7 +68,7 @@ bool
 derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const char *type)
 {
 
-	DbgPrint(L"derive_path_iv input = %s\n", path);
+	DbgPrint(L"derive_path_iv input = %s, type = %S\n", path, type);
 
 	std::wstring wpath;
 
@@ -212,15 +212,20 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 		return &storage[0];
 	}
 
+	std::wstring file_without_stream;
+	std::wstring stream;
+
+	bool have_stream = get_file_stream(filename, &file_without_stream, &stream);
+
 	std::vector<unsigned char> ctstorage;
 
 	char longname_buf[4096];
 
 	std::wstring longname_storage;
 
-	if (!wcsncmp(filename, longname_prefix, sizeof(longname_prefix)/sizeof(longname_prefix[0])-1)) {
+	if (!wcsncmp(file_without_stream.c_str(), longname_prefix, sizeof(longname_prefix)/sizeof(longname_prefix[0])-1)) {
 		if (con->GetConfig()->m_reverse) {
-			if (decrypt_reverse_longname(con, filename, path, dir_iv, storage))
+			if (decrypt_reverse_longname(con, file_without_stream.c_str(), path, dir_iv, storage))
 				return &storage[0];
 			else
 				return false;
@@ -229,7 +234,7 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 			if (fullpath[fullpath.size() - 1] != '\\')
 				fullpath.push_back('\\');
 
-			fullpath += filename;
+			fullpath += file_without_stream.c_str();
 			fullpath += longname_suffix;
 
 			HANDLE hFile = CreateFile(&fullpath[0], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -254,11 +259,11 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 			if (!utf8_to_unicode(longname_buf, longname_storage))
 				return NULL;
 
-			filename = &longname_storage[0];
+			file_without_stream = &longname_storage[0];
 		}
 	}
 
-	if (!base64_decode(filename, ctstorage))
+	if (!base64_decode(file_without_stream.c_str(), ctstorage))
 		return NULL;
 
 	if (con->GetConfig()->m_EMENames) {
@@ -281,6 +286,17 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 		const WCHAR *ws = utf8_to_unicode((const char *)pt, storage);
 
 		delete[] pt;
+
+		if (have_stream && ws) {
+			std::wstring dec_stream;
+			if (decrypt_stream_name(con, dir_iv, stream.c_str(), dec_stream)) {
+				storage += dec_stream;
+				ws = storage.c_str();
+			} else {
+				storage += L":"; // if failure use invalid empty stream name
+				ws = storage.c_str();
+			}
+		}
 
 		return ws;
 
@@ -817,7 +833,7 @@ encrypt_stream_name(const CryptContext *con, const unsigned char *dir_iv, const 
 }
 
 const WCHAR * // returns UNICODE plaintext stream name.  input stream name is expected to start with colon
-decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *stream, std::wstring& storage)
+decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *stream, std::wstring& storage)
 {
 	if (!stream || stream[0] != ':')
 		return NULL;
@@ -834,7 +850,7 @@ decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, co
 	LPCWSTR rs;
 		
 	if (undec_stream.length() > 1) {
-		rs = decrypt_filename(con, dir_iv, path, undec_stream.c_str() + 1, storage);
+		rs = decrypt_filename(con, dir_iv, NULL, undec_stream.c_str() + 1, storage);
 	} else {
 		storage = L"";
 		rs = storage.c_str();

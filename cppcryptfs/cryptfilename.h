@@ -109,4 +109,4 @@ const WCHAR * // returns base64-encoded, encrypted stream name.  input stream na
 encrypt_stream_name(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *stream, std::wstring& storage);
 
 const WCHAR * // returns UNICODE plaintext stream name.  input stream name is expected to start with colon
-decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *stream, std::wstring& storage);
+decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *stream, std::wstring& storage);

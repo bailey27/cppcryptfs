@@ -92,4 +92,4 @@ bool  // for handling streams named like ":foo:$DATA".  The ":$DATA" is treated 
 remove_stream_decoration(LPCWSTR stream, std::wstring& stream_undecorated, std::wstring& decoration);
 
 bool
-convert_find_stream_data(CryptContext *con, LPCWSTR path, WIN32_FIND_STREAM_DATA& fdata);
+convert_find_stream_data(CryptContext *con, LPCWSTR pt_path, LPCWSTR path, WIN32_FIND_STREAM_DATA& fdata);
