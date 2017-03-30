@@ -911,7 +911,7 @@ remove_stream_decoration(LPCWSTR stream, std::wstring& stream_undecorated, std::
 }
 
 bool
-convert_find_stream_data(CryptContext *con, LPCWSTR pt_path, LPCWSTR path, WIN32_FIND_STREAM_DATA& fdata)
+convert_find_stream_data(CryptContext *con, LPCWSTR path, WIN32_FIND_STREAM_DATA& fdata)
 {
 
 	BYTE dir_iv[DIR_IV_LEN];
@@ -923,7 +923,7 @@ convert_find_stream_data(CryptContext *con, LPCWSTR pt_path, LPCWSTR path, WIN32
 	if (!plaintext_names && wcscmp(fdata.cStreamName, L"::$DATA")) {
 		if (reverse) {
 			std::wstring dirpath;
-			if (!get_file_directory(pt_path, dirpath))
+			if (!get_file_directory(path, dirpath))
 				return false;
 			if (!derive_path_iv(con, dirpath.c_str(), dir_iv, TYPE_DIRIV))
 				return false;

@@ -975,7 +975,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileInformation(
 
   DbgPrint(L"GetFileInfo : %s\n", FileName);
 
-  if (!handle || handle == INVALID_HANDLE_VALUE) {
+  if (!handle || handle == INVALID_HANDLE_VALUE && !rt_is_virtual_file(GetContext(), FileName)) {
 	  DbgPrint(L"\tinvalid handle, cleanuped?\n");
 	  handle = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
 		  OPEN_EXISTING, 0, NULL);
@@ -1677,24 +1677,25 @@ CryptFindStreams(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
 
   DbgPrint(L"found stream %s\n", findData.cStreamName);
 
-  if (!convert_find_stream_data(GetContext(), FileName, filePath, findData)) {
+  if (!convert_find_stream_data(GetContext(), filePath, findData)) {
 	  error = GetLastError();
 	  DbgPrint(L"\tconvert_find_stream_data returned false. Error is %u\n\n", error);
 	  FindClose(hFind);
 	  return ToNtStatus(error);
   }
-
+  DbgPrint(L"Stream %s size = %lld\n", findData.cStreamName, findData.StreamSize.QuadPart);
   FillFindStreamData(&findData, DokanFileInfo);
   count++;
 
   while (FindNextStreamW(hFind, &findData) != 0) {
 	DbgPrint(L"found stream %s\n", findData.cStreamName);
-	if (!convert_find_stream_data(GetContext(), FileName, filePath, findData)) {
+	if (!convert_find_stream_data(GetContext(), filePath, findData)) {
 		  error = GetLastError();
 		  DbgPrint(L"\tconvert_find_stream_data returned false (loop). Error is %u\n\n", error);
 		  FindClose(hFind);
 		  return ToNtStatus(error);
 	}
+	DbgPrint(L"Stream %s size = %lld\n", findData.cStreamName, findData.StreamSize.QuadPart);
     FillFindStreamData(&findData, DokanFileInfo);
     count++;
   }
