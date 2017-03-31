@@ -806,16 +806,16 @@ encrypt_stream_name(const CryptContext *con, const unsigned char *dir_iv, const 
 	if (!stream || stream[0] != ':')
 		return NULL;
 
-	std::wstring undec_stream;
-	std::wstring dec;
+	std::wstring stream_without_type;
+	std::wstring type;
 
-	if (!remove_stream_decoration(stream, undec_stream, dec))
+	if (!remove_stream_type(stream, stream_without_type, type))
 		return false;
 
 	LPCWSTR rs;
 	
-	if (undec_stream.length() > 1) {
-		rs = encrypt_filename(con, dir_iv, undec_stream.c_str() + 1, storage, NULL);
+	if (stream_without_type.length() > 1) {
+		rs = encrypt_filename(con, dir_iv, stream_without_type.c_str() + 1, storage, NULL);
 	} else {
 		storage = L"";
 		rs = storage.c_str();
@@ -827,7 +827,7 @@ encrypt_stream_name(const CryptContext *con, const unsigned char *dir_iv, const 
 	if (is_long_name(rs))
 		return NULL;
 
-	storage = L":" + storage + dec;
+	storage = L":" + storage + type;
 
 	return storage.c_str();
 }
@@ -841,16 +841,16 @@ decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *stream, 
 	if (is_long_name(stream + 1))
 		return NULL;
 
-	std::wstring undec_stream;
-	std::wstring dec;
+	std::wstring stream_without_type;
+	std::wstring type;
 
-	if (!remove_stream_decoration(stream, undec_stream, dec))
+	if (!remove_stream_type(stream, stream_without_type, type))
 		return false;
 
 	LPCWSTR rs;
 		
-	if (undec_stream.length() > 1) {
-		rs = decrypt_filename(con, dir_iv, NULL, undec_stream.c_str() + 1, storage);
+	if (stream_without_type.length() > 1) {
+		rs = decrypt_filename(con, dir_iv, NULL, stream_without_type.c_str() + 1, storage);
 	} else {
 		storage = L"";
 		rs = storage.c_str();
@@ -859,7 +859,7 @@ decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *stream, 
 	if (!rs)
 		return NULL;
 
-	storage = L":" + storage + dec;
+	storage = L":" + storage + type;
 
 	return storage.c_str();
 }

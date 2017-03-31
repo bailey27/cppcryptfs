@@ -76,7 +76,6 @@ THE SOFTWARE.
 #include "util.h"
 #include "cryptdokan.h"
 
-
 #include <vector>
 #include <string>
 
@@ -155,20 +154,19 @@ CryptFindStreamsInternal(LPCWSTR FileName, PFillFindStreamData FillFindStreamDat
 static int WINAPI CryptCaseStreamsCallback(PWIN32_FIND_STREAM_DATA pfdata,
 	std::unordered_map<std::wstring, std::wstring>* pmap)
 {
-	std::wstring undec_stream;
-	std::wstring dec;
+	std::wstring stream_without_type;
+	std::wstring type;
 
-	remove_stream_decoration(pfdata->cStreamName, undec_stream, dec);
+	remove_stream_type(pfdata->cStreamName, stream_without_type, type);
 
 	std::wstring uc_stream;
 
-	touppercase(undec_stream.c_str(), uc_stream);
+	touppercase(stream_without_type.c_str(), uc_stream);
 
-	pmap->insert(std::make_pair(uc_stream, undec_stream.c_str()));
+	pmap->insert(std::make_pair(uc_stream, stream_without_type.c_str()));
 
 	return 0;
 }
-
 
 // The FileNameEnc class has a contstructor that takes the necessary inputs
 // for doing the filename encryption.  It saves them for later, at almost zero cost.
@@ -200,8 +198,8 @@ private:
 	bool m_file_existed;  // valid only if case cache is used
 	bool m_force_case_cache_notfound;
 public:
-	LPCWSTR CorrectCasePath() 
-	{	
+	LPCWSTR CorrectCasePath()
+	{
 		if (m_con->IsCaseInsensitive()) {
 			Convert();
 			return m_correct_case_path.c_str();
@@ -248,7 +246,7 @@ void FileNameEnc::AssignConAndPlainPath(CryptContext *con, LPCWSTR plain_path)
 	if (pColon == plain_path)
 		return;
 
-	if (pColon[-1] != '\\') 
+	if (pColon[-1] != '\\')
 		return;
 
 	m_plain_path.erase(pColon - plain_path - 1);
@@ -325,10 +323,10 @@ const WCHAR *FileNameEnc::Convert()
 					bool have_stream = get_file_stream(plain_path, &file_without_stream, &stream);
 					if (have_stream) {
 						std::unordered_map<std::wstring, std::wstring> streams_map;
-						std::wstring undec_stream;
-						std::wstring dec;
+						std::wstring stream_without_type;
+						std::wstring type;
 
-						if (!remove_stream_decoration(stream.c_str(), undec_stream, dec)) {
+						if (!remove_stream_type(stream.c_str(), stream_without_type, type)) {
 							throw(-1);
 						}
 
@@ -337,13 +335,13 @@ const WCHAR *FileNameEnc::Convert()
 
 							std::wstring uc_stream;
 
-							if (!touppercase(undec_stream.c_str(), uc_stream))
+							if (!touppercase(stream_without_type.c_str(), uc_stream))
 								throw(-1);
 
 							auto it = streams_map.find(uc_stream);
 
 							if (it != streams_map.end()) {
-								m_correct_case_path = file_without_stream + it->second + dec;
+								m_correct_case_path = file_without_stream + it->second + type;
 								plain_path = m_correct_case_path.c_str();
 								DbgPrint(L"stream found %s -> %s\n", m_plain_path, plain_path);
 							} else {
@@ -354,7 +352,7 @@ const WCHAR *FileNameEnc::Convert()
 				}
 				if (!encrypt_path(m_con, plain_path, m_enc_path, m_actual_encrypted)) {
 					throw(-1);
-				}			
+				}
 			}
 		} catch (...) {
 			m_failed = true;
@@ -371,8 +369,6 @@ const WCHAR *FileNameEnc::Convert()
 
 	return rs;
 }
-
-
 
 static void PrintUserName(PDOKAN_FILE_INFO DokanFileInfo) {
 

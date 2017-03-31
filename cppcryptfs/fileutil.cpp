@@ -888,7 +888,7 @@ get_file_stream(LPCWSTR filename, std::wstring *file, std::wstring *stream)
 }
 
 bool
-remove_stream_decoration(LPCWSTR stream, std::wstring& stream_undecorated, std::wstring& decoration)
+remove_stream_type(LPCWSTR stream, std::wstring& stream_without_type, std::wstring& type)
 {
 	if (!stream || stream[0] != ':')
 		return false;
@@ -896,16 +896,16 @@ remove_stream_decoration(LPCWSTR stream, std::wstring& stream_undecorated, std::
 	LPCWSTR pLastColon = wcsrchr(stream, ':');
 
 	if (pLastColon == stream) {
-		decoration = L"";
-		stream_undecorated = stream;
+		type = L"";
+		stream_without_type = stream;
 		return true;
 	}
 
-	stream_undecorated = stream;
+	stream_without_type = stream;
 
-	stream_undecorated.erase(pLastColon - stream);
+	stream_without_type.erase(pLastColon - stream);
 
-	decoration = pLastColon;
+	type = pLastColon;
 
 	return true;
 }
