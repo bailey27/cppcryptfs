@@ -50,6 +50,7 @@ public:
 	EmeCryptContext m_eme;
 	SivContext m_siv;
 	int m_bufferblocks;
+	BOOL m_haveSetFileNamedStreamsFlag;
 private:
 	bool m_caseinsensitive;
 public:

@@ -96,6 +96,8 @@ THE SOFTWARE.
 #define UNMOUNT_TIMEOUT 30000
 #define MOUNT_TIMEOUT 30000
 
+#define ENABLE_FILE_NAMED_STREAMS_FLAG 1
+
 BOOL g_UseStdErr;
 BOOL g_DebugMode; 
 BOOL g_HasSeSecurityPrivilege;
@@ -191,7 +193,7 @@ private:
 	std::wstring m_enc_path;
 	std::wstring m_correct_case_path;
 	std::string *m_actual_encrypted;
-	const WCHAR *m_plain_path;
+	std::wstring m_plain_path;
 	CryptContext *m_con;
 	bool m_tried;
 	bool m_failed;
@@ -204,7 +206,7 @@ public:
 			Convert();
 			return m_correct_case_path.c_str();
 		} else {
-			return m_plain_path;
+			return m_plain_path.c_str();
 		}
 	};
 
@@ -216,17 +218,50 @@ public:
 	};
 private:
 	const WCHAR *Convert();
-
+	void AssignConAndPlainPath(CryptContext *con, LPCWSTR plain_path);
 public:
 	FileNameEnc(PDOKAN_FILE_INFO DokanFileInfo, const WCHAR *fname, std::string *actual_encrypted = NULL, bool ignorecasecache = false);
 	virtual ~FileNameEnc();
 };
 
+// For some bizarre reason, if we set FILE_NAMED_STREAMS in the volume flags (in CryptGetVolumeInformation())
+// to announce that we support alternate data streams in files,
+// then whenever a path with a stream is sent down to us by File Explorer, there's an extra slash after the filename
+// and before the colon (e.g. \foo\boo\foo.txt\:blah:$DATA).
+// So here we git rid of that extra slash if necessary
+
+
+void FileNameEnc::AssignConAndPlainPath(CryptContext *con, LPCWSTR plain_path)
+{
+	m_con = con;
+
+	m_plain_path = plain_path;
+
+	if (!m_con->m_haveSetFileNamedStreamsFlag)
+		return;
+
+	LPCWSTR pColon = wcschr(plain_path, ':');
+
+	if (!pColon)
+		return;
+
+	if (pColon == plain_path)
+		return;
+
+	if (pColon[-1] != '\\') 
+		return;
+
+	m_plain_path.erase(pColon - plain_path - 1);
+
+	m_plain_path += pColon;
+
+	DbgPrint(L"converted file with stream path %s -> %s\n", plain_path, m_plain_path.c_str());
+}
+
 FileNameEnc::FileNameEnc(PDOKAN_FILE_INFO DokanFileInfo, const WCHAR *fname, std::string *actual_encrypted, bool forceCaseCacheNotFound)
 {
 	m_dokan_file_info = DokanFileInfo;
-	m_con = GetContext();
-	m_plain_path = fname;
+	AssignConAndPlainPath(GetContext(), fname);
 	m_actual_encrypted = actual_encrypted;
 	m_tried = false;
 	m_failed = false;
@@ -248,37 +283,37 @@ const WCHAR *FileNameEnc::Convert()
 
 		try {
 			if (m_con->GetConfig()->m_reverse) {
-				if (rt_is_config_file(m_con, m_plain_path)) {
+				if (rt_is_config_file(m_con, m_plain_path.c_str())) {
 					m_enc_path = m_con->GetConfig()->m_basedir + L"\\";
 					m_enc_path += REVERSE_CONFIG_NAME;
-				} else if (rt_is_virtual_file(m_con, m_plain_path)) {
+				} else if (rt_is_virtual_file(m_con, m_plain_path.c_str())) {
 					std::wstring dirpath;
-					if (!get_file_directory(m_plain_path, dirpath))
+					if (!get_file_directory(m_plain_path.c_str(), dirpath))
 						throw(-1);
 					if (!decrypt_path(m_con, &dirpath[0], m_enc_path))
 						throw(-1);
 					m_enc_path += L"\\";
 					std::wstring filename;
-					if (!get_bare_filename(m_plain_path, filename))
+					if (!get_bare_filename(m_plain_path.c_str(), filename))
 						throw(-1);
 					m_enc_path += filename;
 				} else {
-					if (!decrypt_path(m_con, m_plain_path, m_enc_path)) {
+					if (!decrypt_path(m_con, m_plain_path.c_str(), m_enc_path)) {
 						throw(-1);
 					}
 				}
 			} else {
 
-				LPCWSTR plain_path = m_plain_path;
+				LPCWSTR plain_path = m_plain_path.c_str();
 				int cache_status = CASE_CACHE_NOTUSED;
 				if (m_con->IsCaseInsensitive()) {
-					cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_notfound);
+					cache_status = m_con->m_case_cache.lookup(m_plain_path.c_str(), m_correct_case_path, m_force_case_cache_notfound);
 					if (cache_status == CASE_CACHE_FOUND || cache_status == CASE_CACHE_NOT_FOUND) {
 						m_file_existed = cache_status == CASE_CACHE_FOUND;
 						plain_path = m_correct_case_path.c_str();
 					} else if (cache_status == CASE_CACHE_MISS) {
-						if (m_con->m_case_cache.load_dir(m_plain_path)) {
-							cache_status = m_con->m_case_cache.lookup(m_plain_path, m_correct_case_path, m_force_case_cache_notfound);
+						if (m_con->m_case_cache.load_dir(m_plain_path.c_str())) {
+							cache_status = m_con->m_case_cache.lookup(m_plain_path.c_str(), m_correct_case_path, m_force_case_cache_notfound);
 							if (cache_status == CASE_CACHE_FOUND || cache_status == CASE_CACHE_NOT_FOUND) {
 								m_file_existed = cache_status == CASE_CACHE_FOUND;
 								plain_path = m_correct_case_path.c_str();
@@ -1670,9 +1705,16 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
   *MaximumComponentLength = (config->m_PlaintextNames || config->m_LongNames) ? 255 : 160;
   DWORD defFlags = (FILE_CASE_SENSITIVE_SEARCH | FILE_CASE_PRESERVED_NAMES |
 	  FILE_SUPPORTS_REMOTE_STORAGE | FILE_UNICODE_ON_DISK |
-	  FILE_PERSISTENT_ACLS);
+	  FILE_PERSISTENT_ACLS 
+#ifdef	ENABLE_FILE_NAMED_STREAMS_FLAG
+	  | FILE_NAMED_STREAMS
+#endif
+	  );
 
   *FileSystemFlags = defFlags & (bGotVI ? fs_flags : 0xffffffff);
+
+  if (*FileSystemFlags & FILE_NAMED_STREAMS)
+	  con->m_haveSetFileNamedStreamsFlag = TRUE;
 
   // File system name could be anything up to 10 characters.
   // But Windows check few feature availability based on file system name.
