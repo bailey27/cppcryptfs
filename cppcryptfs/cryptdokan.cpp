@@ -91,7 +91,7 @@ THE SOFTWARE.
 #include <stdarg.h>
 #include <varargs.h>
 
-
+#include <unordered_map>
 
 #define UNMOUNT_TIMEOUT 30000
 #define MOUNT_TIMEOUT 30000
@@ -141,6 +141,32 @@ void DbgPrint(LPCWSTR format, ...) {
   }
 }
 
+#define GetContext() ((CryptContext*)DokanFileInfo->DokanOptions->GlobalContext)
+
+typedef int(WINAPI *PCryptStoreCaseStream)(PWIN32_FIND_STREAM_DATA,
+	std::unordered_map<std::wstring, std::wstring> *pmap);
+
+NTSTATUS DOKAN_CALLBACK
+CryptFindStreamsInternal(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
+	PDOKAN_FILE_INFO DokanFileInfo, PCryptStoreCaseStream, std::unordered_map<std::wstring, std::wstring> *pmap);
+
+static int WINAPI CryptCaseStreamsCallback(PWIN32_FIND_STREAM_DATA pfdata,
+	std::unordered_map<std::wstring, std::wstring>* pmap)
+{
+	std::wstring undec_stream;
+	std::wstring dec;
+
+	remove_stream_decoration(pfdata->cStreamName, undec_stream, dec);
+
+	std::wstring uc_stream;
+
+	touppercase(undec_stream.c_str(), uc_stream);
+
+	pmap->insert(std::make_pair(uc_stream, undec_stream.c_str()));
+
+	return 0;
+}
+
 
 // The FileNameEnc class has a contstructor that takes the necessary inputs
 // for doing the filename encryption.  It saves them for later, at almost zero cost.
@@ -161,6 +187,7 @@ void DbgPrint(LPCWSTR format, ...) {
 
 class FileNameEnc {
 private:
+	PDOKAN_FILE_INFO m_dokan_file_info;
 	std::wstring m_enc_path;
 	std::wstring m_correct_case_path;
 	std::string *m_actual_encrypted;
@@ -189,15 +216,16 @@ public:
 	};
 private:
 	const WCHAR *Convert();
-	
+
 public:
-	FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted = NULL, bool ignorecasecache = false);
+	FileNameEnc(PDOKAN_FILE_INFO DokanFileInfo, const WCHAR *fname, std::string *actual_encrypted = NULL, bool ignorecasecache = false);
 	virtual ~FileNameEnc();
 };
 
-FileNameEnc::FileNameEnc(CryptContext *con, const WCHAR *fname, std::string *actual_encrypted, bool forceCaseCacheNotFound)
+FileNameEnc::FileNameEnc(PDOKAN_FILE_INFO DokanFileInfo, const WCHAR *fname, std::string *actual_encrypted, bool forceCaseCacheNotFound)
 {
-	m_con = con;
+	m_dokan_file_info = DokanFileInfo;
+	m_con = GetContext();
 	m_plain_path = fname;
 	m_actual_encrypted = actual_encrypted;
 	m_tried = false;
@@ -254,7 +282,38 @@ const WCHAR *FileNameEnc::Convert()
 							if (cache_status == CASE_CACHE_FOUND || cache_status == CASE_CACHE_NOT_FOUND) {
 								m_file_existed = cache_status == CASE_CACHE_FOUND;
 								plain_path = m_correct_case_path.c_str();
-							} 
+							}
+						}
+					}
+					std::wstring stream;
+					std::wstring file_without_stream;
+					bool have_stream = get_file_stream(plain_path, &file_without_stream, &stream);
+					if (have_stream) {
+						std::unordered_map<std::wstring, std::wstring> streams_map;
+						std::wstring undec_stream;
+						std::wstring dec;
+
+						if (!remove_stream_decoration(stream.c_str(), undec_stream, dec)) {
+							throw(-1);
+						}
+
+						if (CryptFindStreamsInternal(file_without_stream.c_str(), NULL, m_dokan_file_info,
+							CryptCaseStreamsCallback, &streams_map) == 0) {
+
+							std::wstring uc_stream;
+
+							if (!touppercase(undec_stream.c_str(), uc_stream))
+								throw(-1);
+
+							auto it = streams_map.find(uc_stream);
+
+							if (it != streams_map.end()) {
+								m_correct_case_path = file_without_stream + it->second + dec;
+								plain_path = m_correct_case_path.c_str();
+								DbgPrint(L"stream found %s -> %s\n", m_plain_path, plain_path);
+							} else {
+								DbgPrint(L"stream not found %s -> %s\n", m_plain_path, plain_path);
+							}
 						}
 					}
 				}
@@ -392,7 +451,7 @@ static BOOL AddSeSecurityNamePrivilege() {
   }
 
 
-#define GetContext() ((CryptContext*)DokanFileInfo->DokanOptions->GlobalContext)
+
 
 
 static NTSTATUS DOKAN_CALLBACK
@@ -403,7 +462,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
 
   std::string actual_encrypted;
-  FileNameEnc filePath(GetContext(), FileName, &actual_encrypted);
+  FileNameEnc filePath(DokanFileInfo, FileName, &actual_encrypted);
   HANDLE handle = NULL;
   DWORD fileAttr;
   NTSTATUS status = STATUS_SUCCESS;
@@ -738,7 +797,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
 static void DOKAN_CALLBACK CryptCloseFile(LPCWSTR FileName,
                                            PDOKAN_FILE_INFO DokanFileInfo) {
-   FileNameEnc filePath(GetContext(), FileName);
+   FileNameEnc filePath(DokanFileInfo, FileName);
 
   if (DokanFileInfo->Context) {
     DbgPrint(L"CloseFile: %s, %x\n", FileName, (DWORD)DokanFileInfo->Context);
@@ -753,7 +812,7 @@ static void DOKAN_CALLBACK CryptCloseFile(LPCWSTR FileName,
 
 static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
                                          PDOKAN_FILE_INFO DokanFileInfo) {
-	FileNameEnc filePath(GetContext(), FileName);
+	FileNameEnc filePath(DokanFileInfo, FileName);
  
 
 	if (DokanFileInfo->Context) {
@@ -802,7 +861,7 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
 	LPDWORD ReadLength,
 	LONGLONG Offset,
 	PDOKAN_FILE_INFO DokanFileInfo) {
-	FileNameEnc filePath(GetContext(), FileName);
+	FileNameEnc filePath(DokanFileInfo, FileName);
 	HANDLE handle = (HANDLE)DokanFileInfo->Context;
 	BOOL opened = FALSE;
 	NTSTATUS ret_status = STATUS_SUCCESS;
@@ -873,7 +932,7 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
                                                LPDWORD NumberOfBytesWritten,
                                                LONGLONG Offset,
                                                PDOKAN_FILE_INFO DokanFileInfo) {
-  FileNameEnc filePath(GetContext(), FileName);
+  FileNameEnc filePath(DokanFileInfo, FileName);
   HANDLE handle = (HANDLE)DokanFileInfo->Context;
   BOOL opened = FALSE;
   NTSTATUS ret_status = STATUS_SUCCESS;
@@ -945,7 +1004,7 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
 
 static NTSTATUS DOKAN_CALLBACK
 CryptFlushFileBuffers(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
-  FileNameEnc filePath(GetContext(), FileName);
+  FileNameEnc filePath(DokanFileInfo, FileName);
   HANDLE handle = (HANDLE)DokanFileInfo->Context;
 
 
@@ -968,7 +1027,7 @@ CryptFlushFileBuffers(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
 static NTSTATUS DOKAN_CALLBACK CryptGetFileInformation(
     LPCWSTR FileName, LPBY_HANDLE_FILE_INFORMATION HandleFileInformation,
     PDOKAN_FILE_INFO DokanFileInfo) {
-	FileNameEnc filePath(GetContext(), FileName);
+	FileNameEnc filePath(DokanFileInfo, FileName);
   HANDLE handle = (HANDLE)DokanFileInfo->Context;
   BOOL opened = FALSE;
 
@@ -1019,7 +1078,7 @@ static NTSTATUS DOKAN_CALLBACK
 CryptFindFiles(LPCWSTR FileName,
                 PFillFindData FillFindData, // function pointer
                 PDOKAN_FILE_INFO DokanFileInfo) {
-  FileNameEnc filePath(GetContext(), FileName);
+  FileNameEnc filePath(DokanFileInfo, FileName);
   size_t fileLen = 0;
   HANDLE hFind = NULL;
 
@@ -1043,7 +1102,7 @@ static NTSTATUS DOKAN_CALLBACK
 CryptDeleteFile(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
   
 
-  FileNameEnc filePath(GetContext(), FileName);
+  FileNameEnc filePath(DokanFileInfo, FileName);
   HANDLE	handle = (HANDLE)DokanFileInfo->Context;
 
   DbgPrint(L"DeleteFile %s - %d\n", FileName, DokanFileInfo->DeleteOnClose);
@@ -1081,7 +1140,7 @@ static NTSTATUS DOKAN_CALLBACK
 CryptDeleteDirectory(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
  
 
-  FileNameEnc filePath(GetContext(), FileName);
+  FileNameEnc filePath(DokanFileInfo, FileName);
 
   DbgPrint(L"DeleteDirectory %s - %d\n", FileName,
 	  DokanFileInfo->DeleteOnClose);
@@ -1112,8 +1171,8 @@ CryptMoveFileInternal(LPCWSTR FileName, // existing file name
   needRepair = false;
 
   std::string actual_encrypted;
-  FileNameEnc filePath(GetContext(), FileName);
-  FileNameEnc newFilePath(GetContext(), NewFileName, &actual_encrypted, repairName);
+  FileNameEnc filePath(DokanFileInfo, FileName);
+  FileNameEnc newFilePath(DokanFileInfo, NewFileName, &actual_encrypted, repairName);
 
   DbgPrint(L"MoveFile %s -> %s\n\n", FileName, NewFileName);
 
@@ -1247,7 +1306,7 @@ static NTSTATUS DOKAN_CALLBACK CryptLockFile(LPCWSTR FileName,
                                               LONGLONG ByteOffset,
                                               LONGLONG Length,
                                               PDOKAN_FILE_INFO DokanFileInfo) {
-  FileNameEnc filePath(GetContext(), FileName);
+  FileNameEnc filePath(DokanFileInfo, FileName);
   HANDLE handle;
 
   DbgPrint(L"LockFile %s\n", FileName);
@@ -1281,7 +1340,7 @@ static NTSTATUS DOKAN_CALLBACK CryptLockFile(LPCWSTR FileName,
 
 static NTSTATUS DOKAN_CALLBACK CryptSetEndOfFile(
     LPCWSTR FileName, LONGLONG ByteOffset, PDOKAN_FILE_INFO DokanFileInfo) {
-	FileNameEnc filePath(GetContext(), FileName);
+	FileNameEnc filePath(DokanFileInfo, FileName);
   HANDLE handle;
 
 
@@ -1315,7 +1374,7 @@ static NTSTATUS DOKAN_CALLBACK CryptSetEndOfFile(
 
 static NTSTATUS DOKAN_CALLBACK CryptSetAllocationSize(
     LPCWSTR FileName, LONGLONG AllocSize, PDOKAN_FILE_INFO DokanFileInfo) {
-	FileNameEnc filePath(GetContext(), FileName);
+	FileNameEnc filePath(DokanFileInfo, FileName);
   HANDLE handle;
   LARGE_INTEGER fileSize;
 
@@ -1366,7 +1425,7 @@ static NTSTATUS DOKAN_CALLBACK CryptSetFileAttributes(
     LPCWSTR FileName, DWORD FileAttributes, PDOKAN_FILE_INFO DokanFileInfo) {
   
 
-  FileNameEnc filePath(GetContext(), FileName);
+  FileNameEnc filePath(DokanFileInfo, FileName);
 
 
   DbgPrint(L"SetFileAttributes %s, %x\n", FileName, FileAttributes);
@@ -1385,7 +1444,7 @@ static NTSTATUS DOKAN_CALLBACK
 CryptSetFileTime(LPCWSTR FileName, CONST FILETIME *CreationTime,
                   CONST FILETIME *LastAccessTime, CONST FILETIME *LastWriteTime,
                   PDOKAN_FILE_INFO DokanFileInfo) {
-	FileNameEnc filePath(GetContext(), FileName);
+	FileNameEnc filePath(DokanFileInfo, FileName);
   HANDLE handle;
   
 
@@ -1411,7 +1470,7 @@ CryptSetFileTime(LPCWSTR FileName, CONST FILETIME *CreationTime,
 static NTSTATUS DOKAN_CALLBACK
 CryptUnlockFile(LPCWSTR FileName, LONGLONG ByteOffset, LONGLONG Length,
                  PDOKAN_FILE_INFO DokanFileInfo) {
-  FileNameEnc filePath(GetContext(), FileName);
+  FileNameEnc filePath(DokanFileInfo, FileName);
   HANDLE handle;
   
 
@@ -1447,7 +1506,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
     LPCWSTR FileName, PSECURITY_INFORMATION SecurityInformation,
     PSECURITY_DESCRIPTOR SecurityDescriptor, ULONG BufferLength,
     PULONG LengthNeeded, PDOKAN_FILE_INFO DokanFileInfo) {
-  FileNameEnc filePath(GetContext(), FileName);
+  FileNameEnc filePath(DokanFileInfo, FileName);
 
   BOOLEAN requestingSaclInfo;
 
@@ -1544,7 +1603,7 @@ static NTSTATUS DOKAN_CALLBACK CryptSetFileSecurity(
     PSECURITY_DESCRIPTOR SecurityDescriptor, ULONG SecurityDescriptorLength,
     PDOKAN_FILE_INFO DokanFileInfo) {
   HANDLE handle;
-  FileNameEnc filePath(GetContext(), FileName);
+  FileNameEnc filePath(DokanFileInfo, FileName);
 
   UNREFERENCED_PARAMETER(SecurityDescriptorLength);
 
@@ -1650,10 +1709,12 @@ NTSYSCALLAPI NTSTATUS NTAPI NtQueryInformationFile(
  * END
  */
 
+
 NTSTATUS DOKAN_CALLBACK
-CryptFindStreams(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
-                  PDOKAN_FILE_INFO DokanFileInfo) {
-  FileNameEnc filePath(GetContext(), FileName);
+CryptFindStreamsInternal(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
+                  PDOKAN_FILE_INFO DokanFileInfo, PCryptStoreCaseStream StoreCaseStream, 
+			std::unordered_map<std::wstring, std::wstring> *pmap) {
+  FileNameEnc filePath(DokanFileInfo, FileName);
   HANDLE hFind;
   WIN32_FIND_STREAM_DATA findData;
   DWORD error;
@@ -1680,11 +1741,17 @@ CryptFindStreams(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
   if (!convert_find_stream_data(GetContext(), FileName, filePath, findData)) {
 	  error = GetLastError();
 	  DbgPrint(L"\tconvert_find_stream_data returned false. Error is %u\n\n", error);
+	  if (error == 0)
+		  error = ERROR_ACCESS_DENIED;
 	  FindClose(hFind);
 	  return ToNtStatus(error);
   }
   DbgPrint(L"Stream %s size = %lld\n", findData.cStreamName, findData.StreamSize.QuadPart);
-  FillFindStreamData(&findData, DokanFileInfo);
+  if (FillFindStreamData)
+	FillFindStreamData(&findData, DokanFileInfo);
+  if (StoreCaseStream && pmap) {
+	  StoreCaseStream(&findData, pmap);
+  }
   count++;
 
   while (FindNextStreamW(hFind, &findData) != 0) {
@@ -1692,11 +1759,17 @@ CryptFindStreams(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
 	if (!convert_find_stream_data(GetContext(), FileName, filePath, findData)) {
 		  error = GetLastError();
 		  DbgPrint(L"\tconvert_find_stream_data returned false (loop). Error is %u\n\n", error);
+		  if (error == 0)
+			  error = ERROR_ACCESS_DENIED;
 		  FindClose(hFind);
 		  return ToNtStatus(error);
 	}
 	DbgPrint(L"Stream %s size = %lld\n", findData.cStreamName, findData.StreamSize.QuadPart);
-    FillFindStreamData(&findData, DokanFileInfo);
+	if (FillFindStreamData && DokanFileInfo)
+		FillFindStreamData(&findData, DokanFileInfo);
+	if (StoreCaseStream && pmap) {
+		StoreCaseStream(&findData, pmap);
+	}
     count++;
   }
 
@@ -1711,6 +1784,13 @@ CryptFindStreams(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
   DbgPrint(L"\tFindStreams return %d entries in %s\n\n", count, FileName);
 
   return STATUS_SUCCESS;
+}
+
+NTSTATUS DOKAN_CALLBACK
+CryptFindStreams(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
+	PDOKAN_FILE_INFO DokanFileInfo) {
+
+	return CryptFindStreamsInternal(FileName, FillFindStreamData, DokanFileInfo, NULL, NULL);
 }
 
 static NTSTATUS DOKAN_CALLBACK CryptMounted(PDOKAN_FILE_INFO DokanFileInfo) {
