@@ -886,3 +886,80 @@ get_file_stream(LPCWSTR filename, std::wstring *file, std::wstring *stream)
 		return false;
 	}
 }
+
+bool
+remove_stream_decoration(LPCWSTR stream, std::wstring& stream_undecorated, std::wstring& decoration)
+{
+	if (!stream || stream[0] != ':')
+		return false;
+
+	LPCWSTR pLastColon = wcsrchr(stream, ':');
+
+	if (pLastColon == stream) {
+		decoration = L"";
+		stream_undecorated = stream;
+		return true;
+	}
+
+	stream_undecorated = stream;
+
+	stream_undecorated.erase(pLastColon - stream);
+
+	decoration = pLastColon;
+
+	return true;
+}
+
+bool
+convert_find_stream_data(CryptContext *con, LPCWSTR pt_path, LPCWSTR path, WIN32_FIND_STREAM_DATA& fdata)
+{
+
+	BYTE dir_iv[DIR_IV_LEN];
+
+	bool plaintext_names = con->GetConfig()->m_PlaintextNames;
+
+	bool reverse = con->GetConfig()->m_reverse;
+
+	if (!plaintext_names && wcscmp(fdata.cStreamName, L"::$DATA")) {
+		if (reverse) {
+			std::wstring dirpath;
+			if (!get_file_directory(pt_path, dirpath))
+				return false;
+			if (!derive_path_iv(con, dirpath.c_str(), dir_iv, TYPE_DIRIV))
+				return false;
+
+			std::wstring enc_stream;
+
+			if (!encrypt_stream_name(con, dir_iv, fdata.cStreamName, enc_stream))
+				return false;
+
+			wcscpy_s(fdata.cStreamName, enc_stream.c_str());
+
+		} else {
+			std::wstring dirpath;
+			if (!get_file_directory(path, dirpath))
+				return false;
+			if (!get_dir_iv(con, dirpath.c_str(), dir_iv))
+				return false;
+
+			std::wstring pt_stream;
+
+			if (!decrypt_stream_name(con, dir_iv, fdata.cStreamName, pt_stream))
+				return false;
+
+			wcscpy_s(fdata.cStreamName, pt_stream.c_str());
+
+		}
+
+	}
+
+	if (reverse) {
+		if (!adjust_file_size_up(fdata.StreamSize))
+			return false;
+	} else {
+		if (!adjust_file_size_down(fdata.StreamSize))
+			return false;
+	}
+
+	return true;
+}
