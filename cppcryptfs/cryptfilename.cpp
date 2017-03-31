@@ -193,8 +193,8 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 			storage += enc_stream;
 			rs = storage.c_str();
 		} else {
-			storage += L":"; // if failure use invalid empty stream name
-			rs = storage.c_str();
+			storage = L"";
+			rs = NULL;
 		}
 		
 	}
