@@ -362,9 +362,9 @@ const WCHAR *FileNameEnc::Convert()
 	const WCHAR *rs = !m_failed ? &m_enc_path[0] : NULL;
 
 	if (rs) {
-		DbgPrint(L"\tconverted filename %s => %s\n", m_plain_path, rs);
+		DbgPrint(L"\tconverted filename %s => %s\n", m_plain_path.c_str(), rs);
 	} else {
-		DbgPrint(L"\terror converting filename %s\n", m_plain_path);
+		DbgPrint(L"\terror converting filename %s\n", m_plain_path.c_str());
 	}
 
 	return rs;
