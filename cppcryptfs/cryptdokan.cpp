@@ -144,14 +144,14 @@ void DbgPrint(LPCWSTR format, ...) {
 
 #define GetContext() ((CryptContext*)DokanFileInfo->DokanOptions->GlobalContext)
 
-typedef int(WINAPI *PCryptStoreCaseStream)(PWIN32_FIND_STREAM_DATA,
+typedef int(WINAPI *PCryptStoreStreamName)(PWIN32_FIND_STREAM_DATA, LPCWSTR encrypted_name,
 	std::unordered_map<std::wstring, std::wstring> *pmap);
 
 NTSTATUS DOKAN_CALLBACK
 CryptFindStreamsInternal(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
-	PDOKAN_FILE_INFO DokanFileInfo, PCryptStoreCaseStream, std::unordered_map<std::wstring, std::wstring> *pmap);
+	PDOKAN_FILE_INFO DokanFileInfo, PCryptStoreStreamName, std::unordered_map<std::wstring, std::wstring> *pmap);
 
-static int WINAPI CryptCaseStreamsCallback(PWIN32_FIND_STREAM_DATA pfdata,
+static int WINAPI CryptCaseStreamsCallback(PWIN32_FIND_STREAM_DATA pfdata, LPCWSTR encrypted_name,
 	std::unordered_map<std::wstring, std::wstring>* pmap)
 {
 	std::wstring stream_without_type;
@@ -1300,8 +1300,18 @@ CryptMoveFileInternal(LPCWSTR FileName, // existing file name
 			  }
 		  }
 	  }
+
       return STATUS_SUCCESS;
   }
+}
+
+static int WINAPI StoreRenameStreamCallback(PWIN32_FIND_STREAM_DATA pfdata, LPCWSTR encrypted_name,
+	std::unordered_map<std::wstring, std::wstring>* pmap)
+{
+
+	pmap->insert(std::make_pair(encrypted_name, pfdata->cStreamName));
+
+	return 0;
 }
 
 static NTSTATUS DOKAN_CALLBACK
@@ -1324,10 +1334,89 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 
 	bool needRepair = false;
 
+	std::unordered_map<std::wstring, std::wstring> rename_streams_map;
+
+	if (!GetContext()->GetConfig()->m_PlaintextNames) {
+		std::wstring fromDir, toDir;
+		get_file_directory(FileName, fromDir);
+		get_file_directory(NewFileName, toDir);
+		if (lstrcmpi(fromDir.c_str(), toDir.c_str())) {
+			std::wstring stream;
+			bool is_stream = false;
+			if (get_file_stream(FileName, NULL, &stream)) {
+				is_stream = stream.length() > 0 && wcscmp(stream.c_str(), L":") != 0 && lstrcmpi(stream.c_str(), L"::$DATA") != 0;
+			}
+			if (!is_stream)
+				CryptFindStreamsInternal(FileName, NULL, DokanFileInfo, StoreRenameStreamCallback, &rename_streams_map);
+		}
+	}
+
 	NTSTATUS status = CryptMoveFileInternal(FileName, NewFileName, ReplaceIfExisting, DokanFileInfo, needRepair, false);
 
 	if (GetContext()->IsCaseInsensitive() && status == 0 && needRepair) {
 		status = CryptMoveFileInternal(NewFileName, NewFileName, TRUE, DokanFileInfo, needRepair, true);
+	}
+
+	if (status == 0) {
+		if (rename_streams_map.size() > 1 && status == STATUS_SUCCESS) {
+			// rename streams by copying and deleting.  rename doesn't work
+			std::wstring file_with_stream;
+			for (auto it : rename_streams_map) {
+				if (it.second.length() < 1 || !wcscmp(it.second.c_str(), L":") || !wcscmp(it.second.c_str(), L"::$DATA")) {
+					DbgPrint(L"movefile skipping default stream %s\n", it.second.c_str());
+					continue;
+				}
+				FileNameEnc newNameWithoutStream(DokanFileInfo, NewFileName);
+				std::wstring stream_without_type;
+				std::wstring stream_type;
+				remove_stream_type(it.first.c_str(), stream_without_type, stream_type);
+				std::wstring newEncNameWithOldEncStream = (LPCWSTR)newNameWithoutStream + stream_without_type;
+				remove_stream_type(it.second.c_str(), stream_without_type, stream_type);
+				std::wstring  newNameWithStream = NewFileName + stream_without_type;
+				FileNameEnc newEncNameWithNewEncStream(DokanFileInfo, newNameWithStream.c_str());
+				HANDLE hStreamSrc = CreateFile(newEncNameWithOldEncStream.c_str(), GENERIC_READ | DELETE, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING,
+					FILE_FLAG_DELETE_ON_CLOSE, NULL);
+				if (hStreamSrc != INVALID_HANDLE_VALUE) {
+
+					HANDLE hStreamDest = CreateFile(newEncNameWithNewEncStream, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, CREATE_NEW,
+						0, NULL);
+					if (hStreamDest != INVALID_HANDLE_VALUE) {
+						CryptFile *src = CryptFile::NewInstance(GetContext());
+						CryptFile *dst = CryptFile::NewInstance(GetContext());
+				
+						if (src->Associate(GetContext(), hStreamSrc, NULL) && dst->Associate(GetContext(), hStreamDest, NULL)) {
+
+							const DWORD bufsize = 64 * 1024;
+
+							BYTE *buf = new BYTE[bufsize];
+
+							LONGLONG offset = 0;
+							DWORD nRead;
+
+							while (src->Read(buf, bufsize, &nRead, offset)) {
+								if (nRead == 0)
+									break;
+								DWORD nWritten = 0;
+								dst->Write(buf, nRead, &nWritten, offset, FALSE, FALSE);
+								if (nRead != nWritten)
+									break;
+								offset += nRead;
+							}
+
+							delete[] buf;
+						}
+						delete src;
+						delete dst;
+						CloseHandle(hStreamDest);
+					}
+					CloseHandle(hStreamSrc);
+				} else {
+					DbgPrint(L"movefile cannot open file to rename stream %s, error = %u\n", newEncNameWithOldEncStream.c_str(), GetLastError());
+				}
+			}
+			SetLastError(0);
+
+		}
 	}
 
 	return status;
@@ -1750,7 +1839,7 @@ NTSYSCALLAPI NTSTATUS NTAPI NtQueryInformationFile(
 
 NTSTATUS DOKAN_CALLBACK
 CryptFindStreamsInternal(LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
-                  PDOKAN_FILE_INFO DokanFileInfo, PCryptStoreCaseStream StoreCaseStream, 
+                  PDOKAN_FILE_INFO DokanFileInfo, PCryptStoreStreamName StoreStreamName,
 			std::unordered_map<std::wstring, std::wstring> *pmap) {
   FileNameEnc filePath(DokanFileInfo, FileName);
   HANDLE hFind;
@@ -1766,6 +1855,8 @@ CryptFindStreamsInternal(LPCWSTR FileName, PFillFindStreamData FillFindStreamDat
 	  return 0;
   }
 
+  std::wstring encrypted_name;
+
   hFind = FindFirstStreamW(filePath, FindStreamInfoStandard, &findData, 0);
 
   if (hFind == INVALID_HANDLE_VALUE) {
@@ -1776,6 +1867,7 @@ CryptFindStreamsInternal(LPCWSTR FileName, PFillFindStreamData FillFindStreamDat
 
   DbgPrint(L"found stream %s\n", findData.cStreamName);
 
+  encrypted_name = findData.cStreamName;
   if (!convert_find_stream_data(GetContext(), FileName, filePath, findData)) {
 	  error = GetLastError();
 	  DbgPrint(L"\tconvert_find_stream_data returned false. Error is %u\n\n", error);
@@ -1787,13 +1879,14 @@ CryptFindStreamsInternal(LPCWSTR FileName, PFillFindStreamData FillFindStreamDat
   DbgPrint(L"Stream %s size = %lld\n", findData.cStreamName, findData.StreamSize.QuadPart);
   if (FillFindStreamData)
 	FillFindStreamData(&findData, DokanFileInfo);
-  if (StoreCaseStream && pmap) {
-	  StoreCaseStream(&findData, pmap);
+  if (StoreStreamName && pmap) {
+	  StoreStreamName(&findData, encrypted_name.c_str(), pmap);
   }
   count++;
 
   while (FindNextStreamW(hFind, &findData) != 0) {
 	DbgPrint(L"found stream %s\n", findData.cStreamName);
+	encrypted_name = findData.cStreamName;
 	if (!convert_find_stream_data(GetContext(), FileName, filePath, findData)) {
 		  error = GetLastError();
 		  DbgPrint(L"\tconvert_find_stream_data returned false (loop). Error is %u\n\n", error);
@@ -1805,8 +1898,8 @@ CryptFindStreamsInternal(LPCWSTR FileName, PFillFindStreamData FillFindStreamDat
 	DbgPrint(L"Stream %s size = %lld\n", findData.cStreamName, findData.StreamSize.QuadPart);
 	if (FillFindStreamData && DokanFileInfo)
 		FillFindStreamData(&findData, DokanFileInfo);
-	if (StoreCaseStream && pmap) {
-		StoreCaseStream(&findData, pmap);
+	if (StoreStreamName && pmap) {
+		StoreStreamName(&findData, encrypted_name.c_str(), pmap);
 	}
     count++;
   }
