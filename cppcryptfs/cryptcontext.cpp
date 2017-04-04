@@ -40,7 +40,6 @@ void CryptContext::InitEme(const BYTE *key)
 
 CryptContext::CryptContext()
 {
-	m_haveSetFileNamedStreamsFlag = FALSE;
 
 	m_mountEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 

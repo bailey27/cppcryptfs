@@ -235,9 +235,6 @@ void FileNameEnc::AssignConAndPlainPath(CryptContext *con, LPCWSTR plain_path)
 
 	m_plain_path = plain_path;
 
-	if (!m_con->m_haveSetFileNamedStreamsFlag)
-		return;
-
 	LPCWSTR pColon = wcschr(plain_path, ':');
 
 	if (!pColon)
@@ -1811,9 +1808,6 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
 	  );
 
   *FileSystemFlags = defFlags & (bGotVI ? fs_flags : 0xffffffff);
-
-  if (*FileSystemFlags & FILE_NAMED_STREAMS)
-	  con->m_haveSetFileNamedStreamsFlag = TRUE;
 
   // File system name could be anything up to 10 characters.
   // But Windows check few feature availability based on file system name.
