@@ -963,3 +963,6 @@ convert_find_stream_data(CryptContext *con, LPCWSTR pt_path, LPCWSTR path, WIN32
 
 	return true;
 }
+
+
+

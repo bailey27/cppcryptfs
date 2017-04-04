@@ -93,3 +93,4 @@ remove_stream_type(LPCWSTR stream, std::wstring& stream_without_type, std::wstri
 
 bool
 convert_find_stream_data(CryptContext *con, LPCWSTR pt_path, LPCWSTR path, WIN32_FIND_STREAM_DATA& fdata);
+

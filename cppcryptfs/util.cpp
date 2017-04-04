@@ -600,3 +600,12 @@ bool touppercase(LPCWSTR in, std::wstring& out)
 
 	return bRet;
 }
+
+int compare_names(CryptContext *con, LPCWSTR name1, LPCWSTR name2)
+{
+	if (con->IsCaseInsensitive()) {
+		return lstrcmpi(name1, name2);
+	} else {
+		return wcscmp(name1, name2);
+	}
+}

@@ -997,18 +997,7 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
 	
     opened = TRUE;
   }
-#if 0 // this code is useful for debugging sometimes
-  if (!lstrcmpi(FileName, L"\\ConsoleApplication1\\ConsoleApplication1\\Debug\\ConsoleApplication1.pch")) {
-	  HANDLE h = CreateFile(L"c:\\tmp\\test.pch", GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, NULL);
-	  if (h != INVALID_HANDLE_VALUE) {
-		  LARGE_INTEGER l;
-		  l.QuadPart = Offset;
-		  SetFilePointerEx(h, l, NULL, FILE_BEGIN);
-		  WriteFile(h, Buffer, NumberOfBytesToWrite, NULL, NULL);
-	  }
-	  CloseHandle(h);
-  }
-#endif
+
   CryptFile *file = CryptFile::NewInstance(GetContext());
   if (file->Associate(GetContext(), handle, FileName)) {
 	  if (!file->Write((const unsigned char *)Buffer, NumberOfBytesToWrite, NumberOfBytesWritten, Offset, DokanFileInfo->WriteToEndOfFile, DokanFileInfo->PagingIo)) {
@@ -1314,6 +1303,7 @@ static int WINAPI StoreRenameStreamCallback(PWIN32_FIND_STREAM_DATA pfdata, LPCW
 	return 0;
 }
 
+
 static NTSTATUS DOKAN_CALLBACK
 CryptMoveFile(LPCWSTR FileName, // existing file name
 	LPCWSTR NewFileName, BOOL ReplaceIfExisting,
@@ -1334,17 +1324,31 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 
 	bool needRepair = false;
 
+	/* 
+		If we are moving a file with an alternate data stream (besides the default "::$DATA" one) 
+		to a different directory, then we need to rename the stream(s) (the encrypted name) using
+		the new IV for its new dir.
+
+		There is no API for renaming streams, so the rename must be done by copy and delete.
+
+		If the rename_streams_map has more than one (the default) stream, then we know to 
+		do this later.
+
+		If we are operating on a (non-default) stream, then we don't need to do any of this.
+	*/
+
 	std::unordered_map<std::wstring, std::wstring> rename_streams_map;
 
 	if (!GetContext()->GetConfig()->m_PlaintextNames) {
 		std::wstring fromDir, toDir;
 		get_file_directory(FileName, fromDir);
 		get_file_directory(NewFileName, toDir);
-		if (lstrcmpi(fromDir.c_str(), toDir.c_str())) {
+		if (compare_names(GetContext(), fromDir.c_str(), toDir.c_str())) {
 			std::wstring stream;
 			bool is_stream = false;
 			if (get_file_stream(FileName, NULL, &stream)) {
-				is_stream = stream.length() > 0 && wcscmp(stream.c_str(), L":") != 0 && lstrcmpi(stream.c_str(), L"::$DATA") != 0;
+				is_stream = stream.length() > 0 && wcscmp(stream.c_str(), L":") && 
+					compare_names(GetContext(), stream.c_str(), L"::$DATA");
 			}
 			if (!is_stream)
 				CryptFindStreamsInternal(FileName, NULL, DokanFileInfo, StoreRenameStreamCallback, &rename_streams_map);
@@ -1358,52 +1362,62 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 	}
 
 	if (status == 0) {
-		if (rename_streams_map.size() > 1 && status == STATUS_SUCCESS) {
+		if (rename_streams_map.size() > 1 && status == 0) {
 			// rename streams by copying and deleting.  rename doesn't work
-			std::wstring file_with_stream;
 			for (auto it : rename_streams_map) {
-				if (it.second.length() < 1 || !wcscmp(it.second.c_str(), L":") || !wcscmp(it.second.c_str(), L"::$DATA")) {
+				if (it.second.length() < 1 || !wcscmp(it.second.c_str(), L":") || 
+					!compare_names(GetContext(), it.second.c_str(), L"::$DATA")) {
 					DbgPrint(L"movefile skipping default stream %s\n", it.second.c_str());
 					continue;
 				}
+
 				FileNameEnc newNameWithoutStream(DokanFileInfo, NewFileName);
-				std::wstring stream_without_type;
-				std::wstring stream_type;
-				remove_stream_type(it.first.c_str(), stream_without_type, stream_type);
-				std::wstring newEncNameWithOldEncStream = (LPCWSTR)newNameWithoutStream + stream_without_type;
-				remove_stream_type(it.second.c_str(), stream_without_type, stream_type);
-				std::wstring  newNameWithStream = NewFileName + stream_without_type;
+				std::wstring newEncNameWithOldEncStream = (LPCWSTR)newNameWithoutStream + it.first;
+				std::wstring  newNameWithStream = NewFileName + it.second;
 				FileNameEnc newEncNameWithNewEncStream(DokanFileInfo, newNameWithStream.c_str());
-				HANDLE hStreamSrc = CreateFile(newEncNameWithOldEncStream.c_str(), GENERIC_READ | DELETE, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING,
-					FILE_FLAG_DELETE_ON_CLOSE, NULL);
+
+				HANDLE hStreamSrc = CreateFile(newEncNameWithOldEncStream.c_str(), GENERIC_READ | DELETE, 
+							FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING,
+							FILE_FLAG_DELETE_ON_CLOSE, NULL);
+
 				if (hStreamSrc != INVALID_HANDLE_VALUE) {
 
-					HANDLE hStreamDest = CreateFile(newEncNameWithNewEncStream, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, CREATE_NEW,
+					HANDLE hStreamDest = CreateFile(newEncNameWithNewEncStream, GENERIC_READ | GENERIC_WRITE, 
+						FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, CREATE_NEW,
 						0, NULL);
+
 					if (hStreamDest != INVALID_HANDLE_VALUE) {
+
 						CryptFile *src = CryptFile::NewInstance(GetContext());
 						CryptFile *dst = CryptFile::NewInstance(GetContext());
 				
-						if (src->Associate(GetContext(), hStreamSrc, NULL) && dst->Associate(GetContext(), hStreamDest, NULL)) {
+						// we don't need to pass pt_path to associate in forward mode so it can be null
+						// we never get here in reverse mode because it is read-only
+
+						if (src->Associate(GetContext(), hStreamSrc, NULL) && 
+							dst->Associate(GetContext(), hStreamDest, NULL)) {
 
 							const DWORD bufsize = 64 * 1024;
 
-							BYTE *buf = new BYTE[bufsize];
+							BYTE *buf = (BYTE*)malloc(bufsize);
 
-							LONGLONG offset = 0;
-							DWORD nRead;
+							if (buf) {
 
-							while (src->Read(buf, bufsize, &nRead, offset)) {
-								if (nRead == 0)
-									break;
-								DWORD nWritten = 0;
-								dst->Write(buf, nRead, &nWritten, offset, FALSE, FALSE);
-								if (nRead != nWritten)
-									break;
-								offset += nRead;
+								LONGLONG offset = 0;
+								DWORD nRead;
+
+								while (src->Read(buf, bufsize, &nRead, offset)) {
+									if (nRead == 0)
+										break;
+									DWORD nWritten = 0;
+									dst->Write(buf, nRead, &nWritten, offset, FALSE, FALSE);
+									if (nRead != nWritten)
+										break;
+									offset += nRead;
+								}
+
+								free(buf);
 							}
-
-							delete[] buf;
 						}
 						delete src;
 						delete dst;

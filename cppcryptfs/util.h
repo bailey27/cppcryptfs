@@ -90,3 +90,5 @@ GetProductVersionInfo(std::wstring& strProductName, std::wstring& strProductVers
 	std::wstring& strLegalCopyright);
 
 bool touppercase(LPCWSTR in, std::wstring& out);
+
+int compare_names(CryptContext *con, LPCWSTR name1, LPCWSTR name2);
