@@ -1795,10 +1795,13 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
 	  DbgPrint(L"GetVolumeInformation failed, err = %u\n", GetLastError());
   }
 
+  _ASSERT(max_component == 255);
  
   wcscpy_s(VolumeNameBuffer, VolumeNameSize, &config->m_VolumeName[0]);
-  *VolumeSerialNumber = con->GetConfig()->m_serial;
-  *MaximumComponentLength = (config->m_PlaintextNames || config->m_LongNames) ? 255 : 160;
+  if (VolumeSerialNumber)
+    *VolumeSerialNumber = con->GetConfig()->m_serial;
+  if (MaximumComponentLength)
+    *MaximumComponentLength = (config->m_PlaintextNames || config->m_LongNames) ? 255 : 160;
   DWORD defFlags = (FILE_CASE_SENSITIVE_SEARCH | FILE_CASE_PRESERVED_NAMES |
 	  FILE_SUPPORTS_REMOTE_STORAGE | FILE_UNICODE_ON_DISK |
 	  FILE_PERSISTENT_ACLS 
@@ -1807,7 +1810,8 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
 #endif
 	  );
 
-  *FileSystemFlags = defFlags & (bGotVI ? fs_flags : 0xffffffff);
+  if (FileSystemFlags)
+    *FileSystemFlags = defFlags & (bGotVI ? fs_flags : 0xffffffff);
 
   // File system name could be anything up to 10 characters.
   // But Windows check few feature availability based on file system name.
