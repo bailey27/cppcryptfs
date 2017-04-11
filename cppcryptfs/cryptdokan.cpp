@@ -1407,7 +1407,8 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 									if (nRead == 0)
 										break;
 									DWORD nWritten = 0;
-									dst->Write(buf, nRead, &nWritten, offset, FALSE, FALSE);
+									if (!dst->Write(buf, nRead, &nWritten, offset, FALSE, FALSE))
+										break;
 									if (nRead != nWritten)
 										break;
 									offset += nRead;
