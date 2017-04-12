@@ -1391,8 +1391,8 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 						// we don't need to pass pt_path to associate in forward mode so it can be null
 						// we never get here in reverse mode because it is read-only
 
-						if (src->Associate(GetContext(), hStreamSrc, NULL) && 
-							dst->Associate(GetContext(), hStreamDest, NULL)) {
+						if (src->Associate(GetContext(), hStreamSrc) && 
+							dst->Associate(GetContext(), hStreamDest)) {
 
 							const DWORD bufsize = 64 * 1024;
 

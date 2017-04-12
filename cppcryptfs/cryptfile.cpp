@@ -718,6 +718,10 @@ BOOL CryptFileReverse::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputP
 
 	LARGE_INTEGER l;
 
+	if (inputPath == NULL) {
+		DbgPrint(L"ASSOCIATE: failed because inputPath is NULL\n");
+	}
+
 	if (!GetFileSizeEx(hfile, &l)) {
 		DbgPrint(L"ASSOCIATE: failed to get size of file\n");
 		return FALSE;
