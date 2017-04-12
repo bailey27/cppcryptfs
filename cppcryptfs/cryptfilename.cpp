@@ -68,7 +68,17 @@ bool
 derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const char *type)
 {
 
-	DbgPrint(L"derive_path_iv input = %s, type = %S\n", path, type);
+	if (!path) {
+		DbgPrint(L"derive_path_iv path is NULL, returning false\n");
+		return false;
+	}
+
+	if (!type) {
+		DbgPrint(L"derive_path_iv type is NULL, returning false\n");
+		return false;
+	}
+
+	DbgPrint(L"derive_path_iv path = %s, type = %S\n", path, type);
 
 	std::wstring wpath;
 
