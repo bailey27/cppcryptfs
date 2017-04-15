@@ -62,6 +62,8 @@ OpenSSL
 ---------
 cppcryptfs uses OpenSSL for doing the actual encrypting and decrypting of data.
 
+You will need to build OpenSSL from its source code.
+
 Please refer to the "INSTALL" file from the OpenSSL distribution if these instructions don't work.
 
 After installing Visual Studio, nasm, git, and ActiveState perl, open a new Windows command prompt (cmd.exe).
@@ -72,7 +74,7 @@ To start an elevated command prompt in Windows 10, click on the search (magnifyi
 
 [how to start an elevated command prompt screenshot](/screenshots/cmd_as_administrator.png?raw=true")
 
-First, clone OpenSSL.
+First, clone the OpenSSL source code from github.
 
 ```
 c:
