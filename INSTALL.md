@@ -52,7 +52,7 @@ git clone ... (or extract zip here)
 
 Dokany
 ------
-Unless you want to develop or debug Dokany, you should just install the Dokany release binaries from here.
+Unless you want to develop or debug Dokany, you should just install one of the Dokany release binaries from here.
 
 https://github.com/dokan-dev/dokany/releases
 
