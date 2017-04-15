@@ -64,7 +64,7 @@ After installing Visual Studio, nasm, git, and ActiveState perl, open a new Wind
 
 You will need an elevated (administrator) command prompt for running the command that installs OpenSSL.  You can build it in a normal command prompt, though.
 
-To start an elevated command prompt in Windows 10, right-click on the Windows logo at the bottom left of the screen and select "Command Prompt (Admin)".  Below is a screenshot.
+To start an elevated command prompt in Windows 10, click on the search (magnifying glass) icon in the lower left of the screen and type "cmd". Then right-click on "Command Prompt" and select "Run as administrator".
 
 [how to start an elevated command prompt screenshot](/screenshots/cmd_as_administrator.png?raw=true")
 
