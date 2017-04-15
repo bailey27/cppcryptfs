@@ -239,6 +239,7 @@ Misc:
   -t, --tray            hide in system tray
   -x, --exit            exit if no drives mounted
   -l, --list            list available and mounted drive letters (with paths)
+  -v, --version         print version
   -h, --help            display this help message
 
 ```

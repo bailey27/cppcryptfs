@@ -844,6 +844,7 @@ static void usage()
 	fprintf(stderr, "  -t, --tray\t\thide in system tray\n");
 	fprintf(stderr, "  -x, --exit\t\texit if no drives mounted\n");
 	fprintf(stderr, "  -l, --list\t\tlist available and mounted drive letters (with paths)\n");
+	fprintf(stderr, "  -v, --version\t\tprint version\n");
 	fprintf(stderr, "  -h, --help\t\tdisplay this help message\n");
 	
 }
@@ -883,6 +884,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	BOOL invalid_opt = FALSE;
 
 	BOOL do_help = FALSE;
+	BOOL do_version = FALSE;
 	BOOL exit_if_no_mounted = FALSE;
 	BOOL hide_to_system_tray = FALSE;
 	BOOL do_list = FALSE;
@@ -900,6 +902,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			{L"tray",  no_argument, 0, 't'},
 			{L"exit",  no_argument, 0, 'x'},
 			{L"list",  no_argument, 0, 'l'},
+			{ L"version",  no_argument, 0, 'v' },
 			{L"help",  no_argument, 0, 'h'},
 			{0, 0, 0, 0}
 		};
@@ -909,7 +912,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 
 		while (1) {
 
-			c = getopt_long(argc, argv, L"m:d:p:u:hxtlr", long_options, &option_index);
+			c = getopt_long(argc, argv, L"m:d:p:u:vhxtlr", long_options, &option_index);
 
 			if (c == -1)
 				break;
@@ -937,6 +940,9 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 					dismount_all = TRUE;
 				else
 					driveletter = *optarg;
+				break;
+			case 'v':
+				do_version = TRUE;
 				break;
 			case 'h':
 				do_help = TRUE;
@@ -971,8 +977,16 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 		fwprintf(stderr, L"cppcryptfs: %s\n", (LPCWSTR)errMes);
 	} else if (invalid_opt) {
 		fwprintf(stderr, L"Try 'cppcryptfs --help' for more information.\n");
-	} else if (do_help) {
-		usage();
+	} else if (do_version || do_help) {
+		if (do_version) {
+			std::wstring prod, ver, copyright;
+			GetProductVersionInfo(prod, ver, copyright);
+			fwprintf(stderr, L"%s %s %s\n", prod.c_str(), ver.c_str(), copyright.c_str());
+			if (do_help)
+				fwprintf(stderr, L"\n");
+		}
+		if (do_help)
+			usage();
 	} else if (do_list) {
 		CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS); 
 		if (pList) {
