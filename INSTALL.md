@@ -78,7 +78,9 @@ First, clone the OpenSSL source code from github.
 
 ```
 c:
-cd \git
+cd \
+mkdir git
+cd git
 git clone https://github.com/openssl/openssl.git
 cd openssl
 ```
