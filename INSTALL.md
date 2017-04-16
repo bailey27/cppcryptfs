@@ -7,7 +7,7 @@ Dokany, Microsoft Visual Studio 2017, perl, nasm, and git. git is optional.
 
 You will also need to download the source code for the OpenSSL and RapidJSON projects from github.  
 
-Only OpenSSL needs to be built separately.  cppcryptfs uses only header files from RapidJSON, so RapidJSON doesn't need to be built separately.
+Only OpenSSL needs to be built separately.  cppcryptfs uses only header files from RapidJSON, so you don't need to build RapidJSON.
 
 For building OpenSSL and cppcryptfs, the free Microsoft Visual Studio 2017 Community Edition is recommended.
 
