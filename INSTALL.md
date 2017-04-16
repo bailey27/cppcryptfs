@@ -9,7 +9,9 @@ You will also need to download the source code for the OpenSSL and RapidJSON pro
 
 Only OpenSSL needs to be built separately.  cppcryptfs uses only header files from RapidJSON, so you don't need to build RapidJSON.
 
-For building OpenSSL and cppcryptfs, the free Microsoft Visual Studio 2017 Community Edition is recommended.
+Microsoft Visual Studio 2017 is recommended for building OpenSSL and required for building cppcryptfs.  
+
+The Community Edition of Microsoft Visual Studio 2017 will work, and it is free.
 
 https://www.visualstudio.com/vs/community/
 
