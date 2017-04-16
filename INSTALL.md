@@ -73,8 +73,7 @@ First, make the c:\\git directory, cd to it, clone the OpenSSL source code from 
 
 ```
 c:
-cd \
-mkdir git
+mkdir \git
 cd \git
 git clone https://github.com/openssl/openssl.git
 cd openssl
