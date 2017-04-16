@@ -167,7 +167,7 @@ reason to not set the cache time to live to a high value or to infinite.
 
 **Case insensitive**
 
-This option has effect only in forward mode and only when encrypted file names are used.  Reverse-mode filesystems are always case-sensitive, and filesystems with plain text file names are always case-insensitive.
+This option has effect only in forward mode and only when encrypted file names are used.  Reverse-mode filesystems with encrypted file names are always case-sensitive, and filesystems with plain text file names are always case-insensitive.
 
 Normally, when file name encryption is used, cppcryptfs requires that files and directories be opened using the same case that was used when the files and directories were created.
 
