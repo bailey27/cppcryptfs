@@ -74,13 +74,13 @@ To start an elevated command prompt in Windows 10, click on the search (magnifyi
 
 [how to start an elevated command prompt screenshot](/screenshots/cmd_as_administrator.png?raw=true")
 
-First, clone the OpenSSL source code from github.
+First, make the c:\\git directory (if you haven't done it already), cd to it, and  clone the OpenSSL source code from github.
 
 ```
 c:
 cd \
 mkdir git
-cd git
+cd \git
 git clone https://github.com/openssl/openssl.git
 cd openssl
 ```
