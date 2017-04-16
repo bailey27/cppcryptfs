@@ -69,7 +69,7 @@ To start an elevated command prompt in Windows 10, click on the search (magnifyi
 
 Whether or not you are using git, everything will go easier if you put everything in C:\git, e.g.
 
-First, make the c:\\git directory, cd to it, and  clone the OpenSSL source code from github.
+First, make the c:\\git directory, cd to it, clone the OpenSSL source code from github, and cd to the openssl directory which is created by git.
 
 ```
 c:
