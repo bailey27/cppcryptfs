@@ -42,15 +42,6 @@ and unzip them.
 
 These instructions assume that you are using git.
 
-Whether or not you are using git, everything will go easier if you put everything in C:\git, e.g.
-
-```
-c:
-cd \
-mkdir git
-cd git
-git clone ... (or extract zip here)
-```
 
 Dokany
 ------
@@ -76,7 +67,9 @@ To start an elevated command prompt in Windows 10, click on the search (magnifyi
 
 [how to start an elevated command prompt screenshot](/screenshots/cmd_as_administrator.png?raw=true")
 
-First, make the c:\\git directory (if you haven't done that already), cd to it, and  clone the OpenSSL source code from github.
+Whether or not you are using git, everything will go easier if you put everything in C:\git, e.g.
+
+First, make the c:\\git directory, cd to it, and  clone the OpenSSL source code from github.
 
 ```
 c:
