@@ -336,14 +336,22 @@ A lot of Windows progams, including File Explorer that comes with Windows, have 
 
 Case Sensitivity
 -----
-Windows filesystems are not case-sensitive, but they are case-preserving.  The gocryptfs filesystem with encrypted file names is case-senstitive.
+Whe Windows API is not case-sensitive with respect to file names, but  Windows filesystems (NTFS and FAT32) preserve the case
+of file names.
 
-The way the file name encryption works means that if you create a file as Foo.txt and then try
-to open it as foo.txt, it will not be found (unless the new "Case insensitive" setting is on).  However, on a regular Windows filesystem, it would be found.  This is not normally a problem because files are usually opened using the same case that was
-used when they were created.  Microsoft Visual Studio has been observed creating files with one case and then trying to open them with another case.  Also, in Windows 10, File Explorer converts all paths to uppercase when trying to open images and videos to make thumbnails of them.
+In Windows, if you create a file as "Foo.txt" and then try to open it as "foo.txt", it will work.
 
-If you turn on "Case insensitive" on the settings page, then cppcryptfs will ignore the case of file and directory names as Windows does.  The option takes effect only when
-a filesystem is subsequently mounted.  It does not change the behavior of an already-mounted filesystem on-the-fly.
+Most, but not all, software opens files using the same case that was used when the files were created.
+
+cppcryptfs was originally always case-sensitive if encrypted file names were used. This is how gocryptfs operates.
+
+So, if encrypted file names were used, then if a file was created as "Foo.txt", then if an attempt were made to open "foo.txt", the file would not be found.
+
+cppcryptfs now has a "case-insensitive" setting that causes it to have case-insensitive behavior even when encrypted file names are used, but only in forward (normal) mode.
+
+In reverse mode, file names are always case-sensitive if encrypted file names are used, regardless of the case-insensitive setting.  This is a necessary precaution because if the case of an encrypted file name is changed (for example, when backing up the filesystem), then the file name will not decrypt properly if the copy of the filesysem is subsequently mounted in forward mode.
+
+If plain text file names are used, then file names are always case-insensitive, in both forward and reverse mode, regardless of the case-insensitive setting.
 
 
 Performance
