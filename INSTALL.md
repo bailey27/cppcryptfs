@@ -104,7 +104,7 @@ The vcvarsall.bat from Visual Studio 2017 must be run in a Windows cmd.exe comma
 
 Then run (ActiveState) perl to configure OpenSSL for a Visual Studio AMD64/X86_64 static build.  
 
-Use "VC-WIN32" instead of  "VC-WIN64A" if you're doing a 32-bit build
+Use "VC-WIN32" instead of  "VC-WIN64A" if you're doing a 32-bit build.
 
 
 ```
