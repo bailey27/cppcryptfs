@@ -3,9 +3,12 @@ cppcryptfs Build and Installation
 
 You will need the following software, all available for free, to build cppcryptfs:
 
-Dokany, Microsoft Visual Studio 2017, perl, nasm, and git. git is optional.
+Microsoft Visual Studio 2017, perl, nasm, and git. git is optional.
 
-You will also need to download the source code for the OpenSSL and RapidJSON projects from github.  
+
+You will also need to install Dokany.
+
+You will need to download the source code for the OpenSSL and RapidJSON projects from github.  
 
 Only OpenSSL needs to be built separately.  cppcryptfs uses only header files from RapidJSON, so you don't need to build RapidJSON.
 
