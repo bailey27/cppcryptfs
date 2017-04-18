@@ -336,7 +336,7 @@ A lot of Windows progams, including File Explorer that comes with Windows, have 
 
 Case Sensitivity
 -----
-Whe Windows API is not case-sensitive with respect to file names, but  Windows filesystems (NTFS and FAT32) preserve the case
+The Windows API is not case-sensitive with respect to file names, but  Windows filesystems (NTFS and FAT32) preserve the case
 of file names.
 
 In Windows, if you create a file as "Foo.txt" and then try to open it as "foo.txt", it will work.
