@@ -43,7 +43,7 @@ The git that comes with cygwin also works.
 You don't need git if you download the source zip files from github
 and unzip them.
 
-These instructions assume that you are using git.  You don't need to have an account on github.
+These instructions assume that you are using git.  You don't need to have a github to use git.
 
 
 Dokany
