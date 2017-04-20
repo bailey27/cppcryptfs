@@ -216,24 +216,29 @@ public:
 	};
 private:
 	const WCHAR *Convert();
-	void AssignConAndPlainPath(CryptContext *con, LPCWSTR plain_path);
+	void AssignPlainPath(LPCWSTR plain_path);
 public:
 	FileNameEnc(PDOKAN_FILE_INFO DokanFileInfo, const WCHAR *fname, std::string *actual_encrypted = NULL, bool ignorecasecache = false);
 	virtual ~FileNameEnc();
 };
 
-// For some bizarre reason, if we set FILE_NAMED_STREAMS in the volume flags (in CryptGetVolumeInformation())
+// Due to a bug in the Dokany driver (as of Dokany 1.03), if we set FILE_NAMED_STREAMS in 
+// the volume flags (in CryptGetVolumeInformation())
 // to announce that we support alternate data streams in files,
 // then whenever a path with a stream is sent down to us by File Explorer, there's an extra slash after the filename
 // and before the colon (e.g. \foo\boo\foo.txt\:blah:$DATA).
-// So here we git rid of that extra slash if necessary
+// So here we git rid of that extra slash if necessary.
 
 
-void FileNameEnc::AssignConAndPlainPath(CryptContext *con, LPCWSTR plain_path)
+void FileNameEnc::AssignPlainPath(LPCWSTR plain_path)
 {
-	m_con = con;
 
 	m_plain_path = plain_path;
+
+	// The bug mentioned above is now fixed in Dokany.  The fix should be in Dokany 1.04.
+	// When Dokany 1.04 comes out, we should verify that the fix is actually there
+	// and use the version to determine if we still need to do this or not.
+	// But it won't hurt to leave this code in.
 
 	LPCWSTR pColon = wcschr(plain_path, ':');
 
@@ -256,7 +261,8 @@ void FileNameEnc::AssignConAndPlainPath(CryptContext *con, LPCWSTR plain_path)
 FileNameEnc::FileNameEnc(PDOKAN_FILE_INFO DokanFileInfo, const WCHAR *fname, std::string *actual_encrypted, bool forceCaseCacheNotFound)
 {
 	m_dokan_file_info = DokanFileInfo;
-	AssignConAndPlainPath(GetContext(), fname);
+	m_con = GetContext();
+	AssignPlainPath(fname);
 	m_actual_encrypted = actual_encrypted;
 	m_tried = false;
 	m_failed = false;
