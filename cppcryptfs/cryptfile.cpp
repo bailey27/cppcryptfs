@@ -395,6 +395,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 		adjust_file_offset_down(size_down);
 		// if creating a hole, call this->SetEndOfFile() to deal with last block if necessary
 		if (offset > size_down.QuadPart && (size_down.QuadPart % PLAIN_BS)) {
+			DbgPrint(L"Calling SetEndOfFile %llu to deal with hole\n", offset);
 			SetEndOfFile(offset, FALSE);
 		}
 	}
@@ -621,12 +622,15 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 	long long last_block;
 	int to_write;
 
+	bool growing = false;
+
 	if (offset < size_down.QuadPart) {
 		last_block = offset / PLAIN_BS;
 		to_write = (int)(offset % PLAIN_BS);
 	} else if (offset > size_down.QuadPart) {
 		last_block = size_down.QuadPart / PLAIN_BS;
 		to_write = size_down.QuadPart % PLAIN_BS ? (int)min(PLAIN_BS, offset - size_down.QuadPart) : 0;
+		growing = true;
 	} else {
 		to_write = 0;
 	}
@@ -678,6 +682,10 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 			return TRUE;
 		}
 	}
+
+	// if growing the file, then we're appending to_write zero bytes to the last block
+	if (growing)
+		to_write = min(to_write + nread, PLAIN_BS);
 
 	BYTE cipher_buf[CIPHER_BS];
 
