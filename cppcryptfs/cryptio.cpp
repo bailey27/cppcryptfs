@@ -93,9 +93,16 @@ read_block(CryptContext *con, HANDLE hfile, BYTE *inputbuf, int bytesinbuf, int 
 
 	if (ptlen < 0) {  // return all zeros for un-authenticated blocks (might exist if file was resized without writing)
 
-		memset(ptbuf, 0, nread - (BLOCK_IV_LEN + BLOCK_TAG_LEN));
+		// if we read all zeros, then it is (probably) really from a hole in the file
 
-		return nread - (BLOCK_IV_LEN + BLOCK_TAG_LEN);
+		if (is_all_zeros(inputbuf ? inputbuf : buf, nread)) {
+			memset(ptbuf, 0, nread - (BLOCK_IV_LEN + BLOCK_TAG_LEN));
+			return nread - (BLOCK_IV_LEN + BLOCK_TAG_LEN);
+		} else {
+			// if there are any non-zero bytes, then there is definitely corrupted data, so return an error
+			SetLastError(ERROR_DATA_CHECKSUM_ERROR);
+			return -1;
+		}
 	
 	}
 

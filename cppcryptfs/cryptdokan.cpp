@@ -415,8 +415,13 @@ static void PrintUserName(PDOKAN_FILE_INFO DokanFileInfo) {
 
 NTSTATUS ToNtStatus(DWORD dwError) {
 
-	return DokanNtStatusFromWin32(dwError);
-
+	// switch is for translating error codes we use that DokanNtStatusFromWin32() does not translate
+	switch (dwError) {
+	case ERROR_DATA_CHECKSUM_ERROR:
+		return STATUS_CRC_ERROR;
+	default:
+		return DokanNtStatusFromWin32(dwError);
+	}
 }
 
 static BOOL AddSeSecurityNamePrivilege() {

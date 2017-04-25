@@ -609,3 +609,23 @@ int compare_names(CryptContext *con, LPCWSTR name1, LPCWSTR name2)
 		return wcscmp(name1, name2);
 	}
 }
+
+bool is_all_zeros(const BYTE *buf, size_t len)
+{
+	static const BYTE zero_bytes[64] = { 0 };
+
+	const BYTE *p = buf;
+
+	size_t bytes_left = len;
+
+	while (bytes_left) {
+		size_t to_comp = min(sizeof(zero_bytes), bytes_left);
+		if (memcmp(p, zero_bytes, to_comp))
+			return false;
+		p += to_comp;
+		bytes_left -= to_comp;
+	}
+
+	return true;
+}
+
