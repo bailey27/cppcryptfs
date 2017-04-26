@@ -610,22 +610,27 @@ int compare_names(CryptContext *con, LPCWSTR name1, LPCWSTR name2)
 	}
 }
 
+template <typename T> bool test_zero_byes(const BYTE *buf, size_t len)
+{
+	return *((T *)buf) == 0 && !memcmp(buf, buf + sizeof(T), len - sizeof(T));
+}
+
 bool is_all_zeros(const BYTE *buf, size_t len)
 {
-	static const BYTE zero_bytes[64] = { 0 };
 
-	const BYTE *p = buf;
-
-	size_t bytes_left = len;
-
-	while (bytes_left) {
-		size_t to_comp = min(sizeof(zero_bytes), bytes_left);
-		if (memcmp(p, zero_bytes, to_comp))
-			return false;
-		p += to_comp;
-		bytes_left -= to_comp;
+	if (len <= sizeof(__int64)) {
+		const BYTE zeros[sizeof(__int64)] = { 0 };
+		return !memcmp(buf, zeros, len);
 	}
 
-	return true;
+	if (((UINT_PTR)buf % sizeof(__int64)) == 0) {
+		return test_zero_byes<__int64>(buf, len);
+	} else if (((UINT_PTR)buf % sizeof(__int32)) == 0) {
+		return test_zero_byes<__int32>(buf, len);
+	} else if (((UINT_PTR)buf % sizeof(__int16)) == 0) {
+		return test_zero_byes<__int16>(buf, len);
+	} else {
+		return test_zero_byes<BYTE>(buf, len);
+	}
 }
 
