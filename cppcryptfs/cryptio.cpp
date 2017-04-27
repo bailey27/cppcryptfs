@@ -81,10 +81,15 @@ read_block(CryptContext *con, HANDLE hfile, BYTE *inputbuf, int bytesinbuf, int 
 	if (nread == 0)
 		return 0;
 
+	if (nread <= CIPHER_BLOCK_OVERHEAD) {
+		SetLastError(ERROR_INVALID_DATA);
+		return -1;
+	}
+
 	int ptlen;
 	
 	if (con->GetConfig()->m_AESSIV) {
-		ptlen = decrypt_siv((inputbuf ? inputbuf : buf) + BLOCK_IV_LEN + BLOCK_SIV_LEN, nread - BLOCK_IV_LEN * 2, auth_data, sizeof(auth_data), 
+		ptlen = decrypt_siv((inputbuf ? inputbuf : buf) + BLOCK_IV_LEN + BLOCK_SIV_LEN, nread - BLOCK_IV_LEN - BLOCK_SIV_LEN, auth_data, sizeof(auth_data), 
 			(inputbuf ? inputbuf : buf) + BLOCK_IV_LEN, con->GetConfig()->GetKey(), (inputbuf ? inputbuf : buf), ptbuf, &con->m_siv);	
 	} else {
 		ptlen = decrypt((inputbuf ? inputbuf : buf) + BLOCK_IV_LEN, nread - BLOCK_IV_LEN - BLOCK_TAG_LEN, auth_data, sizeof(auth_data),

@@ -417,6 +417,8 @@ NTSTATUS ToNtStatus(DWORD dwError) {
 
 	// switch is for translating error codes we use that DokanNtStatusFromWin32() does not translate
 	switch (dwError) {
+	case ERROR_INVALID_DATA:
+		return STATUS_DATA_ERROR;
 	case ERROR_DATA_CHECKSUM_ERROR:
 		return STATUS_CRC_ERROR;
 	default:
