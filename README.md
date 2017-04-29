@@ -119,6 +119,7 @@ Settings
 There is also a settings tab.  
 
 ![Alt text](/screenshots/screenshot_settings.png?raw=true "Mount tab")
+*Recommended settings shown*
 
 
 Changing values on the settings tab affects all filesystems that are subsequently mounted.  Any filesystems that are already mounted will not be affected.  
