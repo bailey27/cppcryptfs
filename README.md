@@ -118,7 +118,7 @@ Settings
 ---------
 There is also a settings tab.  
 
-![Alt text](/screenshots/screenshot_settings.png?raw=true "Mount tab")  
+![Alt text](/screenshots/screenshot_settings.png?raw=true "Settings tab")  
 *Recommended settings shown*
 
 
