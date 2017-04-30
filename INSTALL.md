@@ -68,7 +68,7 @@ You will need an elevated (administrator) command prompt for running the command
 
 To start an elevated command prompt in Windows 10, click on the search (magnifying glass) icon in the lower left of the screen and type "cmd". Then right-click on "Command Prompt" and select "Run as administrator".
 
-[how to start an elevated command prompt screenshot](/screenshots/cmd_as_administrator.png?raw=true")
+[how to start an elevated command prompt screenshot](/screenshots/cmd_as_administrator.jpg?raw=true")
 
 Whether or not you are using git, everything will go easier if you put everything in c:\git.
 
