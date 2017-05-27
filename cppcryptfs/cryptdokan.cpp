@@ -2017,6 +2017,7 @@ static DWORD WINAPI CryptThreadProc(
 
 int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes, bool readonly, int nThreads, int nBufferBlocks, int cachettl, bool caseinsensitve) 
 {
+	mes.clear();
 
 	if (driveletter < 'A' || driveletter > 'Z') {
 		mes = L"Invalid drive letter\n";
@@ -2139,9 +2140,9 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 
 		dokanOptions->MountPoint = mountpoint;
 
-
-		if (!config->read()) {
-			mes = L"unable to load config\n";
+		if (!config->read(mes)) {
+			if (mes.length() < 1)
+				mes = L"unable to load config\n";
 			throw(-1);
 		}
 

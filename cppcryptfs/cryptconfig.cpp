@@ -99,20 +99,24 @@ CryptConfig::~CryptConfig()
 
 
 bool
-CryptConfig::read(const WCHAR *config_file_path)
+CryptConfig::read(std::wstring& mes, WCHAR *config_file_path)
 {
 
 	FILE *fl = NULL;
 
 	if (config_file_path) {
-		if (_wfopen_s(&fl, config_file_path, L"rb"))
+		if (_wfopen_s(&fl, config_file_path, L"rb")) {
+			mes = L"failed to open config file";
 			return false;
+		}
 	} else {
 
 		std::wstring config_path;
 
-		if (m_basedir.size() < 1)
+		if (m_basedir.size() < 1) {
+			mes = L"cannot read config because base dir is empty";
 			return false;
+		}
 
 		config_path = m_basedir;
 
@@ -123,8 +127,10 @@ CryptConfig::read(const WCHAR *config_file_path)
 
 		if (_wfopen_s(&fl, &config_file[0], L"rb")) {
 			config_file = config_path + CONFIG_NAME;
-			if (_wfopen_s(&fl, &config_file[0], L"rb"))
+			if (_wfopen_s(&fl, &config_file[0], L"rb")) {
+				mes = L"failed to open config file";
 				return false;
+			}
 			m_reverse = false;
 		} else {
 			m_reverse = true;
@@ -141,15 +147,19 @@ CryptConfig::read(const WCHAR *config_file_path)
 
 	char *buf = new char[filesize + 1];
 
-	if (!buf)
+	if (!buf) {
+		mes = L"cannot allocate buffer for reading config file";
 		return false;
+	}
 
 	size_t len = fread(buf, 1, filesize, fl);
 
 	fclose(fl);
 
-	if (len < 0)
+	if (len < 0) {
+		mes = L"read error when reading config file";
 		return false;
+	}
 
 	buf[len] = '\0';
 
@@ -159,29 +169,39 @@ CryptConfig::read(const WCHAR *config_file_path)
 
 	delete[] buf;
 
-	if (!d.IsObject())
+	if (!d.IsObject()) {
+		mes = L"config file is not valid JSON";
 		return false;
+	}
 
 	bool bret = true;
 
 	try {
 
-		if (!d.HasMember("EncryptedKey") || !d["EncryptedKey"].IsString())
+		if (!d.HasMember("EncryptedKey") || !d["EncryptedKey"].IsString()) {
+			mes = L"key missing in config file";
 			throw (-1);
+		}
 
 		rapidjson::Value& v = d["EncryptedKey"];
 
-		if (!base64_decode(v.GetString(), m_encrypted_key, false))
+		if (!base64_decode(v.GetString(), m_encrypted_key, false)) {
+			mes = L"failed to base64 decode key";
 			throw (-1);
+		}
 
-		if (!d.HasMember("ScryptObject") || !d["ScryptObject"].IsObject())
+		if (!d.HasMember("ScryptObject") || !d["ScryptObject"].IsObject()) {
+			mes = L"ScryptObject missing in config file";
 			throw (-1);
+		}
 
 		rapidjson::Value& scryptobject = d["ScryptObject"];
 
 
-		if (!base64_decode(scryptobject["Salt"].GetString(), m_encrypted_key_salt, false))
+		if (!base64_decode(scryptobject["Salt"].GetString(), m_encrypted_key_salt, false)) {
+			mes = L"failed to base64 decode Scrypt Salt";
 			throw (-1);
+		}
 
 		const char *sstuff[] = { "N", "R", "P", "KeyLen" };
 
@@ -189,6 +209,7 @@ CryptConfig::read(const WCHAR *config_file_path)
 
 		for (i = 0; i < sizeof(sstuff) / sizeof(sstuff[0]); i++) {
 			if (scryptobject[sstuff[i]].IsNull() || !scryptobject[sstuff[i]].IsInt()) {
+				mes = L"invalid Scrypt object";
 				throw (-1);
 			}
 		}
@@ -198,17 +219,23 @@ CryptConfig::read(const WCHAR *config_file_path)
 		m_P = scryptobject["P"].GetInt();
 		int keyLen = scryptobject["KeyLen"].GetInt();
 
-		if (keyLen != 32)
+		if (keyLen != 32) {
+			mes = L"invalid KeyLen";
 			throw(-1);
+		}
 
 		m_pKeyBuf = new LockZeroBuffer<unsigned char>(keyLen);
 
-		if (!m_pKeyBuf->IsLocked())
+		if (!m_pKeyBuf->IsLocked()) {
+			mes = L"failed to lock key buffer";
 			throw(-1);
+		}
 
 		if (d["Version"].IsNull() || !d["Version"].IsInt()) {
+			mes = L"invalid Version";
 			throw (-1);
 		}
+
 		rapidjson::Value& version = d["Version"];
 
 		m_Version = version.GetInt();
@@ -249,13 +276,21 @@ CryptConfig::read(const WCHAR *config_file_path)
 						m_LongNames = true;
 					} else if (!strcmp(itr->GetString(), "AESSIV")) {
 						m_AESSIV = true;
+					} else {
+						std::wstring wflag;
+						if (utf8_to_unicode(itr->GetString(), wflag)) {
+							mes = L"unkown feature flag: ";
+							mes += wflag;
+						} else {
+							mes = L"unable to convert unkown flag to unicode";
+						}
+						throw(-1);
 					}
 				}
 			}
 		}
 
 		
-
 	} catch (...) {
 		bret = false;
 	}
@@ -393,7 +428,8 @@ bool CryptConfig::write_volume_name()
 		CryptConfig test_cfg;
 
 		try {
-			if (!test_cfg.read(&tmp_path[0])) {
+			std::wstring config_err_mes;
+			if (!test_cfg.read(config_err_mes, &tmp_path[0])) {
 				throw(-1);
 			}
 		} catch (...) {

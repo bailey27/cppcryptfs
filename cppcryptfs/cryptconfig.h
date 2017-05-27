@@ -76,7 +76,7 @@ public:
 	const WCHAR *GetBaseDir() { return &m_basedir[0]; }
 
 	CryptConfig();
-	bool read(const WCHAR *config_file_path = NULL);
+	bool read(std::wstring& mes, WCHAR *config_file_path = NULL);
 	bool decrypt_key(LPCTSTR password);
 
 	bool create(const WCHAR *path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, 
