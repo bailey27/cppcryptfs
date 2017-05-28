@@ -27,14 +27,15 @@ THE SOFTWARE.
 */
 
 #include "stdafx.h"
+#include "crypt.h"
 #include "cryptcontext.h"
 
 static RandomBytes random_bytes;
 
-void CryptContext::InitEme(const BYTE *key)
+bool CryptContext::InitEme(const BYTE *key, bool hkdf)
 {
 
-	m_eme.init(key);
+	return m_eme.init(key, hkdf);
 
 }
 
@@ -57,6 +58,7 @@ CryptContext::CryptContext()
 	m_case_cache.m_con = this;
 }
 
+
 CryptContext::~CryptContext()
 {
 	if (m_mountEvent)
@@ -64,4 +66,5 @@ CryptContext::~CryptContext()
 
 	if (m_config)
 		delete m_config;
+
 }

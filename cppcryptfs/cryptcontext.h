@@ -50,6 +50,7 @@ public:
 	EmeCryptContext m_eme;
 	SivContext m_siv;
 	int m_bufferblocks;
+	
 private:
 	bool m_caseinsensitive;
 public:
@@ -59,7 +60,7 @@ public:
 
 	HANDLE m_mountEvent;
 
-	void InitEme(const BYTE *key);
+	bool InitEme(const BYTE *key, bool hkdf);
 
 	CryptContext();
 

@@ -42,7 +42,7 @@ THE SOFTWARE.
 #include <windows.h>
 
 #include "eme.h"
-
+#include "crypt.h"
 #include "openssl/aes.h"
 
 #include "aes.h"
@@ -123,9 +123,7 @@ static void aesTransform(BYTE* dst, const BYTE* src, bool direction, int len, co
 
 EmeCryptContext::EmeCryptContext()
 { 
-	m_key = NULL; 
 	
-
 	m_LTable = NULL;
 
 	m_pKeyBuf = NULL;
@@ -176,17 +174,30 @@ void EmeCryptContext::tabulateL(int m){
 
 
 
-void EmeCryptContext::init(const BYTE *key)
+bool EmeCryptContext::init(const BYTE *key, bool hkdf)
 {
-	m_key = key;
+	const BYTE *emeKey = key;
+
+	LockZeroBuffer<BYTE> hkdfKey(MASTER_KEY_LEN);
+
+	if (hkdf) {
+		if (!hkdfKey.IsLocked())
+			return false;
+		if (!hkdfDerive(key, MASTER_KEY_LEN, hkdfKey.m_buf, hkdfKey.m_len, hkdfInfoEMENames))
+			return false;
+
+		emeKey = hkdfKey.m_buf;
+	}
 
 	m_pKeyBuf = new LockZeroBuffer<AES_KEY>(2, true);
 
-	AES::initialize_keys(m_key, 256, &m_pKeyBuf->m_buf[0], &m_pKeyBuf->m_buf[1]);
+	AES::initialize_keys(emeKey, 256, &m_pKeyBuf->m_buf[0], &m_pKeyBuf->m_buf[1]);
 
 	m_aes_ctx.set_keys(&m_pKeyBuf->m_buf[0], &m_pKeyBuf->m_buf[1]);
 
 	tabulateL(16 * 8);
+
+	return true;
 
 }
 

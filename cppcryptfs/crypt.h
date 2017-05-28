@@ -35,8 +35,6 @@ THE SOFTWARE.
 
 class SivContext;
 
-#define GetMasterKey() (con->GetConfig()->GetKey())
-
 void *get_crypt_context(int ivlen, int mode);
 
 void free_crypt_context(void *context);
@@ -50,11 +48,11 @@ int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *
 	unsigned char *plaintext, void *context);
 
 int encrypt_siv(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
-	int aad_len, const unsigned char *key, const unsigned char *iv,
+	int aad_len, const unsigned char *iv,
 	unsigned char *ciphertext, unsigned char *siv, const SivContext *context);
 
 int decrypt_siv(const unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
-	int aad_len, const unsigned char *siv, const unsigned char *key, const unsigned char *iv,
+	int aad_len, const unsigned char *siv, const unsigned char *iv,
 	unsigned char *plaintext, const SivContext *context);
 
 bool sha256(const std::string& str, BYTE *sum);  // sum is a 32-byte buffer
@@ -66,3 +64,9 @@ bool sha512(const BYTE *data, int datalen, BYTE *sum); // sum is a 64-byte buffe
 bool encrypt_string_gcm(const std::wstring& str, const BYTE *key, std::string& base64_out);
 
 bool decrypt_string_gcm(const std::string& base64_in, const BYTE *key, std::wstring& str);
+
+bool hkdfDerive(const BYTE *masterKey, int masterKeyLen, BYTE *newKey, int newKeyLen, const char *info);
+
+extern const char *hkdfInfoEMENames;
+extern const char *hkdfInfoGCMContent;
+extern const char *hkdfInfoSIVContent;

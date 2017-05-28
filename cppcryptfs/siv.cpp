@@ -44,7 +44,7 @@ SivContext::~SivContext()
 		delete m_pKeys;
 }
 
-bool SivContext::SetKey(const unsigned char *key, int keylen)
+bool SivContext::SetKey(const unsigned char *key, int keylen, bool hkdf)
 {
 	if (keylen != 32)
 		return false;
@@ -54,8 +54,13 @@ bool SivContext::SetKey(const unsigned char *key, int keylen)
 
 	LockZeroBuffer<BYTE> key64(64, true);
 
-	if (!sha512(key, 32, key64.m_buf))
-		return false;
+	if (hkdf) {
+		if (!hkdfDerive(key, keylen, key64.m_buf, key64.m_len, hkdfInfoSIVContent))
+			return false;
+	} else {
+		if (!sha512(key, 32, key64.m_buf))
+			return false;
+	}
 
 	AES::initialize_keys(key64.m_buf, 256, &m_pKeys->m_buf[SIV_KEY_ENCRYPT_LOW_INDEX], 
 										&m_pKeys->m_buf[SIV_KEY_DECRYPT_LOW_INDEX]);

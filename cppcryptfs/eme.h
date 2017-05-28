@@ -50,7 +50,7 @@ public:
 	virtual ~EmeCryptContext();
 
 private:
-	const BYTE *m_key;
+
 	LockZeroBuffer<AES_KEY> *m_pKeyBuf;
 	LockZeroBuffer<BYTE> *m_pLTableBuf;
 
@@ -59,7 +59,7 @@ public:
 
 	LPBYTE *m_LTable;
 
-	void init(const BYTE *key);
+	bool init(const BYTE *key, bool hkdf);
 };
 
 

@@ -78,6 +78,7 @@ CryptConfig::CryptConfig()
 	m_LongNames = false;
 	m_AESSIV = false;
 	m_Raw64 = false;
+	m_HKDF = false;
 	m_reverse = false;
 	
 	m_pKeyBuf = NULL;
@@ -88,6 +89,8 @@ CryptConfig::CryptConfig()
 
 	m_driveletter = '\0';
 
+	m_pGcmContentKey = NULL;
+
 }
 
 
@@ -95,6 +98,10 @@ CryptConfig::~CryptConfig()
 {
 	if (m_pKeyBuf) {
 		delete m_pKeyBuf;
+	}
+
+	if (m_pGcmContentKey) {
+		delete m_pGcmContentKey;
 	}
 }
 
@@ -262,6 +269,7 @@ CryptConfig::read(std::wstring& mes, WCHAR *config_file_path)
 			bool m_GCMIV128;
 			bool m_LongNames;
 			bool m_Raw64;
+			bool m_HKDF;
 			*/
 
 			for (rapidjson::Value::ConstValueIterator itr = flags.Begin(); itr != flags.End(); ++itr) {
@@ -280,6 +288,8 @@ CryptConfig::read(std::wstring& mes, WCHAR *config_file_path)
 						m_AESSIV = true;
 					} else if (!strcmp(itr->GetString(), "Raw64")) {
 						m_Raw64 = true;
+					} else if (!strcmp(itr->GetString(), "HKDF")) {
+						m_HKDF = true;
 					} else {
 						std::wstring wflag;
 						if (utf8_to_unicode(itr->GetString(), wflag)) {
@@ -354,7 +364,7 @@ bool CryptConfig::write_volume_name()
 		if (vol.size() > 0) {
 			if (vol.size() > MAX_VOLUME_NAME_LENGTH)
 				vol.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
-			if (!encrypt_string_gcm(vol, GetKey(), volume_name_utf8_enc)) {
+			if (!encrypt_string_gcm(vol, GetGcmContentKey(), volume_name_utf8_enc)) {
 				return false;
 			}
 		}
@@ -541,7 +551,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 	void *context = NULL;
 
 	try {
-		if (m_encrypted_key.size() == 0 || m_encrypted_key_salt.size() == 0 || GetKeyLength() == 0)
+		if (m_encrypted_key.size() == 0 || m_encrypted_key_salt.size() == 0 || GetMasterKeyLength() == 0)
 			return false;
 
 		LockZeroBuffer<char> pass_buf(4*MAX_PASSWORD_LEN+1);
@@ -555,14 +565,19 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 			throw (-1);
 		}
 
-		LockZeroBuffer<unsigned char> pwkey(GetKeyLength());
+		LockZeroBuffer<unsigned char> pwkey(GetMasterKeyLength());
+
+		LockZeroBuffer<unsigned char> pwkeyHKDF(GetMasterKeyLength());
 
 		if (!pwkey.IsLocked())
 			throw(-1);
 
+		if (m_HKDF && !pwkeyHKDF.IsLocked())
+			throw(-1);
+
 		int result = EVP_PBE_scrypt(pass, strlen(pass), &m_encrypted_key_salt[0], 
 			m_encrypted_key_salt.size(), m_N, m_R, m_P, SCRYPT_MB * 1024 * 1024, pwkey.m_buf,
-			GetKeyLength());
+			GetMasterKeyLength());
 
 		if (result != 1)
 			throw (-1);
@@ -573,7 +588,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 
 		memset(adata, 0, adata_len);
 
-		int ivlen = MASTER_IV_LEN;
+		int ivlen = m_HKDF ? HKDF_MASTER_IV_LEN : ORIG_MASTER_IV_LEN;
 
 		const int taglen = BLOCK_TAG_LEN;
 
@@ -591,16 +606,25 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 		if (!context)
 			throw(-1);
 
+		if (m_HKDF) {
+			if (!hkdfDerive(pwkey.m_buf, pwkey.m_len, pwkeyHKDF.m_buf, pwkeyHKDF.m_len, hkdfInfoGCMContent))
+				throw(-1);
+		}
 
-		int ptlen = decrypt(ciphertext, ciphertext_len, adata, adata_len, tag, pwkey.m_buf, iv, m_pKeyBuf->m_buf, context);
+		int ptlen = decrypt(ciphertext, ciphertext_len, adata, adata_len, tag, m_HKDF ? pwkeyHKDF.m_buf : pwkey.m_buf, iv, m_pKeyBuf->m_buf, context);
 
 		if (ptlen != MASTER_KEY_LEN)
 			throw (-1);
 
+		// need to do it unconditionally because we use it for other things besides file data
+		if (!this->InitGCMContentKey(this->GetMasterKey(), this->m_HKDF)) {
+			throw(-1);
+		}
+
 		if (m_VolumeName.size() > 0) {
 			std::string vol;
 			if (unicode_to_utf8(&m_VolumeName[0], vol)) {
-				if (!decrypt_string_gcm(vol, GetKey(), m_VolumeName))
+				if (!decrypt_string_gcm(vol, GetGcmContentKey(), m_VolumeName))
 					m_VolumeName = L"";
 				if (m_VolumeName.size() > MAX_VOLUME_NAME_LENGTH)
 					m_VolumeName.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
@@ -625,8 +649,10 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 {
 
 	LockZeroBuffer<char> utf8pass(256);
-	if (!utf8pass.IsLocked())
+	if (!utf8pass.IsLocked()) {
+		error_mes = L"utf8 pass is not locked";
 		return false;
+	}
 
 	m_basedir = path;
 
@@ -634,7 +660,13 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 	FILE *fl = NULL;
 
-	LockZeroBuffer<unsigned char> *pwkey = NULL;
+	LockZeroBuffer<unsigned char> pwkey(MASTER_KEY_LEN);
+	LockZeroBuffer<unsigned char> pwkeyHKDF(MASTER_KEY_LEN);
+
+	if (!pwkey.IsLocked() || !pwkeyHKDF.IsLocked()) {
+		error_mes = L"pw key not locked";
+		return false;
+	}
 
 	void *context = NULL;
 
@@ -651,7 +683,9 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 	if (siv)
 		m_AESSIV = true;
 
+	// Raw64 and HKDF default to true
 	m_Raw64 = true;
+	m_HKDF = true;
 
 	if (reverse)
 		m_reverse = true;
@@ -709,20 +743,24 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 			error_mes = L"cannot convert password to utf-8\n";
 			throw(-1);
 		}
-		
-
-		pwkey = new LockZeroBuffer<unsigned char>(GetKeyLength());
+	
 
 		int result = EVP_PBE_scrypt(utf8pass.m_buf, strlen(utf8pass.m_buf), &m_encrypted_key_salt[0], 
-			m_encrypted_key_salt.size(), m_N, m_R, m_P, SCRYPT_MB * 1024 * 1024, pwkey->m_buf,
-			GetKeyLength());
+			m_encrypted_key_salt.size(), m_N, m_R, m_P, SCRYPT_MB * 1024 * 1024, pwkey.m_buf,
+			GetMasterKeyLength());
 
 		if (result != 1) {
 			error_mes = L"key derivation failed\n";
 			throw(-1);
 		}
 
-		unsigned char iv[MASTER_IV_LEN];
+		if (!hkdfDerive(pwkey.m_buf, pwkey.m_len, pwkeyHKDF.m_buf, pwkeyHKDF.m_len, hkdfInfoGCMContent)) {
+			error_mes = L"unable to perform hkdf on pw key";
+			throw(-1);
+		}
+
+		ASSERT(m_HKDF);
+		unsigned char iv[HKDF_MASTER_IV_LEN];
 
 		if (!get_sys_random_bytes(iv, sizeof(iv))) {
 			error_mes = L"unable to generate iv\n";
@@ -735,8 +773,13 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		memset(adata, 0, adata_len);
 
-		if (!get_sys_random_bytes(m_pKeyBuf->m_buf, GetKeyLength())) {
+		if (!get_sys_random_bytes(m_pKeyBuf->m_buf, GetMasterKeyLength())) {
 			error_mes = L"unable to generate master key\n";
+			throw(-1);
+		}
+
+		if (!InitGCMContentKey(GetMasterKey(), m_HKDF)) {
+			error_mes = L"unable to init gcm content key for volume name";
 			throw(-1);
 		}
 
@@ -746,24 +789,27 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 			std::wstring vol = volume_name;
 			if (vol.size() > MAX_VOLUME_NAME_LENGTH)
 				vol.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
-			if (!encrypt_string_gcm(vol, GetKey(), volume_name_utf8)) {
+			if (!encrypt_string_gcm(vol, GetGcmContentKey(), volume_name_utf8)) {
 				error_mes = L"cannot encrypt volume name\n";
 				throw(-1);
 			}
 		}
 
-		context = get_crypt_context(MASTER_IV_LEN, AES_MODE_GCM);
+		ASSERT(m_HKDF);
+		context = get_crypt_context(HKDF_MASTER_IV_LEN, AES_MODE_GCM);
 
 		if (!context) {
 			error_mes = L"unable to get gcm context\n";
 			throw(-1);
 		}
 
-		encrypted_key = new unsigned char[GetKeyLength() + MASTER_IV_LEN + BLOCK_TAG_LEN];
+		ASSERT(m_HKDF);
+		encrypted_key = new unsigned char[GetMasterKeyLength() + HKDF_MASTER_IV_LEN + BLOCK_TAG_LEN];
 
 		memcpy(encrypted_key, iv, sizeof(iv));
 
-		int ctlen = encrypt(m_pKeyBuf->m_buf, GetKeyLength(), adata, sizeof(adata), pwkey->m_buf, iv, (encrypted_key + sizeof(iv)), encrypted_key + sizeof(iv) + GetKeyLength(), context);
+		ASSERT(m_HKDF);
+		int ctlen = encrypt(m_pKeyBuf->m_buf, GetMasterKeyLength(), adata, sizeof(adata), pwkeyHKDF.m_buf, iv, (encrypted_key + sizeof(iv)), encrypted_key + sizeof(iv) + GetMasterKeyLength(), context);
 
 		if (ctlen < 1) {
 			error_mes = L"unable to encrypt master key\n";
@@ -772,7 +818,8 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		std::string storage;
 
-		const char *base64_key = base64_encode(encrypted_key, GetKeyLength() + MASTER_IV_LEN + BLOCK_TAG_LEN, storage, false, true);
+		ASSERT(m_HKDF);
+		const char *base64_key = base64_encode(encrypted_key, GetMasterKeyLength() + HKDF_MASTER_IV_LEN + BLOCK_TAG_LEN, storage, false, true);
 
 		if (!base64_key) {
 			error_mes = L"unable to base64 encode key\n";
@@ -809,7 +856,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 		fprintf(fl, "\t\t\"N\": %d,\n", m_N);
 		fprintf(fl, "\t\t\"R\": %d,\n", m_R);
 		fprintf(fl, "\t\t\"P\": %d,\n", m_P);
-		fprintf(fl, "\t\t\"KeyLen\": %d\n", GetKeyLength());
+		fprintf(fl, "\t\t\"KeyLen\": %d\n", GetMasterKeyLength());
 		fprintf(fl, "\t},\n");
 		fprintf(fl, "\t\"Version\": %d,\n", m_Version);
 		fprintf(fl, "\t\"VolumeName\": \"%s\",\n", &volume_name_utf8[0]);
@@ -824,6 +871,8 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 			fprintf(fl, "\t\t\"DirIV\",\n");
 		if (m_AESSIV)
 			fprintf(fl, "\t\t\"AESSIV\",\n");
+		if (m_HKDF)
+			fprintf(fl, "\t\t\"HKDF\",\n");
 		if (m_Raw64)
 			fprintf(fl, "\t\t\"Raw64\",\n");
 		fprintf(fl, "\t\t\"GCMIV128\"\n");
@@ -853,11 +902,6 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		bret = false;
 	}
-	
-
-	if (pwkey) {
-		delete[] pwkey;
-	}
 
 	if (encrypted_key) {
 		delete[] encrypted_key;
@@ -872,4 +916,21 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 	return bret;
 }
 
+bool CryptConfig::InitGCMContentKey(const BYTE *key, bool hkdf)
+{
+	if (!hkdf)
+		return true;
+
+	m_pGcmContentKey = new LockZeroBuffer<BYTE>(MASTER_KEY_LEN);
+
+	if (!m_pGcmContentKey->IsLocked())
+		return false;
+
+	if (hkdf) {
+		if (!hkdfDerive(key, MASTER_KEY_LEN, m_pGcmContentKey->m_buf, m_pGcmContentKey->m_len, hkdfInfoGCMContent))
+			return false;
+	}
+
+	return true;
+}
 

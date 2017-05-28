@@ -90,10 +90,10 @@ read_block(CryptContext *con, HANDLE hfile, BYTE *inputbuf, int bytesinbuf, int 
 	
 	if (con->GetConfig()->m_AESSIV) {
 		ptlen = decrypt_siv((inputbuf ? inputbuf : buf) + BLOCK_IV_LEN + BLOCK_SIV_LEN, nread - BLOCK_IV_LEN - BLOCK_SIV_LEN, auth_data, sizeof(auth_data), 
-			(inputbuf ? inputbuf : buf) + BLOCK_IV_LEN, con->GetConfig()->GetKey(), (inputbuf ? inputbuf : buf), ptbuf, &con->m_siv);	
+			(inputbuf ? inputbuf : buf) + BLOCK_IV_LEN, (inputbuf ? inputbuf : buf), ptbuf, &con->m_siv);	
 	} else {
 		ptlen = decrypt((inputbuf ? inputbuf : buf) + BLOCK_IV_LEN, nread - BLOCK_IV_LEN - BLOCK_TAG_LEN, auth_data, sizeof(auth_data),
-			(inputbuf ? inputbuf : buf) + nread - BLOCK_TAG_LEN, con->GetConfig()->GetKey(), (inputbuf ? inputbuf : buf), ptbuf, openssl_crypt_context);
+			(inputbuf ? inputbuf : buf) + nread - BLOCK_TAG_LEN, con->GetConfig()->GetGcmContentKey(), (inputbuf ? inputbuf : buf), ptbuf, openssl_crypt_context);
 	}
 
 	if (ptlen < 0) {  // return all zeros for un-authenticated blocks (might exist if file was resized without writing)
@@ -174,10 +174,10 @@ write_block(CryptContext *con, unsigned char *cipher_buf, HANDLE hfile, const un
 	int ctlen;
 
 	if (siv) {
-		ctlen = encrypt_siv(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetKey(), 
+		ctlen = encrypt_siv(ptbuf, ptlen, auth_data, sizeof(auth_data), 
 			cipher_buf, cipher_buf + BLOCK_IV_LEN + BLOCK_SIV_LEN, cipher_buf + BLOCK_IV_LEN, &con->m_siv);
 	} else {
-		ctlen = encrypt(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetKey(),
+		ctlen = encrypt(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetGcmContentKey(),
 			cipher_buf, cipher_buf + BLOCK_IV_LEN, tag, openssl_crypt_context);
 	}
 

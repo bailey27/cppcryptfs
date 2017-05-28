@@ -47,6 +47,7 @@ public:
 	bool m_PlaintextNames;
 private:
 	LockZeroBuffer<unsigned char> *m_pKeyBuf;
+	LockZeroBuffer<BYTE> *m_pGcmContentKey;
 	bool m_DirIV;
 public:
 	bool DirIV() { return m_DirIV; };
@@ -55,6 +56,7 @@ public:
 	bool m_LongNames;
 	bool m_AESSIV;
 	bool m_Raw64;
+	bool m_HKDF;
 
 	bool m_reverse;
 
@@ -71,10 +73,13 @@ public:
 
 	char m_driveletter;
 
-	const unsigned char *GetKey() { return m_pKeyBuf ? m_pKeyBuf->m_buf : NULL; }
-	int GetKeyLength() { return m_pKeyBuf ? m_pKeyBuf->m_len : 0; }
+	const unsigned char *GetMasterKey() { return m_pKeyBuf ? m_pKeyBuf->m_buf : NULL; }
+	int GetMasterKeyLength() { return m_pKeyBuf ? m_pKeyBuf->m_len : 0; }
 	WCHAR GetDriveLetter() { return m_driveletter; }
 	const WCHAR *GetBaseDir() { return &m_basedir[0]; }
+	bool CryptConfig::InitGCMContentKey(const BYTE *key, bool hkdf);
+
+	const BYTE *GetGcmContentKey() { return m_HKDF ? m_pGcmContentKey->m_buf : GetMasterKey(); };
 
 	CryptConfig();
 	bool read(std::wstring& mes, WCHAR *config_file_path = NULL);

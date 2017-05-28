@@ -40,7 +40,7 @@ class SivContext {
 
 public:
 
-	bool SetKey(const unsigned char *key, int keylen); // must be 32
+	bool SetKey(const unsigned char *key, int keylen, bool hkdf); // keylen must be 32
 
 	SivContext();
 	virtual ~SivContext();

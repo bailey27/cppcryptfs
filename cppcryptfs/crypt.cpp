@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include "stdafx.h"
 
 #include <openssl/evp.h>
+#include <openssl/kdf.h>
 #include "aes-siv/aes256-siv.h"
 #include "cryptdefs.h"
 #include "crypt.h"
@@ -211,7 +212,7 @@ int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *
 }
 
 int encrypt_siv(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
-	int aad_len, const unsigned char *key, const unsigned char *iv, 
+	int aad_len, const unsigned char *iv, 
 	unsigned char *ciphertext, unsigned char *siv, const SivContext *context)
 {
 
@@ -235,7 +236,7 @@ int encrypt_siv(const unsigned char *plaintext, int plaintext_len, unsigned char
 }
 
 int decrypt_siv(const unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
-	int aad_len, const unsigned char *siv, const unsigned char *key, const unsigned char *iv, 
+	int aad_len, const unsigned char *siv, const unsigned char *iv, 
 	unsigned char *plaintext, const SivContext *context)
 {
 
@@ -455,4 +456,51 @@ bool decrypt_string_gcm(const std::string& base64_in, const BYTE *key, std::wstr
 		free_crypt_context(context);
 
 	return rval;
+}
+
+const char *hkdfInfoEMENames = "EME filename encryption";
+const char *hkdfInfoGCMContent = "AES-GCM file content encryption";
+const char *hkdfInfoSIVContent = "AES-SIV file content encryption";
+
+bool hkdfDerive(const BYTE *masterKey, int masterKeyLen, BYTE *newKey, int newKeyLen, const char *info)
+{
+	EVP_PKEY_CTX *pctx = NULL;
+
+	bool ret = true;
+
+	size_t outLen = newKeyLen;
+
+	try {
+
+		pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, NULL);
+
+		if (!pctx)
+			throw(-1);
+
+		if (EVP_PKEY_derive_init(pctx) <= 0)
+			throw(-1);
+		if (EVP_PKEY_CTX_set_hkdf_md(pctx, EVP_sha256()) <= 0)
+			throw(-1);
+#if 0
+		if (EVP_PKEY_CTX_set1_hkdf_salt(pctx, "salt", 4) <= 0)
+			throw(-1);
+#endif
+		if (EVP_PKEY_CTX_set1_hkdf_key(pctx, masterKey, masterKeyLen) <= 0)
+			throw(-1);
+		if (EVP_PKEY_CTX_add1_hkdf_info(pctx, info, (int)strlen(info)) <= 0)
+			throw(-1);
+		if (EVP_PKEY_derive(pctx, newKey, &outLen) <= 0)
+			throw(-1);
+
+		if (outLen != newKeyLen)
+			throw(-1);
+
+	} catch (...) {
+		ret = false;
+	}
+
+	if (pctx)
+		EVP_PKEY_CTX_free(pctx);
+
+	return ret;
 }

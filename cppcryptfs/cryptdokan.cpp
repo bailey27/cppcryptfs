@@ -2160,22 +2160,23 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 
 		if (config->m_EMENames) {
 			try {
-				con->InitEme(config->GetKey());
+				if (!con->InitEme(config->GetMasterKey(), config->m_HKDF)) {
+					throw(-1);
+				}	
 			} catch (...) {
-				mes = L"unable initialize eme context";
+				mes = L"unable to initialize eme context";
 				throw(-1);
 			}
 		}
 
 		if (config->m_AESSIV) {
 			try {
-				con->m_siv.SetKey(config->GetKey(), 32);
+				con->m_siv.SetKey(config->GetMasterKey(), 32, config->m_HKDF);
 			} catch (...) {
 				mes = L"unable to intialize AESSIV context";
 				throw(-1);
 			}
-		}
-
+		} 
 
 		config->init_serial(con);
 
