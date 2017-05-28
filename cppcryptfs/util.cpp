@@ -163,6 +163,9 @@ utf8_to_unicode(const char *utf8_str, std::wstring& storage)
 static const char *
 add_base64_padding(const char *str, std::string& storage)
 {
+
+	storage.reserve(strlen(str) + 4);
+
 	storage = str;
 
 	while (storage.length() % 4)
