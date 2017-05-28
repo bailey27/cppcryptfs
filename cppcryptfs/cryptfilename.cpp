@@ -159,7 +159,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 			return NULL;
 		}
 
-		rs = base64_encode(ct, paddedLen, storage);
+		rs = base64_encode(ct, paddedLen, storage, true, !con->GetConfig()->m_Raw64);
 
 		delete[] ct;
 
@@ -179,7 +179,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 		if (!sha256(utf8, sum))
 			return NULL;
 		std::wstring base64_sum;
-		if (!base64_encode(sum, sizeof(sum), base64_sum))
+		if (!base64_encode(sum, sizeof(sum), base64_sum, true, !con->GetConfig()->m_Raw64))
 			return NULL;
 		storage = longname_prefix;
 		storage += base64_sum;
@@ -263,7 +263,7 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 		}
 	}
 
-	if (!base64_decode(file_without_stream.c_str(), ctstorage))
+	if (!base64_decode(file_without_stream.c_str(), ctstorage, true, !con->GetConfig()->m_Raw64))
 		return NULL;
 
 	if (con->GetConfig()->m_EMENames) {

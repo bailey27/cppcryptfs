@@ -77,6 +77,7 @@ CryptConfig::CryptConfig()
 	m_GCMIV128 = false;
 	m_LongNames = false;
 	m_AESSIV = false;
+	m_Raw64 = false;
 	m_reverse = false;
 	
 	m_pKeyBuf = NULL;
@@ -185,7 +186,7 @@ CryptConfig::read(std::wstring& mes, WCHAR *config_file_path)
 
 		rapidjson::Value& v = d["EncryptedKey"];
 
-		if (!base64_decode(v.GetString(), m_encrypted_key, false)) {
+		if (!base64_decode(v.GetString(), m_encrypted_key, false, true)) {
 			mes = L"failed to base64 decode key";
 			throw (-1);
 		}
@@ -198,7 +199,7 @@ CryptConfig::read(std::wstring& mes, WCHAR *config_file_path)
 		rapidjson::Value& scryptobject = d["ScryptObject"];
 
 
-		if (!base64_decode(scryptobject["Salt"].GetString(), m_encrypted_key_salt, false)) {
+		if (!base64_decode(scryptobject["Salt"].GetString(), m_encrypted_key_salt, false, true)) {
 			mes = L"failed to base64 decode Scrypt Salt";
 			throw (-1);
 		}
@@ -260,6 +261,7 @@ CryptConfig::read(std::wstring& mes, WCHAR *config_file_path)
 			bool m_EMENames;
 			bool m_GCMIV128;
 			bool m_LongNames;
+			bool m_Raw64;
 			*/
 
 			for (rapidjson::Value::ConstValueIterator itr = flags.Begin(); itr != flags.End(); ++itr) {
@@ -276,6 +278,8 @@ CryptConfig::read(std::wstring& mes, WCHAR *config_file_path)
 						m_LongNames = true;
 					} else if (!strcmp(itr->GetString(), "AESSIV")) {
 						m_AESSIV = true;
+					} else if (!strcmp(itr->GetString(), "Raw64")) {
+						m_Raw64 = true;
 					} else {
 						std::wstring wflag;
 						if (utf8_to_unicode(itr->GetString(), wflag)) {
@@ -647,6 +651,8 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 	if (siv)
 		m_AESSIV = true;
 
+	m_Raw64 = true;
+
 	if (reverse)
 		m_reverse = true;
 
@@ -766,7 +772,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		std::string storage;
 
-		const char *base64_key = base64_encode(encrypted_key, GetKeyLength() + MASTER_IV_LEN + BLOCK_TAG_LEN, storage, false);
+		const char *base64_key = base64_encode(encrypted_key, GetKeyLength() + MASTER_IV_LEN + BLOCK_TAG_LEN, storage, false, true);
 
 		if (!base64_key) {
 			error_mes = L"unable to base64 encode key\n";
@@ -797,7 +803,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		fprintf(fl, "\t\"EncryptedKey\": \"%s\",\n", base64_key);
 
-		const char *base64_salt = base64_encode(&m_encrypted_key_salt[0], (DWORD)m_encrypted_key_salt.size(), storage, false);
+		const char *base64_salt = base64_encode(&m_encrypted_key_salt[0], (DWORD)m_encrypted_key_salt.size(), storage, false, true);
 		fprintf(fl, "\t\"ScryptObject\": {\n");
 		fprintf(fl, "\t\t\"Salt\": \"%s\",\n", base64_salt);
 		fprintf(fl, "\t\t\"N\": %d,\n", m_N);
@@ -818,6 +824,8 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 			fprintf(fl, "\t\t\"DirIV\",\n");
 		if (m_AESSIV)
 			fprintf(fl, "\t\t\"AESSIV\",\n");
+		if (m_Raw64)
+			fprintf(fl, "\t\t\"Raw64\",\n");
 		fprintf(fl, "\t\t\"GCMIV128\"\n");
 		fprintf(fl, "\t]\n");
 		fprintf(fl, "}\n");

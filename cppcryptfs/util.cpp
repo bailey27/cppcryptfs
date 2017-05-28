@@ -160,16 +160,43 @@ utf8_to_unicode(const char *utf8_str, std::wstring& storage)
 	return &storage[0];
 }
 
+static const char *
+add_base64_padding(const char *str, std::string& storage)
+{
+	storage = str;
 
+	while (storage.length() % 4)
+		storage.push_back('=');
+
+	return storage.c_str();
+}
+
+static const char *
+remove_base64_padding(std::string& str)
+{
+
+	while (str.length() > 0 && str[str.length() - 1] == '=')
+		str.pop_back();
+
+	return str.c_str();
+}
 
 bool
-base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTransform)
+base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTransform, bool padding)
 {
+	if (!urlTransform) {
+		ASSERT(padding);
+	}
+
+	std::string pstorage;
+
+	if (!padding)
+		str = add_base64_padding(str, pstorage);
+
 	size_t str_len;
 
 	if (!str || (str_len = strlen(str)) < 1)
 		return false;
-
 	
 	char *p = NULL;
 	
@@ -220,7 +247,7 @@ base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTran
 }
 
 bool
-base64_decode(const WCHAR *str, std::vector<unsigned char>& storage, bool urlTransform)
+base64_decode(const WCHAR *str, std::vector<unsigned char>& storage, bool urlTransform, bool padding)
 {
 
 	// profiling shows that the WCHAR versions of the windows
@@ -249,13 +276,18 @@ base64_decode(const WCHAR *str, std::vector<unsigned char>& storage, bool urlTra
 	if (error)
 		return false;
 
-	return base64_decode(&utf8[0], storage, urlTransform);
+	return base64_decode(&utf8[0], storage, urlTransform, padding);
 }
 
 
 const char *
-base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTransform)
+base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTransform, bool padding)
 {
+
+	if (!urlTransform) {
+		ASSERT(padding);
+	}
+
 	if (!data || datalen < 1)
 		return NULL;
 
@@ -294,7 +326,9 @@ base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTra
 		}
 		storage = base64str;
 		delete[] base64str;
-		return &storage[0];
+		if (!padding)
+			remove_base64_padding(storage);
+		return storage.c_str();
 	} else {
 		if (base64str)
 			delete[] base64str;
@@ -303,7 +337,7 @@ base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTra
 }
 
 const WCHAR *
-base64_encode(const BYTE *data, DWORD datalen, std::wstring& storage, bool urlTransform)
+base64_encode(const BYTE *data, DWORD datalen, std::wstring& storage, bool urlTransform, bool padding)
 {
 
 	// profiling shows that the WCHAR versions of the windows
@@ -314,7 +348,7 @@ base64_encode(const BYTE *data, DWORD datalen, std::wstring& storage, bool urlTr
 	try {
 		std::string utf8;
 
-		if (base64_encode(data, datalen, utf8, urlTransform)) {
+		if (base64_encode(data, datalen, utf8, urlTransform, padding)) {
 
 			// can do trivial conversion to unicode because it's a base64 string
 

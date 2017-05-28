@@ -43,16 +43,16 @@ const WCHAR *
 utf8_to_unicode(const char *utf8_str, std::wstring& storage);
 
 bool
-base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTransform = true);
+base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTransform, bool padding);
 
 bool
-base64_decode(const WCHAR *str, std::vector<unsigned char>& storage, bool urlTransform = true);
+base64_decode(const WCHAR *str, std::vector<unsigned char>& storage, bool urlTransform, bool padding);
 
 const char *
-base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTransform = true);
+base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTransform, bool padding);
 
 const WCHAR *
-base64_encode(const BYTE *data, DWORD datalen, std::wstring& storage, bool urlTransform = true);
+base64_encode(const BYTE *data, DWORD datalen, std::wstring& storage, bool urlTransform, bool padding);
 
 
 BOOL

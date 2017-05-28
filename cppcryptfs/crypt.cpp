@@ -402,7 +402,7 @@ bool encrypt_string_gcm(const std::wstring& str, const BYTE *key, std::string& b
 		if (ctlen != utf8.size())
 			throw(-1);
 
-		if (!base64_encode(encrypted, ctlen + sizeof(iv) + BLOCK_TAG_LEN, base64_out, false))
+		if (!base64_encode(encrypted, ctlen + sizeof(iv) + BLOCK_TAG_LEN, base64_out, false, true))
 			throw(-1);
 
 	} catch (...) {
@@ -433,7 +433,7 @@ bool decrypt_string_gcm(const std::string& base64_in, const BYTE *key, std::wstr
 		BYTE adata[8];
 		memset(adata, 0, sizeof(adata));
 
-		if (!base64_decode(&base64_in[0], v, false))
+		if (!base64_decode(&base64_in[0], v, false, true))
 			throw(-1);
 
 		char *plaintext = new char[v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN + 1];

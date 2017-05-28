@@ -54,6 +54,7 @@ public:
 	bool m_GCMIV128;
 	bool m_LongNames;
 	bool m_AESSIV;
+	bool m_Raw64;
 
 	bool m_reverse;
 
