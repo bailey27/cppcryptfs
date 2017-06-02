@@ -33,6 +33,9 @@ THE SOFTWARE.
 
 class CryptContext;
 
+// DbgPrint() function is really in cryptdokan.cpp
+void DbgPrint(LPCWSTR format, ...);
+
 const char *
 unicode_to_utf8(const WCHAR *unicode_str, char *buf, int buflen);
 

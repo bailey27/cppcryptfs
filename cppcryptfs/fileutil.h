@@ -34,8 +34,6 @@ THE SOFTWARE.
 
 class CryptContext;
 
-void DbgPrint(LPCWSTR format, ...);
-
 bool
 get_dir_iv(CryptContext *con, const WCHAR *path, unsigned char *dir_iv);
 

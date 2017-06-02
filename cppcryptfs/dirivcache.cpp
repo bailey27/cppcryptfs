@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 #include "dirivcache.h"
 
-#include "fileutil.h"
+#include "util.h"
 
 /* 
 	Thid file implements a cache that replaces the least-recently-used (LRU)
