@@ -163,8 +163,14 @@ utf8_to_unicode(const char *utf8_str, std::wstring& storage)
 static const char *
 add_base64_padding(const char *str, std::string& storage)
 {
+	// storage won't contain padded string if no padding needed
 
-	storage.reserve(strlen(str) + 4);
+	size_t len = strlen(str);
+
+	if (len % 4 == 0)
+		return str;
+
+	storage.reserve(len + 4);
 
 	storage = str;
 
@@ -191,10 +197,10 @@ base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTran
 		ASSERT(padding);
 	}
 
-	std::string pstorage;
+	std::string padded_storage;
 
 	if (!padding)
-		str = add_base64_padding(str, pstorage);
+		str = add_base64_padding(str, padded_storage);
 
 	size_t str_len;
 
