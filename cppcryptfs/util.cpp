@@ -170,12 +170,13 @@ add_base64_padding(const char *str, std::string& storage)
 	if (len % 4 == 0)
 		return str;
 
-	storage.reserve(len + 4);
+	size_t npad = 4 - len % 4;
+
+	storage.reserve(len + npad);
 
 	storage = str;
 
-	while (storage.length() % 4)
-		storage.push_back('=');
+	storage.resize(len + npad, '=');
 
 	return storage.c_str();
 }
