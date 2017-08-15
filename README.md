@@ -21,7 +21,7 @@ any data.  At least one other person is using it.  There haven't been any seriou
 
 Reverse mode is new and has undergone only limited testing.
 
-Binary releases are on the [release page](https://github.com/bailey27/cppcryptfs/releases)
+Binary releases are on the [releases page](https://github.com/bailey27/cppcryptfs/releases).
 
 Testing
 -------
