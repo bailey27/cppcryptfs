@@ -16,7 +16,7 @@ Current Status
 
 cppcryptfs is pre-alpha, or more accurately: EXPERIMENTAL.
 
-The developer has been using cppcryptfs in forward (normal) mode for several months and hasn't lost
+The developer has been using cppcryptfs in forward (normal) mode for over a year and hasn't lost
 any data.  At least one other person is using it.  There haven't been any serious issues reported.
 
 Reverse mode is new and has undergone only limited testing.
