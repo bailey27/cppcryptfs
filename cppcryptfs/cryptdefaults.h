@@ -43,5 +43,6 @@ THE SOFTWARE.
 #define MOUNTMANAGER_DEFAULT 0
 #define MOUNTMANAGER_RECOMMENDED 0
 
+// warnings (not really settings)
 #define MOUNTMANAGERWARN_DEFAULT 1
 

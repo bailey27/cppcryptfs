@@ -288,5 +288,5 @@ void CSettingsPropertyPage::OnClickedResetwarnings()
 {
 	// TODO: Add your control notification handler code here
 
-	theApp.WriteProfileInt(L"Settings", L"MountManagerWarn", TRUE);
+	theApp.WriteProfileInt(L"Settings", L"MountManagerWarn", MOUNTMANAGERWARN_DEFAULT);
 }
