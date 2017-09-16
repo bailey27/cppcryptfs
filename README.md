@@ -180,8 +180,9 @@ See the section on "Case Sensitivity" for more information.
 
 **Enable Mount Manager (Recycle Bin)**
 
-This option enables the Windows Mount Manager on the encrypted volume.  Enabling mount manager enables the recycle bin.  This option works only if cppcryptfs is run as administrator.  If you try to mount a filesystem with this option checked and cppcryptfs is not running as administrator, then cppcyrptfs will display a warning dialog which can be disabled.  This option is not currently enabled when either Defaults or Recommended settings are chose.  You must enable it separately if you wish to use it.
+This option enables the Windows Mount Manager on the encrypted volume.  Enabling mount manager enables the recycle bin.  This option works only if cppcryptfs is run as administrator.  If you try to mount a filesystem with this option checked and cppcryptfs is not running as administrator, then cppcyrptfs will display a warning dialog (which can be disabled) and will not enable the mount manager.  
 
+This option is not currently enabled when either Defaults or Recommended settings are chosen.  You must enable it separately if you wish to use it.
 
 This setting has no effect on reverse filesystems or when filesystems are mounted read-only.
 
