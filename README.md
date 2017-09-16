@@ -178,6 +178,11 @@ If the case insensitive option is checked, then cppcryptfs will ignore the case 
 
 See the section on "Case Sensitivity" for more information.
 
+**Enable Mount Manager (Recycle Bin)**
+
+This option enables the Windows Mount Manager on the encrypted volume.  Enabling mount manager enables the recycle bin.  This option works only if cppcryptfs is run as administrator.  If you try to mount a filesystem with this option checked and cppcryptfs is not running as administrator, then cppcyrptfs will display a warning dialog which can be disabled.  This option is not currently enabled when either Defaults or Recommended settings are chose.  You must enable it separately if you wish to use it.
+
+
 **Defaults and Recommended**
 
 There are also two buttons: "Defaults" which changes all settings to the original cppcryptfs defaults, and "Recommended" which sets
@@ -188,6 +193,11 @@ undergone the most testing.
 
 When "Recommended" is used, then cppcryptfs will use settings that result in improved performance and functionality at the
 expense of possibly running into new bugs.
+
+
+**Reset Warnings**
+
+Pressing the Reset Warnings button will turn back on any warning dialogs which were previously disabled by selecting "don't show this message again".
 
 Reverse Mode
 ------
