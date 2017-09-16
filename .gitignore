@@ -13,3 +13,4 @@ cppcryptfs/cppcryptfs.aps
 Report*.vspx
 Report*.diagsession
 enc_temp_folder/
+cppcryptfs/fileutil.cpp.security_attributes_on_diriv

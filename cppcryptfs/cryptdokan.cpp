@@ -76,6 +76,7 @@ THE SOFTWARE.
 #include "util.h"
 #include "cryptdokan.h"
 
+
 #include <vector>
 #include <string>
 
@@ -1655,7 +1656,9 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
 
   BOOLEAN requestingSaclInfo;
 
-  DbgPrint(L"GetFileSecurity %s, context handle = %I64x\n", FileName, DokanFileInfo->Context);
+  UNREFERENCED_PARAMETER(DokanFileInfo);
+
+  DbgPrint(L"GetFileSecurity %s\n", FileName);
 
   CryptCheckFlag(*SecurityInformation, FILE_SHARE_READ);
   CryptCheckFlag(*SecurityInformation, OWNER_SECURITY_INFORMATION);
@@ -1666,7 +1669,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
   CryptCheckFlag(*SecurityInformation, ATTRIBUTE_SECURITY_INFORMATION);
   CryptCheckFlag(*SecurityInformation, SCOPE_SECURITY_INFORMATION);
   CryptCheckFlag(*SecurityInformation,
-                  PROCESS_TRUST_LABEL_SECURITY_INFORMATION);
+	  PROCESS_TRUST_LABEL_SECURITY_INFORMATION);
   CryptCheckFlag(*SecurityInformation, BACKUP_SECURITY_INFORMATION);
   CryptCheckFlag(*SecurityInformation, PROTECTED_DACL_SECURITY_INFORMATION);
   CryptCheckFlag(*SecurityInformation, PROTECTED_SACL_SECURITY_INFORMATION);
@@ -1680,8 +1683,6 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
 	  *SecurityInformation &= ~SACL_SECURITY_INFORMATION;
 	  *SecurityInformation &= ~BACKUP_SECURITY_INFORMATION;
   }
-
-
 
   DbgPrint(L"  Opening new handle with READ_CONTROL access\n");
 
@@ -1710,7 +1711,6 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
   HANDLE handle = CreateFile(
 	  is_virtual ? &virt_path[0] : filePath,
 	  READ_CONTROL | ((requestingSaclInfo && g_HasSeSecurityPrivilege)
-
 		  ? ACCESS_SYSTEM_SECURITY
 		  : 0),
 	  FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE,
@@ -1720,24 +1720,32 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
 	  NULL);
 
   if (!handle || handle == INVALID_HANDLE_VALUE) {
-    DbgPrint(L"\tinvalid handle\n\n");
-    int error = GetLastError();
-    return ToNtStatus(error);
+	  DbgPrint(L"\tinvalid handle\n\n");
+	  int error = GetLastError();
+	  return DokanNtStatusFromWin32(error);
   }
 
   if (!GetUserObjectSecurity(handle, SecurityInformation, SecurityDescriptor,
-                             BufferLength, LengthNeeded)) {
-    int error = GetLastError();
-    if (error == ERROR_INSUFFICIENT_BUFFER) {
-      DbgPrint(L"  GetUserObjectSecurity failed: ERROR_INSUFFICIENT_BUFFER\n");
-      CloseHandle(handle);
-	  return STATUS_BUFFER_OVERFLOW;
-    } else {
-      DbgPrint(L"  GetUserObjectSecurity failed: %d\n", error);
-      CloseHandle(handle);
-      return ToNtStatus(error);
-    }
+	  BufferLength, LengthNeeded)) {
+	  int error = GetLastError();
+	  if (error == ERROR_INSUFFICIENT_BUFFER) {
+		  DbgPrint(L"  GetUserObjectSecurity error: ERROR_INSUFFICIENT_BUFFER\n");
+		  CloseHandle(handle);
+		  return STATUS_BUFFER_OVERFLOW;
+	  } else {
+		  DbgPrint(L"  GetUserObjectSecurity error: %d\n", error);
+		  CloseHandle(handle);
+		  return DokanNtStatusFromWin32(error);
+	  }
   }
+
+  // Ensure the Security Descriptor Length is set
+  DWORD securityDescriptorLength =
+	  GetSecurityDescriptorLength(SecurityDescriptor);
+  DbgPrint(L"  GetUserObjectSecurity return true,  *LengthNeeded = "
+	  L"securityDescriptorLength \n");
+  *LengthNeeded = securityDescriptorLength;
+
   CloseHandle(handle);
 
   return STATUS_SUCCESS;
@@ -1752,21 +1760,19 @@ static NTSTATUS DOKAN_CALLBACK CryptSetFileSecurity(
 
   UNREFERENCED_PARAMETER(SecurityDescriptorLength);
 
-
-  DbgPrint(L"SetFileSecurity %s, context handle = %I64x\n", FileName, DokanFileInfo->Context);
+  DbgPrint(L"SetFileSecurity %s\n", FileName);
 
   handle = (HANDLE)DokanFileInfo->Context;
   if (!handle || handle == INVALID_HANDLE_VALUE) {
-    DbgPrint(L"\tinvalid handle\n\n");
-    return STATUS_INVALID_HANDLE;
+	  DbgPrint(L"\tinvalid handle\n\n");
+	  return STATUS_INVALID_HANDLE;
   }
 
   if (!SetUserObjectSecurity(handle, SecurityInformation, SecurityDescriptor)) {
-    int error = GetLastError();
-    DbgPrint(L"  SetUserObjectSecurity failed: %d\n", error);
-    return ToNtStatus(error);
+	  int error = GetLastError();
+	  DbgPrint(L"  SetUserObjectSecurity error: %d\n", error);
+	  return DokanNtStatusFromWin32(error);
   }
-
   return STATUS_SUCCESS;
 }
 
@@ -2015,7 +2021,7 @@ static DWORD WINAPI CryptThreadProc(
 }
 
 
-int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes, bool readonly, int nThreads, int nBufferBlocks, int cachettl, bool caseinsensitve) 
+int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, std::wstring& mes, bool readonly, int nThreads, int nBufferBlocks, int cachettl, bool caseinsensitve, bool mountmanager, bool mountmanagerwarn) 
 {
 	mes.clear();
 
@@ -2207,9 +2213,20 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 			DbgPrint(L"GetVolumeInformation failed, lasterr = %u\n", lasterr);
 		}
 
-		if (config->m_reverse || readonly)
+		if (config->m_reverse || readonly) {
 			dokanOptions->Options |= DOKAN_OPTION_WRITE_PROTECT;
+		} else if (mountmanager) {	
+			if (mountmanagerwarn && !have_security_name_privilege()) {
 
+				if (!mountmanager_continue_mounting()) {
+					mes = L"operation cancelled by user";
+					throw(-1);
+				}
+			}
+
+			if (have_security_name_privilege())
+				dokanOptions->Options |= DOKAN_OPTION_MOUNT_MANAGER;
+		}
 
 		dokanOptions->GlobalContext = (ULONG64)con;
 		dokanOptions->Options |= DOKAN_OPTION_ALT_STREAM;

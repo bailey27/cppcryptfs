@@ -41,6 +41,8 @@ THE SOFTWARE.
 #include "randombytes.h"
 #include "cryptcontext.h"
 
+#include "MountMangerDialog.h"
+
 #include <atlenc.h>
 
 template<typename T>
@@ -679,5 +681,14 @@ bool is_all_zeros(const BYTE *buf, size_t len)
 	TESTZERO(uint16_t);
 	
 	return test_zero_bytes<uint8_t>(buf, len);
+}
+
+bool mountmanager_continue_mounting()
+{
+	CMountMangerDialog mdlg;
+
+	mdlg.DoModal();
+
+	return mdlg.m_bOkPressed != 0;
 }
 

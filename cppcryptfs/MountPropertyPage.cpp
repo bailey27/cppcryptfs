@@ -44,6 +44,7 @@ THE SOFTWARE.
 #include "getopt.h"
 #include "cryptdefaults.h"
 
+
 // CMountPropertyPage dialog
 
 IMPLEMENT_DYNAMIC(CMountPropertyPage, CCryptPropertyPage)
@@ -206,8 +207,12 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	bool bCaseInsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", CASEINSENSITIVE_DEFAULT) != 0;
 
+	bool bMountManager = theApp.GetProfileInt(L"Settings", L"MountManager", MOUNTMANAGER_DEFAULT) != 0;
+
+	bool bMountManagerWarn = theApp.GetProfileInt(L"Settings", L"MountManagerWarn", MOUNTMANAGERWARN_DEFAULT) != 0;
+
 	theApp.DoWaitCursor(1);
-	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes, readonly, nThreads, bufferblocks, cachettl, bCaseInsensitive);
+	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes, readonly, nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, bMountManagerWarn);
 	theApp.DoWaitCursor(-1);
 
 	if (result != 0) {

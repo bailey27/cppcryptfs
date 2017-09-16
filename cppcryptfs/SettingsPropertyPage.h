@@ -39,6 +39,7 @@ class CSettingsPropertyPage : public CCryptPropertyPage
 public:
 
 	bool m_bCaseInsensitive;
+	bool m_bMountManager;
 
 	CSettingsPropertyPage();
 	virtual ~CSettingsPropertyPage();
@@ -48,7 +49,7 @@ public:
 	enum { IDD = IDD_SETTINGS };
 #endif
 protected:
-	BOOL SetControls(int nThreads, int nBufferBlocks, int nCacheTTL, bool bCaseInsensitive);
+	BOOL SetControls(int nThreads, int nBufferBlocks, int nCacheTTL, bool bCaseInsensitive, bool bMountManager);
 	void SaveSettings();
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -62,4 +63,6 @@ public:
 	afx_msg void OnCbnSelchangeCachettl();
 	afx_msg void OnBnClickedDefaults();
 	afx_msg void OnBnClickedRecommended();
+	afx_msg void OnClickedMountmanager();
+	afx_msg void OnClickedResetwarnings();
 };

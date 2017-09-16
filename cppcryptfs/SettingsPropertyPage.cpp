@@ -64,6 +64,8 @@ BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)
 	ON_CBN_SELCHANGE(IDC_CACHETTL, &CSettingsPropertyPage::OnCbnSelchangeCachettl)
 	ON_BN_CLICKED(IDC_DEFAULTS, &CSettingsPropertyPage::OnBnClickedDefaults)
 	ON_BN_CLICKED(IDC_RECOMMENDED, &CSettingsPropertyPage::OnBnClickedRecommended)
+	ON_BN_CLICKED(IDC_MOUNTMANAGER, &CSettingsPropertyPage::OnClickedMountmanager)
+	ON_BN_CLICKED(IDC_RESETWARNINGS, &CSettingsPropertyPage::OnClickedResetwarnings)
 END_MESSAGE_MAP()
 
 
@@ -89,14 +91,17 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 
 	bool bCaseInsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", CASEINSENSITIVE_DEFAULT) != 0;
 
-	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive);
+	bool bMountManager = theApp.GetProfileInt(L"Settings", L"MountManager", CASEINSENSITIVE_DEFAULT) != 0;
+
+	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager);
 }
 
 
-BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, bool bCaseInsensitive)
+BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, bool bCaseInsensitive, bool bMountManager)
 {
 
 	m_bCaseInsensitive =  bCaseInsensitive;
+	m_bMountManager = bMountManager;
 
 	int i;
 
@@ -165,6 +170,8 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	pBox->SetCurSel(selitem);
 
 	CheckDlgButton(IDC_CASEINSENSITIVE, m_bCaseInsensitive ? 1 : 0);
+
+	CheckDlgButton(IDC_MOUNTMANAGER, m_bMountManager ? 1 : 0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
@@ -238,15 +245,17 @@ void CSettingsPropertyPage::SaveSettings()
 	OnCbnSelchangeCachettl();
 
 	m_bCaseInsensitive = !m_bCaseInsensitive; // OnBnClickedCaseinsensitive() flips it
+	m_bMountManager = !m_bMountManager; // ditto
 
 	OnBnClickedCaseinsensitive();
+	OnClickedMountmanager();
 }
 
 void CSettingsPropertyPage::OnBnClickedDefaults()
 {
 	// TODO: Add your control notification handler code here
 
-	SetControls(PER_FILESYSTEM_THREADS_DEFAULT, BUFFERBLOCKS_DEFAULT, CACHETTL_DEFAULT, CASEINSENSITIVE_DEFAULT);
+	SetControls(PER_FILESYSTEM_THREADS_DEFAULT, BUFFERBLOCKS_DEFAULT, CACHETTL_DEFAULT, CASEINSENSITIVE_DEFAULT, MOUNTMANAGER_DEFAULT);
 
 	SaveSettings();
 }
@@ -256,8 +265,28 @@ void CSettingsPropertyPage::OnBnClickedRecommended()
 {
 	// TODO: Add your control notification handler code here
 
-	SetControls(PER_FILESYSTEM_THREADS_RECOMMENDED, BUFFERBLOCKS_RECOMMENDED, CACHETTL_RECOMMENDED, CASEINSENSITIVE_RECOMMENDED);
+	SetControls(PER_FILESYSTEM_THREADS_RECOMMENDED, BUFFERBLOCKS_RECOMMENDED, CACHETTL_RECOMMENDED, CASEINSENSITIVE_RECOMMENDED, MOUNTMANAGER_RECOMMENDED);
 
 	SaveSettings();
 }
 
+
+
+void CSettingsPropertyPage::OnClickedMountmanager()
+{
+	// TODO: Add your control notification handler code here
+
+	m_bMountManager = !m_bMountManager;
+
+	CheckDlgButton(IDC_MOUNTMANAGER, m_bMountManager ? 1 : 0);
+
+	theApp.WriteProfileInt(L"Settings", L"MountManager", m_bMountManager ? 1 : 0);
+}
+
+
+void CSettingsPropertyPage::OnClickedResetwarnings()
+{
+	// TODO: Add your control notification handler code here
+
+	theApp.WriteProfileInt(L"Settings", L"MountManagerWarn", TRUE);
+}

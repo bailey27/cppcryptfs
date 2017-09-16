@@ -233,6 +233,7 @@
     <ClInclude Include="getopt.h" />
     <ClInclude Include="LockZeroBuffer.h" />
     <ClInclude Include="longfilenamecache.h" />
+    <ClInclude Include="MountMangerDialog.h" />
     <ClInclude Include="MountPropertyPage.h" />
     <ClInclude Include="pad16.h" />
     <ClInclude Include="randombytes.h" />
@@ -281,6 +282,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="longfilenamecache.cpp" />
+    <ClCompile Include="MountMangerDialog.cpp" />
     <ClCompile Include="MountPropertyPage.cpp" />
     <ClCompile Include="pad16.cpp" />
     <ClCompile Include="randombytes.cpp" />
