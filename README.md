@@ -188,7 +188,7 @@ This setting has no effect on reverse filesystems or when filesystems are mounte
 
 Note:  If you are syncing the encrypted files of your filesystem with Dropbox, then if you enable mount manger (recycle bin), then Dropbox will not be able to sync the files in the recycle bin because it does not have sufficient privileges.  
 
-You should either run Dropbox as Administrator, or you should determine which encrypted folder name is the name of the recycle bin ($RECYCLE.BIN) and exclude it using the selective sync feature of Dropbox.  The developer intends to add a feature soon to make finding out the encrypted name of the recycle bin more easy.
+You should either run Dropbox as Administrator, or you should determine which encrypted folder name is the name of the recycle bin and exclude it using the selective sync feature of Dropbox.  If you are using plaintext file names, then the recycle bin will be simply "$RECYCLE.BIN".  The developer intends to add a feature soon to make finding out the encrypted name of the recycle bin more easy.
 
 **Defaults and Recommended**
 
