@@ -1,231 +1,228 @@
-/*
- * getopt - POSIX like getopt for Windows console Application
+/*******************************************************************************
+ * Copyright (c) 2012-2017, Kim Grasman <kim.grasman@gmail.com>
+ * All rights reserved.
  *
- * win-c - Windows Console Library
- * Copyright (c) 2015 Koji Takami
- * Released under the MIT license
- * https://github.com/takamin/win-c/blob/master/LICENSE
- */
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Kim Grasman nor the
+ *     names of contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL KIM GRASMAN BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ ******************************************************************************/
 
-/*
- *modified by Bailey Brown to use wchar_t instead of char 
- */
-
-#include <stdio.h>
-#include <string.h>
 #include "getopt.h"
 
-wchar_t* optarg = 0;
+#include <stddef.h>
+#include <string.h>
+
+char* optarg;
+int optopt;
+/* The variable optind [...] shall be initialized to 1 by the system. */
 int optind = 1;
-int opterr = 1;
-int optopt = 0;
+int opterr;
 
-int postpone_count = 0;
-int nextchar = 0;
+static char* optcursor = NULL;
 
-static void postpone(int argc, wchar_t* const argv[], int index) {
-    wchar_t** nc_argv = (wchar_t**)argv;
-    wchar_t* p = nc_argv[index];
-    int j = index;
-    for(; j < argc - 1; j++) {
-        nc_argv[j] = nc_argv[j + 1];
-    }
-    nc_argv[argc - 1] = p;
-}
-static int postpone_noopt(int argc, wchar_t* const argv[], int index) {
-    int i = index;
-    for(; i < argc; i++) {
-        if(*(argv[i]) == '-') {
-            postpone(argc, argv, index);
-            return 1;
-        }
-    }
-    return 0;
-}
-static int _getopt_(int argc, wchar_t* const argv[],
-        const wchar_t* optstring,
-        const struct option* longopts, int* longindex)
-{
-    while(1) {
-        int c;
-        const wchar_t* optptr = 0;
-        if(optind >= argc - postpone_count) {
-            c = 0;
-            optarg = 0;
-            break;
-        }
-        c = *(argv[optind] + nextchar);
-        if(c == '\0') {
-            nextchar = 0;
-            ++optind;
-            continue;
-        }
-        if(nextchar == 0) {
-            if(optstring[0] != '+' && optstring[0] != '-') {
-                while(c != '-') {
-                    /* postpone non-opt parameter */
-                    if(!postpone_noopt(argc, argv, optind)) {
-                        break; /* all args are non-opt param */
-                    }
-                    ++postpone_count;
-                    c = *argv[optind];
-                }
-            }
-            if(c != '-') {
-                if(optstring[0] == '-') {
-                    optarg = argv[optind];
-                    nextchar = 0;
-                    ++optind;
-                    return 1;
-                }
-                break;
-            } else {
-                if(wcscmp(argv[optind], L"--") == 0) {
-                    optind++;
-                    break;
-                }
-                ++nextchar;
-                if(longopts != 0 && *(argv[optind] + 1) == '-') {
-                    wchar_t const* spec_long = argv[optind] + 2;
-                    wchar_t const* pos_eq = wcschr(spec_long, '=');
-#ifdef  _WIN64
-                    long
-#endif
-						long spec_len = (pos_eq == NULL ? wcslen(spec_long) : pos_eq - spec_long);
-                    int index_search = 0;
-                    int index_found = -1;
-                    const struct option* optdef = 0;
-                    while(longopts->name != 0) {
-                        if(wcsncmp(spec_long, longopts->name, spec_len) == 0) {
-                            if(optdef != 0) {
-                                if(opterr) {
-                                    fwprintf(stderr, L"ambiguous option: %s\n", spec_long);
-                                }
-                                return '?';
-                            }
-                            optdef = longopts;
-                            index_found = index_search;
-                        }
-                        longopts++;
-                        index_search++;
-                    }
-                    if(optdef == 0) {
-                        if(opterr) {
-                            fwprintf(stderr, L"no such a option: %s\n", spec_long);
-                        }
-                        return '?';
-                    }
-                    switch(optdef->has_arg) {
-                        case no_argument:
-                            optarg = 0;
-                            if(pos_eq != 0) {
-                                if(opterr) {
-                                    fwprintf(stderr, L"no argument for %s\n", optdef->name);
-                                }
-                                return '?';
-                            }
-                            break;
-                        case required_argument:
-                            if(pos_eq == NULL) {
-                                ++optind;
-                                optarg = argv[optind];
-                            } else {
-                                optarg = (wchar_t*)pos_eq + 1;
-                            }
-                            break;
-                    }
-                    ++optind;
-                    nextchar = 0;
-                    if(longindex != 0) {
-                        *longindex = index_found;
-                    }
-                    if(optdef->flag != 0) {
-                        *optdef->flag = optdef->val;
-                        return 0;
-                    }
-                    return optdef->val;
-                }
-                continue;
-            }
-        }
-        optptr = wcschr(optstring, c);
-        if(optptr == NULL) {
-            optopt = c;
-            if(opterr) {
-                fwprintf(stderr,
-                        L"%s: invalid option -- %c\n",
-                        argv[0], c);
-            }
-            ++nextchar;
-            return '?';
-        }
-        if(*(optptr+1) != ':') {
-            nextchar++;
-            if(*(argv[optind] + nextchar) == '\0') {
-                ++optind;
-                nextchar = 0;
-            }
-            optarg = 0;
+/* Implemented based on [1] and [2] for optional arguments.
+   optopt is handled FreeBSD-style, per [3].
+   Other GNU and FreeBSD extensions are purely accidental.
+
+[1] http://pubs.opengroup.org/onlinepubs/000095399/functions/getopt.html
+[2] http://www.kernel.org/doc/man-pages/online/pages/man3/getopt.3.html
+[3] http://www.freebsd.org/cgi/man.cgi?query=getopt&sektion=3&manpath=FreeBSD+9.0-RELEASE
+*/
+int getopt(int argc, char* const argv[], const char* optstring) {
+  int optchar = -1;
+  const char* optdecl = NULL;
+
+  optarg = NULL;
+  opterr = 0;
+  optopt = 0;
+
+  /* Unspecified, but we need it to avoid overrunning the argv bounds. */
+  if (optind >= argc)
+    goto no_more_optchars;
+
+  /* If, when getopt() is called argv[optind] is a null pointer, getopt()
+     shall return -1 without changing optind. */
+  if (argv[optind] == NULL)
+    goto no_more_optchars;
+
+  /* If, when getopt() is called *argv[optind]  is not the character '-',
+     getopt() shall return -1 without changing optind. */
+  if (*argv[optind] != '-')
+    goto no_more_optchars;
+
+  /* If, when getopt() is called argv[optind] points to the string "-",
+     getopt() shall return -1 without changing optind. */
+  if (strcmp(argv[optind], "-") == 0)
+    goto no_more_optchars;
+
+  /* If, when getopt() is called argv[optind] points to the string "--",
+     getopt() shall return -1 after incrementing optind. */
+  if (strcmp(argv[optind], "--") == 0) {
+    ++optind;
+    goto no_more_optchars;
+  }
+
+  if (optcursor == NULL || *optcursor == '\0')
+    optcursor = argv[optind] + 1;
+
+  optchar = *optcursor;
+
+  /* FreeBSD: The variable optopt saves the last known option character
+     returned by getopt(). */
+  optopt = optchar;
+
+  /* The getopt() function shall return the next option character (if one is
+     found) from argv that matches a character in optstring, if there is
+     one that matches. */
+  optdecl = strchr(optstring, optchar);
+  if (optdecl) {
+    /* [I]f a character is followed by a colon, the option takes an
+       argument. */
+    if (optdecl[1] == ':') {
+      optarg = ++optcursor;
+      if (*optarg == '\0') {
+        /* GNU extension: Two colons mean an option takes an
+           optional arg; if there is text in the current argv-element
+           (i.e., in the same word as the option name itself, for example,
+           "-oarg"), then it is returned in optarg, otherwise optarg is set
+           to zero. */
+        if (optdecl[2] != ':') {
+          /* If the option was the last character in the string pointed to by
+             an element of argv, then optarg shall contain the next element
+             of argv, and optind shall be incremented by 2. If the resulting
+             value of optind is greater than argc, this indicates a missing
+             option-argument, and getopt() shall return an error indication.
+
+             Otherwise, optarg shall point to the string following the
+             option character in that element of argv, and optind shall be
+             incremented by 1.
+          */
+          if (++optind < argc) {
+            optarg = argv[optind];
+          } else {
+            /* If it detects a missing option-argument, it shall return the
+               colon character ( ':' ) if the first character of optstring
+               was a colon, or a question-mark character ( '?' ) otherwise.
+            */
+            optarg = NULL;
+            optchar = (optstring[0] == ':') ? ':' : '?';
+          }
         } else {
-            nextchar++;
-            if(*(argv[optind] + nextchar) != '\0') {
-                optarg = argv[optind] + nextchar;
-            } else {
-                ++optind;
-                if(optind < argc - postpone_count) {
-                    optarg = argv[optind];
-                } else {
-                    optopt = c;
-                    if(opterr) {
-                        fwprintf(stderr,
-                            L"%s: option requires an argument -- %c\n",
-                            argv[0], c);
-                    }
-                    if(optstring[0] == ':' ||
-                        (optstring[0] == '-' || optstring[0] == '+') &&
-                        optstring[1] == ':')
-                    {
-                        c = ':';
-                    } else {
-                        c = '?';
-                    }
-                }
-            }
-            ++optind;
-            nextchar = 0;
+          optarg = NULL;
         }
-        return c;
+      }
+
+      optcursor = NULL;
     }
+  } else {
+    /* If getopt() encounters an option character that is not contained in
+       optstring, it shall return the question-mark ( '?' ) character. */
+    optchar = '?';
+  }
 
-    /* end of option analysis */
+  if (optcursor == NULL || *++optcursor == '\0')
+    ++optind;
 
-    /* fix the order of non-opt params to original */
-    while((argc - optind - postpone_count) > 0) {
-        postpone(argc, argv, optind);
-        ++postpone_count;
+  return optchar;
+
+no_more_optchars:
+  optcursor = NULL;
+  return -1;
+}
+
+/* Implementation based on [1].
+
+[1] http://www.kernel.org/doc/man-pages/online/pages/man3/getopt.3.html
+*/
+int getopt_long(int argc, char* const argv[], const char* optstring,
+  const struct option* longopts, int* longindex) {
+  const struct option* o = longopts;
+  const struct option* match = NULL;
+  int num_matches = 0;
+  size_t argument_name_length = 0;
+  const char* current_argument = NULL;
+  int retval = -1;
+
+  optarg = NULL;
+  optopt = 0;
+
+  if (optind >= argc)
+    return -1;
+
+  if (strlen(argv[optind]) < 3 || strncmp(argv[optind], "--", 2) != 0)
+    return getopt(argc, argv, optstring);
+
+  /* It's an option; starts with -- and is longer than two chars. */
+  current_argument = argv[optind] + 2;
+  argument_name_length = strcspn(current_argument, "=");
+  for (; o->name; ++o) {
+    if (strncmp(o->name, current_argument, argument_name_length) == 0) {
+      match = o;
+      ++num_matches;
     }
+  }
 
-    nextchar = 0;
-    postpone_count = 0;
-    return -1;
-}
+  if (num_matches == 1) {
+    /* If longindex is not NULL, it points to a variable which is set to the
+       index of the long option relative to longopts. */
+    if (longindex)
+      *longindex = (match - longopts);
 
-int getopt(int argc, wchar_t* const argv[],
-            const wchar_t* optstring)
-{
-    return _getopt_(argc, argv, optstring, 0, 0);
+    /* If flag is NULL, then getopt_long() shall return val.
+       Otherwise, getopt_long() returns 0, and flag shall point to a variable
+       which shall be set to val if the option is found, but left unchanged if
+       the option is not found. */
+    if (match->flag)
+      *(match->flag) = match->val;
+
+    retval = match->flag ? 0 : match->val;
+
+    if (match->has_arg != no_argument) {
+      optarg = strchr(argv[optind], '=');
+      if (optarg != NULL)
+        ++optarg;
+
+      if (match->has_arg == required_argument) {
+        /* Only scan the next argv for required arguments. Behavior is not
+           specified, but has been observed with Ubuntu and Mac OSX. */
+        if (optarg == NULL && ++optind < argc) {
+          optarg = argv[optind];
+        }
+
+        if (optarg == NULL)
+          retval = ':';
+      }
+    } else if (strchr(argv[optind], '=')) {
+      /* An argument was provided to a non-argument option.
+         I haven't seen this specified explicitly, but both GNU and BSD-based
+         implementations show this behavior.
+      */
+      retval = '?';
+    }
+  } else {
+    /* Unknown option or ambiguous match. */
+    retval = '?';
+  }
+
+  ++optind;
+  return retval;
 }
-int getopt_long(int argc, wchar_t* const argv[],
-        const wchar_t* optstring,
-        const struct option* longopts, int* longindex)
-{
-    return _getopt_(argc, argv, optstring, longopts, longindex);
-}
-/********************************************************
-int getopt_long_only(int argc, wchar_t* const argv[],
-        const wchar_t* optstring,
-        const struct option* longopts, int* longindex)
-{
-    return -1;
-}
-********************************************************/
