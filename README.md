@@ -180,11 +180,14 @@ See the section on "Case Sensitivity" for more information.
 
 **Enable Mount Manager (Recycle Bin)**
 
+This setting is not currently enabled when either Defaults or Recommended settings are chosen.  You must enable it separately if you wish to use it.  It has not been tested thoroughly.
+
 This setting enables the Windows Mount Manager on the encrypted volume.  Enabling mount manager enables the recycle bin.  This setting works only if cppcryptfs is run as administrator.  If you try to mount a filesystem with this setting checked and cppcryptfs is not running as administrator, then cppcyrptfs will display a warning dialog (which can be disabled) and will not enable the mount manager.  
 
-This setting is not currently enabled when either Defaults or Recommended settings are chosen.  You must enable it separately if you wish to use it.
-
 This setting has no effect on reverse filesystems or when filesystems are mounted read-only.
+
+Note:  If you are syncing the encrypted files of your filesystem with Dropbox, then if you enable mount manger (recycle bin), then Dropbox will not be able to sync the files in the recycle bin because it does not have sufficient privileges.  
+You should either run Dropbox as Administrator, or you should determine which encrypted folder name is the name of the recycle bin ($RECYCLE.BIN) and exclude it using the selective sync feature of Dropbox.  The developer intends to add a feature soon to make finding out the encrypted name of the recycle bin more easy.
 
 **Defaults and Recommended**
 
