@@ -286,7 +286,7 @@ cppcryptfs --mount c:\tmp\test --drive k --password XYZ
 The --list option has an optional argument.  If there is no argument given, then
 it lists the drive letters and shows the path to the root of the encrypted filesystem for mounted filesystems.  
 
-The list command also takes a full path as an optional agument.  The path should be the unencrypted name of a file or directory including the drive letter.  If the argument is a file, then cppcryptfs will print the file path on the left and the unencrypted name on the right.   If the argument is a directory, then cppcryptfs will print the unencrypted names of the files on the left and the encrypted names on the right.
+The list command also takes a full path as an optional agument.  The path should be the unencrypted name of a file or directory including the drive letter.  If the argument is a file, then cppcryptfs will print the unencrypted file path on the left and the encrypted path on the right.   If the argument is a directory, then cppcryptfs will print the unencrypted names of the files on the left and the encrypted names on the right.
 
 Because of the way optional arguments are handled, if you are using the short form of the list switch (-l), then you must put the path right after the -l with no space.  And if you are using the long form (--list), then you must use the "=" sign.  e.g.
 
