@@ -188,7 +188,16 @@ This setting has no effect on reverse filesystems or when filesystems are mounte
 
 Note:  If you are syncing the encrypted files of your filesystem with Dropbox, then if you enable mount manger (recycle bin), then Dropbox will not be able to sync the files in the recycle bin because it does not have sufficient privileges.  
 
-You should either run Dropbox as Administrator, or you should determine which encrypted folder name is the name of the recycle bin and exclude it using the selective sync feature of Dropbox.  If you are using plaintext file names, then the recycle bin will be simply "$RECYCLE.BIN".  The developer intends to add a feature soon to make finding out the encrypted name of the recycle bin more easy.
+You should either run Dropbox as Administrator, or you should determine which encrypted folder name is the name of the recycle bin and exclude it using the selective sync feature of Dropbox.  If you are using plaintext file names, then the recycle bin will be simply "$RECYCLE.BIN". The --list command line switch, if given the (unencrypted) path to the root directory of the filesystem as an argument, can be used to find the encrypted name of the recycle bin.
+
+e.g.
+
+
+```
+
+cppcryptfs --list=d:\
+
+```
 
 **Defaults and Recommended**
 
@@ -279,7 +288,7 @@ it lists the drive letters and shows the path to the root of the encrypted files
 
 The list command also takes a full path as an optional agument.  The path should be the unencrypted name of a file or directory including the drive letter.  If the argument is a file, then cppcryptfs will print the file path on the left and the unencrypted name on the right.   If the argument is a directory, then cppcryptfs will print the unencrypted names of the files on the left and the encrypted names on the right.
 
-Because of the way optional arguments work, if you are using the short form of the list switch (-l), then you must put the path right after the -l with no space.  And if you are using the long form (--list), then you must use the = sign.  e.g.
+Because of the way optional arguments are handled, if you are using the short form of the list switch (-l), then you must put the path right after the -l with no space.  And if you are using the long form (--list), then you must use the "=" sign.  e.g.
 
 ```
 cppcryptfs -lk:\foo
