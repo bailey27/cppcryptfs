@@ -299,7 +299,7 @@ cppcryptfs --list=k:\foo
 
 cppcryptfs is a Windows gui application and not a console application.  However, when started with command line options, it will try to write any error messages to the console (if any) that started it.
 
-Unfortunately, Windows does not seem to handle piping output that is generated this way.  You cannot pipe the output of cppcryptfs through other commands like sort or redirect it to a file, apparently.
+Unfortunately, Windows does not seem to handle piping output that is generated this way.  You cannot pipe the output of cppcryptfs through other commands like sort or redirect it to a file.
 
 There can be only one instance of cppcryptfs running at any time.
 
