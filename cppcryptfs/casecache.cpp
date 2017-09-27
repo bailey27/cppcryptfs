@@ -463,7 +463,7 @@ bool CaseCache::purge(LPCWSTR path)
 }
 
 // use our own callback so rest of the code doesn't need to know about Dokany internals
-static int WINAPI casecache_fill_find_data(PWIN32_FIND_DATAW fdata, void * dokan_cb, void * dokan_ctx)
+static int WINAPI casecache_fill_find_data(PWIN32_FIND_DATAW fdata, PWIN32_FIND_DATAW fdata_orig, void * dokan_cb, void * dokan_ctx)
 {
 	return 0;
 }

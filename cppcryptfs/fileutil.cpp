@@ -334,9 +334,10 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 			}
 			if (!is_interesting_name(isRoot, fdata, con))
 				continue;
+			WIN32_FIND_DATAW fdata_orig = fdata;
 			if (!convert_fdata(con, isRoot, dir_iv, path, fdata, &actual_encrypted))
 				continue;
-			fillData(&fdata, dokan_cb, dokan_ctx);
+			fillData(&fdata, &fdata_orig, dokan_cb, dokan_ctx);
 			if (reverse && !plaintext_names && is_long_name(fdata.cFileName)) {
 				wcscat_s(fdata.cFileName, MAX_PATH, LONGNAME_SUFFIX_W);
 				fdata.dwFileAttributes = VirtualAttributesNameFile(fdata.dwFileAttributes);
@@ -344,7 +345,8 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 				fdata.cAlternateFileName[0] = '\0';
 				fdata.nFileSizeHigh = 0;
 				fdata.nFileSizeLow = (DWORD)actual_encrypted.length();
-				fillData(&fdata, dokan_cb, dokan_ctx);
+				fdata_orig = fdata;
+				fillData(&fdata, &fdata_orig, dokan_cb, dokan_ctx);
 			}
 			if (con->IsCaseInsensitive()) {
 				files.push_back(fdata.cFileName);
@@ -363,7 +365,8 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 			fdata_dot.nFileSizeLow = DIR_IV_LEN;
 			fdata_dot.ftLastWriteTime = fdata_dot.ftCreationTime;
 			fdata_dot.dwFileAttributes = VirtualAttributesDirIv(fdata_dot.dwFileAttributes);
-			fillData(&fdata_dot, dokan_cb, dokan_ctx);
+			WIN32_FIND_DATAW fdata_orig = fdata_dot;
+			fillData(&fdata_dot, &fdata_orig, dokan_cb, dokan_ctx);
 		}
 
 		ret = 0;

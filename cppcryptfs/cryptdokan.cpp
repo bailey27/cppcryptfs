@@ -81,6 +81,7 @@ THE SOFTWARE.
 #include <string>
 
 #include <windows.h>
+#include <Shlwapi.h>
 #include "dokan/dokan.h"
 #include "dokan/fileinfo.h"
 #include <malloc.h>
@@ -1100,7 +1101,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileInformation(
 }
 
 // use our own callback so rest of the code doesn't need to know about Dokany internals
-static int WINAPI crypt_fill_find_data(PWIN32_FIND_DATAW fdata, void * dokan_cb, void * dokan_ctx)
+static int WINAPI crypt_fill_find_data(PWIN32_FIND_DATAW fdata, PWIN32_FIND_DATAW fdata_orig, void * dokan_cb, void * dokan_ctx)
 {
 	return ((PFillFindData)dokan_cb)(fdata, (PDOKAN_FILE_INFO)dokan_ctx);
 }
@@ -2404,4 +2405,120 @@ BOOL have_security_name_privilege()
 void init_security_name_privilege()
 {
 	have_security_name_privilege();
+}
+
+// use our own callback so rest of the code doesn't need to know about Dokany internals
+static int WINAPI crypt_fill_find_data_list(PWIN32_FIND_DATAW fdata, PWIN32_FIND_DATAW fdata_orig, void * dokan_cb, void * dokan_ctx)
+{
+	std::list<FindDataPair> *findDatas = (std::list<FindDataPair> *)dokan_ctx;
+
+	FindDataPair pair;
+
+	pair.fdata = *fdata;
+	pair.fdata_orig = *fdata_orig;
+
+	findDatas->push_back(pair);
+
+	return 0;
+}
+
+BOOL list_files(const WCHAR *path, std::list<FindDataPair> &findDatas, std::wstring& err_mes)
+{
+	err_mes = L""; 
+
+	if (!path) {
+		err_mes = L"path is null";
+		return FALSE;
+	}
+
+	if (wcslen(path) > MAX_PATH - 1) {
+		err_mes = L"path is too long";
+		return FALSE;
+	}
+
+	WCHAR newpath[MAX_PATH + 1];
+
+	if (!PathCanonicalize(newpath, path)) {
+		err_mes = L"failed to canonicalize path";
+		return FALSE;
+	}
+
+	path = newpath;
+	
+	int dl = *path;
+
+	if (dl < 'A' || dl > 'Z') {
+		err_mes = L"invalid drive letter";
+		return FALSE;
+	}
+
+	if (wcslen(path) < 3) {
+		err_mes = L"path is too short";
+		return FALSE;
+	}
+
+	if (path[1] != ':' || path[2] != '\\') {
+		err_mes = L"invalid path";
+		return FALSE;
+	}
+
+	path += 2;
+
+	CryptThreadData *tdata = g_ThreadDatas[dl - 'A'];
+
+	if (!tdata) {
+		err_mes = L"drive not mounted"; 
+		return FALSE;
+	}
+
+	CryptContext *con = &tdata->con;
+
+	DOKAN_FILE_INFO DokanFileInfo;
+	DOKAN_OPTIONS DokanOptions;
+
+	memset(&DokanFileInfo, 0, sizeof(DokanFileInfo));
+	memset(&DokanOptions, 0, sizeof(DokanOptions));
+
+	DokanOptions.GlobalContext = (ULONG_PTR)con;
+
+	DokanFileInfo.DokanOptions = &DokanOptions;
+
+	DokanFileInfo.DokanOptions->GlobalContext = (ULONG_PTR)con;
+
+	FileNameEnc filePath(&DokanFileInfo, path);
+
+	if (PathIsDirectory(filePath)) {
+
+		if (find_files(con, filePath.CorrectCasePath(), filePath, crypt_fill_find_data_list, NULL, &findDatas) != 0) {
+			err_mes = L"error listing files";
+			return FALSE;
+		}
+	} else if (PathFileExists(filePath)) {
+
+		FindDataPair pair;
+		memset(&pair, 0, sizeof(pair));
+
+		wchar_t dl_colon[3]; 
+
+		dl_colon[0] = dl;
+		dl_colon[1] = ':';
+		dl_colon[2] = '\0';
+
+		std::wstring plain_path;
+		
+		plain_path += dl_colon;
+		plain_path += filePath.CorrectCasePath();
+
+		wcscpy_s(pair.fdata.cFileName, plain_path.c_str());
+		wcscpy_s(pair.fdata_orig.cFileName, filePath + (wcslen(filePath) > 4 ? 4 : 0)); // +4 to skip the \\?\
+ 		
+		findDatas.push_back(pair);
+	
+	} else {
+
+		err_mes = L"path does not exist";
+		return FALSE;
+	}
+
+	return TRUE;
 }

@@ -131,7 +131,22 @@ BOOL CcppcryptfsApp::InitInstance()
 						pcd->dwPid = getppid();
 						cd.lpData = (PVOID)pcd;
 						if (wcscpy_s(pcd->szCmdLine, cmdLineLen + 1, cmdLine) == 0) {
+							SetLastError(0);
 							SendMessageW(hWnd, WM_COPYDATA, NULL, (LPARAM)&cd);
+							DWORD dwErr = GetLastError();
+							if (dwErr) {
+								if (dwErr == ERROR_ACCESS_DENIED) {
+									ConsoleErrMes(L"SendMessage() returned error \"access denied\".\n\nPerhaps there is"
+										" already an instance of cppcryptfs running with administrator\nprivileges, but"
+										" you invoked this instance of cppcryptfs from a command prompt\nthat is not running"
+										" with administrator privileges.\n\nIf this is the case, then you should start a"
+										" CMD.exe window using\n\"Run as administrator\" and invoke cppcryptfs from within it.");
+								} else {
+									WCHAR buf[80];
+									_snwprintf_s(buf, _TRUNCATE, L"SendMessage() returned error code %u", dwErr);
+									ConsoleErrMes(buf);
+								}
+							}
 						}
 					} else {
 						ConsoleErrMes(L"unable to lock command line buffer in source");

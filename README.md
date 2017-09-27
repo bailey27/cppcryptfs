@@ -259,6 +259,7 @@ Misc:
   -t, --tray            hide in system tray
   -x, --exit            exit if no drives mounted
   -l, --list            list available and mounted drive letters (with paths)
+  -ld:\p, --list=d:\p   list encrypted and plaintext filenames
   -v, --version         print version
   -h, --help            display this help message
 
@@ -272,7 +273,24 @@ cppcryptfs --mount=c:\tmp\test --drive=k --password=XYZ
 cppcryptfs --mount c:\tmp\test --drive k --password XYZ
 
 ```
+
+The --list option has an optional argument.  If there is no argument given, then
+it lists the drive letters and shows the path to the root of the encrypted filesystem for mounted filesystems.  
+
+The list command also takes a full path as an optional agument.  The path should be the unencrypted name of a file or directory including the drive letter.  If the argument is a file, then cppcryptfs will print the file path on the left and the unencrypted name on the right.   If the argument is a directory, then cppcryptfs will print the unencrypted names of the files on the left and the encrypted names on the right.
+
+Because of the way optional arguments work, if you are using the short form of the list switch (-l), then you must put the path right after the -l with no space.  And if you are using the long form (--list), then you must use the = sign.  e.g.
+
+```
+cppcryptfs -lk:\foo
+
+cppcryptfs --list=k:\foo
+
+```
+
 cppcryptfs is a Windows gui application and not a console application.  However, when started with command line options, it will try to write any error messages to the console (if any) that started it.
+
+Unfortunately, Windows does not seem to handle piping output that is generated this way.  You cannot pipe the output of cppcryptfs through other commands like sort or redirect it to a file, apparently.
 
 There can be only one instance of cppcryptfs running at any time.
 

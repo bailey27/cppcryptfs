@@ -849,9 +849,16 @@ static void usage()
 	fprintf(stderr, "  -t, --tray\t\thide in system tray\n");
 	fprintf(stderr, "  -x, --exit\t\texit if no drives mounted\n");
 	fprintf(stderr, "  -l, --list\t\tlist available and mounted drive letters (with paths)\n");
+	fprintf(stderr, "  -ld:\\p, --list=d:\\p\tlist encrypted and plaintext filenames\n");
 	fprintf(stderr, "  -v, --version\t\tprint version\n");
 	fprintf(stderr, "  -h, --help\t\tdisplay this help message\n");
 	
+}
+
+
+static bool compair_find_datas(const FindDataPair& p1, const FindDataPair& p2)
+{
+	return _wcsicmp(p1.fdata.cFileName, p2.fdata.cFileName) < 0;
 }
 
 void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnStartup)
@@ -895,6 +902,8 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	BOOL do_list = FALSE;
 	bool readonly = false;
 
+	CString list_arg;
+
 	try {
 
 		static struct option long_options[] =
@@ -906,7 +915,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			{L"readonly",  no_argument, 0, 'r'},
 			{L"tray",  no_argument, 0, 't'},
 			{L"exit",  no_argument, 0, 'x'},
-			{L"list",  no_argument, 0, 'l'},
+			{L"list",  optional_argument, 0, 'l'},
 			{ L"version",  no_argument, 0, 'v' },
 			{L"help",  no_argument, 0, 'h'},
 			{0, 0, 0, 0}
@@ -917,7 +926,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 
 		while (1) {
 
-			c = getopt_long(argc, argv, L"m:d:p:u:vhxtlr", long_options, &option_index);
+			c = getopt_long(argc, argv, L"m:d:p:u:vhxtl::r", long_options, &option_index);
 
 			if (c == -1)
 				break;
@@ -954,6 +963,8 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 				break;
 			case 'l':
 				do_list = TRUE;
+				if (optarg)
+					list_arg = optarg;
 				break;
 			case 't':
 				hide_to_system_tray = TRUE;
@@ -995,19 +1006,49 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	} else if (do_list) {
 		CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS); 
 		if (pList) {
-			int nItems = pList->GetItemCount();
-			int i;
-			CString cdl, cpath;
-			for (i = 0; i < nItems; i++) {
-				cdl = pList->GetItemText(i, 0);
-				if (cdl.GetLength() > 0) {
-					fwprintf(stdout, L"%s", (LPCWSTR)cdl);
-					if (theApp.m_mountedDrives & (1 << (*cdl - 'A'))) {
-						cpath = pList->GetItemText(i, 1);
-						if (cpath.GetLength() > 0)
-							fwprintf(stdout, L" %s", (LPCWSTR)cpath);
+			if (list_arg.GetLength() > 0) {
+				const WCHAR *path = (const WCHAR *)list_arg;
+				int dl = *path;
+				if (!iswupper(dl))
+					dl = towupper(dl);
+				if (dl < 'A' || dl > 'Z') {
+					errMes = L"invalid drive letter"; 
+				} else if (theApp.m_mountedDrives & (1 << (dl - 'A'))) {
+					std::wstring err_mes;
+					list_arg.SetAt(0, dl);
+					std::list<FindDataPair> findDatas;
+					if (!list_files(list_arg, findDatas, err_mes)) {
+						errMes = err_mes.c_str();
+					} else {
+						findDatas.sort(compair_find_datas);
+						for (auto it = findDatas.begin(); it != findDatas.end(); it++) {
+							fwprintf(stdout, L"%s => %s\n", it->fdata.cFileName, it->fdata_orig.cFileName);
+						}
 					}
-					fwprintf(stdout, L"\n");
+				} else {
+					errMes = L"drive not mounted";
+				}
+				if (errMes.GetLength() > 0) {
+					LPCWSTR str = errMes;
+					if (str[wcslen(str) - 1] != '\n')
+						errMes += L"\n";
+					fwprintf(stderr, L"cppcryptfs: %s", (LPCWSTR)errMes);
+				}
+			} else {
+				int nItems = pList->GetItemCount();
+				int i;
+				CString cdl, cpath;
+				for (i = 0; i < nItems; i++) {
+					cdl = pList->GetItemText(i, 0);
+					if (cdl.GetLength() > 0) {
+						fwprintf(stdout, L"%s", (LPCWSTR)cdl);
+						if (theApp.m_mountedDrives & (1 << (*cdl - 'A'))) {
+							cpath = pList->GetItemText(i, 1);
+							if (cpath.GetLength() > 0)
+								fwprintf(stdout, L" %s", (LPCWSTR)cpath);
+						}
+						fwprintf(stdout, L"\n");
+					}
 				}
 			}
 		}

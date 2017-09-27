@@ -73,7 +73,7 @@ static const WCHAR * components[] = {
 	L"Dokany (mirror) - Copyright (C) 2015 - 2017 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
 	L"Dokany (library) - Copyright (C) 2015 - 2017 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
 	L"100% free Secure Edit control MFC class - Copyright (c) 2003 Dominik Reichl",
-	L"win-c (getopt) - Windows Console Library Copyright (c) 2015 Koji Takami",
+	L"getopt_port - Copyright (c) 2012-2017, Kim Grasman <kim.grasman@gmail.com>. All rights reserved.",
 	L"aes-siv - Copyright (c) 2015 ARKconcepts / Sasha Kotlyar",
 	NULL
 };
@@ -516,30 +516,33 @@ static const WCHAR *licenses[] = {
 
 	// getopt
 
-	L"project url: github.com/takamin/win-c\r\n\r\n"
+	L"project url: github.com/kimgr/getopt_port\r\n\r\n"
 	L"cppcryptfs usage: getopt.c and getopt.h from this project were modified and incorporated into cppcryptfs.\r\n\r\n"
-	L"win-c copyright and license:\r\n\r\n"
-	L"The MIT License (MIT)\r\n"
-	L"\r\n"
-	L"Copyright (c) 2015 Koji Takami\r\n"
-	L"\r\n"
-	L"Permission is hereby granted, free of charge, to any person obtaining a copy\r\n"
-	L"of this software and associated documentation files (the \"Software\"), to deal\r\n"
-	L"in the Software without restriction, including without limitation the rights\r\n"
-	L"to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\r\n"
-	L"copies of the Software, and to permit persons to whom the Software is\r\n"
-	L"furnished to do so, subject to the following conditions:\r\n"
-	L"\r\n"
-	L"The above copyright notice and this permission notice shall be included in all\r\n"
-	L"copies or substantial portions of the Software.\r\n"
-	L"\r\n"
-	L"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\r\n"
-	L"IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\r\n"
-	L"FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\r\n"
-	L"AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\r\n"
-	L"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\r\n"
-	L"OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\r\n"
-	L"SOFTWARE.\r\n",
+	L"getopt_port copyright and license:\r\n\r\n"
+		L"Copyright (c) 2012-2017, Kim Grasman <kim.grasman@gmail.com>\r\n"
+		L"All rights reserved.\r\n"
+		L"\r\n"
+		L"Redistribution and use in source and binary forms, with or without\r\n"
+		L"modification, are permitted provided that the following conditions are met:\r\n"
+		L"    * Redistributions of source code must retain the above copyright\r\n"
+		L"      notice, this list of conditions and the following disclaimer.\r\n"
+		L"    * Redistributions in binary form must reproduce the above copyright\r\n"
+		L"      notice, this list of conditions and the following disclaimer in the\r\n"
+		L"      documentation and/or other materials provided with the distribution.\r\n"
+		L"    * Neither the name of Kim Grasman nor the\r\n"
+		L"      names of contributors may be used to endorse or promote products\r\n"
+		L"      derived from this software without specific prior written permission.\r\n"
+		L"\r\n"
+		L"THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\r\n"
+		L"ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\r\n"
+		L"WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\r\n"
+		L"DISCLAIMED. IN NO EVENT SHALL KIM GRASMAN BE LIABLE FOR ANY\r\n"
+		L"DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\r\n"
+		L"(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\r\n"
+		L"LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND\r\n"
+		L"ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\r\n"
+		L"(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\r\n"
+		L"SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\r\n",
 
 	// aes-siv
 

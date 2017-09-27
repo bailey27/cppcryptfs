@@ -38,7 +38,7 @@ bool
 get_dir_iv(CryptContext *con, const WCHAR *path, unsigned char *dir_iv);
 
 
-typedef int(WINAPI *PCryptFillFindData)(PWIN32_FIND_DATAW, void * dokan_cb, void * dokan_ctx);
+typedef int(WINAPI *PCryptFillFindData)(PWIN32_FIND_DATAW fdata, PWIN32_FIND_DATAW fdata_orig, void * dokan_cb, void * dokan_ctx);
 
 DWORD
 find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFillFindData, void * dokan_cb, void * dokan_ctx);
