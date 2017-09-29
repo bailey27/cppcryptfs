@@ -37,7 +37,7 @@ THE SOFTWARE.
 class DirIvCacheNode {
 
 public:
-	const std::wstring *m_key;
+	std::wstring m_key;
 	unsigned char m_dir_iv[DIR_IV_LEN];
 	std::list<DirIvCacheNode*>::iterator m_list_it;  // holds position in lru list
 	ULONGLONG m_timestamp; // milliseconds

@@ -57,7 +57,6 @@ THE SOFTWARE.
 CaseCacheNode::CaseCacheNode() 
 {
 	m_timestamp = 0;
-	m_key = NULL;
 
 	memset(&m_filetime, 0, sizeof(m_filetime));
 }
@@ -174,7 +173,7 @@ bool CaseCache::store(LPCWSTR dirpath, const std::list<std::wstring>& files)
 			if (m_map.size() >= CASE_CACHE_ENTRIES) {
 				node = m_lru_list.back();
 				m_lru_list.pop_back();
-				m_map.erase(*node->m_key);
+				m_map.erase(node->m_key);
 				node->m_files.clear();
 			}
 
@@ -191,7 +190,7 @@ bool CaseCache::store(LPCWSTR dirpath, const std::list<std::wstring>& files)
 
 			mp.first->second = node;
 
-			node->m_key = &mp.first->first;
+			node->m_key = mp.first->first;
 			node->m_path = dirpath;
 			std::wstring ucfile;
 			for (auto it = files.begin(); it != files.end(); it++) {
@@ -202,7 +201,8 @@ bool CaseCache::store(LPCWSTR dirpath, const std::list<std::wstring>& files)
 			}
 			node->m_timestamp = GetTickCount64();
 			GetSystemTimeAsFileTime(&node->m_filetime);
-			node->m_list_it = m_lru_list.insert(m_lru_list.begin(), node);
+			m_lru_list.push_front(node);
+			node->m_list_it = m_lru_list.begin();
 
 		} else {
 			

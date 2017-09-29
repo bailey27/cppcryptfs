@@ -36,7 +36,7 @@ THE SOFTWARE.
 class CaseCacheNode {
 
 public:
-	const std::wstring *m_key; // upercased  path
+	std::wstring m_key; // upercased  path
 	std::wstring m_path; // correct-case path of directory
 	std::unordered_map<std::wstring, std::wstring> m_files;  // map of uppercase filenames to correct-case names
 	std::list<CaseCacheNode*>::iterator m_list_it;  // holds position in lru list

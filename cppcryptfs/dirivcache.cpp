@@ -45,7 +45,6 @@ THE SOFTWARE.
 
 DirIvCacheNode::DirIvCacheNode()
 {
-	m_key = NULL;
 	m_timestamp = 0;
 	m_last_write_time = { 0 , 0 };
 }
@@ -232,7 +231,7 @@ bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv, const FILETIME
 			if (m_map.size() >= DIR_IV_CACHE_ENTRIES) {
 				node = m_lru_list.back();
 				m_lru_list.pop_back();
-				m_map.erase(*node->m_key);
+				m_map.erase(node->m_key);
 			}
 
 			// re-use node if we removed one, otherwise get one from spare list, otherwise make a new one
@@ -248,11 +247,12 @@ bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv, const FILETIME
 
 			mp.first->second = node;
 
-			node->m_key = &mp.first->first;
+			node->m_key = mp.first->first;
 			memcpy(node->m_dir_iv, dir_iv, DIR_IV_LEN);
 			node->m_timestamp = GetTickCount64();
 			node->m_last_write_time = last_write_time;
-			node->m_list_it = m_lru_list.insert(m_lru_list.begin(), node);
+			m_lru_list.push_front(node);
+			node->m_list_it = m_lru_list.begin();
 			
 		} else {
 			// copy dir_iv to node at that path (key)
