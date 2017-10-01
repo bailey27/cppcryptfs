@@ -68,4 +68,5 @@ public:
 	CSecureEdit m_password;
 	CSecureEdit m_password2;
 	afx_msg void OnClickedReverse();
+	afx_msg void OnClickedSelectConfigPath();
 };

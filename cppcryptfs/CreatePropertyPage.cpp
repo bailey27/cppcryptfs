@@ -88,6 +88,7 @@ BEGIN_MESSAGE_MAP(CCreatePropertyPage, CPropertyPage)
 	ON_LBN_SELCHANGE(IDC_FILENAME_ENCRYPTION, &CCreatePropertyPage::OnLbnSelchangeFilenameEncryption)
 	ON_CBN_SELCHANGE(IDC_PATH, &CCreatePropertyPage::OnCbnSelchangePath)
 	ON_BN_CLICKED(IDC_REVERSE, &CCreatePropertyPage::OnClickedReverse)
+	ON_BN_CLICKED(IDC_SELECT_CONFIG_PATH, &CCreatePropertyPage::OnClickedSelectConfigPath)
 END_MESSAGE_MAP()
 
 void CCreatePropertyPage::DefaultAction()
@@ -391,4 +392,26 @@ void CCreatePropertyPage::OnClickedReverse()
 
 	pEncBox->SelectString(-1, data_encryption_types[bIsChecked ? AES256_SIV_INDEX : AES256_GCM_INDEX]);
 	
+}
+
+
+void CCreatePropertyPage::OnClickedSelectConfigPath()
+{
+	// TODO: Add your control notification handler code here
+
+	CFileDialog fdlg(FALSE, L"conf", L"gocryptfs", 
+		OFN_DONTADDTORECENT | OFN_LONGNAMES | OFN_OVERWRITEPROMPT |
+		OFN_PATHMUSTEXIST);
+
+	if (fdlg.DoModal() == IDCANCEL)
+		return;
+
+	CString cpath = fdlg.GetPathName();
+
+	if (cpath.GetLength() < 1)
+		return;
+
+	CWnd *pWnd = GetDlgItem(IDC_CONFIG_PATH);
+	if (pWnd)
+		pWnd->SetWindowTextW(cpath);
 }
