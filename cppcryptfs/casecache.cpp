@@ -567,7 +567,13 @@ bool CaseCache::rename(LPCWSTR oldpath, LPCWSTR newpath)
 		}
 
 		for (auto it : toinsert) {
-			m_map.insert(it);
+			auto pr = m_map.insert(it);
+			if (!pr.second) {
+				// wasn't really inserted
+				m_lru_list.erase(it.second->m_list_it);
+				it.second->m_files.clear();
+				m_spare_node_list.push_front(it.second);
+			}
 		}
 	
 	} catch (...) {
