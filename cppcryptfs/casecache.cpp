@@ -170,7 +170,7 @@ bool CaseCache::store(LPCWSTR dirpath, const std::list<std::wstring>& files)
 
 			// if so, remove oldest entry (from tail of linked list)
 
-			if (m_map.size() >= CASE_CACHE_ENTRIES) {
+			if (m_map.size() > CASE_CACHE_ENTRIES) {
 				node = m_lru_list.back();
 				m_lru_list.pop_back();
 				m_map.erase(node->m_key);
@@ -554,6 +554,8 @@ bool CaseCache::rename(LPCWSTR oldpath, LPCWSTR newpath)
 			newkey = ucnew + it.first.substr(oldlen);
 
 			it.second->m_path = newpath + it.second->m_path.substr(oldlen);
+
+			it.second->m_key = newkey;
 
 			toerase.push_back(it.first);
 

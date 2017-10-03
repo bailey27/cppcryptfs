@@ -228,7 +228,7 @@ bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv, const FILETIME
 			
 			// if so, remove oldest entry (from tail of linked list)
 			
-			if (m_map.size() >= DIR_IV_CACHE_ENTRIES) {
+			if (m_map.size() > DIR_IV_CACHE_ENTRIES) {
 				node = m_lru_list.back();
 				m_lru_list.pop_back();
 				m_map.erase(node->m_key);
