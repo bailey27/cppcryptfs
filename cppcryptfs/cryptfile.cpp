@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "fileutil.h"
 #include "util.h"
 #include "crypt.h"
+#include "iobufferpool.h"
 
 CryptFile *CryptFile::NewInstance(CryptContext *con)
 {
@@ -168,6 +169,7 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 	BOOL bRet = TRUE;
 
+	IoBuffer *iobuf = NULL;
 	BYTE *inputbuf = NULL;
 	int bytesinbuf = 0;
 	int inputbuflen = 0;
@@ -179,7 +181,12 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 		if (blocks_spanned > 1 && m_con->m_bufferblocks > 1) {
 			inputbuflen = min(m_con->m_bufferblocks, blocks_spanned)*CIPHER_BS;
-			inputbuf = new BYTE[inputbuflen];
+			iobuf = g_IoBufferPool->GetIoBuffer(inputbuflen);
+			if (iobuf == NULL) {
+				SetLastError(ERROR_OUTOFMEMORY);
+				throw(-1);
+			}
+			inputbuf = iobuf->m_pBuf;
 
 			long long blockoff = FILE_HEADER_LEN + (offset / PLAIN_BS)*CIPHER_BS;
 
@@ -271,8 +278,8 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 	if (context)
 		free_crypt_context(context);
 
-	if (inputbuf)
-		delete[] inputbuf;
+	if (iobuf)
+		g_IoBufferPool->ReleaseIoBuffer(iobuf);
 
 	return bRet;
 }
@@ -415,6 +422,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 		context = NULL;
 	}
 
+	IoBuffer *iobuf = NULL;
 	BYTE *outputbuf = NULL;
 	int outputbytes = 0;
 	int outputbuflen = 0;
@@ -426,7 +434,12 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 		if (blocks_spanned > 1 && m_con->m_bufferblocks > 1) {
 			outputbuflen = min(m_con->m_bufferblocks, blocks_spanned)*CIPHER_BS;
-			outputbuf = new BYTE[outputbuflen];
+			iobuf = g_IoBufferPool->GetIoBuffer(outputbuflen);
+			if (iobuf == NULL) {
+				SetLastError(ERROR_OUTOFMEMORY);
+				throw(-1);
+			}
+			outputbuf = iobuf->m_pBuf;
 		}
 
 		BYTE cipher_buf[CIPHER_BS];
@@ -520,8 +533,8 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 	*pNwritten = min(*pNwritten, buflen);
 
-	if (outputbuf)
-		delete[] outputbuf;
+	if (iobuf)
+		g_IoBufferPool->ReleaseIoBuffer(iobuf);
 
 	if (context)
 		free_crypt_context(context);

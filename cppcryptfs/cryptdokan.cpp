@@ -75,6 +75,7 @@ THE SOFTWARE.
 #include "cryptdefs.h"
 #include "util.h"
 #include "cryptdokan.h"
+#include "iobufferpool.h"
 
 
 #include <vector>
@@ -2103,6 +2104,10 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR *password, 
 		CryptContext *con = &tdata->con;
 
 		con->m_bufferblocks = min(256, max(1, nBufferBlocks));
+
+		if (g_IoBufferPool == NULL) {
+			g_IoBufferPool = new IoBufferPool(con->m_bufferblocks*CIPHER_BS);
+		}
 
 		con->m_dir_iv_cache.SetTTL(cachettl);
 		con->m_case_cache.SetTTL(cachettl);
