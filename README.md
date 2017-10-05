@@ -102,7 +102,7 @@ just created the filesystem in.  Then enter the password and click on the "Mount
 
 If you specified a custom path for the config file when you created the filesystem, then you must specify it here also.
 
-If you specified a custom path for the config file, you must also select "reverese" if it is a reverse filesystem.  Otherwise, cppcryptfs will automatically dtect if the filesytem should be mounted in forward or reverse mode.
+If you specified a custom path for the config file, you must also select "reverse" if it is a reverse filesystem.  Otherwise, cppcryptfs will automatically detect if the filesytem should be mounted in forward or reverse mode.
 
 Note:  cppcryptfs uses the path to the encrypted filesystem as a key for rembering the custom path to the config file (if there is one) and other settings like reverse and read only.  So when you select a path to mount, be sure to verify that these settings are what you wish to use this time.
 
