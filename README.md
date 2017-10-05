@@ -49,7 +49,7 @@ Build Requirements
 
 There are detailed build instructions in [INSTALL.md](INSTALL.md).
 
-cppcryptfs is currently up-to-date with Dokany 1.0.3
+cppcryptfs is currently up-to-date with Dokany 1.0.5
 
 
 Use
@@ -87,7 +87,9 @@ Note: In the gocryptfs documentation, the SIV mode is referred to as AES-512-SIV
 
 If you check Reverse then you will be creating a Reverse Mode filesystem.  See the section in this document about Reverse Mode for more information.
 
-When you click on the "Create" button, a gocryptfs.conf file will be created in the directory.  Unless you choose to use plain text file names, a gocryptfs.diriv will also be created there.  Be sure to back up these files in case they get lost or corrupted.  You won't be able to access any of your data if something happens to gocryptfs.conf.  gocryptfs.conf will never change for the life of your filesystem unless you change the volume label (see bellow).
+If you wish, you can specifiy a config file.  This is the file that contains the settings for the filesystem and also the random 256-bit AES master key that is encrypted using your password.  The config file file can be kept outside the encrypted filesystem for an extra degree of security.
+
+When you click on the "Create" button, config file will be created. It will be created as gocryptfs.conf in the root directory of the encrypted filesystem unless you specified an alternate config file.  Unless you choose to use plain text file names, a gocryptfs.diriv will also be created there.  Be sure to back up these files in case they get lost or corrupted.  You won't be able to access any of your data if something happens to gocryptfs.conf.  gocryptfs.conf will never change for the life of your filesystem unless you change the volume label (see bellow).
 
 If you choose to give the volume a label, then the label will be encrypted in gocryptfs.conf.  The maximum volume label length is 32 characters. 
 
@@ -98,9 +100,15 @@ You can right click on the mounted drive letter in File Explorer, select "Proper
 Then go to the "Mount" tab and select a drive letter and select the folder you
 just created the filesystem in.  Then enter the password and click on the "Mount" button.
 
+If you specified a custom path for the config file when you created the filesystem, then you must specify it here also.
+
+If you specified a custom path for the config file, you must also select "reverese" if it is a reverse filesystem.  Otherwise, cppcryptfs will automatically dtect if the filesytem should be mounted in forward or reverse mode.
+
+Note:  cppcryptfs uses the path to the encrypted filesystem as a key for rembering the custom path to the config file (if there is one) and other settings like reverse and read only.  So when you select a path to mount, be sure to verify that these settings are what you wish to use this time.
+
 ![Alt text](/screenshots/screenshot_mount.png?raw=true "Mount tab")
 
-Your will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is encrypted and saved in files in the folder you specified.
+After you mount the filesystem, you will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is encrypted and saved in files in the folder you specified.
 
 If you check "Read-only", then the filesystem will be mounted read-only (write-protected).
 
@@ -232,6 +240,8 @@ normal/forward mode).
 When you go to mount a filesystem, cppcryptfs first looks for .gocryptfs.reverse.conf, and if it finds it, then it will mount the filesystem
 in reverse mode.  If it doesn't find .gocryptfs.reverse.conf, then it will try to open gocryptfs.conf, and if it succeeds, then the filesysem will
 mounted in forward (normal) mode.
+
+If you specified a custom path for the config file, then you must check "reverse" to mount the filesystem in reverse mode.
 
 If you mount a reverse filesystem and then copy the whole directory tree to some other location, you can then mount that copy (which contains encrypted files and the normal mode config file and other support files) as a forward (normal) filesystem.
 
@@ -427,5 +437,5 @@ cppcryptfs can mount all filesystems created by gocryptfs v0.7 and higher. Likew
 The gocryptfs [compatability matrix](https://github.com/rfjakob/gocryptfs/wiki/Compatibility) provides more details. cppcryptfs *requires* the DirIV, EMENames and GCMIV128 feature flags. It *supports* LongNames and can create filesystems with the flag on and off.
 
 Note: cppcryptfs now keeps version number parity with gocryptfs to indicate its compatibility
-with gocryptfs.  cppcryptfs is now version 1.3 and should be able to mount all filesystems created with gocryptfs 1.3.
+with gocryptfs.  cppcryptfs is now version 1.4 and should be able to mount all filesystems created with gocryptfs 1.4.
 
