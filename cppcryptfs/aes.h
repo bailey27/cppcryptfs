@@ -56,10 +56,10 @@ public:
 	const AES_KEY *m_key_encrypt;
 	const AES_KEY *m_key_decrypt;
 
- private:
+ public:
 	 static bool use_aes_ni();
 
-	
+private:	
 	 bool m_use_aes_ni;
 };
 

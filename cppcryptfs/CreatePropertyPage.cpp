@@ -398,6 +398,10 @@ BOOL CCreatePropertyPage::OnInitDialog()
 	if (pCombo)
 		pCombo->LimitText(MAX_PATH);
 
+	pCombo = (CComboBox*)GetDlgItem(IDC_CONFIG_PATH);
+	if (pCombo)
+		pCombo->LimitText(MAX_PATH);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }

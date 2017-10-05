@@ -919,7 +919,7 @@ static void usage()
 	fprintf(stderr, "  -p, --password=PASS\tuse password PASS\n");
 	fprintf(stderr, "  -r, --readonly\tmount read-only\n");
 	fprintf(stderr, "  -c, --config=PATH\tpath to config file\n");
-	fprintf(stderr, "  -s, --reverse\tmount reverse filesystem\n");
+	fprintf(stderr, "  -s, --reverse\t\tmount reverse filesystem\n");
 	fprintf(stderr, "\nUnmounting:\n");
 	fprintf(stderr, "  -u, --unmount=D\tumount drive letter D\n");
 	fprintf(stderr, "  -u, --umount=all\tunmount all drives\n");

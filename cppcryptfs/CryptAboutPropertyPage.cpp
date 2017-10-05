@@ -36,6 +36,7 @@ THE SOFTWARE.
 #include "afxdialogex.h"
 #include <string>
 #include "util.h"
+#include "aes.h"
 
 
 // CCryptAboutPropertyPage dialog
@@ -583,6 +584,9 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 	std::wstring copyright = L"Copyright (C) 2016-2017 Bailey Brown.  All Rights Reserved.";
 
 	GetProductVersionInfo(prod, ver, copyright);
+
+	if (AES::use_aes_ni())
+		SetDlgItemText(IDC_AES_NI, L"using AES-NI");
 
 	CString prod_ver = &prod[0];
 	prod_ver += L", Version ";
