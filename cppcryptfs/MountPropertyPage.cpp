@@ -71,7 +71,7 @@ void CMountPropertyPage::DefaultAction()
 		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 }
 
-CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR argPassword, bool argReadOnly)
+CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR argPassword, bool argReadOnly, LPCWSTR argConfigPath, bool argReverse)
 {
 	if (argDriveLetter != 0 && (argDriveLetter < 'A' || argDriveLetter > 'Z'))
 		return CString(L"invalid drive letter");
@@ -159,6 +159,27 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 	if (cpath.GetLength() < 1)
 		return CString(L"path length is zero");
 
+	CString config_path;
+
+	if (argConfigPath && *argConfigPath) {
+		config_path = argConfigPath;
+	} else {
+		pWnd = GetDlgItem(IDC_CONFIG_PATH);
+		if (!pWnd)
+			return CString(L"unable to get window for config path");
+		pWnd->GetWindowTextW(config_path);
+	}
+
+	bool reverse = false;
+
+	if (config_path.GetLength() > 0) {
+		if (argDriveLetter != 0) {
+			reverse = argReverse;
+		} else {
+			reverse = IsDlgButtonChecked(IDC_REVERSE) != 0;
+		}
+	}
+
 	bool pathInUse = false;
 	CString mdl;
 
@@ -212,7 +233,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 	bool bMountManagerWarn = theApp.GetProfileInt(L"Settings", L"MountManagerWarn", MOUNTMANAGERWARN_DEFAULT) != 0;
 
 	theApp.DoWaitCursor(1);
-	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, password.m_buf, error_mes, readonly, nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, bMountManagerWarn);
+	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, config_path, password.m_buf, error_mes, readonly, reverse, nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, bMountManagerWarn);
 	theApp.DoWaitCursor(-1);
 
 	if (result != 0) {
@@ -241,10 +262,19 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 		theApp.WriteProfileStringW(L"MountOptions", L"ReadOnly", readonly ? L"1" : L"0");
 
 		CString path_hash;
-
-		if (GetPathHash(cpath, path_hash)) {
+		std::wstring hash;
+		if (GetPathHash(cpath, hash)) {
+			path_hash = hash.c_str();
 			theApp.WriteProfileString(L"MountPoints", path_hash, dl);
+			theApp.WriteProfileString(L"ConfigPaths", path_hash, config_path);
+			int flags = 0;
+			if (readonly)
+				flags |= READONLY_FLAG;
+			if (reverse)
+				flags |= REVERSE_FLAG;
+			theApp.WriteProfileInt(L"MountFlags", path_hash, flags);
 		}
+
 	}
 		
 	return CString(L"");
@@ -263,33 +293,6 @@ BOOL CMountPropertyPage::IsDriveLetterAvailable(WCHAR dl)
 		return FALSE;
 }
 
-BOOL CMountPropertyPage::GetPathHash(LPCWSTR path, CString& hashstr)
-{
-
-	hashstr = L"";
-
-	std::string str;
-
-	if (!unicode_to_utf8(path, str))
-		return FALSE;
-
-	BYTE sum[32];
-
-	if (!sha256(str, sum))
-		return FALSE;
-
-	int i;
-
-	// use only 64bits of the sha256 to keep registry key length short
-
-	for (i = 0; i < 8; i++) {
-		WCHAR buf[3];
-		swprintf_s(buf, L"%02x", sum[i]);
-		hashstr += buf;
-	}
-
-	return TRUE;
-}
 
 void CMountPropertyPage::DoDataExchange(CDataExchange* pDX)
 {
@@ -305,6 +308,7 @@ BEGIN_MESSAGE_MAP(CMountPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_DISMOUNT_ALL, &CMountPropertyPage::OnClickedDismountAll)
 	ON_BN_CLICKED(IDC_EXIT, &CMountPropertyPage::OnClickedExit)
 	ON_CBN_SELCHANGE(IDC_PATH, &CMountPropertyPage::OnCbnSelchangePath)
+	ON_BN_CLICKED(IDC_SELECT_CONFIG_PATH, &CMountPropertyPage::OnClickedSelectConfigPath)
 END_MESSAGE_MAP()
 
 
@@ -353,6 +357,15 @@ BOOL CMountPropertyPage::OnInitDialog()
 		}
 	}
 
+	pBox = (CComboBox*)GetDlgItem(IDC_CONFIG_PATH);
+
+	if (pBox) {
+		for (i = 0; i < m_numLastConfigs; i++) {
+			if (m_lastConfigs[i].GetLength())
+				pBox->InsertString(i, m_lastConfigs[i]);
+		}
+	}
+
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
 	if (!pList)
@@ -365,10 +378,6 @@ BOOL CMountPropertyPage::OnInitDialog()
 	pList->InsertColumn(DL_INDEX, L"Drive", LVCFMT_LEFT, 48);
 
 	pList->InsertColumn(PATH_INDEX, L"Path", LVCFMT_LEFT, 393);
-
-	CString readonly = theApp.GetProfileString(L"MountOptions", L"ReadOnly", L"0");
-
-	CheckDlgButton(IDC_READONLY, readonly == L"1");
 
 	CString lastLetter = theApp.GetProfileString(L"MountPoints", L"LastMountPoint", L"");
 
@@ -457,6 +466,10 @@ BOOL CMountPropertyPage::OnInitDialog()
 	m_password.SetLimitText(MAX_PASSWORD_LEN);
 
 	CComboBox *pCombo = (CComboBox*)GetDlgItem(IDC_PATH);
+	if (pCombo)
+		pCombo->LimitText(MAX_PATH);
+
+	pCombo = (CComboBox*)GetDlgItem(IDC_CONFIG_PATH);
 	if (pCombo)
 		pCombo->LimitText(MAX_PATH);
 
@@ -755,6 +768,54 @@ BOOL CMountPropertyPage::OnSetActive()
 		}
 	}
 
+	RecentItems ritems2(TEXT("ConfigPaths"), TEXT("LastConfig"), m_numLastConfigs);
+
+	ritems2.Populate(m_lastConfigs, TEXT("C:\\"));
+
+	pBox = (CComboBox*)GetDlgItem(IDC_CONFIG_PATH);
+
+	if (pBox) {
+
+		CString cur;
+
+		pBox->GetWindowText(cur);
+
+		pBox->ResetContent();
+
+		pBox->SetWindowTextW(cur);
+
+		int i;
+
+		if (pBox) {
+			for (i = 0; i < m_numLastConfigs; i++) {
+				if (m_lastConfigs[i].GetLength()) {
+					if (i == 0) {
+						pBox->SetWindowTextW(m_lastConfigs[i]);
+					}
+					pBox->InsertString(i, m_lastConfigs[i]);
+				}
+			}
+
+			CComboBox *pBoxPath = (CComboBox*)GetDlgItem(IDC_PATH);
+			if (pBoxPath) {
+				CString cpath;
+				pBoxPath->GetWindowText(cpath);
+				if (cpath.GetLength() > 0) {
+					CString path_hash;
+					std::wstring hash;
+					if (GetPathHash(cpath, hash)) {
+						path_hash = hash.c_str();
+						CString config_path = theApp.GetProfileString(L"ConfigPaths", path_hash, L"");
+						pBox->SetWindowText(config_path);
+						int flags = theApp.GetProfileInt(L"MountFlags", path_hash, 0);
+						CheckDlgButton(IDC_READONLY, (flags & READONLY_FLAG) != 0);
+						CheckDlgButton(IDC_REVERSE, (flags & REVERSE_FLAG) != 0);
+					}
+				}
+			}
+		}
+	}
+
 	return CCryptPropertyPage::OnSetActive();
 }
 
@@ -792,9 +853,11 @@ void CMountPropertyPage::OnCbnSelchangePath()
 		return;
 
 	CString path_hash;
-
-	if (!GetPathHash(cpath, path_hash))
+	std::wstring hash;
+	if (!GetPathHash(cpath, hash))
 		return;
+
+	path_hash = hash.c_str();
 
 	CString cdl = theApp.GetProfileString(L"MountPoints", path_hash, L"");
 
@@ -828,6 +891,19 @@ void CMountPropertyPage::OnCbnSelchangePath()
 
 	pList->EnsureVisible(index, FALSE);
 
+	CString config_path = theApp.GetProfileString(L"ConfigPaths", path_hash, L"");
+
+	CWnd *pConfigPathWnd = GetDlgItem(IDC_CONFIG_PATH);
+
+	if (!pConfigPathWnd)
+		return;
+
+	pConfigPathWnd->SetWindowTextW(config_path);
+
+	int flags = theApp.GetProfileInt(L"MountFlags", path_hash, 0);
+	CheckDlgButton(IDC_READONLY, (flags & READONLY_FLAG) != 0);
+	CheckDlgButton(IDC_REVERSE, (flags & REVERSE_FLAG) != 0);
+
 }
 
 extern wchar_t *optarg;
@@ -842,6 +918,8 @@ static void usage()
 	fprintf(stderr, "  -d, --drive=D\t\tmount to drive letter D\n");
 	fprintf(stderr, "  -p, --password=PASS\tuse password PASS\n");
 	fprintf(stderr, "  -r, --readonly\tmount read-only\n");
+	fprintf(stderr, "  -c, --config=PATH\tpath to config file\n");
+	fprintf(stderr, "  -s, --reverse\tmount reverse filesystem\n");
 	fprintf(stderr, "\nUnmounting:\n");
 	fprintf(stderr, "  -u, --unmount=D\tumount drive letter D\n");
 	fprintf(stderr, "  -u, --umount=all\tunmount all drives\n");
@@ -901,6 +979,8 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	BOOL hide_to_system_tray = FALSE;
 	BOOL do_list = FALSE;
 	bool readonly = false;
+	bool reverse = false;
+	CString config_path;
 
 	CString list_arg;
 
@@ -911,8 +991,10 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			{L"mount",   required_argument,  0, 'm'},
 			{L"drive",   required_argument,  0, 'd'},
 			{L"password", required_argument, 0, 'p'},
+			{ L"config", required_argument, 0, 'c' },
 			{L"unmount",  required_argument, 0, 'u'},
 			{L"readonly",  no_argument, 0, 'r'},
+			{ L"reverse",  no_argument, 0, 's' },
 			{L"tray",  no_argument, 0, 't'},
 			{L"exit",  no_argument, 0, 'x'},
 			{L"list",  optional_argument, 0, 'l'},
@@ -926,7 +1008,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 
 		while (1) {
 
-			c = getopt_long(argc, argv, L"m:d:p:u:vhxtl::r", long_options, &option_index);
+			c = getopt_long(argc, argv, L"m:d:p:u:vhxtl::rsc:", long_options, &option_index);
 
 			if (c == -1)
 				break;
@@ -938,9 +1020,15 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			case 'r':
 				readonly = true;
 				break;
+			case 's':
+				reverse = true;
+				break;
 			case 'm':
 				mount = TRUE;
 				path = optarg;
+				break;
+			case 'c':
+				config_path = optarg;
 				break;
 			case 'd':
 				driveletter = *optarg;
@@ -1055,7 +1143,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	} else {
 		if (mount) {
 			if (driveletter)
-				errMes = Mount(path, driveletter, password.m_buf, readonly);
+				errMes = Mount(path, driveletter, password.m_buf, readonly, config_path.GetLength() > 0 ? config_path : NULL, reverse);
 			else
 				errMes = L"drive letter must be specified";
 		} else if (dismount) {
@@ -1094,3 +1182,27 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 }
 
 
+
+
+void CMountPropertyPage::OnClickedSelectConfigPath()
+{
+	// TODO: Add your control notification handler code here
+
+	bool reverse = IsDlgButtonChecked(IDC_REVERSE) != 0;
+
+	CFileDialog fdlg(TRUE, L"conf", reverse ? L"gocryptfs.reverse" : L"gocryptfs",
+		OFN_DONTADDTORECENT | OFN_LONGNAMES | 0*OFN_OVERWRITEPROMPT |
+		OFN_PATHMUSTEXIST);
+
+	if (fdlg.DoModal() == IDCANCEL)
+		return;
+
+	CString cpath = fdlg.GetPathName();
+
+	if (cpath.GetLength() < 1)
+		return;
+
+	CWnd *pWnd = GetDlgItem(IDC_CONFIG_PATH);
+	if (pWnd)
+		pWnd->SetWindowTextW(cpath);
+}

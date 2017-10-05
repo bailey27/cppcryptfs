@@ -42,7 +42,9 @@ class CCreatePropertyPage : public CCryptPropertyPage
 public:
 
 	CString m_lastDirs[10];
+	CString m_lastConfigs[10];
 	const int m_numLastDirs = 10;
+	const int m_numLastConfigs = 10;
 
 	virtual void DefaultAction();
 	CCreatePropertyPage();
@@ -68,4 +70,5 @@ public:
 	CSecureEdit m_password;
 	CSecureEdit m_password2;
 	afx_msg void OnClickedReverse();
+	afx_msg void OnClickedSelectConfigPath();
 };

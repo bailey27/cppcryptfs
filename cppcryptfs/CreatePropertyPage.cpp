@@ -40,7 +40,7 @@ THE SOFTWARE.
 #include "RecentItems.h"
 #include "cryptdefs.h"
 #include "LockZeroBuffer.h"
-
+#include "util.h"
 
 static const WCHAR *filename_encryption_types[] = {
 	L"AES256-EME",
@@ -88,6 +88,7 @@ BEGIN_MESSAGE_MAP(CCreatePropertyPage, CPropertyPage)
 	ON_LBN_SELCHANGE(IDC_FILENAME_ENCRYPTION, &CCreatePropertyPage::OnLbnSelchangeFilenameEncryption)
 	ON_CBN_SELCHANGE(IDC_PATH, &CCreatePropertyPage::OnCbnSelchangePath)
 	ON_BN_CLICKED(IDC_REVERSE, &CCreatePropertyPage::OnClickedReverse)
+	ON_BN_CLICKED(IDC_SELECT_CONFIG_PATH, &CCreatePropertyPage::OnClickedSelectConfigPath)
 END_MESSAGE_MAP()
 
 void CCreatePropertyPage::DefaultAction()
@@ -100,6 +101,35 @@ void CCreatePropertyPage::CreateCryptfs()
 	CWnd *pWnd = GetDlgItem(IDC_PATH);
 	if (!pWnd)
 		return;
+
+	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1);
+	LockZeroBuffer<WCHAR> password2(MAX_PASSWORD_LEN + 1);
+
+	CSecureEdit *pPass = &m_password;
+
+	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN + 1, pPass->m_strRealText))
+		return;
+
+	if (wcslen(password.m_buf) < 1)
+		return;
+
+	CSecureEdit *pPass2 = &m_password2;
+
+	if (wcscpy_s(password2.m_buf, MAX_PASSWORD_LEN + 1, pPass2->m_strRealText))
+		return;
+
+	if (wcslen(password2.m_buf) < 1) {
+		MessageBox(L"please repeat the password", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		return;
+	}
+
+	if (wcscmp(password.m_buf, password2.m_buf)) {
+		MessageBox(L"passwords do not match", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		return;
+	}
+
+	pPass->SetRealText(L"");
+	pPass2->SetRealText(L"");
 
 	CString cpath;
 
@@ -124,32 +154,15 @@ void CCreatePropertyPage::CreateCryptfs()
 		}
 	}
 
-	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1);
-	LockZeroBuffer<WCHAR> password2(MAX_PASSWORD_LEN + 1);
+	pWnd = GetDlgItem(IDC_CONFIG_PATH);
+	if (!pWnd)
+		return;
+
+	CString config_path;
+
+	pWnd->GetWindowText(config_path);
+
 	
-	CSecureEdit *pPass = &m_password;
-
-	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN+1, pPass->m_strRealText))
-		return;
-
-	if (wcslen(password.m_buf) < 1)
-		return;
-
-	CSecureEdit *pPass2 = &m_password2;
-
-	if (wcscpy_s(password2.m_buf, MAX_PASSWORD_LEN+1, pPass2->m_strRealText))
-		return;
-
-	if (wcslen(password2.m_buf) < 1)
-		return;
-
-	if (wcscmp(password.m_buf, password2.m_buf)) {
-		MessageBox(L"passwords do not match", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
-		return;
-	}
-
-	pPass->SetRealText(L"");
-	pPass2->SetRealText(L"");
 
 	CryptConfig config;
 
@@ -199,7 +212,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	GetDlgItemText(IDC_VOLUME_NAME, volume_name);
 
 	theApp.DoWaitCursor(1);
-	bool bResult = config.create(cpath, password.m_buf, eme, plaintext, longfilenames, siv, reverse, volume_name, error_mes);
+	bool bResult = config.create(cpath, config_path, password.m_buf, eme, plaintext, longfilenames, siv, reverse, volume_name, error_mes);
 	theApp.DoWaitCursor(-1);
 
 	if (!bResult) {
@@ -250,6 +263,21 @@ void CCreatePropertyPage::CreateCryptfs()
 	RecentItems ritems(TEXT("Folders"), TEXT("LastDir"), m_numLastDirs);
 	ritems.Add(cpath);
 
+	if (config_path.GetLength() > 0) {
+		RecentItems ri(TEXT("ConfigPaths"), TEXT("LastConfig"), m_numLastConfigs);
+		ri.Add(config_path);
+	}
+
+	CString path_hash;
+	std::wstring hash;
+	if (GetPathHash(cpath, hash)) {
+		path_hash = hash.c_str();
+		theApp.WriteProfileString(L"ConfigPaths", path_hash, config_path);
+		int flags = 0;
+		if (reverse)
+			flags |= REVERSE_FLAG;
+		theApp.WriteProfileInt(L"MountFlags", path_hash, flags);
+	}
 }
 
 // CCreatePropertyPage message handlers
@@ -315,6 +343,15 @@ BOOL CCreatePropertyPage::OnInitDialog()
 		for (i = 0; i < m_numLastDirs; i++) {
 			if (m_lastDirs[i].GetLength())
 				pBox->InsertString(i, m_lastDirs[i]);
+		}
+	}
+
+	pBox = (CComboBox*)GetDlgItem(IDC_CONFIG_PATH);
+
+	if (pBox) {
+		for (i = 0; i < m_numLastConfigs; i++) {
+			if (m_lastConfigs[i].GetLength())
+				pBox->InsertString(i, m_lastConfigs[i]);
 		}
 	}
 
@@ -391,4 +428,28 @@ void CCreatePropertyPage::OnClickedReverse()
 
 	pEncBox->SelectString(-1, data_encryption_types[bIsChecked ? AES256_SIV_INDEX : AES256_GCM_INDEX]);
 	
+}
+
+
+void CCreatePropertyPage::OnClickedSelectConfigPath()
+{
+	// TODO: Add your control notification handler code here
+
+	bool reverse = IsDlgButtonChecked(IDC_REVERSE) != 0;
+
+	CFileDialog fdlg(FALSE, L"conf", reverse ? L"gocryptfs.reverse" : L"gocryptfs", 
+		OFN_DONTADDTORECENT | OFN_LONGNAMES | OFN_OVERWRITEPROMPT |
+		OFN_PATHMUSTEXIST);
+
+	if (fdlg.DoModal() == IDCANCEL)
+		return;
+
+	CString cpath = fdlg.GetPathName();
+
+	if (cpath.GetLength() < 1)
+		return;
+
+	CWnd *pWnd = GetDlgItem(IDC_CONFIG_PATH);
+	if (pWnd)
+		pWnd->SetWindowTextW(cpath);
 }
