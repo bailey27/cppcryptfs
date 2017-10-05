@@ -99,3 +99,5 @@ int compare_names(CryptContext *con, LPCWSTR name1, LPCWSTR name2);
 bool is_all_zeros(const BYTE *buf, size_t len);
 
 bool mountmanager_continue_mounting();
+
+BOOL GetPathHash(LPCWSTR path, std::wstring& hashstr);

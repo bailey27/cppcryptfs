@@ -34,6 +34,8 @@ THE SOFTWARE.
 #define DL_INDEX 0
 #define PATH_INDEX 1
 
+
+
 // CMountPropertyPage dialog
 
 class CMountPropertyPage : public CCryptPropertyPage
@@ -45,7 +47,9 @@ public:
 	virtual ~CMountPropertyPage();
 
 	CString m_lastDirs[10];
+	CString m_lastConfigs[10];
 	const int m_numLastDirs = 10;
+	const int m_numLastConfigs = 10;
 	CImageList m_imageList;
 	int m_imageIndex;
 
@@ -56,7 +60,7 @@ public:
 
 	virtual void DeviceChange();
 
-	CString Mount(LPCWSTR argPath = NULL, WCHAR argDriveLetter = 0, LPCWSTR argPassword = NULL, bool argReadOnly = false);
+	CString Mount(LPCWSTR argPath = NULL, WCHAR argDriveLetter = 0, LPCWSTR argPassword = NULL, bool argReadOnly = false, LPCWSTR argConfigPath = NULL, bool argReverse = false);
 
 	CString Dismount(WCHAR argDriveLetter = 0);
 
@@ -65,8 +69,6 @@ public:
 	DWORD GetUsedDrives();
 
 	BOOL IsDriveLetterAvailable(WCHAR dl);
-
-	BOOL GetPathHash(LPCWSTR path, CString& hashstr);
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
@@ -88,4 +90,5 @@ public:
 	afx_msg void OnClickedExit();
 	afx_msg void OnCbnSelchangePath();
 	afx_msg void OnBnClickedCheck1();
+	afx_msg void OnClickedSelectConfigPath();
 };

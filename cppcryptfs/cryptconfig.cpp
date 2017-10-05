@@ -107,7 +107,7 @@ CryptConfig::~CryptConfig()
 
 
 bool
-CryptConfig::read(std::wstring& mes, WCHAR *config_file_path)
+CryptConfig::read(std::wstring& mes, const WCHAR *config_file_path, bool reverse)
 {
 
 	FILE *fl = NULL;
@@ -117,6 +117,7 @@ CryptConfig::read(std::wstring& mes, WCHAR *config_file_path)
 			mes = L"failed to open config file";
 			return false;
 		}
+		m_reverse = reverse;
 	} else {
 
 		std::wstring config_path;
@@ -645,7 +646,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 
 
 
-bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, std::wstring& error_mes)
+bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, std::wstring& error_mes)
 {
 
 	LockZeroBuffer<char> utf8pass(256);
@@ -653,6 +654,9 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 		error_mes = L"utf8 pass is not locked";
 		return false;
 	}
+
+	if (specified_config_file_path && *specified_config_file_path == '\0')
+		specified_config_file_path = NULL;
 
 	m_basedir = path;
 
@@ -694,12 +698,18 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		std::wstring config_path;
 
-		config_path = m_basedir;
+		if (specified_config_file_path) {
+			config_path = specified_config_file_path;
+		} else {
 
-		if (config_path[config_path.size() - 1] != '\\')
-			config_path.push_back('\\');
+			config_path = m_basedir;
 
-		config_path += m_reverse ? REVERSE_CONFIG_NAME : CONFIG_NAME;
+			if (config_path[config_path.size() - 1] != '\\')
+				config_path.push_back('\\');
+
+			config_path += m_reverse ? REVERSE_CONFIG_NAME : CONFIG_NAME;
+
+		}
 
 		if (m_reverse && !m_AESSIV) {
 			error_mes = L"AES256-SIV must be used with Reverse\n";
@@ -708,7 +718,11 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		if (m_reverse) {
 			if (PathFileExists(&config_path[0])) {
-				error_mes = config_path + L" (normally a hidden file) already exists.  Please remove it and try again.";
+				if (specified_config_file_path) {
+					error_mes = config_path + L" already exists.  Please remove it and try again.";
+				} else {
+					error_mes = config_path + L" (normally a hidden file) already exists.  Please remove it and try again.";
+				}
 				throw(-1);
 			}
 		} else {
@@ -884,7 +898,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *password, bool eme, boo
 
 		DWORD attr = GetFileAttributesW(&config_path[0]);
 		if (attr != INVALID_FILE_ATTRIBUTES) {
-			attr |= FILE_ATTRIBUTE_READONLY | (m_reverse ? FILE_ATTRIBUTE_HIDDEN : 0);
+			attr |= FILE_ATTRIBUTE_READONLY | (m_reverse && !specified_config_file_path ? FILE_ATTRIBUTE_HIDDEN : 0);
 			SetFileAttributes(&config_path[0], attr);
 		}
 

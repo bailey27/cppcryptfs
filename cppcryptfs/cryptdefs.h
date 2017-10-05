@@ -70,4 +70,5 @@ THE SOFTWARE.
 
 #define SHA256_LEN 32
 
-
+#define READONLY_FLAG 1
+#define REVERSE_FLAG  2

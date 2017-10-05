@@ -211,6 +211,10 @@ BOOL CcppcryptfsApp::InitInstance()
 
 	ritems.Populate(mount.m_lastDirs, TEXT("C:\\"));
 
+	RecentItems ritems4(TEXT("ConfigPaths"), TEXT("LastConfig"), mount.m_numLastConfigs);
+
+	ritems4.Populate(mount.m_lastConfigs, TEXT("C:\\"));
+
 	dlg.AddPage(&mount);
 
 	dlg.m_nMountPageIndex = dlg.GetPageCount() - 1;
@@ -222,6 +226,10 @@ BOOL CcppcryptfsApp::InitInstance()
 	RecentItems ritems2(TEXT("Folders"), TEXT("LastDir"), create.m_numLastDirs);
 
 	ritems2.Populate(create.m_lastDirs, TEXT("C:\\"));
+
+	RecentItems ritems3(TEXT("ConfigPaths"), TEXT("LastConfig"), create.m_numLastConfigs);
+
+	ritems3.Populate(create.m_lastConfigs, TEXT("C:\\"));
 
 	dlg.AddPage(&create);
 

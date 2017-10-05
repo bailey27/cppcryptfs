@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include  <tlhelp32.h>
 #include "util.h"
 #include "cryptdefs.h"
+#include "crypt.h"
 #include <openssl/rand.h>
 
 #include <wincrypt.h>
@@ -692,3 +693,30 @@ bool mountmanager_continue_mounting()
 	return mdlg.m_bOkPressed != 0;
 }
 
+BOOL GetPathHash(LPCWSTR path, std::wstring& hashstr)
+{
+
+	hashstr = L"";
+
+	std::string str;
+
+	if (!unicode_to_utf8(path, str))
+		return FALSE;
+
+	BYTE sum[32];
+
+	if (!sha256(str, sum))
+		return FALSE;
+
+	int i;
+
+	// use only 64bits of the sha256 to keep registry key length short
+
+	for (i = 0; i < 8; i++) {
+		WCHAR buf[3];
+		swprintf_s(buf, L"%02x", sum[i]);
+		hashstr += buf;
+	}
+
+	return TRUE;
+}
