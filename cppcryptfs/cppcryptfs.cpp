@@ -46,6 +46,7 @@ THE SOFTWARE.
 #include "LockZeroBuffer.h"
 #include "util.h"
 #include "crypt.h"
+#include "iobufferpool.h"
 
 
 #ifdef _DEBUG
@@ -271,6 +272,9 @@ BOOL CcppcryptfsApp::InitInstance()
 		ReleaseMutex(hAppMutex); // Explicitly release mutex
 		CloseHandle(hAppMutex); // close handle before terminating
 	}
+
+	if (g_IoBufferPool)
+		delete g_IoBufferPool;
 
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.

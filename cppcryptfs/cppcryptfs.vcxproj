@@ -231,6 +231,7 @@
     <ClInclude Include="fileutil.h" />
     <ClInclude Include="FolderDialog.h" />
     <ClInclude Include="getopt.h" />
+    <ClInclude Include="iobufferpool.h" />
     <ClInclude Include="LockZeroBuffer.h" />
     <ClInclude Include="longfilenamecache.h" />
     <ClInclude Include="MountMangerDialog.h" />
@@ -281,6 +282,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="iobufferpool.cpp" />
     <ClCompile Include="longfilenamecache.cpp" />
     <ClCompile Include="MountMangerDialog.cpp" />
     <ClCompile Include="MountPropertyPage.cpp" />
