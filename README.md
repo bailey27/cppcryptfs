@@ -269,6 +269,8 @@ Mounting:
   -d, --drive=D         mount to drive letter D
   -p, --password=PASS   use password PASS
   -r, --readonly        mount read-only
+  -c, --config=PATH     path to config file
+  -s, --reverse         mount reverse filesystem
 
 Unmounting:
   -u, --unmount=D       umount drive letter D
