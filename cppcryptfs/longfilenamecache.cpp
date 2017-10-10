@@ -45,7 +45,6 @@ THE SOFTWARE.
 
 LongFilenameCacheNode::LongFilenameCacheNode()
 {
-	m_key = NULL;
 
 #ifndef LFN_CACHE_NOTTL
 	m_timestap = 0;
@@ -201,7 +200,7 @@ bool LongFilenameCache::store_if_not_there(LPCWSTR base64_hash, LPCWSTR path, co
 			if (m_map.size() >= LFN_CACHE_ENTRIES) {
 				node = m_lru_list.back();
 				m_lru_list.pop_back();
-				m_map.erase(*node->m_key);
+				m_map.erase(node->m_key);
 			}
 
 			// re-use node if we removed one, otherwise get one from spare list, otherwise make a new one
@@ -217,7 +216,7 @@ bool LongFilenameCache::store_if_not_there(LPCWSTR base64_hash, LPCWSTR path, co
 
 			mp.first->second = node;
 
-			node->m_key = &mp.first->first;
+			node->m_key = mp.first->first;
 			node->m_path = path;
 			node->m_actual_encrypted = actual_encrypted;
 #ifndef LFN_CACHE_NOTTL

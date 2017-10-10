@@ -51,7 +51,7 @@ THE SOFTWARE.
 class LongFilenameCacheNode {
 
 public:
-	const std::wstring *m_key;
+	std::wstring m_key;
 	std::wstring  m_path;
 	std::string m_actual_encrypted;
 	std::list<LongFilenameCacheNode*>::iterator m_list_it;  // holds position in lru list
