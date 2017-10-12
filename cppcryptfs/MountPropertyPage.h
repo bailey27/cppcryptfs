@@ -42,6 +42,10 @@ class CMountPropertyPage : public CCryptPropertyPage
 {
 	DECLARE_DYNAMIC(CMountPropertyPage)
 
+private:
+	static  void HandleTooltipsActivation(MSG *pMsg, CWnd *This, CWnd *disabledCtrls[], int numOfCtrls, CToolTipCtrl *pTooltip);
+protected:
+	CToolTipCtrl m_ToolTip;
 public:
 	CMountPropertyPage();
 	virtual ~CMountPropertyPage();
@@ -70,6 +74,7 @@ public:
 
 	BOOL IsDriveLetterAvailable(WCHAR dl);
 
+
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_MOUNT };
@@ -92,4 +97,5 @@ public:
 	afx_msg void OnBnClickedCheck1();
 	afx_msg void OnClickedSelectConfigPath();
 	afx_msg void OnEditchangePath();
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };

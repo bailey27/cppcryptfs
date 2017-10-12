@@ -50,6 +50,81 @@ THE SOFTWARE.
 
 IMPLEMENT_DYNAMIC(CMountPropertyPage, CCryptPropertyPage)
 
+void CMountPropertyPage::HandleTooltipsActivation(MSG * pMsg, CWnd * This, CWnd * disabledCtrls[], int numOfCtrls, CToolTipCtrl * pTooltip)
+{
+	CRect  rect;
+	POINT  pt;
+
+	HWND   hWnd = pMsg->hwnd;
+	LPARAM lParam = pMsg->lParam;
+
+	//---------------------------------------------------------------------------
+	//      Disabled control do not show tool tips, in modal dialog
+	//
+	//
+	//      The hwnd of the WM_MOUSEMOVE above a disabled control
+	//      is the hWnd of the Dialog itself, this confuse the tooltip
+	//
+	//      To correct this, if we get WM_MOUSEMOVE and the hwnd is the dialog's hwnd
+	//
+	//      We check on all the controls that are Visible, but disabled if the point is in their
+	//  rectangle.
+	//
+	// In this case we alter the msg to the controls hWnd and coordinates before
+	// Relaying it to the toolTip control
+	//----------------------------------------
+
+
+	if ((pMsg->message == WM_MOUSEMOVE) && (pMsg->hwnd == This->m_hWnd)) {
+
+		//---------------------------
+		// The point is in the dialog 
+		// client coordinates
+		//---------------------------
+		pt.x = LOWORD(pMsg->lParam);  // horizontal position of cursor 
+		pt.y = HIWORD(pMsg->lParam);  // vertical position of cursor 
+
+		for (int i = 0; i < numOfCtrls; i++) {
+
+			//---------------------------------
+			// rect is the control rectangel in
+			// Dialog client coordinates
+			//----------------------------------
+			disabledCtrls[i]->GetWindowRect(&rect);
+			This->ScreenToClient(&rect);
+
+			if (rect.PtInRect(pt)) {
+				//----------------------------------------------------------------
+				// The mouse is inside the control
+				//
+				// 1. We change the Msg hwnd    to the controls hWnd
+				// 2. We change the Msg lParam  to the controls client coordinates
+				//
+				//----------------------------------------------------------------
+
+				pMsg->hwnd = disabledCtrls[i]->m_hWnd;
+
+				This->ClientToScreen(&pt);
+				disabledCtrls[i]->ScreenToClient(&pt);
+				pMsg->lParam = MAKELPARAM(pt.x, pt.y);
+				break;
+			}
+		}
+	}
+
+
+	//---------------------------------------
+	//      Relay the msg to the tool tip control
+	//---------------------------------------
+	pTooltip->RelayEvent(pMsg);
+
+	//--------------------------------------
+	//      Restore the original msg
+	//--------------------------------------
+	pMsg->hwnd = hWnd;
+	pMsg->lParam = lParam;
+}
+
 CMountPropertyPage::CMountPropertyPage()
 	: CCryptPropertyPage(IDD_MOUNT)
 {
@@ -357,6 +432,20 @@ BOOL CMountPropertyPage::OnInitDialog()
 	CPropertyPage::OnInitDialog();
 
 	// TODO:  Add extra initialization here
+
+	//Create the ToolTip control
+	if (!m_ToolTip.Create(this))
+	{
+		TRACE0("Unable to create the ToolTip!");
+	} else
+	{
+		// Add tool tips to the controls, either by hard coded string 
+		// or using the string table resource
+		CWnd *pWnd = GetDlgItem(IDC_SAVE_PASSWORD);
+		if (pWnd) {
+			m_ToolTip.AddTool(pWnd, _T("To enable Save password, turn on \"Enable saved passwords\" in the Settings tab."));
+		}
+	}
 
 	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_PATH);
 
@@ -804,6 +893,8 @@ BOOL CMountPropertyPage::OnSetActive()
 	ritems2.Populate(m_lastConfigs, TEXT("C:\\"));
 
 	BOOL save_passwords_enabled = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
+
+	m_ToolTip.Activate(!save_passwords_enabled);
 
 	pBox = (CComboBox*)GetDlgItem(IDC_CONFIG_PATH);
 
@@ -1309,4 +1400,25 @@ void CMountPropertyPage::OnEditchangePath()
 
 	if (pEd)
 		pEd->SetRealText(L"");
+}
+
+
+
+BOOL CMountPropertyPage::PreTranslateMessage(MSG* pMsg)
+{
+	// TODO: Add your specialized code here and/or call the base class
+
+	
+
+	CWnd *pSavePass = GetDlgItem(IDC_SAVE_PASSWORD);
+
+	if (pSavePass && !pSavePass->IsWindowEnabled()) {
+
+		CMountPropertyPage::HandleTooltipsActivation(pMsg, this, &pSavePass, 1, &m_ToolTip);
+
+	} else {
+		m_ToolTip.RelayEvent(pMsg);
+	}
+
+	return CCryptPropertyPage::PreTranslateMessage(pMsg);
 }
