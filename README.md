@@ -208,13 +208,13 @@ cppcryptfs --list=d:\
 
 ```
 
-**Enable saving passwords**
+**Enable saved passwords**
 
 This setting enables the saving of passwords.  Please see the secion on Saved Passwords for more information about saved passwords.
 
 When this setting is on, the "Save password" checkbox in the mount tab will be usable.  
 
-If the "Enable saving passwords" setting is changed from checked to unchecked, then all saved passwords will be deleted.
+If the "Enable saved passwords" setting is changed from checked to unchecked, then all saved passwords will be deleted.
 
 This setting is not enabled in either the Default or Recommended settings.
 
@@ -238,7 +238,7 @@ Pressing the Reset Warnings button will turn back on any warning dialogs which w
 Saved Passwords
 ------
 
-If the "Enable saving passwords" setting is enabled in the settings tab,  then the "Save passwords" check box on the mount tab will be usable.
+If the "Enable saved passwords" setting is enabled in the settings tab,  then the "Save passwords" check box on the mount tab will be usable.
 
 When cppcryptfs saves passwords, it uses the Windows Data Protection API (DPAPI) which is described here.
 
