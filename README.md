@@ -112,6 +112,9 @@ After you mount the filesystem, you will then have a new drive letter, and you c
 
 If you check "Read-only", then the filesystem will be mounted read-only (write-protected).
 
+
+For an explanation of how saved passwords work in cppcryptfs, please see the section on "Saved Passwords" below.
+
 For technical details of the cryptographic design of gocryptfs, please visit
 the [gocryptfs project page](https://github.com/rfjakob/gocryptfs).
 
@@ -240,7 +243,7 @@ Saved Passwords
 
 If the "Enable saved passwords" setting is enabled in the settings tab,  then the "Save passwords" check box on the mount tab will be usable.
 
-When cppcryptfs saves passwords, it uses the Windows Data Protection API (DPAPI) which is described here.
+When cppcryptfs saves passwords, it uses the Windows Data Protection API (DPAPI)to encrypt the passwords.  The Windows DPAPI is described here.
 
 https://msdn.microsoft.com/en-us/library/ms995355.aspx
 
