@@ -264,8 +264,6 @@ If the saved password for that path is found, then it will be used.
 The -P command line option can be used to mount filesystems from the command line using the saved password for that path.
 
 
-If a path in the history is selected, and "Save pass
-
 Reverse Mode
 ------
 In reverse mode, the source (root) directory used for the filesystem consists of unencrypted files.  When this directory is mounted, then 
