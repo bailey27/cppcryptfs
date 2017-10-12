@@ -705,7 +705,7 @@ BOOL GetPathHash(LPCWSTR path, std::wstring& hashstr)
 
 	size_t len = ucpath.length();
 
-	while (len >= 1) {
+	while (len > 3) {
 		
 		if (ucpath[len - 1] == '\\') {
 			ucpath.resize(len - 1);
