@@ -37,6 +37,7 @@ THE SOFTWARE.
 #include <string>
 #include "util.h"
 #include "aes.h"
+#include "openssl/crypto.h"
 
 
 // CCryptAboutPropertyPage dialog
@@ -585,8 +586,26 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 
 	GetProductVersionInfo(prod, ver, copyright);
 
-	if (AES::use_aes_ni())
-		SetDlgItemText(IDC_AES_NI, L"using AES-NI");
+	std::string openssl_ver_s = SSLeay_version(SSLEAY_VERSION);
+
+	// get rid of unknown build date which is returned as "xx XXX xxxx"
+	if (strstr(openssl_ver_s.c_str(), "xx XXX xxxx")) {
+		while (openssl_ver_s.length() > 0 && (openssl_ver_s.back() == 'x' || openssl_ver_s.back() == 'X' || openssl_ver_s.back() == ' '))
+			openssl_ver_s.pop_back();
+	}
+
+	std::wstring openssl_ver_w;
+
+	if (!utf8_to_unicode(openssl_ver_s.c_str(), openssl_ver_w))
+		openssl_ver_w = L"error getting openssl version";
+
+	CString openssl_ver = openssl_ver_w.c_str();
+
+	if (AES::use_aes_ni()) {
+		SetDlgItemText(IDC_AES_NI, openssl_ver + L" using AES-NI");
+	} else {
+		SetDlgItemText(IDC_AES_NI, openssl_ver + L" not using AES-NI");
+	}
 
 	CString prod_ver = &prod[0];
 	prod_ver += L", Version ";
