@@ -208,7 +208,7 @@ cppcryptfs --list=d:\
 
 ```
 
-**Enable saving passwords
+**Enable saving passwords**
 
 This setting enables the saving of passwords.  Please see the secion on Saved Passwords for more information about saved passwords.
 
