@@ -213,7 +213,7 @@ cppcryptfs --list=d:\
 
 **Enable saved passwords**
 
-This setting enables the saving of passwords.  Please see the secion on Saved Passwords for more information about saved passwords.
+This setting enables the saving of passwords.  Please see the secion on Saved Passwords below for more information about saved passwords.
 
 When this setting is on, the "Save password" checkbox in the mount tab will be usable.  
 
