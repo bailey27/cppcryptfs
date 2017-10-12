@@ -977,6 +977,7 @@ static void usage()
 	fprintf(stderr, "  -m, --mount=PATH\tmount filesystem located at PATH\n");
 	fprintf(stderr, "  -d, --drive=D\t\tmount to drive letter D\n");
 	fprintf(stderr, "  -p, --password=PASS\tuse password PASS\n");
+	fprintf(stderr, "  -P, --saved-password\tuse saved password\n");
 	fprintf(stderr, "  -r, --readonly\tmount read-only\n");
 	fprintf(stderr, "  -c, --config=PATH\tpath to config file\n");
 	fprintf(stderr, "  -s, --reverse\t\tmount reverse filesystem\n");
@@ -1041,6 +1042,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	bool readonly = false;
 	bool reverse = false;
 	CString config_path;
+	bool use_saved_password = false;
 
 	CString list_arg;
 
@@ -1055,6 +1057,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			{L"unmount",  required_argument, 0, 'u'},
 			{L"readonly",  no_argument, 0, 'r'},
 			{ L"reverse",  no_argument, 0, 's' },
+			{ L"saved-password",  no_argument, 0, 'P' },
 			{L"tray",  no_argument, 0, 't'},
 			{L"exit",  no_argument, 0, 'x'},
 			{L"list",  optional_argument, 0, 'l'},
@@ -1068,7 +1071,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 
 		while (1) {
 
-			c = getopt_long(argc, argv, L"m:d:p:u:vhxtl::rsc:", long_options, &option_index);
+			c = getopt_long(argc, argv, L"m:d:p:u:vhxtl::rsc:P", long_options, &option_index);
 
 			if (c == -1)
 				break;
@@ -1092,6 +1095,9 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 				break;
 			case 'd':
 				driveletter = *optarg;
+				break;
+			case 'P':
+				use_saved_password = true;
 				break;
 			case 'p':
 				wcscpy_s(password.m_buf, password.m_len, optarg);
@@ -1202,10 +1208,17 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 		}
 	} else {
 		if (mount) {
-			if (driveletter)
-				errMes = Mount(path, driveletter, password.m_buf, readonly, config_path.GetLength() > 0 ? config_path : NULL, reverse);
-			else
-				errMes = L"drive letter must be specified";
+			if (use_saved_password) {
+				if (!SavedPasswords::RetrievePassword(path, password.m_buf, password.m_len)) {
+					errMes = L"unable to retrieve password";
+				}
+			}
+			if (errMes.GetLength() < 1) {
+				if (driveletter)
+					errMes = Mount(path, driveletter, password.m_buf, readonly, config_path.GetLength() > 0 ? config_path : NULL, reverse);
+				else
+					errMes = L"drive letter must be specified";
+			}
 		} else if (dismount) {
 			if (dismount_all) {
 				errMes = DismountAll();
