@@ -91,4 +91,5 @@ public:
 	afx_msg void OnCbnSelchangePath();
 	afx_msg void OnBnClickedCheck1();
 	afx_msg void OnClickedSelectConfigPath();
+	afx_msg void OnEditchangePath();
 };

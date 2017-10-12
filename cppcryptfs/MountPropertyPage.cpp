@@ -320,6 +320,7 @@ BEGIN_MESSAGE_MAP(CMountPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_EXIT, &CMountPropertyPage::OnClickedExit)
 	ON_CBN_SELCHANGE(IDC_PATH, &CMountPropertyPage::OnCbnSelchangePath)
 	ON_BN_CLICKED(IDC_SELECT_CONFIG_PATH, &CMountPropertyPage::OnClickedSelectConfigPath)
+	ON_CBN_EDITCHANGE(IDC_PATH, &CMountPropertyPage::OnEditchangePath)
 END_MESSAGE_MAP()
 
 
@@ -588,6 +589,25 @@ void CMountPropertyPage::OnClickedSelect()
 void CMountPropertyPage::OnClickedMount()
 {
 	// TODO: Add your control notification handler code here
+
+	BOOL save_passwords_enabled = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
+
+	CSecureEdit *pEd = (CSecureEdit*)GetDlgItem(IDC_PASSWORD);
+	if (pEd && save_passwords_enabled) {
+		if (IsDlgButtonChecked(IDC_SAVE_PASSWORD)) {
+			if (pEd->m_strRealText == NULL || wcslen(pEd->m_strRealText) < 1) {
+				CWnd *pPath = GetDlgItem(IDC_PATH);
+				if (pPath) {
+					LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true);
+					CString cpath;
+					pPath->GetWindowTextW(cpath);
+					if (cpath.GetLength() > 0 && SavedPasswords::RetrievePassword(cpath, password.m_buf, password.m_len)) {
+						pEd->SetRealText(password.m_buf);
+					}
+				}
+			}
+		}	
+	}
 
 	CString mes = Mount();
 	if (mes.GetLength() > 0)
@@ -1278,4 +1298,15 @@ void CMountPropertyPage::OnClickedSelectConfigPath()
 	CWnd *pWnd = GetDlgItem(IDC_CONFIG_PATH);
 	if (pWnd)
 		pWnd->SetWindowTextW(cpath);
+}
+
+
+void CMountPropertyPage::OnEditchangePath()
+{
+	// TODO: Add your control notification handler code here
+
+	CSecureEdit *pEd = (CSecureEdit*)GetDlgItem(IDC_PASSWORD);
+
+	if (pEd)
+		pEd->SetRealText(L"");
 }
