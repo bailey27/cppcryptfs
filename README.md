@@ -205,7 +205,18 @@ e.g.
 
 cppcryptfs --list=d:\
 
+
 ```
+
+**Enable saving passwords
+
+This setting enables the saving of passwords.  Please see the secion on Saved Passwords for more information about saved passwords.
+
+When this setting is on, the "Save password" checkbox in the mount tab will be usable.  
+
+If the "Enable saving passwords" setting is changed from checked to unchecked, then all saved passwords will be deleted.
+
+This setting is not enabled in either the Default or Recommended settings.
 
 **Defaults and Recommended**
 
@@ -222,6 +233,35 @@ expense of possibly running into new bugs.
 **Reset Warnings**
 
 Pressing the Reset Warnings button will turn back on any warning dialogs which were previously disabled by selecting "don't show this message again".
+
+
+Saved Passwords
+------
+
+If the "Enable saving passwords" setting is enabled in the settings tab,  then the "Save passwords" check box on the mount tab will be usable.
+
+When cppcryptfs saves passwords, it uses the Windows Data Protection API (DPAPI) which is described here.
+
+https://msdn.microsoft.com/en-us/library/ms995355.aspx
+
+Data encrypted using Windows DPAPI is only as secure as the strength and security of the password used for logging into Windows.
+
+Saved passwords are associated with the path to the root of the encrypted filesystem.  
+
+Also, the "Save password" setting itself is assocated with the path.
+
+To save a password, make sure the "Save password" box is checked when you mount the filesystem.
+
+The password will be encrypted using DPAPI and saved in the registry.
+
+To mount the filesystem without typing the password, make sure "Save password" is checked, and then either select the path from the path history, in which case the password will filled in (displaying as dots) in the password field, or type the path in the path field and press the mount button.
+
+If the saved password for that path is found, then it will be used.
+
+The -P command line option can be used to mount filesystems from the command line using the saved password for that path.
+
+
+If a path in the history is selected, and "Save pass
 
 Reverse Mode
 ------
