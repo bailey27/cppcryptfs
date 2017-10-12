@@ -257,7 +257,7 @@ To save a password, make sure the "Save password" box is checked when you mount 
 
 The password will be encrypted using DPAPI and saved in the Windows registry.
 
-To mount the filesystem without typing the password, make sure "Save password" is checked, and then either select the path from the path history, in which case the password for that path (if found) will be filled in (displaying as dots) in the password field. If you type the path in the path field and press the mount button without typing a password, then if the saved password for that path is found it will be used.
+To mount the filesystem without typing the password, make sure "Save password" is checked, and then either select the path from the path history, in which case the password for that path (if found) will be filled in (displaying as dots) in the password field. Or if instead of selecting the path, you type it in the path field and press the mount button without typing a password, then if the saved password for that path is found it will be used.
 
 The -P command line option can be used to mount filesystems from the command line using the saved password for that path.
 
