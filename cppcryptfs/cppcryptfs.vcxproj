@@ -240,6 +240,7 @@
     <ClInclude Include="randombytes.h" />
     <ClInclude Include="RecentItems.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="savedpasswords.h" />
     <ClInclude Include="SecureEdit.h" />
     <ClInclude Include="SettingsPropertyPage.h" />
     <ClInclude Include="siv.h" />
@@ -289,6 +290,7 @@
     <ClCompile Include="pad16.cpp" />
     <ClCompile Include="randombytes.cpp" />
     <ClCompile Include="RecentItems.cpp" />
+    <ClCompile Include="savedpasswords.cpp" />
     <ClCompile Include="SecureEdit.cpp" />
     <ClCompile Include="SettingsPropertyPage.cpp" />
     <ClCompile Include="siv.cpp" />

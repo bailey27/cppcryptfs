@@ -698,6 +698,28 @@ BOOL GetPathHash(LPCWSTR path, std::wstring& hashstr)
 
 	hashstr = L"";
 
+	std::wstring ucpath;
+
+	if (!touppercase(path, ucpath))
+		return FALSE;
+
+	size_t len = ucpath.length();
+
+	while (len >= 1) {
+		
+		if (ucpath[len - 1] == '\\') {
+			ucpath.resize(len - 1);
+		} else {
+			break;
+		}
+		len = ucpath.length();
+	}
+
+	if (len < 1)
+		return FALSE;
+
+	path = ucpath.c_str();
+
 	std::string str;
 
 	if (!unicode_to_utf8(path, str))
@@ -710,9 +732,9 @@ BOOL GetPathHash(LPCWSTR path, std::wstring& hashstr)
 
 	int i;
 
-	// use only 64bits of the sha256 to keep registry key length short
+	// use only 128bits of the sha256 to keep registry key length shorter
 
-	for (i = 0; i < 8; i++) {
+	for (i = 0; i < 16; i++) {
 		WCHAR buf[3];
 		swprintf_s(buf, L"%02x", sum[i]);
 		hashstr += buf;

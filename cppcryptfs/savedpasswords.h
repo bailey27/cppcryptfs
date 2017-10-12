@@ -26,45 +26,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+
 #pragma once
 
-#include "CryptPropertyPage.h"
+#include <windows.h>
 
-// CSettingsPropertyPage dialog
+#define SAVED_PASSWORDS_SECTION L"SavedPasswords"
 
-class CSettingsPropertyPage : public CCryptPropertyPage
-{
-	DECLARE_DYNAMIC(CSettingsPropertyPage)
+#define MIN_SAVED_PASSWORD_LEN 32
+
+#define OPTIONAL_ENTROPY "tFeCowK#ScWxJb!td3uNoHDnt$LWdlWNTc7EsBwD"
+
+class SavedPasswords {
 
 public:
+	static BOOL ClearSavedPasswords();
 
-	bool m_bCaseInsensitive;
-	bool m_bMountManager;
-	bool m_bEnableSavingPasswords;
+	static BOOL SavePassword(LPCWSTR path, LPCWSTR password);
 
-	CSettingsPropertyPage();
-	virtual ~CSettingsPropertyPage();
+	static BOOL RetrievePassword(LPCWSTR path, LPWSTR password_buf, DWORD password_buf_len);
 
-// Dialog Data
-#ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_SETTINGS };
-#endif
-protected:
-	BOOL SetControls(int nThreads, int nBufferBlocks, int nCacheTTL, bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords);
-	void SaveSettings();
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
-	DECLARE_MESSAGE_MAP()
-public:
-	virtual BOOL OnInitDialog();
-	afx_msg void OnSelchangeThreads();
-	afx_msg void OnSelchangeBuffersize();
-	afx_msg void OnBnClickedCaseinsensitive();
-	afx_msg void OnCbnSelchangeCachettl();
-	afx_msg void OnBnClickedDefaults();
-	afx_msg void OnBnClickedRecommended();
-	afx_msg void OnClickedMountmanager();
-	afx_msg void OnClickedResetwarnings();
-	afx_msg void OnClickedEnableSavingPasswords();
+	SavedPasswords();
+	virtual ~SavedPasswords();
 };

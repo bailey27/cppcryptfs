@@ -35,7 +35,7 @@ THE SOFTWARE.
 #include "afxdialogex.h"
 #include "cppcryptfs.h"
 #include "cryptdefaults.h"
-
+#include "savedpasswords.h"
 
 // CSettingsPropertyPage dialog
 
@@ -45,6 +45,8 @@ CSettingsPropertyPage::CSettingsPropertyPage()
 	: CCryptPropertyPage(IDD_SETTINGS)
 {
 	m_bCaseInsensitive = false;
+	m_bMountManager = false;
+	m_bEnableSavingPasswords = false;
 }
 
 CSettingsPropertyPage::~CSettingsPropertyPage()
@@ -66,6 +68,7 @@ BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_RECOMMENDED, &CSettingsPropertyPage::OnBnClickedRecommended)
 	ON_BN_CLICKED(IDC_MOUNTMANAGER, &CSettingsPropertyPage::OnClickedMountmanager)
 	ON_BN_CLICKED(IDC_RESETWARNINGS, &CSettingsPropertyPage::OnClickedResetwarnings)
+	ON_BN_CLICKED(IDC_ENABLE_SAVING_PASSWORDS, &CSettingsPropertyPage::OnClickedEnableSavingPasswords)
 END_MESSAGE_MAP()
 
 
@@ -91,17 +94,20 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 
 	bool bCaseInsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", CASEINSENSITIVE_DEFAULT) != 0;
 
-	bool bMountManager = theApp.GetProfileInt(L"Settings", L"MountManager", CASEINSENSITIVE_DEFAULT) != 0;
+	bool bMountManager = theApp.GetProfileInt(L"Settings", L"MountManager", MOUNTMANAGER_DEFAULT) != 0;
 
-	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager);
+	bool bEnableSavingPasswords = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
+
+	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, bEnableSavingPasswords);
 }
 
 
-BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, bool bCaseInsensitive, bool bMountManager)
+BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords)
 {
 
 	m_bCaseInsensitive =  bCaseInsensitive;
 	m_bMountManager = bMountManager;
+	m_bEnableSavingPasswords = bEnableSavingPasswords;
 
 	int i;
 
@@ -172,6 +178,8 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	CheckDlgButton(IDC_CASEINSENSITIVE, m_bCaseInsensitive ? 1 : 0);
 
 	CheckDlgButton(IDC_MOUNTMANAGER, m_bMountManager ? 1 : 0);
+
+	CheckDlgButton(IDC_ENABLE_SAVING_PASSWORDS, m_bEnableSavingPasswords ? 1 : 0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
@@ -246,16 +254,18 @@ void CSettingsPropertyPage::SaveSettings()
 
 	m_bCaseInsensitive = !m_bCaseInsensitive; // OnBnClickedCaseinsensitive() flips it
 	m_bMountManager = !m_bMountManager; // ditto
+	m_bEnableSavingPasswords = !m_bEnableSavingPasswords; // ditto
 
 	OnBnClickedCaseinsensitive();
 	OnClickedMountmanager();
+	OnClickedEnableSavingPasswords();
 }
 
 void CSettingsPropertyPage::OnBnClickedDefaults()
 {
 	// TODO: Add your control notification handler code here
 
-	SetControls(PER_FILESYSTEM_THREADS_DEFAULT, BUFFERBLOCKS_DEFAULT, CACHETTL_DEFAULT, CASEINSENSITIVE_DEFAULT, MOUNTMANAGER_DEFAULT);
+	SetControls(PER_FILESYSTEM_THREADS_DEFAULT, BUFFERBLOCKS_DEFAULT, CACHETTL_DEFAULT, CASEINSENSITIVE_DEFAULT, MOUNTMANAGER_DEFAULT, ENABLE_SAVING_PASSWORDS_DEFAULT);
 
 	SaveSettings();
 }
@@ -265,7 +275,7 @@ void CSettingsPropertyPage::OnBnClickedRecommended()
 {
 	// TODO: Add your control notification handler code here
 
-	SetControls(PER_FILESYSTEM_THREADS_RECOMMENDED, BUFFERBLOCKS_RECOMMENDED, CACHETTL_RECOMMENDED, CASEINSENSITIVE_RECOMMENDED, MOUNTMANAGER_RECOMMENDED);
+	SetControls(PER_FILESYSTEM_THREADS_RECOMMENDED, BUFFERBLOCKS_RECOMMENDED, CACHETTL_RECOMMENDED, CASEINSENSITIVE_RECOMMENDED, MOUNTMANAGER_RECOMMENDED, ENABLE_SAVING_PASSWORDS_RECOMMENDED);
 
 	SaveSettings();
 }
@@ -289,4 +299,23 @@ void CSettingsPropertyPage::OnClickedResetwarnings()
 	// TODO: Add your control notification handler code here
 
 	theApp.WriteProfileInt(L"Settings", L"MountManagerWarn", MOUNTMANAGERWARN_DEFAULT);
+}
+
+
+void CSettingsPropertyPage::OnClickedEnableSavingPasswords()
+{
+	// TODO: Add your control notification handler code here
+
+	m_bEnableSavingPasswords = !m_bEnableSavingPasswords;
+
+	CheckDlgButton(IDC_ENABLE_SAVING_PASSWORDS, m_bEnableSavingPasswords ? 1 : 0);
+
+	if (m_bEnableSavingPasswords) {
+		theApp.WriteProfileInt(L"Settings", L"EnableSavingPasswords", TRUE);
+	} else {
+		theApp.WriteProfileInt(L"Settings", L"EnableSavingPasswords", FALSE);
+		if (!SavedPasswords::ClearSavedPasswords()) {
+			MessageBox(L"unable to delete saved passwords", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
+		}
+	}
 }

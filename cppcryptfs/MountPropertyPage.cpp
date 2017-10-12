@@ -43,6 +43,7 @@ THE SOFTWARE.
 #include "util.h"
 #include "getopt.h"
 #include "cryptdefaults.h"
+#include "savedpasswords.h"
 
 
 // CMountPropertyPage dialog
@@ -232,6 +233,8 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	bool bMountManagerWarn = theApp.GetProfileInt(L"Settings", L"MountManagerWarn", MOUNTMANAGERWARN_DEFAULT) != 0;
 
+	bool bSavePassword = argDriveLetter == 0 && (IsDlgButtonChecked(IDC_SAVE_PASSWORD) != 0);
+
 	theApp.DoWaitCursor(1);
 	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, config_path, password.m_buf, error_mes, readonly, reverse, nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, bMountManagerWarn);
 	theApp.DoWaitCursor(-1);
@@ -249,6 +252,12 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	// update saved settings in registry only when the GUI is used (not command line)
 	if (argDriveLetter == 0) {
+
+		if (IsDlgButtonChecked(IDC_SAVE_PASSWORD)) {
+			if (!SavedPasswords::SavePassword(cpath, password.m_buf)) {
+				MessageBox(L"unable to save password", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
+			}
+		}
 
 		RecentItems ritems(TEXT("Folders"), TEXT("LastDir"), m_numLastDirs);
 		ritems.Add(cpath);
@@ -272,6 +281,8 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 				flags |= READONLY_FLAG;
 			if (reverse)
 				flags |= REVERSE_FLAG;
+			if (bSavePassword)
+				flags |= SAVE_PASSWORD_FLAG;
 			theApp.WriteProfileInt(L"MountFlags", path_hash, flags);
 		}
 
@@ -772,6 +783,8 @@ BOOL CMountPropertyPage::OnSetActive()
 
 	ritems2.Populate(m_lastConfigs, TEXT("C:\\"));
 
+	BOOL save_passwords_enabled = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
+
 	pBox = (CComboBox*)GetDlgItem(IDC_CONFIG_PATH);
 
 	if (pBox) {
@@ -810,11 +823,37 @@ BOOL CMountPropertyPage::OnSetActive()
 						int flags = theApp.GetProfileInt(L"MountFlags", path_hash, 0);
 						CheckDlgButton(IDC_READONLY, (flags & READONLY_FLAG) != 0);
 						CheckDlgButton(IDC_REVERSE, (flags & REVERSE_FLAG) != 0);
+
+						LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true);
+
+						if ((flags & SAVE_PASSWORD_FLAG) && save_passwords_enabled && SavedPasswords::RetrievePassword(cpath, password.m_buf, password.m_len)) {
+
+							password.m_buf[MAX_PASSWORD_LEN] = '\0';
+							CSecureEdit *pEd = (CSecureEdit*)GetDlgItem(IDC_PASSWORD);
+							if (pEd) {
+								pEd->SetRealText(password.m_buf);
+							}
+						} else {
+							CSecureEdit *pEd = (CSecureEdit*)GetDlgItem(IDC_PASSWORD);
+							if (pEd) {
+								pEd->SetRealText(L"");
+							}
+						}
+						CheckDlgButton(IDC_SAVE_PASSWORD, (flags & SAVE_PASSWORD_FLAG) != 0);
 					}
 				}
 			}
 		}
 	}
+
+	
+
+	CWnd *pSavePwWnd = GetDlgItem(IDC_SAVE_PASSWORD);
+	if (pSavePwWnd)
+		pSavePwWnd->EnableWindow(save_passwords_enabled);
+
+	if (!save_passwords_enabled)
+		CheckDlgButton(IDC_SAVE_PASSWORD, FALSE);
 
 	return CCryptPropertyPage::OnSetActive();
 }
@@ -859,6 +898,40 @@ void CMountPropertyPage::OnCbnSelchangePath()
 
 	path_hash = hash.c_str();
 
+
+	CString config_path = theApp.GetProfileString(L"ConfigPaths", path_hash, L"");
+
+	CWnd *pConfigPathWnd = GetDlgItem(IDC_CONFIG_PATH);
+
+	if (!pConfigPathWnd)
+		return;
+
+	pConfigPathWnd->SetWindowTextW(config_path);
+
+	int flags = theApp.GetProfileInt(L"MountFlags", path_hash, 0);
+	CheckDlgButton(IDC_READONLY, (flags & READONLY_FLAG) != 0);
+	CheckDlgButton(IDC_REVERSE, (flags & REVERSE_FLAG) != 0);
+
+	BOOL save_passwords_enabled = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
+
+	CheckDlgButton(IDC_SAVE_PASSWORD, (flags & SAVE_PASSWORD_FLAG) && save_passwords_enabled);
+
+	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN+1, true);
+
+	if ((flags & SAVE_PASSWORD_FLAG) && save_passwords_enabled && SavedPasswords::RetrievePassword(cpath, password.m_buf, password.m_len)) {
+
+		password.m_buf[MAX_PASSWORD_LEN] = '\0';
+		CSecureEdit *pEd = (CSecureEdit*)GetDlgItem(IDC_PASSWORD);
+		if (pEd) {
+			pEd->SetRealText(password.m_buf);
+		}
+	} else {
+		CSecureEdit *pEd = (CSecureEdit*)GetDlgItem(IDC_PASSWORD);
+		if (pEd) {
+			pEd->SetRealText(L"");
+		}
+	}
+
 	CString cdl = theApp.GetProfileString(L"MountPoints", path_hash, L"");
 
 	if (cdl.GetLength() != 1)
@@ -890,19 +963,6 @@ void CMountPropertyPage::OnCbnSelchangePath()
 	pList->SetItemState(index, LVIS_SELECTED, LVIS_SELECTED);
 
 	pList->EnsureVisible(index, FALSE);
-
-	CString config_path = theApp.GetProfileString(L"ConfigPaths", path_hash, L"");
-
-	CWnd *pConfigPathWnd = GetDlgItem(IDC_CONFIG_PATH);
-
-	if (!pConfigPathWnd)
-		return;
-
-	pConfigPathWnd->SetWindowTextW(config_path);
-
-	int flags = theApp.GetProfileInt(L"MountFlags", path_hash, 0);
-	CheckDlgButton(IDC_READONLY, (flags & READONLY_FLAG) != 0);
-	CheckDlgButton(IDC_REVERSE, (flags & REVERSE_FLAG) != 0);
 
 }
 
