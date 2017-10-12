@@ -243,7 +243,7 @@ Saved Passwords
 
 If the "Enable saved passwords" setting is enabled in the settings tab,  then the "Save passwords" check box on the mount tab will be usable.
 
-When cppcryptfs saves passwords, it uses the Windows Data Protection API (DPAPI)to encrypt the passwords.  The Windows DPAPI is described here.
+When cppcryptfs saves passwords, it uses the Windows Data Protection API (DPAPI) to encrypt the passwords.  The Windows DPAPI is described here.
 
 https://msdn.microsoft.com/en-us/library/ms995355.aspx
 
