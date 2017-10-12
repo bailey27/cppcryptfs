@@ -443,7 +443,7 @@ BOOL CMountPropertyPage::OnInitDialog()
 		// or using the string table resource
 		CWnd *pWnd = GetDlgItem(IDC_SAVE_PASSWORD);
 		if (pWnd) {
-			m_ToolTip.AddTool(pWnd, _T("To enable Save password, turn on \"Enable saved passwords\" in the Settings tab."));
+			m_ToolTip.AddTool(pWnd, _T("To enable \"Save password\", turn on \"Enable saved passwords\" in the Settings tab."));
 		}
 	}
 
