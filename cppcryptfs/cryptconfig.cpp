@@ -164,6 +164,7 @@ CryptConfig::read(std::wstring& mes, const WCHAR *config_file_path, bool reverse
 
 	if (!buf) {
 		mes = L"cannot allocate buffer for reading config file";
+		fclose(fl);
 		return false;
 	}
 
