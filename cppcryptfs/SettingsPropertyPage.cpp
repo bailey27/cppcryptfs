@@ -314,8 +314,16 @@ void CSettingsPropertyPage::OnClickedEnableSavingPasswords()
 		theApp.WriteProfileInt(L"Settings", L"EnableSavingPasswords", TRUE);
 	} else {
 		theApp.WriteProfileInt(L"Settings", L"EnableSavingPasswords", FALSE);
-		if (!SavedPasswords::ClearSavedPasswords()) {
-			MessageBox(L"unable to delete saved passwords", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
+		int numSavedPasswords = SavedPasswords::ClearSavedPasswords(FALSE);
+		if (numSavedPasswords < 0) {
+			MessageBox(L"unable to count saved passwords", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
+		} else if (numSavedPasswords > 0) {
+			int result = MessageBox(L"Delete all saved passwords?", L"cppcryptfs", MB_ICONWARNING | MB_YESNO);
+			if (result == IDYES) {
+				if (SavedPasswords::ClearSavedPasswords(TRUE) != numSavedPasswords) {
+					MessageBox(L"unable to delete saved passwords", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
+				}
+			}
 		}
 	}
 }

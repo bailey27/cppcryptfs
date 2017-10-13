@@ -40,11 +40,14 @@ THE SOFTWARE.
 class SavedPasswords {
 
 public:
-	static BOOL ClearSavedPasswords();
+	// returns count of saved passwords. doesn't really delete if bDelete is false
+	static int ClearSavedPasswords(BOOL bDelete);
 
 	static BOOL SavePassword(LPCWSTR path, LPCWSTR password);
 
 	static BOOL RetrievePassword(LPCWSTR path, LPWSTR password_buf, DWORD password_buf_len);
+
+	int GetSavedPasswordsCount();
 
 	SavedPasswords();
 	virtual ~SavedPasswords();

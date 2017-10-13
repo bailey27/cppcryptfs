@@ -602,9 +602,9 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 	CString openssl_ver = openssl_ver_w.c_str();
 
 	if (AES::use_aes_ni()) {
-		SetDlgItemText(IDC_AES_NI, L"linked with " + openssl_ver + L" and using AES-NI");
+		SetDlgItemText(IDC_AES_NI, L"linked with " + openssl_ver + L"; AES-NI detected");
 	} else {
-		SetDlgItemText(IDC_AES_NI, L"linked with " + openssl_ver + L" and not using AES-NI");
+		SetDlgItemText(IDC_AES_NI, L"linked with " + openssl_ver + L"; AES-NI not detected");
 	}
 
 	CString prod_ver = &prod[0];

@@ -35,8 +35,10 @@ THE SOFTWARE.
 
 #include <list>
 
-BOOL SavedPasswords::ClearSavedPasswords()
+int SavedPasswords::ClearSavedPasswords(BOOL bDelete)
 {
+
+	int count = 0;
 	
 	LPCWSTR reg_path = theApp.m_pszRegistryKey;
 
@@ -45,9 +47,9 @@ BOOL SavedPasswords::ClearSavedPasswords()
 	LSTATUS status = RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\cppcryptfs\\cppcryptfs\\" SAVED_PASSWORDS_SECTION, 0, KEY_ALL_ACCESS, &hk_pws);
 
 	if (status == ERROR_FILE_NOT_FOUND)
-		return TRUE;
+		return count;
 	else if (status != ERROR_SUCCESS)
-		return FALSE;
+		return -1;
 
 	WCHAR hash[256];
 
@@ -71,20 +73,26 @@ BOOL SavedPasswords::ClearSavedPasswords()
 
 	if (status != ERROR_NO_MORE_ITEMS) {
 		RegCloseKey(hk_pws);
-		return FALSE;
+		return -1;
 	}
 
-	for (auto it : hashes) {
-		status = RegDeleteValue(hk_pws, it.c_str());
-		if (status != ERROR_SUCCESS) {
-			RegCloseKey(hk_pws);
-			return FALSE;
+	if (bDelete) {
+
+		for (auto it : hashes) {
+			status = RegDeleteValue(hk_pws, it.c_str());
+			if (status != ERROR_SUCCESS) {
+				RegCloseKey(hk_pws);
+				return -1;
+			}
+			count++;
 		}
+	} else {
+		count = (int)hashes.size();
 	}
 
 	RegCloseKey(hk_pws);
 
-	return TRUE;
+	return count;
 }
 
 BOOL SavedPasswords::SavePassword(LPCWSTR path, LPCWSTR password)
@@ -178,6 +186,11 @@ BOOL SavedPasswords::RetrievePassword(LPCWSTR path, LPWSTR password_buf, DWORD p
 	delete[] p;
 
 	return TRUE;
+}
+
+int SavedPasswords::GetSavedPasswordsCount()
+{
+	return 0;
 }
 
 SavedPasswords::SavedPasswords()

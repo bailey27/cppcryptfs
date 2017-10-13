@@ -217,7 +217,7 @@ This setting enables the saving of passwords.  Please see the section on Saved P
 
 When this setting is on, the "Save password" checkbox in the mount tab will be usable.  
 
-If the "Enable saved passwords" setting is changed from checked to unchecked, then all saved passwords will be deleted.
+If the "Enable saved passwords" setting is changed from checked to unchecked, then cppcryptfs asks if all saved passwords should be deleted.
 
 This setting is not enabled in either the Default or Recommended settings.
 
