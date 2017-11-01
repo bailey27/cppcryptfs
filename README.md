@@ -11,18 +11,13 @@ cppcryptfs is an implementation of the gocryptfs filesystem in C++ for Windows.
 It uses the the [Dokany](https://github.com/dokan-dev/dokany) driver and library to provide a virtual fileystem in user mode under Windows.
 
 
-This software is developed and maintained by Bailey Brown.  
-
-
 Current Status
 --------------
-
-cppcryptfs is pre-alpha, or more accurately: EXPERIMENTAL.
 
 The developer has been using cppcryptfs in forward (normal) mode for over a year and hasn't lost
 any data.  At least one other person is using it.  There haven't been any serious issues reported.
 
-Reverse mode is new and has undergone only limited testing.
+Reverse mode undergone only limited testing by the developer.
 
 Binary releases are on the [releases page](https://github.com/bailey27/cppcryptfs/releases).
 
