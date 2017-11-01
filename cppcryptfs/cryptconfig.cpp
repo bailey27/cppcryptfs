@@ -146,13 +146,31 @@ CryptConfig::read(std::wstring& mes, const WCHAR *config_file_path, bool reverse
 		}
 	}
 
-	if (fseek(fl, 0, SEEK_END))
+	if (fseek(fl, 0, SEEK_END)) {
+		mes = L"unable to seek to end of config file";
+		fclose(fl);
 		return false;
+	}
 
 	long filesize = ftell(fl);
 
-	if (fseek(fl, 0, SEEK_SET))
+	if (filesize > MAX_CONFIG_FILE_SIZE) {
+		mes = L"config file is too big";
+		fclose(fl);
 		return false;
+	}
+
+	if (filesize < 1) {
+		mes = L"config file is empty";
+		fclose(fl);
+		return false;
+	}
+
+	if (fseek(fl, 0, SEEK_SET)) {
+		mes = L"unable to seek to beginning of config file";
+		fclose(fl);
+		return false;
+	}
 
 	char *buf = NULL;
 

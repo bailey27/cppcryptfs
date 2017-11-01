@@ -33,6 +33,8 @@ THE SOFTWARE.
 
 #include "LockZeroBuffer.h"
 
+#define MAX_CONFIG_FILE_SIZE (16*1024*1024) // 16MB
+
 #define DEFAULT_VOLUME_SERIAL_NUMBER 0xb2a1d417
 
 class CryptContext;
