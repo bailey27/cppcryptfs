@@ -17,7 +17,7 @@ Current Status
 The developer has been using cppcryptfs in forward (normal) mode for over a year and hasn't lost
 any data.  At least one other person is using it.  There haven't been any serious issues reported.
 
-Reverse mode undergone only limited testing by the developer.
+Reverse mode has undergone only limited testing by the developer.
 
 Binary releases are on the [releases page](https://github.com/bailey27/cppcryptfs/releases).
 
