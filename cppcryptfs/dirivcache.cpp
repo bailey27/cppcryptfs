@@ -78,6 +78,8 @@ DirIvCache::~DirIvCache()
 		DirIvCacheNode *node = *it;
 		delete node;
 	}
+
+	DeleteCriticalSection(&m_crit);
 }
 
 void DirIvCache::normalize_key(std::wstring& key)

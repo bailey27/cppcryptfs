@@ -87,6 +87,8 @@ CaseCache::~CaseCache()
 		CaseCacheNode *node = *it;
 		delete node;
 	}
+
+	DeleteCriticalSection(&m_crit);
 }
 
 void CaseCache::lock()

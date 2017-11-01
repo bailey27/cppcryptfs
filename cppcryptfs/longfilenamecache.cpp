@@ -80,6 +80,8 @@ LongFilenameCache::~LongFilenameCache()
 		LongFilenameCacheNode *node = *it;
 		delete node;
 	}
+
+	DeleteCriticalSection(&m_crit);
 }
 
 

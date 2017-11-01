@@ -57,6 +57,8 @@ RandomBytes::~RandomBytes()
 	// do not free m_randbuf.  It points to m_pRandBuf->m_buf
 	if (m_pRandBuf)
 		delete m_pRandBuf;
+
+	DeleteCriticalSection(&m_crit);
 }
 
 void RandomBytes::lock()

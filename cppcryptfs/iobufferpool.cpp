@@ -65,6 +65,8 @@ IoBufferPool::~IoBufferPool()
 	for (IoBuffer* pBuf : m_buffers) {
 		delete pBuf;
 	}
+
+	DeleteCriticalSection(&m_crit);
 }
 
 IoBuffer * IoBufferPool::GetIoBuffer(size_t buffer_size)
