@@ -1887,22 +1887,25 @@ CryptFindStreamsInternal(LPCWSTR FileName, PFillFindStreamData FillFindStreamDat
   if (rt_is_virtual_file(GetContext(), FileName)) {
 	  wcscpy_s(findData.cStreamName, L"::$DATA");
 	  if (rt_is_dir_iv_file(GetContext(), FileName)) {
+
 		  findData.StreamSize.QuadPart = DIR_IV_LEN;
 
 	  } else if (rt_is_name_file(GetContext(), FileName)) {
 		  BYTE dir_iv[DIR_IV_LEN];
 
 		  if (!derive_path_iv(GetContext(), FileName, dir_iv, TYPE_DIRIV)) {
-			  return DokanNtStatusFromWin32(ERROR_PATH_NOT_FOUND);
+			  return ToNtStatus(ERROR_PATH_NOT_FOUND);
 		  }
 		  std::wstring storage, bare_filename;
 		  std::string actual_encrypted;
 		  if (!get_bare_filename(FileName, bare_filename))
-			  return DokanNtStatusFromWin32(ERROR_PATH_NOT_FOUND);
+			  return ToNtStatus(ERROR_PATH_NOT_FOUND);
 		  const WCHAR *dname = encrypt_filename(GetContext(), dir_iv, bare_filename.c_str(), storage, &actual_encrypted);
 		  if (!dname)
-			  return DokanNtStatusFromWin32(ERROR_PATH_NOT_FOUND);
+			  return ToNtStatus(ERROR_PATH_NOT_FOUND);
 		  findData.StreamSize.QuadPart = actual_encrypted.length();
+	  } else {
+		  return ToNtStatus(ERROR_PATH_NOT_FOUND);
 	  }
 	  if (FillFindStreamData)
 		  FillFindStreamData(&findData, DokanFileInfo);
