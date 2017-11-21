@@ -31,13 +31,13 @@ THE SOFTWARE.
 #include "Shlwapi.h"
 
 #include "cryptdefs.h"
-#include "fileutil.h"
-#include "cryptfilename.h"
+#include "util/fileutil.h"
+#include "filename/cryptfilename.h"
 
 #include <string>
 #include <vector>
 
-#include "dirivcache.h"
+#include "filename/dirivcache.h"
 
 // derive attributes for virtual reverse-mode diriv file from 
 // the attributes of its directory

@@ -30,10 +30,10 @@ THE SOFTWARE.
 #include "cryptdefs.h"
 #include "cryptio.h"
 #include "cryptfile.h"
-#include "cryptfilename.h"
-#include "fileutil.h"
-#include "util.h"
-#include "crypt.h"
+#include "filename/cryptfilename.h"
+#include "util/fileutil.h"
+#include "util/util.h"
+#include "crypt/crypt.h"
 #include "iobufferpool.h"
 
 CryptFile *CryptFile::NewInstance(CryptContext *con)

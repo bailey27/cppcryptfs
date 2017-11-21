@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include "stdafx.h"
 
 #include <windows.h>
-#include "util.h"
+#include "util/util.h"
 #include "randombytes.h"
 
 RandomBytes::RandomBytes()

@@ -17,7 +17,7 @@
 
 
 // Use LockZeroBuffers instead of CStrings for enhanced security for cppcryptfs
-#include "LockZeroBuffer.h"
+#include "util/LockZeroBuffer.h"
 
 /////////////////////////////////////////////////////////////////////////////
 

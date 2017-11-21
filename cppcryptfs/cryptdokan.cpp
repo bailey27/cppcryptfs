@@ -67,15 +67,15 @@ THE SOFTWARE.
 
 #include <assert.h>
 
-#include "cryptfilename.h"
+#include "filename/cryptfilename.h"
 #include "cryptconfig.h"
 #include "cryptcontext.h"
-#include "fileutil.h"
-#include "cryptfile.h"
+#include "util/fileutil.h"
+#include "file/cryptfile.h"
 #include "cryptdefs.h"
-#include "util.h"
+#include "util/util.h"
 #include "cryptdokan.h"
-#include "iobufferpool.h"
+#include "file/iobufferpool.h"
 
 
 #include <vector>

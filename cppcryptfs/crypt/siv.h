@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "LockZeroBuffer.h"
+#include "util/LockZeroBuffer.h"
 #include "openssl/aes.h"
 
 #define SIV_KEY_ENCRYPT_LOW_INDEX  0

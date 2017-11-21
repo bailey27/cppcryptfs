@@ -27,7 +27,7 @@ THE SOFTWARE.
 */
 
 #include "stdafx.h"
-#include "crypt.h"
+#include "crypt/crypt.h"
 #include "cryptcontext.h"
 
 static RandomBytes random_bytes;

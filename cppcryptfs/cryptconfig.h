@@ -31,7 +31,7 @@ THE SOFTWARE.
 #include <windows.h>
 #include <vector>
 
-#include "LockZeroBuffer.h"
+#include "util/LockZeroBuffer.h"
 
 #define MAX_CONFIG_FILE_SIZE (16*1024*1024) // 16MB
 

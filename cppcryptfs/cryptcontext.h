@@ -31,12 +31,12 @@ THE SOFTWARE.
 #include "cryptconfig.h"
 #include <windows.h>
 #include <vector>
-#include "eme.h"
-#include "randombytes.h"
-#include "dirivcache.h"
-#include "longfilenamecache.h"
-#include "siv.h"
-#include "casecache.h"
+#include "crypt/eme.h"
+#include "crypt/randombytes.h"
+#include "filename/dirivcache.h"
+#include "filename/longfilenamecache.h"
+#include "crypt/siv.h"
+#include "filename/casecache.h"
 
 class CryptContext {
 private:

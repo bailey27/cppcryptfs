@@ -31,12 +31,12 @@ THE SOFTWARE.
 #include <windows.h>
 #include <vector>
 
-#include "util.h"
+#include "util/util.h"
 #include "cryptdefs.h"
-#include "crypt.h"
+#include "crypt/crypt.h"
 #include "cryptconfig.h"
 #include "cryptcontext.h"
-#include "eme.h"
+#include "crypt/eme.h"
 
 
 #define LONGNAME_PREFIX_W L"gocryptfs.longname."

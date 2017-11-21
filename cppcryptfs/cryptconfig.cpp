@@ -55,12 +55,12 @@ THE SOFTWARE.
 
 #include <cstdio>
 
-#include "util.h"
+#include "util/util.h"
 #include "cryptdefs.h"
-#include "crypt.h"
-#include "fileutil.h"
-#include "LockZeroBuffer.h"
-#include "cryptfilename.h"
+#include "crypt/crypt.h"
+#include "util/fileutil.h"
+#include "util/LockZeroBuffer.h"
+#include "filename/cryptfilename.h"
 
 #define SCRYPT_MB 72 // 65 seems to be enough, but allow more just in case
 

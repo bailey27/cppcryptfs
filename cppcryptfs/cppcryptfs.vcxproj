@@ -94,7 +94,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.5\include;c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.5\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -120,7 +120,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.5\include;c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.5\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <Link>
@@ -150,7 +150,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.5\include;c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.5\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -180,7 +180,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.5\include;c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.0.5\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -203,110 +203,106 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="aes-siv\aes256-cmac.h" />
-    <ClInclude Include="aes-siv\aes256-common.h" />
-    <ClInclude Include="aes-siv\aes256-ctr.h" />
-    <ClInclude Include="aes-siv\aes256-siv.h" />
-    <ClInclude Include="aes.h" />
-    <ClInclude Include="casecache.h" />
     <ClInclude Include="cppcryptfs.h" />
-    <ClInclude Include="CreatePropertyPage.h" />
-    <ClInclude Include="crypt.h" />
-    <ClInclude Include="CryptAboutPropertyPage.h" />
     <ClInclude Include="cryptconfig.h" />
     <ClInclude Include="cryptcontext.h" />
-    <ClInclude Include="cryptdefaults.h" />
     <ClInclude Include="cryptdefs.h" />
     <ClInclude Include="cryptdokan.h" />
-    <ClInclude Include="cryptfile.h" />
-    <ClInclude Include="cryptfilename.h" />
-    <ClInclude Include="cryptio.h" />
-    <ClInclude Include="CryptPropertyPage.h" />
-    <ClInclude Include="CryptPropertySheet.h" />
-    <ClInclude Include="dirivcache.h" />
-    <ClInclude Include="eme.h" />
-    <ClInclude Include="fileutil.h" />
-    <ClInclude Include="FolderDialog.h" />
-    <ClInclude Include="getopt.h" />
-    <ClInclude Include="iobufferpool.h" />
-    <ClInclude Include="LockZeroBuffer.h" />
-    <ClInclude Include="longfilenamecache.h" />
-    <ClInclude Include="MountMangerDialog.h" />
-    <ClInclude Include="MountPropertyPage.h" />
-    <ClInclude Include="pad16.h" />
-    <ClInclude Include="randombytes.h" />
-    <ClInclude Include="RecentItems.h" />
+    <ClInclude Include="crypt\aes-siv\aes256-cmac.h" />
+    <ClInclude Include="crypt\aes-siv\aes256-common.h" />
+    <ClInclude Include="crypt\aes-siv\aes256-ctr.h" />
+    <ClInclude Include="crypt\aes-siv\aes256-siv.h" />
+    <ClInclude Include="crypt\aes.h" />
+    <ClInclude Include="crypt\crypt.h" />
+    <ClInclude Include="crypt\eme.h" />
+    <ClInclude Include="crypt\randombytes.h" />
+    <ClInclude Include="crypt\siv.h" />
+    <ClInclude Include="filename\casecache.h" />
+    <ClInclude Include="filename\cryptfilename.h" />
+    <ClInclude Include="filename\dirivcache.h" />
+    <ClInclude Include="filename\longfilenamecache.h" />
+    <ClInclude Include="file\cryptfile.h" />
+    <ClInclude Include="file\cryptio.h" />
+    <ClInclude Include="file\iobufferpool.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="savedpasswords.h" />
-    <ClInclude Include="SecureEdit.h" />
-    <ClInclude Include="SettingsPropertyPage.h" />
-    <ClInclude Include="siv.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="TrayIcon.h" />
-    <ClInclude Include="util.h" />
+    <ClInclude Include="ui\CreatePropertyPage.h" />
+    <ClInclude Include="ui\CryptAboutPropertyPage.h" />
+    <ClInclude Include="ui\cryptdefaults.h" />
+    <ClInclude Include="ui\CryptPropertyPage.h" />
+    <ClInclude Include="ui\CryptPropertySheet.h" />
+    <ClInclude Include="ui\FolderDialog.h" />
+    <ClInclude Include="ui\MountMangerDialog.h" />
+    <ClInclude Include="ui\MountPropertyPage.h" />
+    <ClInclude Include="ui\RecentItems.h" />
+    <ClInclude Include="ui\SecureEdit.h" />
+    <ClInclude Include="ui\SettingsPropertyPage.h" />
+    <ClInclude Include="ui\TrayIcon.h" />
+    <ClInclude Include="util\fileutil.h" />
+    <ClInclude Include="util\getopt.h" />
+    <ClInclude Include="util\LockZeroBuffer.h" />
+    <ClInclude Include="util\pad16.h" />
+    <ClInclude Include="util\savedpasswords.h" />
+    <ClInclude Include="util\util.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="aes-siv\aes256-cmac.cpp" />
-    <ClCompile Include="aes-siv\aes256-common.cpp" />
-    <ClCompile Include="aes-siv\aes256-ctr.cpp" />
-    <ClCompile Include="aes-siv\aes256-siv.cpp" />
-    <ClCompile Include="aes.cpp" />
-    <ClCompile Include="casecache.cpp" />
     <ClCompile Include="cppcryptfs.cpp" />
-    <ClCompile Include="CreatePropertyPage.cpp" />
-    <ClCompile Include="crypt.cpp" />
-    <ClCompile Include="CryptAboutPropertyPage.cpp" />
     <ClCompile Include="cryptconfig.cpp" />
     <ClCompile Include="cryptcontext.cpp" />
-    <ClCompile Include="cryptfile.cpp" />
-    <ClCompile Include="cryptfilename.cpp" />
-    <ClCompile Include="cryptio.cpp" />
-    <ClCompile Include="CryptPropertyPage.cpp" />
-    <ClCompile Include="CryptPropertySheet.cpp" />
-    <ClCompile Include="dirivcache.cpp" />
-    <ClCompile Include="eme.cpp" />
-    <ClCompile Include="fileutil.cpp" />
-    <ClCompile Include="FolderDialog.cpp" />
+    <ClCompile Include="crypt\aes-siv\aes256-cmac.cpp" />
+    <ClCompile Include="crypt\aes-siv\aes256-common.cpp" />
+    <ClCompile Include="crypt\aes-siv\aes256-ctr.cpp" />
+    <ClCompile Include="crypt\aes-siv\aes256-siv.cpp" />
+    <ClCompile Include="crypt\aes.cpp" />
+    <ClCompile Include="crypt\crypt.cpp" />
+    <ClCompile Include="crypt\eme.cpp" />
+    <ClCompile Include="crypt\randombytes.cpp" />
+    <ClCompile Include="crypt\siv.cpp" />
+    <ClCompile Include="filename\casecache.cpp" />
+    <ClCompile Include="filename\cryptfilename.cpp" />
+    <ClCompile Include="filename\dirivcache.cpp" />
+    <ClCompile Include="filename\longfilenamecache.cpp" />
+    <ClCompile Include="file\cryptfile.cpp" />
+    <ClCompile Include="file\cryptio.cpp" />
+    <ClCompile Include="file\iobufferpool.cpp" />
     <ClCompile Include="cryptdokan.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="getopt.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="iobufferpool.cpp" />
-    <ClCompile Include="longfilenamecache.cpp" />
-    <ClCompile Include="MountMangerDialog.cpp" />
-    <ClCompile Include="MountPropertyPage.cpp" />
-    <ClCompile Include="pad16.cpp" />
-    <ClCompile Include="randombytes.cpp" />
-    <ClCompile Include="RecentItems.cpp" />
-    <ClCompile Include="savedpasswords.cpp" />
-    <ClCompile Include="SecureEdit.cpp" />
-    <ClCompile Include="SettingsPropertyPage.cpp" />
-    <ClCompile Include="siv.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="util.cpp" />
+    <ClCompile Include="ui\CreatePropertyPage.cpp" />
+    <ClCompile Include="ui\CryptAboutPropertyPage.cpp" />
+    <ClCompile Include="ui\CryptPropertyPage.cpp" />
+    <ClCompile Include="ui\CryptPropertySheet.cpp" />
+    <ClCompile Include="ui\FolderDialog.cpp" />
+    <ClCompile Include="ui\MountMangerDialog.cpp" />
+    <ClCompile Include="ui\MountPropertyPage.cpp" />
+    <ClCompile Include="ui\RecentItems.cpp" />
+    <ClCompile Include="ui\SecureEdit.cpp" />
+    <ClCompile Include="ui\SettingsPropertyPage.cpp" />
+    <ClCompile Include="util\fileutil.cpp" />
+    <ClCompile Include="util\getopt.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="util\pad16.cpp" />
+    <ClCompile Include="util\savedpasswords.cpp" />
+    <ClCompile Include="util\util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="cppcryptfs.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="cppcryptfs.ruleset" />
     <None Include="res\cppcryptfs.rc2" />
   </ItemGroup>
   <ItemGroup>

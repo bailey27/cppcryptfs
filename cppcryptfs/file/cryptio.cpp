@@ -30,8 +30,8 @@ THE SOFTWARE.
 
 #include "cryptconfig.h"
 #include "cryptdefs.h"
-#include "util.h"
-#include "crypt.h"
+#include "util/util.h"
+#include "crypt/crypt.h"
 #include "cryptio.h"
 
 

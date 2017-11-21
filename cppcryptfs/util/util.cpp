@@ -30,19 +30,19 @@ THE SOFTWARE.
 
 #include <stdio.h>
 #include  <tlhelp32.h>
-#include "util.h"
+#include "util/util.h"
 #include "cryptdefs.h"
-#include "crypt.h"
+#include "crypt/crypt.h"
 #include <openssl/rand.h>
 
 #include <wincrypt.h>
 
 #include <iostream>
 
-#include "randombytes.h"
+#include "crypt/randombytes.h"
 #include "cryptcontext.h"
 
-#include "MountMangerDialog.h"
+#include "ui/MountMangerDialog.h"
 
 #include <atlenc.h>
 

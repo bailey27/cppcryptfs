@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include "aes-siv/aes256-siv.h"
 #include "cryptdefs.h"
 #include "crypt.h"
-#include "util.h"
+#include "util/util.h"
 
 #include <string>
 

@@ -49,8 +49,8 @@ THE SOFTWARE.
 
 #include "stdafx.h"
 #include "casecache.h"
-#include "util.h"
-#include "fileutil.h"
+#include "util/util.h"
+#include "util/fileutil.h"
 #include "cryptcontext.h"
 #include "cryptfilename.h"
 

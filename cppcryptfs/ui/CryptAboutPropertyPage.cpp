@@ -35,8 +35,8 @@ THE SOFTWARE.
 #include "CryptAboutPropertyPage.h"
 #include "afxdialogex.h"
 #include <string>
-#include "util.h"
-#include "aes.h"
+#include "util/util.h"
+#include "crypt/aes.h"
 #include "openssl/crypto.h"
 
 

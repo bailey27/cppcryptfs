@@ -36,14 +36,14 @@ THE SOFTWARE.
 #include "FolderDialog.h"
 #include "cryptdokan.h"
 #include "RecentItems.h"
-#include "LockZeroBuffer.h"
+#include "util/LockZeroBuffer.h"
 #include "cryptdefs.h"
 #include "CryptPropertySheet.h"
-#include "crypt.h"
-#include "util.h"
-#include "getopt.h"
+#include "crypt/crypt.h"
+#include "util/util.h"
+#include "util/getopt.h"
 #include "cryptdefaults.h"
-#include "savedpasswords.h"
+#include "util/savedpasswords.h"
 
 
 // CMountPropertyPage dialog

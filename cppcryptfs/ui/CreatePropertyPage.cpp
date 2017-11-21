@@ -35,12 +35,12 @@ THE SOFTWARE.
 #include "CreatePropertyPage.h"
 #include "afxdialogex.h"
 #include "FolderDialog.h"
-#include "fileutil.h"
+#include "util/fileutil.h"
 #include "cryptconfig.h"
 #include "RecentItems.h"
 #include "cryptdefs.h"
-#include "LockZeroBuffer.h"
-#include "util.h"
+#include "util/LockZeroBuffer.h"
+#include "util/util.h"
 
 static const WCHAR *filename_encryption_types[] = {
 	L"AES256-EME",

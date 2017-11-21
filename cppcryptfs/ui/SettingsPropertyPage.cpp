@@ -34,8 +34,8 @@ THE SOFTWARE.
 #include "SettingsPropertyPage.h"
 #include "afxdialogex.h"
 #include "cppcryptfs.h"
-#include "cryptdefaults.h"
-#include "savedpasswords.h"
+#include "ui/cryptdefaults.h"
+#include "util/savedpasswords.h"
 
 // CSettingsPropertyPage dialog
 

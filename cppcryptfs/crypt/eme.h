@@ -30,29 +30,39 @@ THE SOFTWARE.
 
 #include <windows.h>
 
-#include "LockZeroBuffer.h"
+#include "cryptdefs.h"
 
-#define RANDOM_POOL_SIZE (32*1024)
+#include "openssl/aes.h"
 
-class RandomBytes {
+#include "aes.h"
+
+#include "util/LockZeroBuffer.h"
+
+
+
+
+class EmeCryptContext {
+public:
+	
+	AES m_aes_ctx;
+
+	EmeCryptContext();
+	virtual ~EmeCryptContext();
+
 private:
 
-	LockZeroBuffer<BYTE> *m_pRandBuf;
+	LockZeroBuffer<AES_KEY> *m_pKeyBuf;
+	LockZeroBuffer<BYTE> *m_pLTableBuf;
 
-	unsigned char *m_randbuf; // do not free this. it points to m_pRandBuf->m_buf;
-
-	DWORD m_bufpos;
-
-	CRITICAL_SECTION m_crit;
-
-
-	void lock();
-	void unlock();
-
+	void tabulateL(int m);
 public:
-	bool GetRandomBytes(unsigned char *buf, DWORD len);
 
-	RandomBytes();
-	virtual ~RandomBytes();
+	LPBYTE *m_LTable;
+
+	bool init(const BYTE *key, bool hkdf);
 };
+
+
+BYTE* EmeTransform(const EmeCryptContext *eme_context, 
+	const BYTE *T, const BYTE *P, int len, bool direction);
 
