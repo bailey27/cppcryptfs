@@ -65,11 +65,11 @@ To make a new encrypted virtual fileystem, first click the "Create" tab.
 
 ![Alt text](/screenshots/screenshot_create.png?raw=true "Create tab")
 
-You need to find or create (you can create a directory in the directory selector in the UI) a directory to be the root of your filesystem.
+You need to find or create a directory to be the root of your filesystem.  You can create a directory in the directory selector in the UI.
 
-If you are using normal forward mode, then this directory must be empty.
+If you are using normal (forward) mode, then this directory must be empty.
 
-If you are using reverse mode, then it need not be empty (see the section on Reverse Mode in this document which follows this section).
+If you are using reverse mode, then the directory need not be empty (see the section on Reverse Mode in this document which follows this section).
 
 It is strongly recommended that this directory reside on an NTFS filesystem.
 
