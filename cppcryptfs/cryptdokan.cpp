@@ -527,8 +527,8 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   securityAttrib.bInheritHandle = FALSE;
 
   DokanMapKernelToUserCreateFileFlags(
-      FileAttributes, CreateOptions, CreateDisposition, &fileAttributesAndFlags,
-      &creationDisposition);
+	  DesiredAccess, FileAttributes, CreateOptions, CreateDisposition,
+	  &genericDesiredAccess, &fileAttributesAndFlags, &creationDisposition);
 
 
   DbgPrint(L"CreateFile : %s\n", FileName);
@@ -592,8 +592,6 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 	  DbgPrint(L"\tadded FILE_READ_DATA to desired access\n");
 	  DesiredAccess |= FILE_READ_DATA;
   }
-
-  genericDesiredAccess = DokanMapStandardToGenericAccess(DesiredAccess);
 
   if (!(bHasDirAttr || (CreateOptions & FILE_DIRECTORY_FILE)) && 
 	  (ShareAccess & FILE_SHARE_WRITE)) {
@@ -783,6 +781,10 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 		  SetLastError(0);
 		  handle = INVALID_HANDLE_VALUE;
 	  } else {
+
+		  // Truncate should always be used with write access
+		  if (creationDisposition == TRUNCATE_EXISTING)
+			  genericDesiredAccess |= GENERIC_WRITE;
 
 		  handle = CreateFile(
 			  filePath,
