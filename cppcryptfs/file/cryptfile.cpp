@@ -108,7 +108,8 @@ CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
 	DWORD nread;
 
 	if (!ReadFile(hfile, &m_header, sizeof(m_header), &nread, NULL)) {
-		DbgPrint(L"ASSOCIATE: failed to read header\n");
+		DWORD error = GetLastError();
+		DbgPrint(L"ASSOCIATE: failed to read header, error = %d\n", error);
 		return FALSE;
 	}
 
