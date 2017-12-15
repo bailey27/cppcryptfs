@@ -589,8 +589,8 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   // unless we can also read from it.
   if (!(bHasDirAttr || (CreateOptions & FILE_DIRECTORY_FILE)) && 
 	  ((DesiredAccess & GENERIC_WRITE) || (DesiredAccess & FILE_WRITE_DATA))) {
-	  DbgPrint(L"\tadded FILE_READ_DATA to desired access\n");
-	  DesiredAccess |= FILE_READ_DATA;
+	  DbgPrint(L"\tadded GENERIC_READ to genericDesiredAccess\n");
+	  genericDesiredAccess |= GENERIC_READ;
   }
 
   if (!(bHasDirAttr || (CreateOptions & FILE_DIRECTORY_FILE)) && 
@@ -661,11 +661,15 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
   if (DokanFileInfo->IsDirectory) {
     // It is a create directory request
-    if (creationDisposition == CREATE_NEW) {
+    if (creationDisposition == CREATE_NEW ||
+		creationDisposition == OPEN_ALWAYS) {
       if (!CreateDirectory(filePath, &securityAttrib)) {
         error = GetLastError();
-        DbgPrint(L"\terror code = %d\n\n", error);
-        status = ToNtStatus(error);
+		if (error != ERROR_ALREADY_EXISTS ||
+			creationDisposition == CREATE_NEW) {
+			DbgPrint(L"\terror code = %d\n\n", error);
+			status = ToNtStatus(error);
+		}
       } else {
 
 		  if (!create_dir_iv(GetContext(), filePath)) {
@@ -762,10 +766,36 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 		  }
         DokanFileInfo->Context =
             (ULONG64)handle; // save the file handle in Context
+		// Open succeed but we need to inform the driver
+		// that the dir open and not created by returning STATUS_OBJECT_NAME_COLLISION
+		if (creationDisposition == OPEN_ALWAYS &&
+			fileAttr != INVALID_FILE_ATTRIBUTES)
+			return STATUS_OBJECT_NAME_COLLISION;
       }
     }
   } else {
 	  // It is a create file request
+
+	  // Cannot overwrite a hidden or system file if flag not set
+	  if (fileAttr != INVALID_FILE_ATTRIBUTES &&
+		  ((!(fileAttributesAndFlags & FILE_ATTRIBUTE_HIDDEN) &&
+		  (fileAttr & FILE_ATTRIBUTE_HIDDEN)) ||
+			  (!(fileAttributesAndFlags & FILE_ATTRIBUTE_SYSTEM) &&
+			  (fileAttr & FILE_ATTRIBUTE_SYSTEM))) &&
+				  (creationDisposition == TRUNCATE_EXISTING ||
+					  creationDisposition == CREATE_ALWAYS))
+		  return STATUS_ACCESS_DENIED;
+
+	  // Cannot delete a read only file
+	  if ((fileAttr != INVALID_FILE_ATTRIBUTES &&
+		  (fileAttr & FILE_ATTRIBUTE_READONLY) ||
+		  (fileAttributesAndFlags & FILE_ATTRIBUTE_READONLY)) &&
+		  (fileAttributesAndFlags & FILE_FLAG_DELETE_ON_CLOSE))
+		  return STATUS_CANNOT_DELETE;
+
+	  // Truncate should always be used with write access
+	  if (creationDisposition == TRUNCATE_EXISTING)
+		  genericDesiredAccess |= GENERIC_WRITE;
 	 
 	  if (fileAttr != INVALID_FILE_ATTRIBUTES &&
 		  (fileAttr & FILE_ATTRIBUTE_DIRECTORY) &&
@@ -786,6 +816,9 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 		  if (creationDisposition == TRUNCATE_EXISTING)
 			  genericDesiredAccess |= GENERIC_WRITE;
 
+		  DbgPrint(L"CreateFile 0x%08x, 0x%08x, 0x%08x, 0x%08x", genericDesiredAccess,
+			  ShareAccess, creationDisposition, fileAttributesAndFlags);
+		  
 		  handle = CreateFile(
 			  filePath,
 			  genericDesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
@@ -814,6 +847,12 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 			}
 		}
 
+		//Need to update FileAttributes with previous when Overwrite file
+		if (fileAttr != INVALID_FILE_ATTRIBUTES &&
+			creationDisposition == TRUNCATE_EXISTING) {
+			SetFileAttributes(filePath, fileAttributesAndFlags | fileAttr);
+		}
+
       DokanFileInfo->Context =
           (ULONG64)handle; // save the file handle in Context
 
@@ -827,7 +866,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 		  if (GetContext()->IsCaseInsensitive() && handle != INVALID_HANDLE_VALUE && !filePath.FileExisted()) {
 			  GetContext()->m_case_cache.store(filePath.CorrectCasePath());
 		  }
-		  return STATUS_OBJECT_NAME_COLLISION;
+		  status = STATUS_OBJECT_NAME_COLLISION;
         }
       }
     }
@@ -1513,7 +1552,7 @@ static NTSTATUS DOKAN_CALLBACK CryptSetEndOfFile(
 	  }
   } else {
 	  delete file;
-	  DbgPrint(L"\tSetEndOfFile unable to associate\n");
+	  DbgPrint(L"\tSetEndOfFile unable to associate handle %I64x\n", handle);
 	  return STATUS_ACCESS_DENIED;
   }
 
@@ -1580,10 +1619,18 @@ static NTSTATUS DOKAN_CALLBACK CryptSetFileAttributes(
 
   DbgPrint(L"SetFileAttributes %s, %x\n", FileName, FileAttributes);
 
-  if (!SetFileAttributes(filePath, FileAttributes)) {
-    DWORD error = GetLastError();
-    DbgPrint(L"\terror code = %d\n\n", error);
-    return ToNtStatus(error);
+  if (FileAttributes != 0) {
+	  if (!SetFileAttributes(filePath, FileAttributes)) {
+		  DWORD error = GetLastError();
+		  DbgPrint(L"\terror code = %d\n\n", error);
+		  return ToNtStatus(error);
+	  }
+  } else {
+	  // case FileAttributes == 0 :
+	  // MS-FSCC 2.6 File Attributes : There is no file attribute with the value 0x00000000
+	  // because a value of 0x00000000 in the FileAttributes field means that the file attributes for this file MUST NOT be changed when setting basic information for the file
+	  DbgPrint(L"Set 0 to FileAttributes means MUST NOT be changed. Didn't call "
+		  L"SetFileAttributes function. \n");
   }
 
   DbgPrint(L"\n");
