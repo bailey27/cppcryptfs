@@ -160,15 +160,9 @@ The settings tab has the following setings:
 
 **Per-filesystem threads**
 
-Early in cppycryptfs' development, Dokany (then version 0.9) had a problem if multiple threads were used to service requests on a single filesystem.
+Using more than one thread to process requests for each filesystem may result in improved performance.
 
-Therefore the number of threads per-filesystem was hard-coded to 1 in cppcryptfs.
-
-It now appears to be safe to use more than one thread per-filesystem.  However, almost all testing and usage of cppcryptfs until now has been done with only one thread per filesystem.
-
-Using more than one thread for each filesystem may result in improved performance.
-
-The default number of per-filesystem threads is still 1.  Using "Dokany default" will cause Dokany to choose an appropriate number of threads.  It currently uses five threads.
+Using "Dokany default" will cause Dokany to choose an appropriate number of threads.  It currently uses five threads.
 
 **I/O buffer size (KB)**
 
