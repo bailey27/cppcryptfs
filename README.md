@@ -4,12 +4,29 @@
 cppcryptfs
 ------
 
-This software is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs), an encrypted overlay filesystem written in Go.
+cppcrypts provides on-the-fly, at-rest and in-the-cloud encryption of files and file names in a virtual filesystem.
+
+You can use cppcryptfs to create an encrpypted filesystem in a folder.  The encrypted filesystem is protected with a password that you choose.  
+
+When you use cppcryptfs to mount the encrypted filesystem by providing the password, then you have a new drive letter in Windows.  This virtual drive letter gives you an unencrypted view of your files.  The encryption and decryption is done on-the-fly and is transparent to applications that use the files on that virtual drive.
+
+After you tell cppcryptfs to dismount the virtual drive letter, then there is no way to get at your unencrypted data unless the filesystem is re-mounted again using your password.
+
+If the folder where the encrypted files are kept is being synced with a cloud service, then only the encrypted files with encrypted file names will be uploaded to the cloud service.
+
+This way, neither the employees of the cloud service nor anybody who hacks into the cloud service can use your files.
+
+Also, if a thief steals your computer and the encrypted filesystem is not mounted, then the thief cannot use your files either.
+
+Because the encryption is done on a per-file basis, you do not have to decide ahead of time how much encrypted storage you will need.  cppcryptfs has very minimal storage overhead, and your encrypted filesystem can grow dynamically up to the size of the physical drive the filesystem resides on.
+
+Another advantage of per-file encryption over container-based encryption is that per-file encryption syncs very quickly and easily with cloud-based services.
+
+cppcryptfs is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs), an encrypted overlay filesystem written in Go.
 
 cppcryptfs is an implementation of the gocryptfs filesystem in C++ for Windows.
 
 It uses the the [Dokany](https://github.com/dokan-dev/dokany) driver and library to provide a virtual fileystem in user mode under Windows.
-
 
 Current Status
 --------------
@@ -22,11 +39,9 @@ Reverse mode has undergone only limited testing by the developer.
 Binary releases are on the [releases page](https://github.com/bailey27/cppcryptfs/releases).
 
 Testing
--------
+-------  
 
-cppcryptfs seems to work.  
-
-It passes 492/492 tests in [winfstest](https://github.com/dimov-cz/winfstest) when run as administrator.  Without administrator privileges, cppcryptfs passes 486/492 tests.  The winftest main project page still says there are 171 tests, but there are actually 492 tests now.
+cppcryptfs passes 492/492 tests in [winfstest](https://github.com/dimov-cz/winfstest) when run as administrator.  Without administrator privileges, cppcryptfs passes 486/492 tests.  The winftest main project page still says there are 171 tests, but there are actually 492 tests now.
 
 The tests that cppcryptfs fails when run without administrator privileges have to do with operations on DACLs (Discretionary Access Control Lists).  cppcryptfs must be run as administrator for these operations to work.  Running without administrator privileges doesn't seem to affect the normal usage of cppcryptfs.
 
