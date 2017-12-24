@@ -41,6 +41,7 @@ Binary releases are on the [releases page](https://github.com/bailey27/cppcryptf
 
 
 It is always prudent to keep backups of your data in case something goes wrong. 
+
 Testing
 -------  
 
