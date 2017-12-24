@@ -12,7 +12,7 @@ It uses the the [Dokany](https://github.com/dokan-dev/dokany) driver and library
 
 cppcrypts provides on-the-fly, at-rest and in-the-cloud encryption of files and file names in a virtual filesystem.
 
-You can use cppcryptfs to create an encrpypted filesystem in a folder.  The encrypted filesystem is protected with a password that you choose.  
+You can use cppcryptfs to create an encrypted filesystem in a folder.  The encrypted filesystem is protected with a password that you choose.  
 
 When you use cppcryptfs to mount the encrypted filesystem by providing the password, then you have a new drive letter in Windows.  This virtual drive letter gives you an unencrypted view of your files.  The encryption and decryption is done on the fly and is transparent to applications that use the files on that virtual drive.
 
