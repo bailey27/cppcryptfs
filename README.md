@@ -22,7 +22,7 @@ If the folder where the encrypted files are kept is being synced with a cloud se
 
 This way, neither the employees of the cloud service nor anybody who hacks into the cloud service can use your files.
 
-Also, if someone steals your computer and the encrypted filesystem is not mounted, then the thief cannot use your files either.
+Also, if someone steals your computer and the encrypted filesystem is not mounted, then the thief cannot use your files.
 
 Because the encryption is done on a per-file basis instead of using a container file to store the data, you do not have to decide ahead of time how much encrypted storage you will need.  cppcryptfs has very minimal storage overhead, and your encrypted filesystem can grow dynamically limited only by the amount of free space on the physical drive on which the encrypted filesystem is located.
 
