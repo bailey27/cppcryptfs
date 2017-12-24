@@ -174,7 +174,6 @@ Increasing the I/O buffer size may result in improved performance, especially wh
 
 For remote filesystems, good values to try are "Dokany default (5)" for per-filesystem threads and 64KB for I/O buffer size.
 
-The default is the original 4KB size.  When this size is used, the code paths are almost exactly the same as they were before the I/O buffer size setting was added.
 
 **Cache time to live**
 
