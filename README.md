@@ -4,6 +4,12 @@
 cppcryptfs
 ------
 
+cppcryptfs is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs), an encrypted overlay filesystem written in Go.
+
+cppcryptfs is an implementation of the gocryptfs filesystem in C++ for Windows.
+
+It uses the the [Dokany](https://github.com/dokan-dev/dokany) driver and library to provide a virtual fileystem in user mode under Windows.
+
 cppcrypts provides on-the-fly, at-rest and in-the-cloud encryption of files and file names in a virtual filesystem.
 
 You can use cppcryptfs to create an encrpypted filesystem in a folder.  The encrypted filesystem is protected with a password that you choose.  
@@ -22,11 +28,6 @@ Because the encryption is done on a per-file basis instead of using a container 
 
 Another advantage of per-file encryption over container-based encryption is that per-file encryption syncs very quickly and efficiently with cloud-based services.
 
-cppcryptfs is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs), an encrypted overlay filesystem written in Go.
-
-cppcryptfs is an implementation of the gocryptfs filesystem in C++ for Windows.
-
-It uses the the [Dokany](https://github.com/dokan-dev/dokany) driver and library to provide a virtual fileystem in user mode under Windows.
 
 Current Status
 --------------
