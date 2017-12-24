@@ -8,7 +8,7 @@ cppcrypts provides on-the-fly, at-rest and in-the-cloud encryption of files and 
 
 You can use cppcryptfs to create an encrpypted filesystem in a folder.  The encrypted filesystem is protected with a password that you choose.  
 
-When you use cppcryptfs to mount the encrypted filesystem by providing the password, then you have a new drive letter in Windows.  This virtual drive letter gives you an unencrypted view of your files.  The encryption and decryption is done on-the-fly and is transparent to applications that use the files on that virtual drive.
+When you use cppcryptfs to mount the encrypted filesystem by providing the password, then you have a new drive letter in Windows.  This virtual drive letter gives you an unencrypted view of your files.  The encryption and decryption is done on the fly and is transparent to applications that use the files on that virtual drive.
 
 After you tell cppcryptfs to dismount the virtual drive letter, then there is no way to get at your unencrypted data unless the filesystem is re-mounted again using your password.
 
