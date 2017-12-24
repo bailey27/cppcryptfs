@@ -20,7 +20,7 @@ Also, if someone steals your computer and the encrypted filesystem is not mounte
 
 Because the encryption is done on a per-file basis instead of using a container file to store the data, you do not have to decide ahead of time how much encrypted storage you will need.  cppcryptfs has very minimal storage overhead, and your encrypted filesystem can grow dynamically limited only by the amount of free space on the physical drive on which the encrypted filesystem is located.
 
-Another advantage of per-file encryption over container-based encryption is that per-file encryption syncs very quickly and easily with cloud-based services.
+Another advantage of per-file encryption over container-based encryption is that per-file encryption syncs very quickly and efficiently with cloud-based services.
 
 cppcryptfs is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs), an encrypted overlay filesystem written in Go.
 
