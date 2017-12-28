@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include "cppcryptfs.h"
 #include "CryptPropertySheet.h"
 #include "CryptPropertyPage.h"
-#include "cryptdokan.h"
+#include "dokan/cryptdokan.h"
 #include "util/LockZeroBuffer.h"
 #include "util/util.h"
 

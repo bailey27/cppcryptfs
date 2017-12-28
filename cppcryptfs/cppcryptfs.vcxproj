@@ -207,7 +207,6 @@
     <ClInclude Include="cryptconfig.h" />
     <ClInclude Include="cryptcontext.h" />
     <ClInclude Include="cryptdefs.h" />
-    <ClInclude Include="cryptdokan.h" />
     <ClInclude Include="crypt\aes-siv\aes256-cmac.h" />
     <ClInclude Include="crypt\aes-siv\aes256-common.h" />
     <ClInclude Include="crypt\aes-siv\aes256-ctr.h" />
@@ -217,6 +216,7 @@
     <ClInclude Include="crypt\eme.h" />
     <ClInclude Include="crypt\randombytes.h" />
     <ClInclude Include="crypt\siv.h" />
+    <ClInclude Include="dokan\cryptdokan.h" />
     <ClInclude Include="filename\casecache.h" />
     <ClInclude Include="filename\cryptfilename.h" />
     <ClInclude Include="filename\dirivcache.h" />
@@ -259,6 +259,12 @@
     <ClCompile Include="crypt\eme.cpp" />
     <ClCompile Include="crypt\randombytes.cpp" />
     <ClCompile Include="crypt\siv.cpp" />
+    <ClCompile Include="dokan\cryptdokan.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="filename\casecache.cpp" />
     <ClCompile Include="filename\cryptfilename.cpp" />
     <ClCompile Include="filename\dirivcache.cpp" />
@@ -266,12 +272,6 @@
     <ClCompile Include="file\cryptfile.cpp" />
     <ClCompile Include="file\cryptio.cpp" />
     <ClCompile Include="file\iobufferpool.cpp" />
-    <ClCompile Include="cryptdokan.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

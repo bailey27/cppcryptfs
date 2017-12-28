@@ -41,7 +41,7 @@ THE SOFTWARE.
 #include "ui/CryptAboutPropertyPage.h"
 #include "ui/RecentItems.h"
 #include "ui/TrayIcon.h"
-#include "cryptdokan.h"
+#include "dokan/cryptdokan.h"
 #include "util/getopt.h"
 #include "util/LockZeroBuffer.h"
 #include "util/util.h"

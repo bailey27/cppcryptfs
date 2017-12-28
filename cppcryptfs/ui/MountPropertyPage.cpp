@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include "MountPropertyPage.h"
 #include "afxdialogex.h"
 #include "FolderDialog.h"
-#include "cryptdokan.h"
+#include "dokan/cryptdokan.h"
 #include "RecentItems.h"
 #include "util/LockZeroBuffer.h"
 #include "cryptdefs.h"
