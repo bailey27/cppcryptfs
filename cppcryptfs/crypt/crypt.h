@@ -29,8 +29,8 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "cryptconfig.h"
-#include "cryptcontext.h"
+#include "config/cryptconfig.h"
+#include "context/cryptcontext.h"
 
 
 class SivContext;

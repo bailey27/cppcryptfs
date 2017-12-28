@@ -40,7 +40,7 @@ THE SOFTWARE.
 #include <iostream>
 
 #include "crypt/randombytes.h"
-#include "cryptcontext.h"
+#include "context/cryptcontext.h"
 
 #include "ui/MountMangerDialog.h"
 

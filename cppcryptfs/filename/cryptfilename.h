@@ -34,8 +34,8 @@ THE SOFTWARE.
 #include "util/util.h"
 #include "cryptdefs.h"
 #include "crypt/crypt.h"
-#include "cryptconfig.h"
-#include "cryptcontext.h"
+#include "config/cryptconfig.h"
+#include "context/cryptcontext.h"
 #include "crypt/eme.h"
 
 

@@ -67,8 +67,8 @@ THE SOFTWARE.
 #include <assert.h>
 
 #include "filename/cryptfilename.h"
-#include "cryptconfig.h"
-#include "cryptcontext.h"
+#include "config/cryptconfig.h"
+#include "context/cryptcontext.h"
 #include "util/fileutil.h"
 #include "file/cryptfile.h"
 #include "cryptdefs.h"

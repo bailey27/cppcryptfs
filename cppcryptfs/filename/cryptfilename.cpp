@@ -33,8 +33,8 @@ THE SOFTWARE.
 
 #include "cryptdefs.h"
 #include "crypt/crypt.h"
-#include "cryptconfig.h"
-#include "cryptcontext.h"
+#include "config/cryptconfig.h"
+#include "context/cryptcontext.h"
 #include "cryptfilename.h"
 #include "util/fileutil.h"
 #include "util/pad16.h"

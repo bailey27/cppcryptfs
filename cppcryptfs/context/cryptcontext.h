@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "cryptconfig.h"
+#include "config/cryptconfig.h"
 #include <windows.h>
 #include <vector>
 #include "crypt/eme.h"

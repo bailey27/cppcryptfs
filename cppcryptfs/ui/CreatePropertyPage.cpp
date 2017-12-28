@@ -36,7 +36,7 @@ THE SOFTWARE.
 #include "afxdialogex.h"
 #include "FolderDialog.h"
 #include "util/fileutil.h"
-#include "cryptconfig.h"
+#include "config/cryptconfig.h"
 #include "RecentItems.h"
 #include "cryptdefs.h"
 #include "util/LockZeroBuffer.h"

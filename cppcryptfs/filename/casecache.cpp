@@ -51,7 +51,7 @@ THE SOFTWARE.
 #include "casecache.h"
 #include "util/util.h"
 #include "util/fileutil.h"
-#include "cryptcontext.h"
+#include "context/cryptcontext.h"
 #include "cryptfilename.h"
 
 CaseCacheNode::CaseCacheNode() 
