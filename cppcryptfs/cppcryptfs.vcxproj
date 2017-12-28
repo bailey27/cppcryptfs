@@ -206,13 +206,13 @@
     <ClInclude Include="config\cryptconfig.h" />
     <ClInclude Include="context\cryptcontext.h" />
     <ClInclude Include="cppcryptfs.h" />
-    <ClInclude Include="cryptdefs.h" />
     <ClInclude Include="crypt\aes-siv\aes256-cmac.h" />
     <ClInclude Include="crypt\aes-siv\aes256-common.h" />
     <ClInclude Include="crypt\aes-siv\aes256-ctr.h" />
     <ClInclude Include="crypt\aes-siv\aes256-siv.h" />
     <ClInclude Include="crypt\aes.h" />
     <ClInclude Include="crypt\crypt.h" />
+    <ClInclude Include="crypt\cryptdefs.h" />
     <ClInclude Include="crypt\eme.h" />
     <ClInclude Include="crypt\randombytes.h" />
     <ClInclude Include="crypt\siv.h" />

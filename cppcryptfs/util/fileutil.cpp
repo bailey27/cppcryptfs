@@ -30,7 +30,7 @@ THE SOFTWARE.
 
 #include "Shlwapi.h"
 
-#include "cryptdefs.h"
+#include "crypt/cryptdefs.h"
 #include "util/fileutil.h"
 #include "filename/cryptfilename.h"
 

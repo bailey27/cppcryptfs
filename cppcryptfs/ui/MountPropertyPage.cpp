@@ -37,7 +37,7 @@ THE SOFTWARE.
 #include "dokan/cryptdokan.h"
 #include "RecentItems.h"
 #include "util/LockZeroBuffer.h"
-#include "cryptdefs.h"
+#include "crypt/cryptdefs.h"
 #include "CryptPropertySheet.h"
 #include "crypt/crypt.h"
 #include "util/util.h"

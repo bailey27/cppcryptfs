@@ -31,7 +31,7 @@ THE SOFTWARE.
 #include <stdio.h>
 #include  <tlhelp32.h>
 #include "util/util.h"
-#include "cryptdefs.h"
+#include "crypt/cryptdefs.h"
 #include "crypt/crypt.h"
 #include <openssl/rand.h>
 

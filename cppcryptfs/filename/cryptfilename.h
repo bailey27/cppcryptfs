@@ -32,7 +32,7 @@ THE SOFTWARE.
 #include <vector>
 
 #include "util/util.h"
-#include "cryptdefs.h"
+#include "crypt/cryptdefs.h"
 #include "crypt/crypt.h"
 #include "config/cryptconfig.h"
 #include "context/cryptcontext.h"

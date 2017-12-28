@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include "stdafx.h"
 
 #include "config/cryptconfig.h"
-#include "cryptdefs.h"
+#include "crypt/cryptdefs.h"
 #include "util/util.h"
 #include "crypt/crypt.h"
 #include "cryptio.h"

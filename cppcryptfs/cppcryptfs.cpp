@@ -33,7 +33,7 @@ THE SOFTWARE.
 
 #include "stdafx.h"
 #include "cppcryptfs.h"
-#include "cryptdefs.h"
+#include "crypt/cryptdefs.h"
 #include "ui/CryptPropertySheet.h"
 #include "ui/MountPropertyPage.h"
 #include "ui/CreatePropertyPage.h"

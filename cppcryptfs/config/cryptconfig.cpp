@@ -56,7 +56,7 @@ THE SOFTWARE.
 #include <cstdio>
 
 #include "util/util.h"
-#include "cryptdefs.h"
+#include "crypt/cryptdefs.h"
 #include "crypt/crypt.h"
 #include "util/fileutil.h"
 #include "util/LockZeroBuffer.h"

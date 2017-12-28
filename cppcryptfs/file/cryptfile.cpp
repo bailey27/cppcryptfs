@@ -27,7 +27,7 @@ THE SOFTWARE.
 */
 
 #include "stdafx.h"
-#include "cryptdefs.h"
+#include "crypt/cryptdefs.h"
 #include "cryptio.h"
 #include "cryptfile.h"
 #include "filename/cryptfilename.h"

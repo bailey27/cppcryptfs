@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "SecureEdit.h"
-#include "cryptdefs.h"
+#include "crypt/cryptdefs.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

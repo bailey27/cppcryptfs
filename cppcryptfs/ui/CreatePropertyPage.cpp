@@ -38,7 +38,7 @@ THE SOFTWARE.
 #include "util/fileutil.h"
 #include "config/cryptconfig.h"
 #include "RecentItems.h"
-#include "cryptdefs.h"
+#include "crypt/cryptdefs.h"
 #include "util/LockZeroBuffer.h"
 #include "util/util.h"
 

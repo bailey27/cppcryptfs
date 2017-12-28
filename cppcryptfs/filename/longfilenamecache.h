@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "cryptdefs.h"
+#include "crypt/cryptdefs.h"
 
 #include <unordered_map>
 #include <list>

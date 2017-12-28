@@ -71,7 +71,7 @@ THE SOFTWARE.
 #include "context/cryptcontext.h"
 #include "util/fileutil.h"
 #include "file/cryptfile.h"
-#include "cryptdefs.h"
+#include "crypt/cryptdefs.h"
 #include "util/util.h"
 #include "cryptdokan.h"
 #include "file/iobufferpool.h"
