@@ -184,7 +184,7 @@ is re-validated before it is used.
 
 Increasing the cache time to live or setting it to infinite will result in better performance.
 
-However, if you are constantly syncing your cppcryptfs filesystem with another copy of the filesystem that is on a another machine running
+However, if you are constantly syncing your cppcryptfs filesystem with another copy of the filesystem that is on a another computer running
 under another instance of cppcryptfs or gocryptfs, then setting the time to live to too high of a value may result in errors
 if the filesystem is modified on the other machine.
 
