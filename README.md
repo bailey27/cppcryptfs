@@ -18,7 +18,7 @@ When you use cppcryptfs to mount the encrypted filesystem by providing the passw
 
 After you tell cppcryptfs to dismount the virtual drive letter, then there is no way to get at your unencrypted data unless the filesystem is re-mounted again using your password.  
 
-Shutting down your computer automatically dismounts all cppcrytfs drive letters.
+Shutting down your computer automatically dismounts all cppcryptfs drive letters.
 
 If the folder where the encrypted files are kept is being synced with a cloud service, then only the encrypted files with encrypted file names will be uploaded to the cloud service.
 
