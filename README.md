@@ -186,7 +186,7 @@ Increasing the cache time to live or setting it to infinite will result in bette
 
 However, if you are constantly syncing your cppcryptfs filesystem with another copy of the filesystem that is on a another computer running
 under another instance of cppcryptfs or gocryptfs, then setting the time to live to too high of a value may result in errors
-if the filesystem is modified on the other machine.
+if the filesystem is modified on the other computer.
 
 If you are not syncing the filesystem between two concurrently running instances of cppcryptfs or between an instance of cppcryptfs and an instance of gocryptfs, then there is no
 reason to not set the cache time to live to a high value or to infinite.
