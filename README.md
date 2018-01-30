@@ -39,7 +39,7 @@ any data.  At least one other person is using it.  There haven't been any seriou
 
 Reverse mode has undergone only limited testing by the developer.
 
-Binary releases signed by the developer are on the [releases page](https://github.com/bailey27/cppcryptfs/releases).
+Binary releases signed by the developer (Open Source Developer, Bailey Brown) are on the [releases page](https://github.com/bailey27/cppcryptfs/releases).
 
 
 It is always prudent to keep backups of your data in case something goes wrong. 
