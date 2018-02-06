@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2017 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2018 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -69,7 +69,7 @@ END_MESSAGE_MAP()
 
 
 static const WCHAR * components[] = {
-	L"cppcryptfs - Copyright (C) 2016-2017 Bailey Brown. All Rights Reserved.",
+	L"cppcryptfs - Copyright (C) 2016-2018 Bailey Brown. All Rights Reserved.",
 	L"OpenSSL - Copyright 1998-2017 The OpenSSL Project Authors. All Rights Reserved.",
 	L"RapidJSON - Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip. All rights reserved.",
 	L"Dokany (mirror) - Copyright (C) 2015 - 2017 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
@@ -83,7 +83,7 @@ static const WCHAR * components[] = {
 static const WCHAR *licenses[] = {
 
 	// cppcryptfs
-	L"cppcryptfs - Copyright (C) 2016-2017 Bailey Brown. All rights reserved.\r\n\r\n"
+	L"cppcryptfs - Copyright (C) 2016-2018 Bailey Brown. All rights reserved.\r\n\r\n"
 	L"project url: github.com/bailey27/cppcryptfs\r\n\r\n"
 	L"cppcryptfs is a user-mode cryptographic virtual overlay filesystem\r\n\r\n"
 	L"cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)\r\n\r\n"
@@ -582,7 +582,7 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 
 	std::wstring prod = L"cppryptfs";
 	std::wstring ver = L"1.0";
-	std::wstring copyright = L"Copyright (C) 2016-2017 Bailey Brown.  All Rights Reserved.";
+	std::wstring copyright = L"Copyright (C) 2016-2018 Bailey Brown.  All Rights Reserved.";
 
 	GetProductVersionInfo(prod, ver, copyright);
 
