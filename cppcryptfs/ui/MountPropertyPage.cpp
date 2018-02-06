@@ -41,6 +41,7 @@ THE SOFTWARE.
 #include "CryptPropertySheet.h"
 #include "crypt/crypt.h"
 #include "util/util.h"
+#include "util/fileutil.h"
 #include "util/getopt.h"
 #include "cryptdefaults.h"
 #include "util/savedpasswords.h"
@@ -125,6 +126,8 @@ void CMountPropertyPage::HandleTooltipsActivation(MSG * pMsg, CWnd * This, CWnd 
 	pMsg->lParam = lParam;
 }
 
+
+
 CMountPropertyPage::CMountPropertyPage()
 	: CCryptPropertyPage(IDD_MOUNT)
 {
@@ -147,10 +150,9 @@ void CMountPropertyPage::DefaultAction()
 		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 }
 
-CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR argPassword, bool argReadOnly, LPCWSTR argConfigPath, bool argReverse)
+CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWSTR argPassword, bool argReadOnly, LPCWSTR argConfigPath, bool argReverse)
 {
-	if (argDriveLetter != 0 && (argDriveLetter < 'A' || argDriveLetter > 'Z'))
-		return CString(L"invalid drive letter");
+	
 
 	POSITION pos = NULL;
 
@@ -180,15 +182,15 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	int nItem = -1;
 
-	if (argDriveLetter) {
+	if (argMountPoint != NULL && wcslen(argMountPoint) > 0) {
 		LVFINDINFO fi;
 		memset(&fi, 0, sizeof(fi));
 		fi.flags = LVFI_STRING;
-		CString str = CString(argDriveLetter) + L":";
+		CString str = wcslen(argMountPoint) == 1 ? CString(*argMountPoint) + L":" : argMountPoint;
 		fi.psz = str;
 		nItem = pList->FindItem(&fi);
 		if (nItem < 0)
-			return CString(L"Drive ") + str + CString(L" is already in use.");
+			return CString(L"Mount point ") + str + CString(L" is already in use.");
 		int nOldItem = pList->GetNextSelectedItem(pos);
 		if (nOldItem >= 0)
 			pList->SetItemState(nOldItem, ~LVIS_SELECTED, LVIS_SELECTED);
@@ -201,12 +203,14 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 	if (nItem < 0)
 		return CString(L"unable to find item");
 
-	CString cdl = argDriveLetter ? CString(argDriveLetter) + L":" : pList->GetItemText(nItem, DL_INDEX);
+	CString cmp = argMountPoint && wcslen(argMountPoint) > 0 ? 
+		(wcslen(argMountPoint) == 1 ? CString(*argMountPoint) + L":" : argMountPoint) 
+		: pList->GetItemText(nItem, DL_INDEX);
 
-	if (cdl.GetLength() < 1)
+	if (cmp.GetLength() < 1)
 		return CString(L"unable to get drive letter");;
 
-	BOOL dlInUse = !IsDriveLetterAvailable(*(LPCWSTR)cdl);
+	BOOL dlInUse = is_mountpoint_a_drive(cmp) && !IsDriveLetterAvailable(*(LPCWSTR)cmp);
 
 	CString mounted_path = pList->GetItemText(nItem, PATH_INDEX);
 
@@ -214,8 +218,8 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 		dlInUse = true;
 
 	if (dlInUse) {
-		CString mes = L"Drive ";
-		mes += cdl;
+		CString mes = L"Mount point ";
+		mes += cmp;
 		mes += L" is already being used.";
 		return mes;
 	}
@@ -249,7 +253,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 	bool reverse = false;
 
 	if (config_path.GetLength() > 0) {
-		if (argDriveLetter != 0) {
+		if (argMountPoint != NULL) {
 			reverse = argReverse;
 		} else {
 			reverse = IsDlgButtonChecked(IDC_REVERSE) != 0;
@@ -290,11 +294,12 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	cpath = &basedir[0];
 
-	theApp.m_mountedDrives |= 1 << (*(const WCHAR*)cdl - 'A');
+	if (is_mountpoint_a_drive(cmp))
+		theApp.m_mountedLetters |= 1 << (*(const WCHAR*)cmp - 'A');
 
 	// if non-zero dl is specified as arg, then use arg for readonly
 
-	bool readonly = argDriveLetter ? argReadOnly : IsDlgButtonChecked(IDC_READONLY) != 0;
+	bool readonly = argMountPoint != NULL ? argReadOnly : IsDlgButtonChecked(IDC_READONLY) != 0;
 
 	int nThreads = theApp.GetProfileInt(L"Settings", L"Threads", PER_FILESYSTEM_THREADS_DEFAULT);
 
@@ -308,16 +313,19 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 
 	bool bMountManagerWarn = theApp.GetProfileInt(L"Settings", L"MountManagerWarn", MOUNTMANAGERWARN_DEFAULT) != 0;
 
-	bool bSavePassword = argDriveLetter == 0 && (IsDlgButtonChecked(IDC_SAVE_PASSWORD) != 0);
+	bool bSavePassword = argMountPoint == NULL && (IsDlgButtonChecked(IDC_SAVE_PASSWORD) != 0);
 
 	theApp.DoWaitCursor(1);
-	int result = mount_crypt_fs(*(const WCHAR *)cdl, cpath, config_path, password.m_buf, error_mes, readonly, reverse, nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, bMountManagerWarn);
+	int result = mount_crypt_fs(cmp, cpath, config_path, password.m_buf, error_mes, readonly, reverse, nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, bMountManagerWarn);
 	theApp.DoWaitCursor(-1);
 
 	if (result != 0) {
-		theApp.m_mountedDrives &= ~(1 << (*(const WCHAR *)cdl - 'A'));
+		if (is_mountpoint_a_drive(cmp))
+			theApp.m_mountedLetters &= ~(1 << (*(const WCHAR *)cmp - 'A'));
 		return CString(&error_mes[0]);
 	}
+
+	theApp.m_mountedMountPoints.emplace((LPCWSTR)cmp, cpath);
 
 	// otherwise if fs in root dir of the drive, we get "d:" displayed for the path instead of "d:\"
 	if (cpath.GetLength() == 2 && ((LPCWSTR)cpath)[1] == ':')
@@ -326,7 +334,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 	pList->SetItemText(nItem, PATH_INDEX, cpath);
 
 	// update saved settings in registry only when the GUI is used (not command line)
-	if (argDriveLetter == 0) {
+	if (argMountPoint == NULL) {
 
 		if (IsDlgButtonChecked(IDC_SAVE_PASSWORD)) {
 			if (!SavedPasswords::SavePassword(cpath, password.m_buf)) {
@@ -338,10 +346,10 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 		ritems.Add(cpath);
 
 		WCHAR dl[2];
-		dl[0] = *(const WCHAR *)cdl;
+		dl[0] = *(const WCHAR *)cmp;
 		dl[1] = 0;
 
-		theApp.WriteProfileString(L"MountPoints", L"LastMountPoint", dl);
+		theApp.WriteProfileString(L"MountPoints", L"LastMountPoint", is_mountpoint_a_drive(cmp) ? dl : cmp);
 
 		theApp.WriteProfileStringW(L"MountOptions", L"ReadOnly", readonly ? L"1" : L"0");
 
@@ -349,7 +357,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, WCHAR argDriveLetter, LPCWSTR
 		std::wstring hash;
 		if (GetPathHash(cpath, hash)) {
 			path_hash = hash.c_str();
-			theApp.WriteProfileString(L"MountPoints", path_hash, dl);
+			theApp.WriteProfileString(L"MountPoints", path_hash, is_mountpoint_a_drive(cmp) ? dl : cmp);
 			theApp.WriteProfileString(L"ConfigPaths", path_hash, config_path);
 			int flags = 0;
 			if (readonly)
@@ -396,6 +404,7 @@ BEGIN_MESSAGE_MAP(CMountPropertyPage, CPropertyPage)
 	ON_CBN_SELCHANGE(IDC_PATH, &CMountPropertyPage::OnCbnSelchangePath)
 	ON_BN_CLICKED(IDC_SELECT_CONFIG_PATH, &CMountPropertyPage::OnClickedSelectConfigPath)
 	ON_CBN_EDITCHANGE(IDC_PATH, &CMountPropertyPage::OnEditchangePath)
+	ON_WM_CONTEXTMENU()
 END_MESSAGE_MAP()
 
 
@@ -476,15 +485,16 @@ BOOL CMountPropertyPage::OnInitDialog()
 	Style |= LVS_EX_FULLROWSELECT;
 	::SendMessage(pList->m_hWnd, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, Style);
 
-	pList->InsertColumn(DL_INDEX, L"Drive", LVCFMT_LEFT, 48);
+	pList->InsertColumn(DL_INDEX, L"Mount Point", LVCFMT_LEFT, 48);
 
 	pList->InsertColumn(PATH_INDEX, L"Path", LVCFMT_LEFT, 393);
 
-	CString lastLetter = theApp.GetProfileString(L"MountPoints", L"LastMountPoint", L"");
+	CString lastMountPoint = theApp.GetProfileString(L"MountPoints", L"LastMountPoint", L"");
+
+	if (lastMountPoint.GetLength() > 0 && lastMountPoint.GetLength() < 2)
+		lastMountPoint += L":";
 
 	DWORD drives = GetUsedDrives();
-
-	int bit;
 
 	i = 0;
 
@@ -492,25 +502,18 @@ BOOL CMountPropertyPage::OnInitDialog()
 
 	int lastIndex = -1;
 
-	WCHAR dl[3];
-
-	dl[1] = ':';
-	dl[2] = 0;
+	CStringArray mountPoints;
+	GetMountPoints(mountPoints);
 
 
-	if (lastLetter.GetLength() > 0) {
-		for (bit = 0; bit < 26; bit++) {
-			if (drives & (1 << bit))
-				continue;
+	if (lastMountPoint.GetLength() > 0) {
+		for (i = 0; i < mountPoints.GetCount(); i++) {
 
-			dl[0] = 'A' + bit;
-
-			if (*(const WCHAR *)lastLetter == dl[0]) {
+			if (!_wcsicmp(lastMountPoint, mountPoints.GetAt(i))) {
 				lastIndex = i;
 				break;
 			}
 
-			i++;
 		}
 	}
 
@@ -536,13 +539,18 @@ BOOL CMountPropertyPage::OnInitDialog()
 
 	pList->SetImageList(&m_imageList, LVSIL_SMALL);
 
+	int mountPointColumnWidth = theApp.GetProfileInt(L"MountPoint", L"MountPointColumnWidth", -1);
+
+	if (IsValidMountPointColumnWidth(mountPointColumnWidth)) {
+		pList->SetColumnWidth(0, mountPointColumnWidth);
+	} else {
+		pList->SetColumnWidth(0, LVSCW_AUTOSIZE_USEHEADER);
+	}
+
 	i = 0;
 
-	for (bit = 0; bit < 26; bit++) {
-		if (drives & (1 << bit))
-			continue;	
-
-		dl[0] = 'A' + bit;
+	for (i = 0; i < mountPoints.GetCount(); i++) {
+	
 
 		bool isSelected;
 
@@ -552,7 +560,7 @@ BOOL CMountPropertyPage::OnInitDialog()
 			isSelected = bFirst;
 		}
 
-		pList->InsertItem(LVIF_TEXT | (m_imageIndex >= 0 ? LVIF_IMAGE : 0) | LVIF_STATE, i++, dl,
+		pList->InsertItem(LVIF_TEXT | (m_imageIndex >= 0 ? LVIF_IMAGE : 0) | LVIF_STATE, i, mountPoints.GetAt(i),
 			isSelected ? LVIS_SELECTED : 0, LVIS_SELECTED, m_imageIndex >= 0 ? m_imageIndex : 0, 0);
 
 		bFirst = false;
@@ -591,21 +599,16 @@ void CMountPropertyPage::DeviceChange()
 	if (!pList)
 		return;
 
-	CString paths[26];
+	
 	int nItems = pList->GetItemCount();
 	int i;
 	bool selected_was_visible = false;
-	WCHAR selected = 0;
-	CString cdl, cpath;
+	CString selected;
+	CString cmp, cpath;
 	for (i = 0; i < nItems; i++) {
-		cdl = pList->GetItemText(i, 0);
-		if (cdl.GetLength() > 0 && (theApp.m_mountedDrives & (1 << (*cdl - 'A')))) {
-			cpath = pList->GetItemText(i, 1);
-			if (cpath.GetLength() > 0)
-				paths[*cdl - 'A'] = cpath;
-		}
+		cmp = pList->GetItemText(i, 0);
 		if (pList->GetItemState(i, LVIS_SELECTED) == LVIS_SELECTED) {
-			selected = *cdl;
+			selected = cmp;
 			if (pList->IsItemVisible(i))
 				selected_was_visible = true;
 		}
@@ -613,33 +616,30 @@ void CMountPropertyPage::DeviceChange()
 
 	pList->DeleteAllItems();
 
-	WCHAR dl;
+
 	i = 0;
 	bool selected_something = false;
 	int new_selected_index = -1;
 
-	WCHAR dls[3];
+	CStringArray mountPoints;
+	GetMountPoints(mountPoints);
 
-	dls[1] = ':';
-	dls[2] = '\0';
-
-	for (dl = 'A'; dl <= 'Z'; dl++) {
+	for (i = 0; i < mountPoints.GetCount(); i++) {
 		
-		if (IsDriveLetterAvailable(dl) || (theApp.m_mountedDrives & (1 << (dl - 'A')))) {
-			
-			dls[0] = dl;
+		CString dls = mountPoints.GetAt(i);
 
-			if (dl == selected) {
-				selected_something = true;
-				new_selected_index = i;
-			}
-
-			pList->InsertItem(LVIF_TEXT | (m_imageIndex >= 0 ? LVIF_IMAGE : 0) | LVIF_STATE, i, dls,
-				dl == selected ? LVIS_SELECTED : 0, LVIS_SELECTED, m_imageIndex >= 0 ? m_imageIndex : 0, 0);
-			if (paths[dl - 'A'].GetLength() > 0)
-				pList->SetItemText(i, 1, paths[dl - 'A']);
-			i++;
+		if (!_wcsicmp(dls, selected)) {
+			selected_something = true;
+			new_selected_index = i;
 		}
+
+		pList->InsertItem(LVIF_TEXT | (m_imageIndex >= 0 ? LVIF_IMAGE : 0) | LVIF_STATE, i, dls,
+			!_wcsicmp(dls, selected) ? LVIS_SELECTED : 0, LVIS_SELECTED, m_imageIndex >= 0 ? m_imageIndex : 0, 0);
+		auto it = theApp.m_mountedMountPoints.find((LPCWSTR)dls);
+		if (it != theApp.m_mountedMountPoints.end())
+			pList->SetItemText(i, 1, it->second.c_str());
+		
+		
 	}
 	if (pList->GetItemCount() > 0) {
 		if (!selected_something) {
@@ -649,6 +649,7 @@ void CMountPropertyPage::DeviceChange()
 			pList->EnsureVisible(new_selected_index, FALSE);
 		}
 	}
+
 }
 
 
@@ -711,10 +712,9 @@ void CMountPropertyPage::OnClickedDismount()
 		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 }
 
-CString CMountPropertyPage::Dismount(WCHAR argDriveLetter)
+CString CMountPropertyPage::Dismount(LPCWSTR argMountPoint)
 {
-	if (argDriveLetter != 0 && (argDriveLetter < 'A' || argDriveLetter > 'Z'))
-		return CString(L"invalid drive letter");
+	
 
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
@@ -728,11 +728,11 @@ CString CMountPropertyPage::Dismount(WCHAR argDriveLetter)
 
 	int nItem;
 	
-	if (argDriveLetter) {
+	if (argMountPoint && wcslen(argMountPoint) > 0) {
 		LVFINDINFO fi;
 		memset(&fi, 0, sizeof(fi));
 		fi.flags = LVFI_STRING;
-		CString str = CString(argDriveLetter) + L":";
+		CString str = wcslen(argMountPoint) == 1 ? CString(*argMountPoint) + L":" : argMountPoint;
 		fi.psz = str;
 		nItem = pList->FindItem(&fi);
 		if (nItem < 0)
@@ -744,34 +744,39 @@ CString CMountPropertyPage::Dismount(WCHAR argDriveLetter)
 	if (nItem < 0)
 		return CString(L"unable to find item");
 
-	CString cdl = pList->GetItemText(nItem, DL_INDEX);
+	CString cmp = pList->GetItemText(nItem, DL_INDEX);
 
-	if (cdl.GetLength() < 1)
+	if (cmp.GetLength() < 1)
 		return CString(L"unable to get drive letter");
 
 	CString cpath = pList->GetItemText(nItem, PATH_INDEX);
 
 	if (cpath.GetLength() < 1)
-		return CString(L"Drive ") + cdl + CString(L" does not have a mounted cppcryptfs filesystem.");
+		return CString(L"Drive ") + cmp + CString(L" does not have a mounted cppcryptfs filesystem.");
 
 	CString mes;
 
-	if (!write_volume_name_if_changed(*(const WCHAR *)cdl))
-		mes += L"unable to update volume label";
+	if (is_mountpoint_a_drive(cmp)) {
+		if (!write_volume_name_if_changed(*(const WCHAR *)cmp))
+			mes += L"unable to update volume label";
+	}
 
 	theApp.DoWaitCursor(1);
-	BOOL bresult = unmount_crypt_fs(*(const WCHAR *)cdl, true);
+	BOOL bresult = unmount_crypt_fs(cmp, true);
 	theApp.DoWaitCursor(-1);
 
 	if (!bresult) {
 		if (mes.GetLength() > 0)
 			mes += L". ";
 		mes += L"cannot umount ";
-		mes.Append(cdl);
+		mes.Append(cmp);
 		return mes;
 	}
 
-	theApp.m_mountedDrives &= ~(1 << (*(const WCHAR *)cdl - 'A'));
+	if (is_mountpoint_a_drive(cmp))
+		theApp.m_mountedLetters &= ~(1 << (*(const WCHAR *)cmp - 'A'));
+
+	theApp.m_mountedMountPoints.erase((LPCWSTR)cmp);
 
 	pList->SetItemText(nItem, PATH_INDEX, L"");
 
@@ -804,22 +809,26 @@ CString CMountPropertyPage::DismountAll()
 
 	bool volnameFailure = false;
 
-	DWORD mounted_drives = theApp.m_mountedDrives;
+	DWORD mounted_letters = theApp.m_mountedLetters;
 
 	for (i = 0; i < count; i++) {
-		CString cdl;
+		CString cmp;
 		CString cpath;
 		cpath = pList->GetItemText(i, PATH_INDEX);
 		if (cpath.GetLength() > 1) {
-			cdl = pList->GetItemText(i, DL_INDEX);
-			if (cdl.GetLength() < 1) {
+			cmp = pList->GetItemText(i, DL_INDEX);
+			if (cmp.GetLength() < 1) {
 				hadFailure = true;
 				continue;
 			}
-			if (!write_volume_name_if_changed(*(const WCHAR *)cdl))
-				volnameFailure = true;
-			if (unmount_crypt_fs(*(const WCHAR *)cdl, false)) {
-				mounted_drives &= ~(1 << (*(const WCHAR *)cdl - 'A'));
+			if (is_mountpoint_a_drive(cmp)) {
+				if (!write_volume_name_if_changed(*(const WCHAR *)cmp))
+					volnameFailure = true;
+			}
+			if (unmount_crypt_fs(cmp, false)) {
+				if (is_mountpoint_a_drive(cmp))
+					mounted_letters &= ~(1 << (*(const WCHAR *)cmp - 'A'));
+				theApp.m_mountedMountPoints.erase((LPCWSTR)cmp);
 				hadSuccess = true;
 				pList->SetItemText(i, PATH_INDEX, L"");
 			} else {
@@ -832,7 +841,7 @@ CString CMountPropertyPage::DismountAll()
 	wait_for_all_unmounted();
 	theApp.DoWaitCursor(-1);
 
-	theApp.m_mountedDrives = mounted_drives;
+	theApp.m_mountedLetters = mounted_letters;
 
 	CString mes;
 
@@ -1043,12 +1052,9 @@ void CMountPropertyPage::OnCbnSelchangePath()
 		}
 	}
 
-	CString cdl = theApp.GetProfileString(L"MountPoints", path_hash, L"");
+	CString cmp = theApp.GetProfileString(L"MountPoints", path_hash, L"");
 
-	if (cdl.GetLength() != 1)
-		return;
-
-	if (!IsDriveLetterAvailable(*((LPCWSTR)cdl)))
+	if (cmp.GetLength() == 1 && !IsDriveLetterAvailable(*((LPCWSTR)cmp)))
 		return;
 
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
@@ -1062,9 +1068,10 @@ void CMountPropertyPage::OnCbnSelchangePath()
 
 	fi.flags = LVFI_STRING;
 
-	cdl += L":";
+	if (cmp.GetLength() == 1)
+		cmp += L":";
 
-	fi.psz = (LPCWSTR)cdl;
+	fi.psz = (LPCWSTR)cmp;
 
 	int index = pList->FindItem(&fi);
 
@@ -1086,14 +1093,14 @@ static void usage()
 	fprintf(stderr, "Usage: cppcryptfs [OPTIONS]\n");
 	fprintf(stderr, "\nMounting:\n");
 	fprintf(stderr, "  -m, --mount=PATH\tmount filesystem located at PATH\n");
-	fprintf(stderr, "  -d, --drive=D\t\tmount to drive letter D\n");
+	fprintf(stderr, "  -d, --drive=D\t\tmount to drive letter D or empty dir DIR\n");
 	fprintf(stderr, "  -p, --password=PASS\tuse password PASS\n");
 	fprintf(stderr, "  -P, --saved-password\tuse saved password\n");
 	fprintf(stderr, "  -r, --readonly\tmount read-only\n");
 	fprintf(stderr, "  -c, --config=PATH\tpath to config file\n");
 	fprintf(stderr, "  -s, --reverse\t\tmount reverse filesystem\n");
 	fprintf(stderr, "\nUnmounting:\n");
-	fprintf(stderr, "  -u, --unmount=D\tumount drive letter D\n");
+	fprintf(stderr, "  -u, --unmount=D\tumount drive letter D or dir DIR\n");
 	fprintf(stderr, "  -u, --umount=all\tunmount all drives\n");
 	fprintf(stderr, "\nMisc:\n");
 	fprintf(stderr, "  -t, --tray\t\thide in system tray\n");
@@ -1137,7 +1144,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	OpenConsole(bOnStartup ? 0 : pid);
 
 	CString path;
-	WCHAR driveletter = 0;
+	CString mountPoint;
 	LockZeroBuffer<WCHAR> password((DWORD)(wcslen(szCmd) + 1));
 	BOOL mount = FALSE;
 	BOOL dismount = FALSE;
@@ -1205,7 +1212,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 				config_path = optarg;
 				break;
 			case 'd':
-				driveletter = *optarg;
+				mountPoint = optarg;
 				break;
 			case 'P':
 				use_saved_password = true;
@@ -1218,7 +1225,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 				if (wcscmp(optarg, L"all") == 0)
 					dismount_all = TRUE;
 				else
-					driveletter = *optarg;
+					mountPoint = optarg;
 				break;
 			case 'v':
 				do_version = TRUE;
@@ -1242,8 +1249,13 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			}
 		}
 
-		if (driveletter >= 'a' && driveletter <= 'z')
-			driveletter -= 'a' - 'A';
+		if (mountPoint.GetLength() > 0) {
+			WCHAR driveletter = *(LPCWSTR)mountPoint;
+			if (driveletter >= 'a' && driveletter <= 'z') {
+				driveletter -= 'a' - 'A';
+				mountPoint.SetAt(0, driveletter);
+			}
+		}
 
 	} catch (int err) {
 		if (err) {
@@ -1278,7 +1290,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 					dl = towupper(dl);
 				if (dl < 'A' || dl > 'Z') {
 					errMes = L"invalid drive letter"; 
-				} else if (theApp.m_mountedDrives & (1 << (dl - 'A'))) {
+				} else { // list_files will figure out of this path is really mounted or not
 					std::wstring err_mes;
 					list_arg.SetAt(0, dl);
 					std::list<FindDataPair> findDatas;
@@ -1286,13 +1298,11 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 						errMes = err_mes.c_str();
 					} else {
 						findDatas.sort(compair_find_datas);
-						for (auto it = findDatas.begin(); it != findDatas.end(); it++) {
-							fwprintf(stdout, L"%s => %s\n", it->fdata.cFileName, it->fdata_orig.cFileName);
+						for (auto &it : findDatas) {
+							fwprintf(stdout, L"%s => %s\n", it.fdata.cFileName, it.fdata_orig.cFileName);
 						}
 					}
-				} else {
-					errMes = L"drive not mounted";
-				}
+				}  
 				if (errMes.GetLength() > 0) {
 					LPCWSTR str = errMes;
 					if (str[wcslen(str) - 1] != '\n')
@@ -1302,16 +1312,16 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			} else {
 				int nItems = pList->GetItemCount();
 				int i;
-				CString cdl, cpath;
+				CString cmp, cpath;
 				for (i = 0; i < nItems; i++) {
-					cdl = pList->GetItemText(i, 0);
-					if (cdl.GetLength() > 0) {
-						fwprintf(stdout, L"%s", (LPCWSTR)cdl);
-						if (theApp.m_mountedDrives & (1 << (*cdl - 'A'))) {
-							cpath = pList->GetItemText(i, 1);
-							if (cpath.GetLength() > 0)
-								fwprintf(stdout, L" %s", (LPCWSTR)cpath);
-						}
+					cmp = pList->GetItemText(i, 0);
+					if (cmp.GetLength() > 0) {
+						fwprintf(stdout, L"%s", (LPCWSTR)cmp);
+						
+						cpath = pList->GetItemText(i, 1);
+						if (cpath.GetLength() > 0)
+							fwprintf(stdout, L" %s", (LPCWSTR)cpath);
+						
 						fwprintf(stdout, L"\n");
 					}
 				}
@@ -1325,19 +1335,19 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 				}
 			}
 			if (errMes.GetLength() < 1) {
-				if (driveletter)
-					errMes = Mount(path, driveletter, password.m_buf, readonly, config_path.GetLength() > 0 ? config_path : NULL, reverse);
+				if (mountPoint.GetLength() > 0)
+					errMes = Mount(path, mountPoint, password.m_buf, readonly, config_path.GetLength() > 0 ? config_path : NULL, reverse);
 				else
-					errMes = L"drive letter must be specified";
+					errMes = L"drive letter/mount point must be specified";
 			}
 		} else if (dismount) {
 			if (dismount_all) {
 				errMes = DismountAll();
 			} else {
-				if (driveletter)
-					errMes = Dismount(driveletter);
+				if (mountPoint.GetLength() > 0)
+					errMes = Dismount(mountPoint);
 				else
-					errMes = L"drive letter must be specified";			
+					errMes = L"drive letter/mount point must be specified";			
 			}
 		} 
 		if (errMes.GetLength() > 0) {
@@ -1351,7 +1361,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	CCryptPropertySheet *pParent = (CCryptPropertySheet*)GetParent();
 
 	if (pParent) {
-		if (theApp.m_mountedDrives == 0 && exit_if_no_mounted) {
+		if (theApp.m_mountedMountPoints.empty() && exit_if_no_mounted) {
 			pParent->OnIdrExitcppcryptfs();
 		} else if (hide_to_system_tray) {
 			if (bOnStartup)
@@ -1421,4 +1431,185 @@ BOOL CMountPropertyPage::PreTranslateMessage(MSG* pMsg)
 	}
 
 	return CCryptPropertyPage::PreTranslateMessage(pMsg);
+}
+
+
+void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
+{
+	// TODO: Add your message handler code here
+
+	CListCtrl* pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
+
+	if ((CWnd*)pList == pWnd) {
+		CMenu menu;
+		
+		if (!menu.CreatePopupMenu())
+			return;
+
+		menu.AppendMenu(MF_ENABLED, 1, L"&Add Mount Point");
+
+		int item = -1;
+
+		for (int i = 0; i < pList->GetItemCount(); i++) {
+			if (pList->GetItemState(i, LVIS_SELECTED) & LVIS_SELECTED) {
+				item = i;
+				break;
+			}
+		}
+
+		if (item >= 0) {
+			CString cmp = pList->GetItemText(item, 0);
+			if (is_mountpoint_a_dir(cmp)) {
+				bool mounted = theApp.m_mountedMountPoints.find((LPCWSTR)cmp) != theApp.m_mountedMountPoints.end();
+				menu.AppendMenu(mounted ? MF_DISABLED : MF_ENABLED, 2, L"&Delete Mount Point");
+			}
+		}
+
+		int retVal = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NONOTIFY | TPM_RETURNCMD, point.x, point.y, this);
+
+		
+
+		switch (retVal) {
+		case 1:
+			{	
+				CFolderDialog fdlg; 
+				fdlg.DoModal();
+				CString path = fdlg.GetPathName();
+				if (path.GetLength())
+					AddMountPoint(path);
+			}
+			break;
+		case 2:
+		{
+			DeleteMountPoint(item);
+			return;
+
+		}
+		default:
+			break;
+		}
+
+		// Handle your returns here.
+	}
+}
+
+void CMountPropertyPage::AddMountPoint(const CString & path)
+{
+	if (path.GetLength() < 1)
+		return;
+
+	if (!is_suitable_mountpoint(path)) {
+		MessageBox(L"The path is not suitable for use as a mount point.  The folder must be empty, and it must reside on an NTFS filesystem",
+			L"cppcyrptfs", MB_OK | MB_ICONEXCLAMATION);
+		return;
+	}
+
+	CString mountPointsStr = theApp.GetProfileString(L"MountPoint", L"MountPoints", NULL);
+
+	int i = 0;
+	for (CString mp = mountPointsStr.Tokenize(L"|", i); i >= 0; mp = mountPointsStr.Tokenize(L"|", i)) {
+		if (!_wcsicmp(path, mp)) {
+			MessageBox(L"Mount point has already been added.", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+			return;
+		}
+	}
+
+	if (mountPointsStr.GetLength() > 0)
+		mountPointsStr += L"|";
+
+	mountPointsStr += path;
+
+	theApp.WriteProfileString(L"MountPoint", L"MountPoints", mountPointsStr);
+
+	CListCtrl* pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
+
+	i = pList->GetItemCount();
+
+	pList->InsertItem(LVIF_TEXT | (m_imageIndex >= 0 ? LVIF_IMAGE : 0) | LVIF_STATE, i, path,
+		true ? LVIS_SELECTED : 0, LVIS_SELECTED, m_imageIndex >= 0 ? m_imageIndex : 0, 0);
+
+	pList->EnsureVisible(i, FALSE);
+
+}
+
+// builds array of all mountpoints inclding available drive letters
+void CMountPropertyPage::GetMountPoints(CStringArray & mountPoints)
+{
+	CString mountpoints = theApp.GetProfileString(L"MountPoint", L"MountPoints", NULL);
+	
+	int i;
+
+	for (i = 'A'; i <= 'Z'; i++) {
+		WCHAR buf[3];
+		buf[0] = (WCHAR)i;
+		buf[1] = ':';
+		buf[2] = '\0';
+		if (theApp.m_mountedMountPoints.find(buf) != theApp.m_mountedMountPoints.end() || IsDriveLetterAvailable((WCHAR)i)) {
+			WCHAR buf[3];
+			buf[0] = (WCHAR)i;
+			buf[1] = ':';
+			buf[2] = '\0';
+			mountPoints.Add(buf);
+		}
+	}
+
+	i = 0;
+	for (CString path = mountpoints.Tokenize(L"|", i); i >= 0; path = mountpoints.Tokenize(L"|", i)) {
+		mountPoints.Add(path);
+	}
+
+}
+
+void CMountPropertyPage::DeleteMountPoint(int item)
+{
+	CListCtrl* pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
+
+	if (!pList)
+		return;
+
+	CString delmp = pList->GetItemText(item, 0);
+
+	CString mountPointsStr = theApp.GetProfileString(L"MountPoint", L"MountPoints", NULL);
+
+	CStringArray mountPoints;
+
+	int i = 0;
+	for (CString path = mountPointsStr.Tokenize(L"|", i); i >= 0; path = mountPointsStr.Tokenize(L"|", i)) {
+		mountPoints.Add(path);
+	}
+
+	mountPointsStr = L"";
+
+	for (i = 0; i < mountPoints.GetCount(); i++) {
+		if (!_wcsicmp(mountPoints.GetAt(i), delmp))
+			continue;
+		if (i > 0)
+			mountPointsStr += "|";
+		mountPointsStr += mountPoints.GetAt(i);
+		
+	}
+
+	theApp.WriteProfileString(L"MountPoint", L"MountPoints", mountPointsStr);
+
+	pList->DeleteItem(item);
+
+
+}
+
+void CMountPropertyPage::OnExit()
+{
+	CListCtrl* pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
+
+	if (pList) {
+		int mountPointColumnWidth = pList->GetColumnWidth(0);
+		if (IsValidMountPointColumnWidth(mountPointColumnWidth)) {
+			theApp.WriteProfileInt(L"MountPoint", L"MountPointColumnWidth", mountPointColumnWidth);
+		}
+	}
+	CCryptPropertyPage::OnExit();
+}
+
+BOOL CMountPropertyPage::IsValidMountPointColumnWidth(int cw)
+{
+	return cw >= 50 && cw <= 350;
 }

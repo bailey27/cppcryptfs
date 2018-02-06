@@ -87,8 +87,6 @@ CryptConfig::CryptConfig()
 
 	m_serial = DEFAULT_VOLUME_SERIAL_NUMBER;
 
-	m_driveletter = '\0';
-
 	m_pGcmContentKey = NULL;
 
 }
@@ -285,18 +283,8 @@ CryptConfig::read(std::wstring& mes, const WCHAR *config_file_path, bool reverse
 		}
 
 		if (d.HasMember("FeatureFlags") && !d["FeatureFlags"].IsNull() && d["FeatureFlags"].IsArray()) {
+
 			rapidjson::Value& flags = d["FeatureFlags"];
-
-			/*
-
-			bool m_PlaintextNames;
-			bool m_DirIV;
-			bool m_EMENames;
-			bool m_GCMIV128;
-			bool m_LongNames;
-			bool m_Raw64;
-			bool m_HKDF;
-			*/
 
 			for (rapidjson::Value::ConstValueIterator itr = flags.Begin(); itr != flags.End(); ++itr) {
 				if (itr->IsString()) {

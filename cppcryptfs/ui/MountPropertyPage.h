@@ -46,6 +46,9 @@ private:
 	static  void HandleTooltipsActivation(MSG *pMsg, CWnd *This, CWnd *disabledCtrls[], int numOfCtrls, CToolTipCtrl *pTooltip);
 protected:
 	CToolTipCtrl m_ToolTip;
+	void AddMountPoint(const CString& path);
+	void GetMountPoints(CStringArray& mountPoints); // builds array of all mountpoints inclding available drive letters
+	void DeleteMountPoint(int item);
 public:
 	CMountPropertyPage();
 	virtual ~CMountPropertyPage();
@@ -64,15 +67,19 @@ public:
 
 	virtual void DeviceChange();
 
-	CString Mount(LPCWSTR argPath = NULL, WCHAR argDriveLetter = 0, LPCWSTR argPassword = NULL, bool argReadOnly = false, LPCWSTR argConfigPath = NULL, bool argReverse = false);
+	CString Mount(LPCWSTR argPath = NULL, LPCWSTR argMountPoint = NULL, LPCWSTR argPassword = NULL, bool argReadOnly = false, LPCWSTR argConfigPath = NULL, bool argReverse = false);
 
-	CString Dismount(WCHAR argDriveLetter = 0);
+	CString Dismount(LPCWSTR argMountPoint = NULL);
 
 	CString DismountAll();
 
 	DWORD GetUsedDrives();
 
 	BOOL IsDriveLetterAvailable(WCHAR dl);
+
+	BOOL IsValidMountPointColumnWidth(int cw);
+
+	virtual void OnExit() override;
 
 
 // Dialog Data
@@ -94,8 +101,8 @@ public:
 	CSecureEdit m_password;
 	afx_msg void OnClickedExit();
 	afx_msg void OnCbnSelchangePath();
-	afx_msg void OnBnClickedCheck1();
 	afx_msg void OnClickedSelectConfigPath();
 	afx_msg void OnEditchangePath();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/);
 };

@@ -37,6 +37,9 @@ THE SOFTWARE.
 
 #include "resource.h"		// main symbols
 
+#include <unordered_map>
+#include <string>
+
 #define CPPCRYPTFS_COPYDATA_CMDLINE 0x574cd9d1
 
 #define CPPCRYPTFS_COPYDATA_CMDLINE_MAXLEN (64*1024) // keep small because of VirtualLock()
@@ -55,7 +58,9 @@ class CcppcryptfsApp : public CWinApp
 public:
 	CcppcryptfsApp();
 
-	DWORD m_mountedDrives;
+	std::unordered_map<std::wstring, std::wstring> m_mountedMountPoints; // used for tracking all mounted mountpoints (dirs and drive letters)
+																		 // drive letters are stored with colon e.g drive M as L"M:"
+	DWORD m_mountedLetters;  // used for tracking mounted (by cpppcryptfs) drive letters
 
 // Overrides
 public:

@@ -62,17 +62,19 @@ CCryptPropertySheet::~CCryptPropertySheet()
 
 BOOL CCryptPropertySheet::CanClose()
 {
-	if (theApp.m_mountedDrives) {
+	if (!theApp.m_mountedMountPoints.empty()) {
 		
 		if (MessageBox(L"All mounted cppcryptfs filesystems will be dismounted. Do you really wish to exit?", L"cppcryptfs",
 			MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
 
 			int i;
 			for (i = 0; i < 26; i++) {
-				if (theApp.m_mountedDrives & (1<<i)) {
+				if (theApp.m_mountedLetters & (1<<i)) {
 					write_volume_name_if_changed(i + 'A');
-					unmount_crypt_fs(i + 'A', false);
 				}
+			}
+			for (auto it = theApp.m_mountedMountPoints.begin(); it != theApp.m_mountedMountPoints.end(); it++) {
+				unmount_crypt_fs(it->first.c_str(), false);
 			}
 			theApp.DoWaitCursor(1);
 			wait_for_all_unmounted();
@@ -195,8 +197,16 @@ void CCryptPropertySheet::OnIdrExitcppcryptfs()
 {
 	// TODO: Add your command handler code here
 
-	if (CanClose())
+	if (CanClose()) {
+		
+		int pageCount = GetPageCount();
+		for (int i = 0; i < pageCount; i++) {
+			CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(i);
+			if (page)
+				page->OnExit();
+		}
 		EndDialog(IDCLOSE);
+	}
 }
 
 
@@ -264,7 +274,7 @@ BOOL CCryptPropertySheet::OnDeviceChange( UINT nEventType, DWORD_PTR dwData )
 
 		if (pHdr->dbch_devicetype == DBT_DEVTYP_VOLUME) {
 			PDEV_BROADCAST_VOLUME pVolHdr = (PDEV_BROADCAST_VOLUME)dwData;
-			if ((pVolHdr->dbcv_unitmask & theApp.m_mountedDrives) != pVolHdr->dbcv_unitmask) {
+			if ((pVolHdr->dbcv_unitmask & theApp.m_mountedLetters) != pVolHdr->dbcv_unitmask) {
 				CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(m_nMountPageIndex);
 				if (page)
 					page->DeviceChange();

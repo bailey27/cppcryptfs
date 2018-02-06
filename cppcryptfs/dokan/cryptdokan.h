@@ -37,9 +37,9 @@ typedef struct _struct_win32_find_data_pair {
 	WIN32_FIND_DATAW fdata_orig;
 } FindDataPair;
 
-int mount_crypt_fs(WCHAR driveletter, const WCHAR *path, const WCHAR* config_path, const WCHAR *password, std::wstring& mes, bool readonly, bool reverse, int nThreads, int nBufferBlocks, int cachettl, bool caseinsensitive, bool mountmanager, bool mountmanagerwarn);
+int mount_crypt_fs(const WCHAR *mountpoint, const WCHAR *path, const WCHAR* config_path, const WCHAR *password, std::wstring& mes, bool readonly, bool reverse, int nThreads, int nBufferBlocks, int cachettl, bool caseinsensitive, bool mountmanager, bool mountmanagerwarn);
 
-BOOL unmount_crypt_fs(WCHAR driveletter, bool wait);
+BOOL unmount_crypt_fs(const WCHAR *mountpoint, bool wait);
 
 BOOL wait_for_all_unmounted();
 

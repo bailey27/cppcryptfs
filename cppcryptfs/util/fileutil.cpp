@@ -668,8 +668,10 @@ create_dir_iv(CryptContext *con, LPCWSTR path)
 	return error == 0;
 }
 
+
+
 bool
-can_delete_directory(LPCWSTR path, BOOL bMustReallyBeEmpty)
+is_empty_directory(LPCWSTR path, BOOL bMustReallyBeEmpty)
 {
 	bool bret = true;
 
@@ -733,6 +735,12 @@ can_delete_directory(LPCWSTR path, BOOL bMustReallyBeEmpty)
 
 	return bret;
 
+}
+
+bool
+can_delete_directory(LPCWSTR path, BOOL bMustReallyBeEmpty)
+{
+	return is_empty_directory(path, bMustReallyBeEmpty);
 }
 
 bool can_delete_file(LPCWSTR path)
@@ -967,5 +975,45 @@ convert_find_stream_data(CryptContext *con, LPCWSTR pt_path, LPCWSTR path, WIN32
 	return true;
 }
 
+bool is_suitable_mountpoint(LPCWSTR path)
+{
+	if (!is_empty_directory(path, TRUE))
+		return false;
 
+	WCHAR rpath[4];
+
+	rpath[0] = *path;
+	rpath[1] = ':';
+	rpath[2] = '\\';
+	rpath[3] = '\0';
+
+	WCHAR fsnamebuf[256];
+
+	if (!GetVolumeInformationW(rpath, NULL,
+		0, NULL, NULL,
+		NULL, fsnamebuf, sizeof(fsnamebuf) / sizeof(fsnamebuf[0]) - 1)) {
+		DWORD error = GetLastError();
+		DbgPrint(L"get fs name error = %u\n", error);
+		return false;
+	}
+
+	return !_wcsicmp(fsnamebuf, L"NTFS");
+
+}
+
+bool is_mountpoint_a_dir(LPCWSTR mountpoint)
+{
+	if (!mountpoint)
+		return false;
+
+	return wcslen(mountpoint) > 2;
+}
+
+bool is_mountpoint_a_drive(LPCWSTR mountpoint)
+{
+	if (!mountpoint)
+		return false;
+
+	return !is_mountpoint_a_dir(mountpoint);
+}
 

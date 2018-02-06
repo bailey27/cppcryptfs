@@ -65,6 +65,9 @@ bool
 adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l);
 
 bool
+is_empty_directory(LPCWSTR path, BOOL bMustReallyBeEmpty = FALSE);
+
+bool
 can_delete_directory(LPCWSTR path, BOOL bMustReallyBeEmpty = FALSE);
 
 bool 
@@ -91,4 +94,14 @@ remove_stream_type(LPCWSTR stream, std::wstring& stream_without_type, std::wstri
 
 bool
 convert_find_stream_data(CryptContext *con, LPCWSTR pt_path, LPCWSTR path, WIN32_FIND_STREAM_DATA& fdata);
+
+bool
+is_suitable_mountpoint(LPCWSTR path);
+
+bool
+is_mountpoint_a_dir(LPCWSTR mountpoint);
+
+bool
+is_mountpoint_a_drive(LPCWSTR mountpoint);
+
 

@@ -73,12 +73,12 @@ public:
 
 	DWORD m_serial; // windows volume serial number - derived from root diriv or from hash of root dir
 
-	char m_driveletter;
+	std::wstring m_mountpoint;
 
 	const unsigned char *GetMasterKey() { return m_pKeyBuf ? m_pKeyBuf->m_buf : NULL; }
 	int GetMasterKeyLength() { return m_pKeyBuf ? m_pKeyBuf->m_len : 0; }
-	WCHAR GetDriveLetter() { return m_driveletter; }
-	const WCHAR *GetBaseDir() { return &m_basedir[0]; }
+	const WCHAR *GetMountPoint() { return m_mountpoint.c_str(); }
+	const WCHAR *GetBaseDir() { return m_basedir.c_str(); }
 	bool CryptConfig::InitGCMContentKey(const BYTE *key, bool hkdf);
 
 	const BYTE *GetGcmContentKey() { return m_HKDF ? m_pGcmContentKey->m_buf : GetMasterKey(); };

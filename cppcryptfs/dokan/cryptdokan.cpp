@@ -106,13 +106,15 @@ struct struct_CryptThreadData {
   DOKAN_OPERATIONS operations;
   DOKAN_OPTIONS options;
   CryptContext con;
-  WCHAR mountpoint[4];
+  std::wstring mountpoint;
 };
 
 typedef struct struct_CryptThreadData CryptThreadData;
 
-HANDLE g_DriveThreadHandles[26];
-CryptThreadData *g_ThreadDatas[26];
+std::unordered_map<std::wstring, HANDLE> g_DriveThreadHandles;
+
+
+std::unordered_map<std::wstring, CryptThreadData*> g_ThreadDatas;
 
 void DbgPrint(LPCWSTR format, ...) {
   if (g_DebugMode) {
@@ -2101,7 +2103,7 @@ static DWORD WINAPI CryptThreadProc(_In_ LPVOID lpParameter
   return (DWORD)status;
 }
 
-int mount_crypt_fs(WCHAR driveletter, const WCHAR *path,
+int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
                    const WCHAR *config_path, const WCHAR *password,
                    std::wstring &mes, bool readonly, bool reverse, int nThreads,
                    int nBufferBlocks, int cachettl, bool caseinsensitve,
@@ -2111,13 +2113,24 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path,
   if (config_path && *config_path == '\0')
     config_path = NULL;
 
-  if (driveletter < 'A' || driveletter > 'Z') {
-    mes = L"Invalid drive letter\n";
-    return -1;
+  if (mountpoint == NULL) {
+	  mes = L"invalid mountpoint";
+	  return -1;
   }
 
-  if (g_DriveThreadHandles[driveletter - 'A']) {
-    mes = L"drive letter already in use\n";
+  if (is_mountpoint_a_dir(mountpoint) && !is_suitable_mountpoint(mountpoint)) {
+	  if (!PathFileExists(mountpoint)) {
+		  mes = L"the mount point directory does not exist";
+	  } else {
+		  mes = L"mount point directory must be empty and reside on NTFS volume";
+	  }
+	  return -1;
+  }
+
+  auto it = g_DriveThreadHandles.find(mountpoint);
+
+  if (it != g_DriveThreadHandles.end()) {
+    mes = L"drive letter/mount point already in use\n";
     return -1;
   }
 
@@ -2223,16 +2236,11 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path,
 
     config->m_basedir += holder;
 
-    config->m_driveletter = (char)driveletter;
+    config->m_mountpoint = mountpoint;
 
-    WCHAR *mountpoint = tdata->mountpoint;
+    tdata->mountpoint = mountpoint;
 
-    mountpoint[0] = driveletter;
-    mountpoint[1] = L':';
-    mountpoint[2] = L'\\';
-    mountpoint[3] = 0;
-
-    dokanOptions->MountPoint = mountpoint;
+    dokanOptions->MountPoint = tdata->mountpoint.c_str();
 
     if (!config->read(mes, config_path, reverse)) {
       if (mes.length() < 1)
@@ -2247,6 +2255,19 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path,
       throw(-1);
     }
 
+	// reverse-mode filesystems won't work when mounted to an empty dir for the reason given below.
+	// i.e. because we don't support case-insensitive in reverse mode.
+	if (config->m_reverse && is_mountpoint_a_dir(mountpoint)) {
+		mes = L"Reverse fileystems must be mounted using a drive letter.\n";
+		throw(-1);
+	}
+	// Windows uppercases filenames passed to CryptCreateFile() 
+	// if the filesystem is mounted to an empty NTFS dir instead of to a drive letter.
+	if (!con->IsCaseInsensitive() && is_mountpoint_a_dir(mountpoint)) {
+		mes = L"Filesystems mounted using a directory for the mount point must be mounted case-insensitive.\n";
+		throw(-1);
+	}
+	
     if (!config->decrypt_key(password)) {
       mes = L"password incorrect\n";
       throw(-1);
@@ -2325,12 +2346,12 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path,
     hThread = CreateThread(NULL, 0, CryptThreadProc, tdata, 0, NULL);
 
     if (!hThread) {
-      mes = L"unable to create thread for drive letter\n";
+      mes = L"unable to create thread for drive letter/mount point\n";
       throw(-1);
     }
 
-    g_DriveThreadHandles[driveletter - 'A'] = hThread;
-    g_ThreadDatas[driveletter - 'A'] = tdata;
+    g_DriveThreadHandles.emplace(mountpoint, hThread);
+    g_ThreadDatas.emplace(mountpoint, tdata);
 
     HANDLE handles[2];
     handles[0] = con->m_mountEvent;
@@ -2361,39 +2382,41 @@ int mount_crypt_fs(WCHAR driveletter, const WCHAR *path,
     if (hThread) {
       CloseHandle(hThread);
     }
-    g_DriveThreadHandles[driveletter - 'A'] = NULL;
+	g_DriveThreadHandles.erase(mountpoint);
     if (tdata) {
       delete tdata;
     }
-    g_ThreadDatas[driveletter - 'A'] = NULL;
+	g_ThreadDatas.erase(mountpoint);
   }
 
   return retval;
 }
 
-BOOL unmount_crypt_fs(WCHAR driveletter, bool wait) {
-  if (driveletter < 'A' || driveletter > 'Z')
-    return false;
+BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait) {
 
-  BOOL result = DokanUnmount(driveletter);
+  BOOL result = DokanRemoveMountPoint(mountpoint);
+
   if (!result)
     return FALSE;
 
-  if (!g_DriveThreadHandles[driveletter - 'A'])
+  auto it = g_DriveThreadHandles.find(mountpoint);
+
+  if (it == g_DriveThreadHandles.end())
     return FALSE;
 
   if (wait) {
     DWORD wait_timeout = UNMOUNT_TIMEOUT;
-    DWORD status = WaitForSingleObject(g_DriveThreadHandles[driveletter - 'A'],
+    DWORD status = WaitForSingleObject(it->second,
                                        wait_timeout);
 
     if (status == WAIT_OBJECT_0) {
       result = TRUE;
-      CloseHandle(g_DriveThreadHandles[driveletter - 'A']);
-      g_DriveThreadHandles[driveletter - 'A'] = NULL;
-      if (g_ThreadDatas[driveletter - 'A']) {
-        delete g_ThreadDatas[driveletter - 'A'];
-        g_ThreadDatas[driveletter - 'A'] = NULL;
+      CloseHandle(it->second);
+      g_DriveThreadHandles.erase(mountpoint);
+	  auto tdit = g_ThreadDatas.find(mountpoint);
+      if (tdit != g_ThreadDatas.end()) {
+        delete tdit->second;
+        g_ThreadDatas.erase(mountpoint);
       }
     } else {
       result = FALSE;
@@ -2403,58 +2426,80 @@ BOOL unmount_crypt_fs(WCHAR driveletter, bool wait) {
   return result;
 }
 
-BOOL wait_for_all_unmounted() {
-  HANDLE handles[26];
+static BOOL do_wait_all(int count, HANDLE handles[], std::wstring mountpoints[])
+{
 
-  DWORD timeout = UNMOUNT_TIMEOUT;
+	const DWORD timeout = UNMOUNT_TIMEOUT;
+
+	DWORD status = WaitForMultipleObjects(count, handles, TRUE, timeout);
+
+	DWORD first = WAIT_OBJECT_0;
+	DWORD last = WAIT_OBJECT_0 + (count - 1);
+
+	if (status >= first && status <= last) {
+		for (int i = 0; i < count; i++) {
+			CloseHandle(handles[i]);
+			g_DriveThreadHandles.erase(mountpoints[i]);
+			
+			auto it = g_ThreadDatas.find(mountpoints[i]);
+
+			if (it != g_ThreadDatas.end()) {
+	
+				delete it->second;
+				g_ThreadDatas.erase(it);
+				
+			}
+		}
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+}
+
+BOOL wait_for_all_unmounted() {
+
+  HANDLE handles[MAXIMUM_WAIT_OBJECTS];
+  std::wstring mountpoints[MAXIMUM_WAIT_OBJECTS];
 
   int count = 0;
-  for (int i = 0; i < 26; i++) {
-    if (g_DriveThreadHandles[i])
-      handles[count++] = g_DriveThreadHandles[i];
+  for (auto &it : g_DriveThreadHandles) {
+	  mountpoints[count] = it.first;
+	  handles[count++] = it.second;
+	  if (count == MAXIMUM_WAIT_OBJECTS) {
+		  if (!do_wait_all(count, handles, mountpoints))
+			  return FALSE;
+		  count = 0;
+	  }
   }
-  if (!count)
-    return TRUE;
 
-  DWORD status = WaitForMultipleObjects(count, handles, TRUE, timeout);
+  if (count)
+	  return do_wait_all(count, handles, mountpoints);
+  else
+	  return TRUE;  
 
-  DWORD first = WAIT_OBJECT_0;
-  DWORD last = WAIT_OBJECT_0 + (count - 1);
-
-  if (status >= first && status <= last) {
-    for (int i = 0; i < 26; i++) {
-      if (g_DriveThreadHandles[i]) {
-        CloseHandle(g_DriveThreadHandles[i]);
-        g_DriveThreadHandles[i] = NULL;
-
-        if (g_ThreadDatas[i]) {
-          delete g_ThreadDatas[i];
-          g_ThreadDatas[i] = NULL;
-        }
-      }
-    }
-    return TRUE;
-  } else {
-    return FALSE;
-  }
 }
 
 BOOL write_volume_name_if_changed(WCHAR dl) {
-  CryptThreadData *tdata = g_ThreadDatas[dl - 'A'];
+
+  
+  std::wstring fs_root;
+
+  fs_root.push_back(dl);
+  fs_root.push_back(':');
+
+  auto it = g_ThreadDatas.find(fs_root);
+
+  CryptThreadData *tdata = it != g_ThreadDatas.end() ? it->second : NULL;
 
   if (!tdata)
     return FALSE;
+
+  fs_root.push_back('\\');
 
   CryptContext *con = &tdata->con;
 
   if (!con)
     return false;
-
-  std::wstring fs_root;
-
-  fs_root.push_back(dl);
-  fs_root.push_back(':');
-  fs_root.push_back('\\');
 
   WCHAR volbuf[256];
 
@@ -2545,13 +2590,25 @@ BOOL list_files(const WCHAR *path, std::list<FindDataPair> &findDatas,
     return FALSE;
   }
 
-  path += 2;
+  CryptThreadData *tdata = NULL;
 
-  CryptThreadData *tdata = g_ThreadDatas[dl - 'A'];
+  for (auto it = g_ThreadDatas.begin(); it != g_ThreadDatas.end(); it++) {
+	  if (!_wcsnicmp(it->first.c_str(), path, it->first.length())) {
+		  tdata = it->second;
+		  path += it->first.length();
+		  break;
+	  }
+  }
 
   if (!tdata) {
     err_mes = L"drive not mounted";
     return FALSE;
+  }
+
+  std::wstring find_path = path;
+
+  if (find_path[0] != '\\') {
+	  find_path = L"\\" + find_path;
   }
 
   CryptContext *con = &tdata->con;
@@ -2568,7 +2625,7 @@ BOOL list_files(const WCHAR *path, std::list<FindDataPair> &findDatas,
 
   DokanFileInfo.DokanOptions->GlobalContext = (ULONG_PTR)con;
 
-  FileNameEnc filePath(&DokanFileInfo, path);
+  FileNameEnc filePath(&DokanFileInfo, find_path.c_str());
 
   if (PathIsDirectory(filePath)) {
 

@@ -325,7 +325,7 @@ Mounting:
   -s, --reverse         mount reverse filesystem
 
 Unmounting:
-  -u, --unmount=D       umount drive letter D
+  -u, --unmount=D       umount drive letter D or dir DIR
   -u, --umount=all      unmount all drives
 
 Misc:

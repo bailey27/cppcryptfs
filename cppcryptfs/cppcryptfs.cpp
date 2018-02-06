@@ -71,7 +71,7 @@ CcppcryptfsApp::CcppcryptfsApp()
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
 
-	m_mountedDrives = 0;
+	m_mountedLetters = 0;
 
 	// get an OpenSSL EVP context to force detection of AES-NI instructions
 	// so we can use AES-NI even if EVP is never used
