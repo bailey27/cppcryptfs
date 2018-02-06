@@ -119,6 +119,10 @@ You can right click on the mounted drive letter in File Explorer, select "Proper
 Then go to the "Mount" tab and select a drive letter and select the folder you
 just created the filesystem in.  Then enter the password and click on the "Mount" button.
 
+You can also right-click in the list of drive letters and select "Add Mount Point".  This will let you add an empty directory to the list of drive letters.  This empty directory, which must be on an NTFS volume, can serve as a mount point in place of a drive letter.  The added mount point will be added to the list below the drive letters.  You can also right click on an added mount point and delete it from the list.  The mount point directories you add are saved in the Windows registry.
+
+Note: Currently, if an empty directory can be used as a mount point only in normal (forward) mode.  See  [issue #22](/../../issues/22) for an explanation.
+
 If you specified a custom path for the config file when you created the filesystem, then you must specify it here also.
 
 If you specified a custom path for the config file, you must also select "reverse" if it is a reverse filesystem.  Otherwise, cppcryptfs will automatically detect if the filesytem should be mounted in forward or reverse mode.
@@ -235,15 +239,11 @@ This setting is not enabled in either the Default or Recommended settings.
 
 **Defaults and Recommended**
 
-There are also two buttons: "Defaults" which changes all settings to the original cppcryptfs defaults, and "Recommended" which sets
-the currently recommended settings.
+Currently, the default and recommended settings are the same.
 
-When "Defaults" is used, then cppcryptfs will behave as it has from the beginning.  These are the safest settings which have
-undergone the most testing.
+You can view the previous default settings here
 
-When "Recommended" is used, then cppcryptfs will use settings that result in improved performance and functionality at the
-expense of possibly running into new bugs.
-
+[Previous default settings screenshot](/screenshots/screenshot_previous_defaults.png?raw=true") 
 
 **Reset Warnings**
 

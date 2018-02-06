@@ -485,9 +485,15 @@ BOOL CMountPropertyPage::OnInitDialog()
 	Style |= LVS_EX_FULLROWSELECT;
 	::SendMessage(pList->m_hWnd, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, Style);
 
-	pList->InsertColumn(DL_INDEX, L"Mount Point", LVCFMT_LEFT, 48);
+	int mountPointColumnWidth = theApp.GetProfileInt(L"MountPoint", L"MountPointColumnWidth", 79);
 
-	pList->InsertColumn(PATH_INDEX, L"Path", LVCFMT_LEFT, 393);
+	if (!IsValidMountPointColumnWidth(mountPointColumnWidth)) {
+		mountPointColumnWidth = 79;
+	}
+
+	pList->InsertColumn(DL_INDEX, L"Mount Point", LVCFMT_LEFT, mountPointColumnWidth);
+
+	pList->InsertColumn(PATH_INDEX, L"Path", LVCFMT_LEFT, 454-mountPointColumnWidth);
 
 	CString lastMountPoint = theApp.GetProfileString(L"MountPoints", L"LastMountPoint", L"");
 
@@ -538,16 +544,6 @@ BOOL CMountPropertyPage::OnInitDialog()
 	}
 
 	pList->SetImageList(&m_imageList, LVSIL_SMALL);
-
-	int mountPointColumnWidth = theApp.GetProfileInt(L"MountPoint", L"MountPointColumnWidth", -1);
-
-	if (IsValidMountPointColumnWidth(mountPointColumnWidth)) {
-		pList->SetColumnWidth(0, mountPointColumnWidth);
-	} else {
-		pList->SetColumnWidth(0, LVSCW_AUTOSIZE_USEHEADER);
-	}
-
-	i = 0;
 
 	for (i = 0; i < mountPoints.GetCount(); i++) {
 	

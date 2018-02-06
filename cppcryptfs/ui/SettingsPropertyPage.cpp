@@ -123,8 +123,6 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	for (i = 0; i < 15; i++) {
 		if (i == 0) {
 			pBox->AddString(L"Dokany default (5)");
-		} else if (i == 1) {
-			pBox->AddString(L"1 (cppcryptfs default)");
 		} else {
 			swprintf_s(buf, L"%d", i);
 			pBox->AddString(buf);
