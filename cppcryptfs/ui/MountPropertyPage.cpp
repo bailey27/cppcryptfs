@@ -189,13 +189,22 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 		CString str = wcslen(argMountPoint) == 1 ? CString(*argMountPoint) + L":" : argMountPoint;
 		fi.psz = str;
 		nItem = pList->FindItem(&fi);
-		if (nItem < 0)
-			return CString(L"Mount point ") + str + CString(L" is already in use.");
+		if (nItem < 0) {
+			if (is_mountpoint_a_drive(str)) {
+				return CString(L"Mount point ") + str + CString(L" is already in use.");
+			} else {
+				int i = pList->GetItemCount();
+				nItem = pList->InsertItem(LVIF_TEXT | (m_imageIndex >= 0 ? LVIF_IMAGE : 0) | LVIF_STATE, i, str,
+					true ? LVIS_SELECTED : 0, LVIS_SELECTED, m_imageIndex >= 0 ? m_imageIndex : 0, 0);
+			}
+		}
 		int nOldItem = pList->GetNextSelectedItem(pos);
 		if (nOldItem >= 0)
 			pList->SetItemState(nOldItem, ~LVIS_SELECTED, LVIS_SELECTED);
-		if (nItem >= 0)
+		if (nItem >= 0) {
 			pList->SetItemState(nItem, LVIS_SELECTED, LVIS_SELECTED);
+			pList->EnsureVisible(nItem, FALSE);
+		}
 	} else {
 		nItem = pList->GetNextSelectedItem(pos);
 	}
@@ -1436,13 +1445,15 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 
 	CListCtrl* pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
+	enum { DismountV=1, AddMountPointV, DeleteMountPointV };
+
 	if ((CWnd*)pList == pWnd) {
 		CMenu menu;
 		
 		if (!menu.CreatePopupMenu())
 			return;
 
-		menu.AppendMenu(MF_ENABLED, 1, L"&Add Mount Point");
+		menu.AppendMenu(MF_ENABLED, AddMountPointV, L"&Add Mount Point");
 
 		int item = -1;
 
@@ -1453,12 +1464,17 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 			}
 		}
 
+		CString cmp;
 		if (item >= 0) {
-			CString cmp = pList->GetItemText(item, 0);
+			cmp = pList->GetItemText(item, 0);
+			bool mounted = theApp.m_mountedMountPoints.find((LPCWSTR)cmp) != theApp.m_mountedMountPoints.end();
 			if (is_mountpoint_a_dir(cmp)) {
-				bool mounted = theApp.m_mountedMountPoints.find((LPCWSTR)cmp) != theApp.m_mountedMountPoints.end();
-				menu.AppendMenu(mounted ? MF_DISABLED : MF_ENABLED, 2, L"&Delete Mount Point");
+				menu.AppendMenu(mounted ? MF_DISABLED : MF_ENABLED, DeleteMountPointV, L"Dele&te Mount Point");
+			} 
+			if (mounted) {
+				menu.AppendMenu(MF_ENABLED, DismountV, L"&Dismount");
 			}
+
 		}
 
 		int retVal = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NONOTIFY | TPM_RETURNCMD, point.x, point.y, this);
@@ -1466,7 +1482,13 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 		
 
 		switch (retVal) {
-		case 1:
+		case DismountV: {
+			if (cmp.GetLength() > 1) {
+				Dismount(cmp);
+			}
+			return;
+		}
+		case AddMountPointV:
 			{	
 				CFolderDialog fdlg; 
 				fdlg.DoModal();
@@ -1475,7 +1497,7 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 					AddMountPoint(path);
 			}
 			break;
-		case 2:
+		case DeleteMountPointV:
 		{
 			DeleteMountPoint(item);
 			return;
