@@ -163,6 +163,18 @@ BOOL CcppcryptfsApp::InitInstance()
 		}
 		
 		return FALSE;
+	} else {
+		std::wstring mes;
+		bool dokVerCheck = check_dokany_version(mes);
+		if (!dokVerCheck && mes.length() < 1) {
+			mes = L"problem with Dokany version";
+		}
+		if (mes.length()) {
+			::MessageBox(NULL, mes.c_str(), L"cppcryptfs", MB_OK | (dokVerCheck ? MB_ICONEXCLAMATION :  MB_ICONERROR));
+		}
+		if (!dokVerCheck) {
+			return FALSE;
+		}
 	}
 
 

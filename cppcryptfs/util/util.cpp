@@ -536,11 +536,12 @@ ConsoleErrMes(LPCWSTR err, DWORD pid)
 
 static bool 
 GetProductVersionInfo(CString& strProductName, CString& strProductVersion,
-	CString& strLegalCopyright)
+	CString& strLegalCopyright, HMODULE hMod)
 {
 
-	TCHAR fullPath[MAX_PATH];
-	if (!GetModuleFileName(NULL, fullPath, MAX_PATH-1)) {
+	TCHAR fullPath[MAX_PATH+1];
+	*fullPath = L'\0';
+	if (!GetModuleFileName(hMod, fullPath, MAX_PATH)) {
 		return false;
 	}
 	DWORD dummy = 0;
@@ -571,10 +572,39 @@ GetProductVersionInfo(CString& strProductName, CString& strProductVersion,
 	LPVOID pvLegalCopyright = NULL;
 	unsigned int iLegalCopyrightLen = 0;
 
+	struct LANGANDCODEPAGE {
+		WORD wLanguage;
+		WORD wCodePage;
+	} *lpTranslate;
+
+	// Read the list of languages and code pages.
+	unsigned int cbTranslate;
+	if (!VerQueryValue(pVersionResource,
+		TEXT("\\VarFileInfo\\Translation"),
+		(LPVOID*)&lpTranslate,
+		&cbTranslate)) {
+
+		return false;
+	}
+
+	if (cbTranslate/sizeof(struct LANGANDCODEPAGE) < 1) {
+		return false;
+	}
+
+	CString lang;
+
+	WCHAR buf[16];
+
+	// use the first language/codepage;
+
+	wsprintf(buf, L"%04x%04x", lpTranslate->wLanguage, lpTranslate->wCodePage);
+
+	lang = buf;
+
 	// replace "040904e4" with the language ID of your resources
-	if (!VerQueryValue(pVersionResource, _T("\\StringFileInfo\\040904b0\\ProductName"), &pvProductName, &iProductNameLen) ||
-		!VerQueryValue(pVersionResource, _T("\\StringFileInfo\\040904b0\\ProductVersion"), &pvProductVersion, &iProductVersionLen) ||
-		!VerQueryValue(pVersionResource, _T("\\StringFileInfo\\040904b0\\LegalCopyright"), &pvLegalCopyright, &iLegalCopyrightLen))
+	if (!VerQueryValue(pVersionResource, L"\\StringFileInfo\\" + lang + L"\\ProductName", &pvProductName, &iProductNameLen) ||
+		!VerQueryValue(pVersionResource, L"\\StringFileInfo\\" + lang + "\\ProductVersion", &pvProductVersion, &iProductVersionLen) ||
+		!VerQueryValue(pVersionResource, L"\\StringFileInfo\\" + lang + "\\LegalCopyright", &pvLegalCopyright, &iLegalCopyrightLen))
 	{
 		free(pVersionResource);
 		return false;
@@ -596,11 +626,11 @@ GetProductVersionInfo(CString& strProductName, CString& strProductVersion,
 
 bool 
 GetProductVersionInfo(std::wstring& strProductName, std::wstring& strProductVersion,
-	std::wstring& strLegalCopyright)
+	std::wstring& strLegalCopyright, HMODULE hMod)
 {
 	CString cName, cVer, cCop;
 
-	if (GetProductVersionInfo(cName, cVer, cCop)) {
+	if (GetProductVersionInfo(cName, cVer, cCop, hMod)) {
 		strProductName = cName;
 		strProductVersion = cVer;
 		strLegalCopyright = cCop;

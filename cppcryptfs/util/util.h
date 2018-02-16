@@ -90,7 +90,7 @@ void ConsoleErrMes(LPCWSTR err, DWORD pid = 0);
 
 bool
 GetProductVersionInfo(std::wstring& strProductName, std::wstring& strProductVersion,
-	std::wstring& strLegalCopyright);
+	std::wstring& strLegalCopyright, HMODULE hMod = NULL);
 
 bool touppercase(LPCWSTR in, std::wstring& out);
 
@@ -101,3 +101,4 @@ bool is_all_zeros(const BYTE *buf, size_t len);
 bool mountmanager_continue_mounting();
 
 BOOL GetPathHash(LPCWSTR path, std::wstring& hashstr);
+

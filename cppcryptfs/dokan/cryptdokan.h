@@ -50,3 +50,5 @@ BOOL have_security_name_privilege();
 void init_security_name_privilege();
 
 BOOL list_files(const WCHAR *path, std::list<FindDataPair> &fileDatas, std::wstring& err_mes);
+
+bool check_dokany_version(std::wstring& mes);

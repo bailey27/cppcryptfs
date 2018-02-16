@@ -997,7 +997,7 @@ bool is_suitable_mountpoint(LPCWSTR path)
 		return false;
 	}
 
-	return !_wcsicmp(fsnamebuf, L"NTFS");
+	return !lstrcmpi(fsnamebuf, L"NTFS");
 
 }
 

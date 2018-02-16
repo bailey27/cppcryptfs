@@ -78,6 +78,7 @@ THE SOFTWARE.
 
 #include <vector>
 #include <string>
+#include <sstream>
 
 #include <windows.h>
 #include <Shlwapi.h>
@@ -2663,4 +2664,92 @@ BOOL list_files(const WCHAR *path, std::list<FindDataPair> &findDatas,
   }
 
   return TRUE;
+}
+
+static bool get_dokany_version(std::wstring& ver, std::vector<int>& v)
+{
+	// DokanVersion() is useless because it returns 100
+
+	v.clear();
+
+	HMODULE hDok = GetModuleHandle(L"dokan1.dll");
+	if (!hDok)
+		return false;
+	WCHAR dokPath[MAX_PATH+1];
+	dokPath[0] = '\0';
+
+	
+
+	std::wstring name;
+	std::wstring copyright;
+
+	if (!GetProductVersionInfo(name, ver, copyright, hDok)) {
+		return false;
+	}
+
+	std::vector<std::wstring> strings;
+	std::wistringstream f(ver);
+	wchar_t buf[32];
+	while (f.getline(buf, sizeof(buf) / sizeof(buf[0]) - 1, L'.')) {
+		strings.push_back(buf);
+	}
+
+	if (strings.size() != 4) {
+		return false;
+	}
+
+	v.push_back(_wtoi(strings[0].c_str()));
+	v.push_back(_wtoi(strings[1].c_str()));
+	v.push_back(_wtoi(strings[2].c_str()));
+	v.push_back(_wtoi(strings[3].c_str()));
+
+	return true;
+
+}
+
+// return false if won't work, returns true with no message if all ok, 
+// returns true with message if there will maybe be a problem
+bool check_dokany_version(std::wstring& mes)
+{
+	const int required_major = 1;
+	const int required_middle = 1;
+	const std::wstring required_ver = L"1.1.x.x";
+	
+	mes = L"";
+
+	std::wstring ver;
+
+	std::vector<int> v;
+	if (!get_dokany_version(ver, v)) {
+		mes = L"unable to get dokany version";
+		return false;
+	}
+
+	if (v.size() < 2) {
+		return false;
+	}
+
+	int major = v[0];
+	int middle = v[1];
+
+	if (major == required_major && middle == required_middle) {
+		return true;
+	}
+	
+	if (major != required_major) {
+		mes = L"Dokany version " + ver + L" is not compatible.  Please install Dokany " + required_ver;
+		return false; // error
+	}
+	
+	if (major == required_major && middle < required_middle) {
+		mes = L"Dokany version " + ver + L" is not compatible.  Please install Dokany " + required_ver;
+		return false; // error
+	}
+
+	if (major == required_major && middle > required_middle) {
+		mes = L"Dokany version " + ver + L" is has not been tested.  Please install Dokany " + required_ver;
+		return true; // warning
+	}
+
+	return false;
 }

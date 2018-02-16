@@ -515,7 +515,7 @@ BOOL CMountPropertyPage::OnInitDialog()
 	if (lastMountPoint.GetLength() > 0) {
 		for (i = 0; i < mountPoints.GetCount(); i++) {
 
-			if (!_wcsicmp(lastMountPoint, mountPoints.GetAt(i))) {
+			if (!lstrcmpi(lastMountPoint, mountPoints.GetAt(i))) {
 				lastIndex = i;
 				break;
 			}
@@ -624,13 +624,13 @@ void CMountPropertyPage::DeviceChange()
 		
 		CString dls = mountPoints.GetAt(i);
 
-		if (!_wcsicmp(dls, selected)) {
+		if (!lstrcmpi(dls, selected)) {
 			selected_something = true;
 			new_selected_index = i;
 		}
 
 		pList->InsertItem(LVIF_TEXT | (m_imageIndex >= 0 ? LVIF_IMAGE : 0) | LVIF_STATE, i, dls,
-			!_wcsicmp(dls, selected) ? LVIS_SELECTED : 0, LVIS_SELECTED, m_imageIndex >= 0 ? m_imageIndex : 0, 0);
+			!lstrcmpi(dls, selected) ? LVIS_SELECTED : 0, LVIS_SELECTED, m_imageIndex >= 0 ? m_imageIndex : 0, 0);
 		auto it = theApp.m_mountedMountPoints.find((LPCWSTR)dls);
 		if (it != theApp.m_mountedMountPoints.end())
 			pList->SetItemText(i, 1, it->second.c_str());
@@ -1111,7 +1111,7 @@ static void usage()
 
 static bool compair_find_datas(const FindDataPair& p1, const FindDataPair& p2)
 {
-	return _wcsicmp(p1.fdata.cFileName, p2.fdata.cFileName) < 0;
+	return lstrcmpi(p1.fdata.cFileName, p2.fdata.cFileName) < 0;
 }
 
 void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnStartup)
@@ -1504,7 +1504,7 @@ void CMountPropertyPage::AddMountPoint(const CString & path)
 
 	int i = 0;
 	for (CString mp = mountPointsStr.Tokenize(L"|", i); i >= 0; mp = mountPointsStr.Tokenize(L"|", i)) {
-		if (!_wcsicmp(path, mp)) {
+		if (!lstrcmpi(path, mp)) {
 			MessageBox(L"Mount point has already been added.", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 			return;
 		}
@@ -1577,7 +1577,7 @@ void CMountPropertyPage::DeleteMountPoint(int item)
 	mountPointsStr = L"";
 
 	for (i = 0; i < mountPoints.GetCount(); i++) {
-		if (!_wcsicmp(mountPoints.GetAt(i), delmp))
+		if (!lstrcmpi(mountPoints.GetAt(i), delmp))
 			continue;
 		if (i > 0)
 			mountPointsStr += "|";
