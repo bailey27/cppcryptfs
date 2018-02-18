@@ -107,15 +107,15 @@ struct struct_CryptThreadData {
   DOKAN_OPERATIONS operations;
   DOKAN_OPTIONS options;
   CryptContext con;
-  std::wstring mountpoint;
+  wstring mountpoint;
 };
 
 typedef struct struct_CryptThreadData CryptThreadData;
 
-std::unordered_map<std::wstring, HANDLE> g_DriveThreadHandles;
+unordered_map<wstring, HANDLE> g_DriveThreadHandles;
 
 
-std::unordered_map<std::wstring, CryptThreadData*> g_ThreadDatas;
+unordered_map<wstring, CryptThreadData*> g_ThreadDatas;
 
 void DbgPrint(LPCWSTR format, ...) {
   if (g_DebugMode) {
@@ -148,26 +148,26 @@ void DbgPrint(LPCWSTR format, ...) {
 
 typedef int(WINAPI *PCryptStoreStreamName)(
     PWIN32_FIND_STREAM_DATA, LPCWSTR encrypted_name,
-    std::unordered_map<std::wstring, std::wstring> *pmap);
+    unordered_map<wstring, wstring> *pmap);
 
 NTSTATUS DOKAN_CALLBACK CryptFindStreamsInternal(
     LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
     PDOKAN_FILE_INFO DokanFileInfo, PCryptStoreStreamName,
-    std::unordered_map<std::wstring, std::wstring> *pmap);
+    unordered_map<wstring, wstring> *pmap);
 
 static int WINAPI
 CryptCaseStreamsCallback(PWIN32_FIND_STREAM_DATA pfdata, LPCWSTR encrypted_name,
-                         std::unordered_map<std::wstring, std::wstring> *pmap) {
-  std::wstring stream_without_type;
-  std::wstring type;
+                         unordered_map<wstring, wstring> *pmap) {
+  wstring stream_without_type;
+  wstring type;
 
   remove_stream_type(pfdata->cStreamName, stream_without_type, type);
 
-  std::wstring uc_stream;
+  wstring uc_stream;
 
   touppercase(stream_without_type.c_str(), uc_stream);
 
-  pmap->insert(std::make_pair(uc_stream, stream_without_type.c_str()));
+  pmap->insert(make_pair(uc_stream, stream_without_type.c_str()));
 
   return 0;
 }
@@ -192,10 +192,10 @@ CryptCaseStreamsCallback(PWIN32_FIND_STREAM_DATA pfdata, LPCWSTR encrypted_name,
 class FileNameEnc {
 private:
   PDOKAN_FILE_INFO m_dokan_file_info;
-  std::wstring m_enc_path;
-  std::wstring m_correct_case_path;
-  std::string *m_actual_encrypted;
-  std::wstring m_plain_path;
+  wstring m_enc_path;
+  wstring m_correct_case_path;
+  string *m_actual_encrypted;
+  wstring m_plain_path;
   CryptContext *m_con;
   bool m_tried;
   bool m_failed;
@@ -226,7 +226,7 @@ private:
 
 public:
   FileNameEnc(PDOKAN_FILE_INFO DokanFileInfo, const WCHAR *fname,
-              std::string *actual_encrypted = NULL,
+              string *actual_encrypted = NULL,
               bool ignorecasecache = false);
   virtual ~FileNameEnc();
 };
@@ -267,7 +267,7 @@ void FileNameEnc::AssignPlainPath(LPCWSTR plain_path) {
 }
 
 FileNameEnc::FileNameEnc(PDOKAN_FILE_INFO DokanFileInfo, const WCHAR *fname,
-                         std::string *actual_encrypted,
+                         string *actual_encrypted,
                          bool forceCaseCacheNotFound) {
   m_dokan_file_info = DokanFileInfo;
   m_con = GetContext();
@@ -293,13 +293,13 @@ const WCHAR *FileNameEnc::Convert() {
           m_enc_path = m_con->GetConfig()->m_basedir + L"\\";
           m_enc_path += REVERSE_CONFIG_NAME;
         } else if (rt_is_virtual_file(m_con, m_plain_path.c_str())) {
-          std::wstring dirpath;
+          wstring dirpath;
           if (!get_file_directory(m_plain_path.c_str(), dirpath))
             throw(-1);
           if (!decrypt_path(m_con, &dirpath[0], m_enc_path))
             throw(-1);
           m_enc_path += L"\\";
-          std::wstring filename;
+          wstring filename;
           if (!get_bare_filename(m_plain_path.c_str(), filename))
             throw(-1);
           m_enc_path += filename;
@@ -332,14 +332,14 @@ const WCHAR *FileNameEnc::Convert() {
               }
             }
           }
-          std::wstring stream;
-          std::wstring file_without_stream;
+          wstring stream;
+          wstring file_without_stream;
           bool have_stream =
               get_file_stream(plain_path, &file_without_stream, &stream);
           if (have_stream) {
-            std::unordered_map<std::wstring, std::wstring> streams_map;
-            std::wstring stream_without_type;
-            std::wstring type;
+            unordered_map<wstring, wstring> streams_map;
+            wstring stream_without_type;
+            wstring type;
 
             if (!remove_stream_type(stream.c_str(), stream_without_type,
                                     type)) {
@@ -350,7 +350,7 @@ const WCHAR *FileNameEnc::Convert() {
                     file_without_stream.c_str(), NULL, m_dokan_file_info,
                     CryptCaseStreamsCallback, &streams_map) == 0) {
 
-              std::wstring uc_stream;
+              wstring uc_stream;
 
               if (!touppercase(stream_without_type.c_str(), uc_stream))
                 throw(-1);
@@ -511,7 +511,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
                 ULONG ShareAccess, ULONG CreateDisposition, ULONG CreateOptions,
                 PDOKAN_FILE_INFO DokanFileInfo) {
 
-  std::string actual_encrypted;
+  string actual_encrypted;
   FileNameEnc filePath(DokanFileInfo, FileName, &actual_encrypted);
   HANDLE handle = NULL;
   DWORD fileAttr;
@@ -693,7 +693,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
         }
 
         if (GetContext()->IsCaseInsensitive()) {
-          std::list<std::wstring> files;
+          list<wstring> files;
           if (wcscmp(FileName, L"\\")) {
             files.push_front(L"..");
             files.push_front(L".");
@@ -729,7 +729,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
         }
 
         if (GetContext()->IsCaseInsensitive()) {
-          std::list<std::wstring> files;
+          list<wstring> files;
           if (wcscmp(FileName, L"\\")) {
             files.push_front(L"..");
             files.push_front(L".");
@@ -1245,7 +1245,7 @@ static NTSTATUS CryptMoveFileInternal(LPCWSTR FileName, // existing file name
 
   needRepair = false;
 
-  std::string actual_encrypted;
+  string actual_encrypted;
   FileNameEnc filePath(DokanFileInfo, FileName);
   FileNameEnc newFilePath(DokanFileInfo, NewFileName, &actual_encrypted,
                           repairName);
@@ -1305,8 +1305,8 @@ static NTSTATUS CryptMoveFileInternal(LPCWSTR FileName, // existing file name
     if (GetContext()->IsCaseInsensitive() && !repairName) {
 
       if (newFilePath.FileExisted()) {
-        std::wstring existing_file_name;
-        std::wstring new_file_name;
+        wstring existing_file_name;
+        wstring new_file_name;
 
         if (get_dir_and_file_from_path(newFilePath.CorrectCasePath(), NULL,
                                        &existing_file_name) &&
@@ -1356,9 +1356,9 @@ static NTSTATUS CryptMoveFileInternal(LPCWSTR FileName, // existing file name
 
 static int WINAPI StoreRenameStreamCallback(
     PWIN32_FIND_STREAM_DATA pfdata, LPCWSTR encrypted_name,
-    std::unordered_map<std::wstring, std::wstring> *pmap) {
+    unordered_map<wstring, wstring> *pmap) {
 
-  pmap->insert(std::make_pair(encrypted_name, pfdata->cStreamName));
+  pmap->insert(make_pair(encrypted_name, pfdata->cStreamName));
 
   return 0;
 }
@@ -1396,14 +1396,14 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 		If we are operating on a (non-default) stream, then we don't need to do any of this.
 	*/
 
-  std::unordered_map<std::wstring, std::wstring> rename_streams_map;
+  unordered_map<wstring, wstring> rename_streams_map;
 
   if (!GetContext()->GetConfig()->m_PlaintextNames) {
-    std::wstring fromDir, toDir;
+    wstring fromDir, toDir;
     get_file_directory(FileName, fromDir);
     get_file_directory(NewFileName, toDir);
     if (compare_names(GetContext(), fromDir.c_str(), toDir.c_str())) {
-      std::wstring stream;
+      wstring stream;
       bool is_stream = false;
       if (get_file_stream(FileName, NULL, &stream)) {
         is_stream = stream.length() > 0 && wcscmp(stream.c_str(), L":") &&
@@ -1436,9 +1436,9 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
         }
 
         FileNameEnc newNameWithoutStream(DokanFileInfo, NewFileName);
-        std::wstring newEncNameWithOldEncStream =
+        wstring newEncNameWithOldEncStream =
             (LPCWSTR)newNameWithoutStream + it.first;
-        std::wstring newNameWithStream = NewFileName + it.second;
+        wstring newNameWithStream = NewFileName + it.second;
         FileNameEnc newEncNameWithNewEncStream(DokanFileInfo,
                                                newNameWithStream.c_str());
 
@@ -1748,7 +1748,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
 
   bool is_virtual = rt_is_virtual_file(GetContext(), FileName);
 
-  std::wstring virt_path;
+  wstring virt_path;
 
   if (is_virtual) {
     if (rt_is_dir_iv_file(GetContext(), FileName)) {
@@ -1757,7 +1757,7 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileSecurity(
       }
     } else if (rt_is_name_file(GetContext(), FileName)) {
 
-      std::wstring enc_path;
+      wstring enc_path;
 
       remove_longname_suffix(FileName, enc_path);
 
@@ -1933,7 +1933,7 @@ NTSYSCALLAPI NTSTATUS NTAPI NtQueryInformationFile(
 NTSTATUS DOKAN_CALLBACK CryptFindStreamsInternal(
     LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
     PDOKAN_FILE_INFO DokanFileInfo, PCryptStoreStreamName StoreStreamName,
-    std::unordered_map<std::wstring, std::wstring> *pmap) {
+    unordered_map<wstring, wstring> *pmap) {
   FileNameEnc filePath(DokanFileInfo, FileName);
   HANDLE hFind;
   WIN32_FIND_STREAM_DATA findData;
@@ -1954,8 +1954,8 @@ NTSTATUS DOKAN_CALLBACK CryptFindStreamsInternal(
       if (!derive_path_iv(GetContext(), FileName, dir_iv, TYPE_DIRIV)) {
         return ToNtStatus(ERROR_PATH_NOT_FOUND);
       }
-      std::wstring storage, bare_filename;
-      std::string actual_encrypted;
+      wstring storage, bare_filename;
+      string actual_encrypted;
       if (!get_bare_filename(FileName, bare_filename))
         return ToNtStatus(ERROR_PATH_NOT_FOUND);
       const WCHAR *dname =
@@ -1975,7 +1975,7 @@ NTSTATUS DOKAN_CALLBACK CryptFindStreamsInternal(
     ;
   }
 
-  std::wstring encrypted_name;
+  wstring encrypted_name;
 
   hFind = FindFirstStreamW(filePath, FindStreamInfoStandard, &findData, 0);
 
@@ -2106,7 +2106,7 @@ static DWORD WINAPI CryptThreadProc(_In_ LPVOID lpParameter
 
 int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
                    const WCHAR *config_path, const WCHAR *password,
-                   std::wstring &mes, bool readonly, bool reverse, int nThreads,
+                   wstring &mes, bool readonly, bool reverse, int nThreads,
                    int nBufferBlocks, int cachettl, bool caseinsensitve,
                    bool mountmanager, bool mountmanagerwarn) {
   mes.clear();
@@ -2200,9 +2200,11 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
     con->m_bufferblocks = min(256, max(1, nBufferBlocks));
 
-    if (g_IoBufferPool == NULL) {
-      g_IoBufferPool = new IoBufferPool(con->m_bufferblocks * CIPHER_BS);
-    }
+	// initialize IoBufferPool singleton (will init if not already inited)
+	// block size is tuned for first mounted filesystem
+	// if subsquent mounts require a larger block due to setting being changed
+	// then those mounts buffers will come from the heap instead of the pool
+    IoBufferPool::getInstance(con->m_bufferblocks * CIPHER_BS); 
 
     con->m_dir_iv_cache.SetTTL(cachettl);
     con->m_case_cache.SetTTL(cachettl);
@@ -2230,7 +2232,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
            config->m_basedir[config->m_basedir.size() - 1] == '\\')
       config->m_basedir.erase(config->m_basedir.size() - 1);
 
-    std::wstring holder = config->m_basedir;
+    wstring holder = config->m_basedir;
 
     config->m_basedir =
         L"\\\\?\\"; // this prefix enables up to 32K long file paths on NTFS
@@ -2249,7 +2251,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
       throw(-1);
     }
 
-    std::wstring config_error_mes;
+    wstring config_error_mes;
 
     if (!config->check_config(config_error_mes)) {
       mes = &config_error_mes[0];
@@ -2316,7 +2318,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
                                                    : MAX_FAT_VOLUME_NAME_LENGTH;
 
       if (config->m_VolumeName.size() > maxlength)
-        config->m_VolumeName.erase(maxlength, std::wstring::npos);
+        config->m_VolumeName.erase(maxlength, wstring::npos);
 
       if (fs_flags & FILE_READ_ONLY_VOLUME)
         dokanOptions->Options |= DOKAN_OPTION_WRITE_PROTECT;
@@ -2427,7 +2429,7 @@ BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait) {
   return result;
 }
 
-static BOOL do_wait_all(int count, HANDLE handles[], std::wstring mountpoints[])
+static BOOL do_wait_all(int count, HANDLE handles[], wstring mountpoints[])
 {
 
 	const DWORD timeout = UNMOUNT_TIMEOUT;
@@ -2460,7 +2462,7 @@ static BOOL do_wait_all(int count, HANDLE handles[], std::wstring mountpoints[])
 BOOL wait_for_all_unmounted() {
 
   HANDLE handles[MAXIMUM_WAIT_OBJECTS];
-  std::wstring mountpoints[MAXIMUM_WAIT_OBJECTS];
+  wstring mountpoints[MAXIMUM_WAIT_OBJECTS];
 
   int count = 0;
   for (auto &it : g_DriveThreadHandles) {
@@ -2483,7 +2485,7 @@ BOOL wait_for_all_unmounted() {
 BOOL write_volume_name_if_changed(WCHAR dl) {
 
   
-  std::wstring fs_root;
+  wstring fs_root;
 
   fs_root.push_back(dl);
   fs_root.push_back(':');
@@ -2539,7 +2541,7 @@ void init_security_name_privilege() { have_security_name_privilege(); }
 static int WINAPI crypt_fill_find_data_list(PWIN32_FIND_DATAW fdata,
                                             PWIN32_FIND_DATAW fdata_orig,
                                             void *dokan_cb, void *dokan_ctx) {
-  std::list<FindDataPair> *findDatas = (std::list<FindDataPair> *)dokan_ctx;
+  list<FindDataPair> *findDatas = (list<FindDataPair> *)dokan_ctx;
 
   FindDataPair pair;
 
@@ -2551,8 +2553,8 @@ static int WINAPI crypt_fill_find_data_list(PWIN32_FIND_DATAW fdata,
   return 0;
 }
 
-BOOL list_files(const WCHAR *path, std::list<FindDataPair> &findDatas,
-                std::wstring &err_mes) {
+BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
+                wstring &err_mes) {
   err_mes = L"";
 
   if (!path) {
@@ -2606,7 +2608,7 @@ BOOL list_files(const WCHAR *path, std::list<FindDataPair> &findDatas,
     return FALSE;
   }
 
-  std::wstring find_path = path;
+  wstring find_path = path;
 
   if (find_path[0] != '\\') {
 	  find_path = L"\\" + find_path;
@@ -2646,7 +2648,7 @@ BOOL list_files(const WCHAR *path, std::list<FindDataPair> &findDatas,
     dl_colon[1] = ':';
     dl_colon[2] = '\0';
 
-    std::wstring plain_path;
+    wstring plain_path;
 
     plain_path += dl_colon;
     plain_path += filePath.CorrectCasePath();
@@ -2666,7 +2668,7 @@ BOOL list_files(const WCHAR *path, std::list<FindDataPair> &findDatas,
   return TRUE;
 }
 
-static bool get_dokany_version(std::wstring& ver, std::vector<int>& v)
+static bool get_dokany_version(wstring& ver, vector<int>& v)
 {
 	// DokanVersion() is useless because it returns 100
 
@@ -2680,15 +2682,15 @@ static bool get_dokany_version(std::wstring& ver, std::vector<int>& v)
 
 	
 
-	std::wstring name;
-	std::wstring copyright;
+	wstring name;
+	wstring copyright;
 
 	if (!GetProductVersionInfo(name, ver, copyright, hDok)) {
 		return false;
 	}
 
-	std::vector<std::wstring> strings;
-	std::wistringstream f(ver);
+	vector<wstring> strings;
+	wistringstream f(ver);
 	wchar_t buf[32];
 	while (f.getline(buf, sizeof(buf) / sizeof(buf[0]) - 1, L'.')) {
 		strings.push_back(buf);
@@ -2709,17 +2711,17 @@ static bool get_dokany_version(std::wstring& ver, std::vector<int>& v)
 
 // return false if won't work, returns true with no message if all ok, 
 // returns true with message if there will maybe be a problem
-bool check_dokany_version(std::wstring& mes)
+bool check_dokany_version(wstring& mes)
 {
 	const int required_major = 1;
 	const int required_middle = 1;
-	const std::wstring required_ver = L"1.1.x.x";
+	const wstring required_ver = L"1.1.x.x";
 	
 	mes = L"";
 
-	std::wstring ver;
+	wstring ver;
 
-	std::vector<int> v;
+	vector<int> v;
 	if (!get_dokany_version(ver, v)) {
 		mes = L"unable to get dokany version";
 		return false;

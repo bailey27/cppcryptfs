@@ -42,6 +42,10 @@ public:
 	bool m_bMountManager;
 	bool m_bEnableSavingPasswords;
 
+	// disallow copying
+	CSettingsPropertyPage(CSettingsPropertyPage const&) = delete;
+	void operator=(CSettingsPropertyPage const&) = delete;
+
 	CSettingsPropertyPage();
 	virtual ~CSettingsPropertyPage();
 

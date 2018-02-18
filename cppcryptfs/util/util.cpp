@@ -110,7 +110,7 @@ unicode_to_utf8(const WCHAR *unicode_str, char *buf, int buflen)
 }
 
 const char *
-unicode_to_utf8(const WCHAR *unicode_str, std::string& storage)
+unicode_to_utf8(const WCHAR *unicode_str, string& storage)
 {
 
 	int len = WideCharToMultiByte(CP_UTF8, 0, unicode_str, -1, NULL, 0, NULL, NULL);
@@ -138,7 +138,7 @@ unicode_to_utf8(const WCHAR *unicode_str, std::string& storage)
 
 
 const WCHAR *
-utf8_to_unicode(const char *utf8_str, std::wstring& storage)
+utf8_to_unicode(const char *utf8_str, wstring& storage)
 {
 	int len = MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, NULL, 0);
 
@@ -164,7 +164,7 @@ utf8_to_unicode(const char *utf8_str, std::wstring& storage)
 }
 
 static const char *
-add_base64_padding(const char *str, std::string& storage)
+add_base64_padding(const char *str, string& storage)
 {
 	// storage won't contain padded string if no padding needed
 
@@ -185,7 +185,7 @@ add_base64_padding(const char *str, std::string& storage)
 }
 
 static const char *
-remove_base64_padding(std::string& str)
+remove_base64_padding(string& str)
 {
 
 	while (str.length() > 0 && str[str.length() - 1] == '=')
@@ -195,13 +195,13 @@ remove_base64_padding(std::string& str)
 }
 
 bool
-base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTransform, bool padding)
+base64_decode(const char *str, vector<unsigned char>& storage, bool urlTransform, bool padding)
 {
 	if (!urlTransform) {
 		ASSERT(padding);
 	}
 
-	std::string padded_storage;
+	string padded_storage;
 
 	if (!padding)
 		str = add_base64_padding(str, padded_storage);
@@ -260,13 +260,13 @@ base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTran
 }
 
 bool
-base64_decode(const WCHAR *str, std::vector<unsigned char>& storage, bool urlTransform, bool padding)
+base64_decode(const WCHAR *str, vector<unsigned char>& storage, bool urlTransform, bool padding)
 {
 
 	// profiling shows that the WCHAR versions of the windows
 	// base64 conversions just convert to utf8 anyway
 
-	std::string utf8;
+	string utf8;
 
 	size_t len = wcslen(str);
 
@@ -294,7 +294,7 @@ base64_decode(const WCHAR *str, std::vector<unsigned char>& storage, bool urlTra
 
 
 const char *
-base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTransform, bool padding)
+base64_encode(const BYTE *data, DWORD datalen, string& storage, bool urlTransform, bool padding)
 {
 
 	if (!urlTransform) {
@@ -350,7 +350,7 @@ base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTra
 }
 
 const WCHAR *
-base64_encode(const BYTE *data, DWORD datalen, std::wstring& storage, bool urlTransform, bool padding)
+base64_encode(const BYTE *data, DWORD datalen, wstring& storage, bool urlTransform, bool padding)
 {
 
 	// profiling shows that the WCHAR versions of the windows
@@ -359,7 +359,7 @@ base64_encode(const BYTE *data, DWORD datalen, std::wstring& storage, bool urlTr
 	const WCHAR *rs = NULL;
 
 	try {
-		std::string utf8;
+		string utf8;
 
 		if (base64_encode(data, datalen, utf8, urlTransform, padding)) {
 
@@ -395,7 +395,7 @@ bool read_password(WCHAR *pwbuf, int pwbuflen, const WCHAR *prompt)
 	if (!hStdin)
 		return false;
 
-	std::wcout << (prompt ? prompt : L"Password: ");
+	wcout << (prompt ? prompt : L"Password: ");
 
 	DWORD old_mode = 0;
 	if (!GetConsoleMode(hStdin, &old_mode))
@@ -413,7 +413,7 @@ bool read_password(WCHAR *pwbuf, int pwbuflen, const WCHAR *prompt)
 
 	SetConsoleMode(hStdin, old_mode);
 
-	std::wcout << L"\n";
+	wcout << L"\n";
 
 	return true;
 }
@@ -625,8 +625,8 @@ GetProductVersionInfo(CString& strProductName, CString& strProductVersion,
 }
 
 bool 
-GetProductVersionInfo(std::wstring& strProductName, std::wstring& strProductVersion,
-	std::wstring& strLegalCopyright, HMODULE hMod)
+GetProductVersionInfo(wstring& strProductName, wstring& strProductVersion,
+	wstring& strLegalCopyright, HMODULE hMod)
 {
 	CString cName, cVer, cCop;
 
@@ -641,7 +641,7 @@ GetProductVersionInfo(std::wstring& strProductName, std::wstring& strProductVers
 }
 
 
-bool touppercase(LPCWSTR in, std::wstring& out)
+bool touppercase(LPCWSTR in, wstring& out)
 {
 	WCHAR sbuf[MAX_PATH]; // if longer then use heap
 	WCHAR *hbuf = NULL;
@@ -723,12 +723,12 @@ bool mountmanager_continue_mounting()
 	return mdlg.m_bOkPressed != 0;
 }
 
-BOOL GetPathHash(LPCWSTR path, std::wstring& hashstr)
+BOOL GetPathHash(LPCWSTR path, wstring& hashstr)
 {
 
 	hashstr = L"";
 
-	std::wstring ucpath;
+	wstring ucpath;
 
 	if (!touppercase(path, ucpath))
 		return FALSE;
@@ -750,7 +750,7 @@ BOOL GetPathHash(LPCWSTR path, std::wstring& hashstr)
 
 	path = ucpath.c_str();
 
-	std::string str;
+	string str;
 
 	if (!unicode_to_utf8(path, str))
 		return FALSE;

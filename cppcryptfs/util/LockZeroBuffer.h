@@ -30,11 +30,17 @@ THE SOFTWARE.
 
 #include <string>
 
+using namespace std;
+
 template<typename T>
 class LockZeroBuffer
 {
 	BOOL m_IsLocked;
 public:
+	// disallow copying
+	LockZeroBuffer(LockZeroBuffer const&) = delete;
+	void operator=(LockZeroBuffer const&) = delete;
+
 	BOOL IsLocked() { return m_IsLocked; };
 	T *m_buf;
 	unsigned int m_len;
@@ -71,7 +77,7 @@ public:
 		}
 		if (!m_IsLocked && throw_if_not_locked) {
 			delete[] m_buf;
-			std::bad_alloc exception;
+			bad_alloc exception;
 			throw exception;
 		}
 		memset(m_buf, 0, sizeof(T)*m_len);

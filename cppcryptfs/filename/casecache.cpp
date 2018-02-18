@@ -107,7 +107,7 @@ bool CaseCache::check_node_clean(CaseCacheNode *node)
 	if (!m_ttl || (GetTickCount64() - node->m_timestamp < m_ttl))
 		return true;
 
-	std::wstring enc_path;
+	wstring enc_path;
 
 	if (!encrypt_path(m_con, node->m_path.c_str(), enc_path, NULL)) 
 		return false;
@@ -149,11 +149,11 @@ void CaseCache::update_lru(CaseCacheNode *node)
 	}
 }
 
-bool CaseCache::store(LPCWSTR dirpath, const std::list<std::wstring>& files)
+bool CaseCache::store(LPCWSTR dirpath, const list<wstring>& files)
 {
 	bool bRet = true;
 
-	std::wstring key;
+	wstring key;
 
 	if (!touppercase(dirpath, key))
 		return false;
@@ -194,12 +194,12 @@ bool CaseCache::store(LPCWSTR dirpath, const std::list<std::wstring>& files)
 
 			node->m_key = mp.first->first;
 			node->m_path = dirpath;
-			std::wstring ucfile;
+			wstring ucfile;
 			for (auto it = files.begin(); it != files.end(); it++) {
 				if (!touppercase(it->c_str(), ucfile)) {
 					throw(-1);
 				}
-				node->m_files.insert(std::make_pair(ucfile, *it));
+				node->m_files.insert(make_pair(ucfile, *it));
 			}
 			node->m_timestamp = GetTickCount64();
 			GetSystemTimeAsFileTime(&node->m_filetime);
@@ -209,12 +209,12 @@ bool CaseCache::store(LPCWSTR dirpath, const std::list<std::wstring>& files)
 		} else {
 			
 			mp.first->second->m_files.clear();
-			std::wstring ucfile;
+			wstring ucfile;
 			for (auto it = files.begin(); it != files.end(); it++) {
 				if (!touppercase(it->c_str(), ucfile)) {
 					throw(-1);
 				}
-				mp.first->second->m_files.insert(std::make_pair(ucfile, *it));
+				mp.first->second->m_files.insert(make_pair(ucfile, *it));
 			}
 			mp.first->second->m_path = dirpath;
 			mp.first->second->m_timestamp = GetTickCount64();
@@ -235,7 +235,7 @@ bool CaseCache::store(LPCWSTR dirpath, LPCWSTR file)
 {
 	bool bRet = true;
 
-	std::wstring key;
+	wstring key;
 
 	if (!touppercase(dirpath, key))
 		return false;
@@ -252,18 +252,18 @@ bool CaseCache::store(LPCWSTR dirpath, LPCWSTR file)
 
 			CaseCacheNode *node = it->second;
 
-			std::wstring file_without_stream;
+			wstring file_without_stream;
 
 			bool have_stream = get_file_stream(file, &file_without_stream, NULL);
 
-			std::wstring ucfile;
+			wstring ucfile;
 
 			if (!touppercase(file_without_stream.c_str(), ucfile)) {
 				throw(-1);
 			}
 
 			if (have_stream) {
-				node->m_files.insert(std::make_pair(ucfile, file_without_stream.c_str()));
+				node->m_files.insert(make_pair(ucfile, file_without_stream.c_str()));
 			} else {
 				node->m_files.insert_or_assign(ucfile, file_without_stream.c_str());
 			}
@@ -281,8 +281,8 @@ bool CaseCache::store(LPCWSTR dirpath, LPCWSTR file)
 bool CaseCache::store(LPCWSTR filepath)
 {
 
-	std::wstring dir;
-	std::wstring file;
+	wstring dir;
+	wstring file;
 
 	if (!get_dir_and_file_from_path(filepath, &dir, &file))
 		return false;
@@ -291,7 +291,7 @@ bool CaseCache::store(LPCWSTR filepath)
 }
 
 
-int CaseCache::lookup(LPCWSTR path, std::wstring& result_path, bool force_not_found)
+int CaseCache::lookup(LPCWSTR path, wstring& result_path, bool force_not_found)
 {
 
 	if (!wcscmp(path, L"\\") || !wcscmp(path, L"\\*")) {
@@ -301,20 +301,20 @@ int CaseCache::lookup(LPCWSTR path, std::wstring& result_path, bool force_not_fo
 
 	int ret;
 
-	std::wstring dir;
-	std::wstring file;
+	wstring dir;
+	wstring file;
 
 	if (!get_dir_and_file_from_path(path, &dir, &file))
 		return CASE_CACHE_ERROR;
 
-	std::wstring ucdir;
-	std::wstring ucfile;
+	wstring ucdir;
+	wstring ucfile;
 
 	if (!touppercase(dir.c_str(), ucdir))
 		return CASE_CACHE_ERROR;
 
-	std::wstring file_without_stream;
-	std::wstring stream;
+	wstring file_without_stream;
+	wstring stream;
 
 	get_file_stream(file.c_str(), &file_without_stream, &stream);
 
@@ -370,8 +370,8 @@ bool CaseCache::remove(LPCWSTR path, LPCWSTR file)
 	if (get_file_stream(file, NULL, NULL))
 		return true;
 
-	std::wstring ucdir;
-	std::wstring ucfile;
+	wstring ucdir;
+	wstring ucfile;
 
 	if (!touppercase(path, ucdir))
 		return false;
@@ -412,8 +412,8 @@ bool CaseCache::remove(LPCWSTR path, LPCWSTR file)
 
 bool CaseCache::remove(LPCWSTR path)
 {
-	std::wstring dir;
-	std::wstring file;
+	wstring dir;
+	wstring file;
 
 	if (!get_dir_and_file_from_path(path, &dir, &file))
 		return false;
@@ -421,7 +421,7 @@ bool CaseCache::remove(LPCWSTR path)
 	return remove(dir.c_str(), file.c_str());
 }
 
-void CaseCache::remove_node(std::unordered_map<std::wstring, CaseCacheNode *>::iterator it)
+void CaseCache::remove_node(unordered_map<wstring, CaseCacheNode *>::iterator it)
 {
 	CaseCacheNode *node = it->second;
 
@@ -439,7 +439,7 @@ bool CaseCache::purge(LPCWSTR path)
 {
 	bool bRet = true;
 
-	std::wstring ucpath;
+	wstring ucpath;
 
 	if (!touppercase(path, ucpath))
 		return false;
@@ -476,13 +476,13 @@ bool CaseCache::load_dir(LPCWSTR filepath)
 	if (!m_con->IsCaseInsensitive())
 		return true;
 
-	std::wstring dir;
+	wstring dir;
 	
 	if (!get_dir_and_file_from_path(filepath, &dir, NULL)) {
 		return false;
 	}
 
-	std::wstring case_dir;
+	wstring case_dir;
 
 	int status = lookup(dir.c_str(), case_dir);
 
@@ -499,7 +499,7 @@ bool CaseCache::load_dir(LPCWSTR filepath)
 	if (status != CASE_CACHE_FOUND)
 		return false;
 
-	std::wstring enc_dir;
+	wstring enc_dir;
 	
 	if (!encrypt_path(m_con, case_dir.c_str(), enc_dir)) {
 		return false;
@@ -520,12 +520,12 @@ bool CaseCache::rename(LPCWSTR oldpath, LPCWSTR newpath)
 {
 	bool bRet = true;
 
-	std::wstring ucold;
+	wstring ucold;
 
 	if (!touppercase(oldpath, ucold))
 		return false;
 
-	std::wstring ucnew;
+	wstring ucnew;
 
 	if (!touppercase(newpath, ucnew))
 		return false;
@@ -534,11 +534,11 @@ bool CaseCache::rename(LPCWSTR oldpath, LPCWSTR newpath)
 
 	size_t newlen = ucnew.length();
 
-	std::wstring newkey;
+	wstring newkey;
 
-	std::list<std::wstring> toerase;
+	list<wstring> toerase;
 
-	std::list<std::pair<std::wstring, CaseCacheNode *>> toinsert;
+	list<pair<wstring, CaseCacheNode *>> toinsert;
 
 	lock();
 
@@ -561,7 +561,7 @@ bool CaseCache::rename(LPCWSTR oldpath, LPCWSTR newpath)
 
 			toerase.push_back(it.first);
 
-			toinsert.push_back(std::make_pair(newkey, it.second));
+			toinsert.push_back(make_pair(newkey, it.second));
 		} 
 
 		for (auto it : toerase) {

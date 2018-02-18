@@ -44,22 +44,27 @@ THE SOFTWARE.
 class EmeCryptContext {
 public:
 	
-	AES m_aes_ctx;
-
-	EmeCryptContext();
-	virtual ~EmeCryptContext();
-
 private:
 
 	LockZeroBuffer<AES_KEY> *m_pKeyBuf;
 	LockZeroBuffer<BYTE> *m_pLTableBuf;
-
-	void tabulateL(int m);
 public:
-
+	AES m_aes_ctx;
 	LPBYTE *m_LTable;
 
+	EmeCryptContext();
+
+	// disallow copying
+	EmeCryptContext(EmeCryptContext const&) = delete;
+	void operator=(EmeCryptContext const&) = delete;
+
+	virtual ~EmeCryptContext();
+
+	void tabulateL(int m);
+
+
 	bool init(const BYTE *key, bool hkdf);
+	
 };
 
 

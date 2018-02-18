@@ -11,6 +11,10 @@ public:
 
 	BOOL m_bOkPressed;
 
+	// disallow copying
+	CMountMangerDialog(CMountMangerDialog const&) = delete;
+	void operator=(CMountMangerDialog const&) = delete;
+
 	CMountMangerDialog(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CMountMangerDialog();
 

@@ -166,7 +166,7 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	CryptConfig config;
 
-	std::wstring error_mes;
+	wstring error_mes;
 
 	
 
@@ -269,7 +269,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	}
 
 	CString path_hash;
-	std::wstring hash;
+	wstring hash;
 	if (GetPathHash(cpath, hash)) {
 		path_hash = hash.c_str();
 		theApp.WriteProfileString(L"ConfigPaths", path_hash, config_path);

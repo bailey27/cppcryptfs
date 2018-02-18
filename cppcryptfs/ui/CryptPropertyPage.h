@@ -36,6 +36,10 @@ class CCryptPropertyPage : public CPropertyPage
 	DECLARE_DYNAMIC(CCryptPropertyPage)
 
 public:
+	// disallow copying
+	CCryptPropertyPage(CCryptPropertyPage const&) = delete;
+	void operator=(CCryptPropertyPage const&) = delete;
+
 	CCryptPropertyPage();
 	CCryptPropertyPage(int id);
 	virtual ~CCryptPropertyPage();

@@ -33,6 +33,8 @@ THE SOFTWARE.
 #include <unordered_map>
 #include <list>
 
+using namespace std;
+
 #define LFN_CACHE_ENTRIES 5000
 
 // There's no reason to have a TTL on the lfn cache entries because
@@ -51,13 +53,17 @@ THE SOFTWARE.
 class LongFilenameCacheNode {
 
 public:
-	std::wstring m_key;
-	std::wstring  m_path;
-	std::string m_actual_encrypted;
-	std::list<LongFilenameCacheNode*>::iterator m_list_it;  // holds position in lru list
+	wstring m_key;
+	wstring  m_path;
+	string m_actual_encrypted;
+	list<LongFilenameCacheNode*>::iterator m_list_it;  // holds position in lru list
 #ifndef LFN_CACHE_NOTTL
 	ULONGLONG m_timestap; // milliseconds
 #endif
+	// disallow copying
+	LongFilenameCacheNode(LongFilenameCacheNode const&) = delete;
+	void operator=(LongFilenameCacheNode const&) = delete;
+
 	LongFilenameCacheNode();
 	virtual ~LongFilenameCacheNode();
 };
@@ -69,11 +75,11 @@ class LongFilenameCache {
 private:
 
 
-	std::unordered_map<std::wstring, LongFilenameCacheNode*> m_map;
+	unordered_map<wstring, LongFilenameCacheNode*> m_map;
 
-	std::list<LongFilenameCacheNode*> m_lru_list;
+	list<LongFilenameCacheNode*> m_lru_list;
 
-	std::list<LongFilenameCacheNode*> m_spare_node_list;
+	list<LongFilenameCacheNode*> m_spare_node_list;
 
 	CRITICAL_SECTION m_crit;
 
@@ -83,14 +89,19 @@ private:
 	void lock();
 	void unlock();
 
-	bool check_node_clean(LongFilenameCacheNode *node, const std::wstring& path);
+	bool check_node_clean(LongFilenameCacheNode *node, const wstring& path);
 
 public:
+
+	// disallow copying
+	LongFilenameCache(LongFilenameCache const&) = delete;
+	void operator=(LongFilenameCache const&) = delete;
+
 	LongFilenameCache();
 
 	virtual ~LongFilenameCache();
 
-	bool lookup(LPCWSTR base64_hash, std::wstring *path, std::string *actual_encrypted);
+	bool lookup(LPCWSTR base64_hash, wstring *path, string *actual_encrypted);
 
 	bool store_if_not_there(LPCWSTR base64_hash, LPCWSTR path, const char *actual_encrypted);
 

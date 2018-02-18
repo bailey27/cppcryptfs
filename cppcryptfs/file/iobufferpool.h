@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include <windows.h>
 #include <list>
 
+using namespace std;
 
 class IoBuffer {
 public:
@@ -39,6 +40,10 @@ public:
 	unsigned char *m_pBuf;
 	size_t m_bufferSize;
 	bool m_bIsFromPool;
+
+	// disallow copying
+	IoBuffer(IoBuffer const&) = delete;
+	void operator=(IoBuffer const&) = delete;
 
 	IoBuffer(bool fromPool, size_t bufferSize);
 	virtual ~IoBuffer();
@@ -51,14 +56,40 @@ private:
 	const int m_max_buffers = 10;
 	int m_num_buffers;
 	size_t m_buffer_size;
-	std::list<IoBuffer*> m_buffers;
+	list<IoBuffer*> m_buffers;
 	void lock();
 	void unlock();
+
+	void init(size_t buffer_size);
+
+	IoBufferPool() { m_buffer_size = 0; }
+
 public:
-	IoBufferPool(size_t buffer_size);
+
+	static IoBufferPool* getInstance(size_t buffer_size = 0)
+	{
+		static IoBufferPool  instance; 
+
+		// We don't need to care about thread safety with this singleton
+		// because getInstance() is called with an argument only during a mount operation which 
+		// is always initiated from the main thread. If instance.m_buffer_size is not
+		// 0 then init() won't be called again.
+		// The methods that involve IoBuffers are all thread-safe.
+		if (buffer_size == 0 && instance.m_buffer_size == 0) {
+			throw std::runtime_error("error: attempting to use uninitialized IoBufferPool");
+		}
+
+		if (buffer_size != 0 && instance.m_buffer_size == 0) {
+			instance.init(buffer_size);
+		}
+		return &instance;
+	}
+
+	// disallow copying
+	IoBufferPool(IoBufferPool const&) = delete;
+	void operator=(IoBufferPool const&) = delete;
+
 	virtual ~IoBufferPool();
 	IoBuffer *GetIoBuffer(size_t buffer_size);
 	void ReleaseIoBuffer(IoBuffer *pBuf);
 };
-
-extern IoBufferPool *g_IoBufferPool;

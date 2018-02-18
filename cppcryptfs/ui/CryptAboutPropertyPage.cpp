@@ -580,13 +580,13 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 
 	// TODO:  Add extra initialization here
 
-	std::wstring prod = L"cppryptfs";
-	std::wstring ver = L"1.0";
-	std::wstring copyright = L"Copyright (C) 2016-2018 Bailey Brown.  All Rights Reserved.";
+	wstring prod = L"cppryptfs";
+	wstring ver = L"1.0";
+	wstring copyright = L"Copyright (C) 2016-2018 Bailey Brown.  All Rights Reserved.";
 
 	GetProductVersionInfo(prod, ver, copyright);
 
-	std::string openssl_ver_s = SSLeay_version(SSLEAY_VERSION);
+	string openssl_ver_s = SSLeay_version(SSLEAY_VERSION);
 
 	// get rid of unknown build date which is returned as "xx XXX xxxx"
 	if (strstr(openssl_ver_s.c_str(), "xx XXX xxxx")) {
@@ -594,7 +594,7 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 			openssl_ver_s.pop_back();
 	}
 
-	std::wstring openssl_ver_w;
+	wstring openssl_ver_w;
 
 	if (!utf8_to_unicode(openssl_ver_s.c_str(), openssl_ver_w))
 		openssl_ver_w = L"error getting openssl version";

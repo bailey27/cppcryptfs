@@ -46,7 +46,6 @@ THE SOFTWARE.
 #include "util/LockZeroBuffer.h"
 #include "util/util.h"
 #include "crypt/crypt.h"
-#include "file/iobufferpool.h"
 
 
 #ifdef _DEBUG
@@ -164,7 +163,7 @@ BOOL CcppcryptfsApp::InitInstance()
 		
 		return FALSE;
 	} else {
-		std::wstring mes;
+		wstring mes;
 		bool dokVerCheck = check_dokany_version(mes);
 		if (!dokVerCheck && mes.length() < 1) {
 			mes = L"problem with Dokany version";
@@ -292,9 +291,6 @@ BOOL CcppcryptfsApp::InitInstance()
 		ReleaseMutex(hAppMutex); // Explicitly release mutex
 		CloseHandle(hAppMutex); // close handle before terminating
 	}
-
-	if (g_IoBufferPool)
-		delete g_IoBufferPool;
 
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.

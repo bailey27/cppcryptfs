@@ -31,6 +31,8 @@ THE SOFTWARE.
 #include <windows.h>
 #include <vector>
 
+using namespace std;
+
 class CryptContext;
 
 // DbgPrint() function is really in cryptdokan.cpp
@@ -40,22 +42,22 @@ const char *
 unicode_to_utf8(const WCHAR *unicode_str, char *buf, int buflen);
 
 const char *
-unicode_to_utf8(const WCHAR *unicode_str, std::string& storage);
+unicode_to_utf8(const WCHAR *unicode_str, string& storage);
 
 const WCHAR *
-utf8_to_unicode(const char *utf8_str, std::wstring& storage);
+utf8_to_unicode(const char *utf8_str, wstring& storage);
 
 bool
-base64_decode(const char *str, std::vector<unsigned char>& storage, bool urlTransform, bool padding);
+base64_decode(const char *str, vector<unsigned char>& storage, bool urlTransform, bool padding);
 
 bool
-base64_decode(const WCHAR *str, std::vector<unsigned char>& storage, bool urlTransform, bool padding);
+base64_decode(const WCHAR *str, vector<unsigned char>& storage, bool urlTransform, bool padding);
 
 const char *
-base64_encode(const BYTE *data, DWORD datalen, std::string& storage, bool urlTransform, bool padding);
+base64_encode(const BYTE *data, DWORD datalen, string& storage, bool urlTransform, bool padding);
 
 const WCHAR *
-base64_encode(const BYTE *data, DWORD datalen, std::wstring& storage, bool urlTransform, bool padding);
+base64_encode(const BYTE *data, DWORD datalen, wstring& storage, bool urlTransform, bool padding);
 
 
 BOOL
@@ -89,10 +91,10 @@ void CloseConsole();
 void ConsoleErrMes(LPCWSTR err, DWORD pid = 0);
 
 bool
-GetProductVersionInfo(std::wstring& strProductName, std::wstring& strProductVersion,
-	std::wstring& strLegalCopyright, HMODULE hMod = NULL);
+GetProductVersionInfo(wstring& strProductName, wstring& strProductVersion,
+	wstring& strLegalCopyright, HMODULE hMod = NULL);
 
-bool touppercase(LPCWSTR in, std::wstring& out);
+bool touppercase(LPCWSTR in, wstring& out);
 
 int compare_names(CryptContext *con, LPCWSTR name1, LPCWSTR name2);
 
@@ -100,5 +102,5 @@ bool is_all_zeros(const BYTE *buf, size_t len);
 
 bool mountmanager_continue_mounting();
 
-BOOL GetPathHash(LPCWSTR path, std::wstring& hashstr);
+BOOL GetPathHash(LPCWSTR path, wstring& hashstr);
 

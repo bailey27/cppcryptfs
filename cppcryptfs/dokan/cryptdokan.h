@@ -37,7 +37,7 @@ typedef struct _struct_win32_find_data_pair {
 	WIN32_FIND_DATAW fdata_orig;
 } FindDataPair;
 
-int mount_crypt_fs(const WCHAR *mountpoint, const WCHAR *path, const WCHAR* config_path, const WCHAR *password, std::wstring& mes, bool readonly, bool reverse, int nThreads, int nBufferBlocks, int cachettl, bool caseinsensitive, bool mountmanager, bool mountmanagerwarn);
+int mount_crypt_fs(const WCHAR *mountpoint, const WCHAR *path, const WCHAR* config_path, const WCHAR *password, wstring& mes, bool readonly, bool reverse, int nThreads, int nBufferBlocks, int cachettl, bool caseinsensitive, bool mountmanager, bool mountmanagerwarn);
 
 BOOL unmount_crypt_fs(const WCHAR *mountpoint, bool wait);
 
@@ -49,6 +49,6 @@ BOOL have_security_name_privilege();
 
 void init_security_name_privilege();
 
-BOOL list_files(const WCHAR *path, std::list<FindDataPair> &fileDatas, std::wstring& err_mes);
+BOOL list_files(const WCHAR *path, list<FindDataPair> &fileDatas, wstring& err_mes);
 
-bool check_dokany_version(std::wstring& mes);
+bool check_dokany_version(wstring& mes);

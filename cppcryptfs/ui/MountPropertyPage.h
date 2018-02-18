@@ -50,6 +50,10 @@ protected:
 	void GetMountPoints(CStringArray& mountPoints); // builds array of all mountpoints inclding available drive letters
 	void DeleteMountPoint(int item);
 public:
+	// disallow copying
+	CMountPropertyPage(CMountPropertyPage const&) = delete;
+	void operator=(CMountPropertyPage const&) = delete;
+
 	CMountPropertyPage();
 	virtual ~CMountPropertyPage();
 

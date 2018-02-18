@@ -24,6 +24,11 @@
 class CSecureEdit : public CEdit
 {
 public:
+
+	// disallow copying
+	CSecureEdit(CSecureEdit const&) = delete;
+	void operator=(CSecureEdit const&) = delete;
+
 	CSecureEdit();
 	virtual ~CSecureEdit();
 

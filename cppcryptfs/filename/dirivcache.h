@@ -33,15 +33,20 @@ THE SOFTWARE.
 #include <unordered_map>
 #include <list>
 
+using namespace std;
 
 class DirIvCacheNode {
 
 public:
-	std::wstring m_key;
+	wstring m_key;
 	unsigned char m_dir_iv[DIR_IV_LEN];
-	std::list<DirIvCacheNode*>::iterator m_list_it;  // holds position in lru list
+	list<DirIvCacheNode*>::iterator m_list_it;  // holds position in lru list
 	ULONGLONG m_timestamp; // milliseconds
 	FILETIME m_last_write_time;
+	// disallow copying
+	DirIvCacheNode(DirIvCacheNode const&) = delete;
+	void operator=(DirIvCacheNode const&) = delete;
+
 	DirIvCacheNode();
 	virtual ~DirIvCacheNode();
 };
@@ -56,25 +61,29 @@ private:
 
 	ULONGLONG m_ttl;
 
-	std::unordered_map<std::wstring, DirIvCacheNode*> m_map;
+	unordered_map<wstring, DirIvCacheNode*> m_map;
 
-	std::list<DirIvCacheNode*> m_lru_list;
+	list<DirIvCacheNode*> m_lru_list;
 
-	std::list<DirIvCacheNode*> m_spare_node_list;
+	list<DirIvCacheNode*> m_spare_node_list;
 
 	CRITICAL_SECTION m_crit;
 
 	long long m_lookups;
 	long long m_hits;
 	
-	void normalize_key(std::wstring &key);
+	void normalize_key(wstring &key);
 
 	void lock();
 	void unlock();
 
-	bool check_node_clean(DirIvCacheNode *node, const std::wstring& path);
+	bool check_node_clean(DirIvCacheNode *node, const wstring& path);
 	void update_lru(DirIvCacheNode *node);
 public:
+	// disallow copying
+	DirIvCache(DirIvCache const&) = delete;
+	void operator=(DirIvCache const&) = delete;
+
 	DirIvCache();
 
 	virtual ~DirIvCache();

@@ -38,7 +38,7 @@ THE SOFTWARE.
 	Thid file implements a cache that replaces the least-recently-used (LRU)
 	item when a new item is inserted and the cache is full.
 
-	The node pointers are kept in both a std::unordered_map and a std::list
+	The node pointers are kept in both a unordered_map and a list
 
 	The map is for lookups, and the list is for doing the LRU replacement.
 */
@@ -82,7 +82,7 @@ DirIvCache::~DirIvCache()
 	DeleteCriticalSection(&m_crit);
 }
 
-void DirIvCache::normalize_key(std::wstring& key)
+void DirIvCache::normalize_key(wstring& key)
 {
 	if (key.size() > 0 && key[key.size() - 1] != '\\') {
 		key.push_back('\\');
@@ -99,13 +99,13 @@ void DirIvCache::unlock()
 	LeaveCriticalSection(&m_crit);
 }
 
-bool DirIvCache::check_node_clean(DirIvCacheNode *node, const std::wstring& path)
+bool DirIvCache::check_node_clean(DirIvCacheNode *node, const wstring& path)
 {
 
 	if (!m_ttl || (GetTickCount64() - node->m_timestamp < m_ttl))
 		return true;
 
-	std::wstring filepath = path;
+	wstring filepath = path;
 	
 	// already normalized with trailing slash
 	filepath += DIR_IV_NAME;
@@ -149,7 +149,7 @@ void DirIvCache::update_lru(DirIvCacheNode *node)
 
 bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 {
-	std::wstring key = path;
+	wstring key = path;
 
 	bool found;
 
@@ -211,7 +211,7 @@ bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv, const FILETIME
 
 	bool rval = true;
 
-	std::wstring key = path;
+	wstring key = path;
 
 	normalize_key(key);
 
@@ -278,7 +278,7 @@ bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv, const FILETIME
 
 void DirIvCache::remove(LPCWSTR path)
 {
-	std::wstring key = path;
+	wstring key = path;
 
 	normalize_key(key);
 

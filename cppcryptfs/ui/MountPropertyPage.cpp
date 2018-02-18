@@ -293,9 +293,9 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 	pPass->SetRealText(L"");
 
-	std::wstring error_mes;
+	wstring error_mes;
 
-	std::wstring basedir = (const WCHAR *)cpath;
+	wstring basedir = (const WCHAR *)cpath;
 
 	// strip any trailing backslashes
 	while (basedir.size() > 0 && basedir[basedir.size() - 1] == '\\')
@@ -363,7 +363,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 		theApp.WriteProfileStringW(L"MountOptions", L"ReadOnly", readonly ? L"1" : L"0");
 
 		CString path_hash;
-		std::wstring hash;
+		wstring hash;
 		if (GetPathHash(cpath, hash)) {
 			path_hash = hash.c_str();
 			theApp.WriteProfileString(L"MountPoints", path_hash, is_mountpoint_a_drive(cmp) ? dl : cmp);
@@ -940,7 +940,7 @@ BOOL CMountPropertyPage::OnSetActive()
 				pBoxPath->GetWindowText(cpath);
 				if (cpath.GetLength() > 0) {
 					CString path_hash;
-					std::wstring hash;
+					wstring hash;
 					if (GetPathHash(cpath, hash)) {
 						path_hash = hash.c_str();
 						CString config_path = theApp.GetProfileString(L"ConfigPaths", path_hash, L"");
@@ -1017,7 +1017,7 @@ void CMountPropertyPage::OnCbnSelchangePath()
 		return;
 
 	CString path_hash;
-	std::wstring hash;
+	wstring hash;
 	if (!GetPathHash(cpath, hash))
 		return;
 
@@ -1277,7 +1277,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 		fwprintf(stderr, L"Try 'cppcryptfs --help' for more information.\n");
 	} else if (do_version || do_help) {
 		if (do_version) {
-			std::wstring prod, ver, copyright;
+			wstring prod, ver, copyright;
 			GetProductVersionInfo(prod, ver, copyright);
 			fwprintf(stderr, L"%s %s %s\n", prod.c_str(), ver.c_str(), copyright.c_str());
 			if (do_help)
@@ -1296,9 +1296,9 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 				if (dl < 'A' || dl > 'Z') {
 					errMes = L"invalid drive letter"; 
 				} else { // list_files will figure out of this path is really mounted or not
-					std::wstring err_mes;
+					wstring err_mes;
 					list_arg.SetAt(0, dl);
-					std::list<FindDataPair> findDatas;
+					list<FindDataPair> findDatas;
 					if (!list_files(list_arg, findDatas, err_mes)) {
 						errMes = err_mes.c_str();
 					} else {

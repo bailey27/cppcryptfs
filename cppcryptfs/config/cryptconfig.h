@@ -63,17 +63,17 @@ public:
 	bool m_reverse;
 
 	int m_Version;
-	std::wstring m_VolumeName;
+	wstring m_VolumeName;
 
-	std::vector<unsigned char> m_encrypted_key_salt;
-	std::vector<unsigned char> m_encrypted_key;
+	vector<unsigned char> m_encrypted_key_salt;
+	vector<unsigned char> m_encrypted_key;
 
 
-	std::wstring m_basedir;  // the real root of the fs
+	wstring m_basedir;  // the real root of the fs
 
 	DWORD m_serial; // windows volume serial number - derived from root diriv or from hash of root dir
 
-	std::wstring m_mountpoint;
+	wstring m_mountpoint;
 
 	const unsigned char *GetMasterKey() { return m_pKeyBuf ? m_pKeyBuf->m_buf : NULL; }
 	int GetMasterKeyLength() { return m_pKeyBuf ? m_pKeyBuf->m_len : 0; }
@@ -84,19 +84,23 @@ public:
 	const BYTE *GetGcmContentKey() { return m_HKDF ? m_pGcmContentKey->m_buf : GetMasterKey(); };
 
 	CryptConfig();
-	bool read(std::wstring& mes, const WCHAR *config_file_path = NULL, bool reverse = false);
+	bool read(wstring& mes, const WCHAR *config_file_path = NULL, bool reverse = false);
 	bool decrypt_key(LPCTSTR password);
 
 	bool create(const WCHAR *path, const WCHAR *specified_config_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, 
-					bool siv, bool reverse, const WCHAR *volume_name, std::wstring& error_mes);
+					bool siv, bool reverse, const WCHAR *volume_name, wstring& error_mes);
 
-	bool check_config(std::wstring& mes);
+	bool check_config(wstring& mes);
 
 	bool write_volume_name();
 
 	bool init_serial(CryptContext *con);
 
 	WCHAR get_base_drive_letter();
+
+	// disallow copying
+	CryptConfig(CryptConfig const&) = delete;
+	void operator=(CryptConfig const&) = delete;
 
 	virtual ~CryptConfig();
 };

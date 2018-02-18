@@ -32,6 +32,8 @@ THE SOFTWARE.
 
 #include <string>
 
+using namespace std;
+
 class CryptContext;
 
 typedef struct struct_FileHeader {
@@ -48,7 +50,7 @@ public:
 
 	HANDLE m_handle;
 
-	std::wstring m_path;
+	wstring m_path;
 
 	CryptContext *m_con;
 
@@ -67,6 +69,10 @@ public:
 	virtual BOOL UnlockFile(LONGLONG ByteOffset, LONGLONG Length) = 0;
 
 	BOOL NotImplemented() { SetLastError(ERROR_ACCESS_DENIED); return FALSE; };
+
+	// disallow copying
+	CryptFile(CryptFile const&) = delete;
+	void operator=(CryptFile const&) = delete;
 
 	CryptFile();
 	virtual ~CryptFile();
@@ -90,6 +96,10 @@ public:
 	virtual BOOL LockFile(LONGLONG ByteOffset, LONGLONG Length);
 
 	virtual BOOL UnlockFile(LONGLONG ByteOffset, LONGLONG Length);
+
+	// disallow copying
+	CryptFileForward(CryptFileForward const&) = delete;
+	void operator=(CryptFileForward const&) = delete;
 
 	CryptFileForward();
 
@@ -123,6 +133,10 @@ public:
 	virtual BOOL LockFile(LONGLONG ByteOffset, LONGLONG Length) { return NotImplemented(); };
 
 	virtual BOOL UnlockFile(LONGLONG ByteOffset, LONGLONG Length) { return NotImplemented(); };
+
+	// disallow copying
+	CryptFileReverse(CryptFileReverse const&) = delete;
+	void operator=(CryptFileReverse const&) = delete;
 
 	CryptFileReverse();
 

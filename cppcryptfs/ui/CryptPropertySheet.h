@@ -37,6 +37,11 @@ class CCryptPropertySheet : public CPropertySheet
 	DECLARE_DYNAMIC(CCryptPropertySheet)
 
 public:
+
+	// disallow copying
+	CCryptPropertySheet(CCryptPropertySheet const&) = delete;
+	void operator=(CCryptPropertySheet const&) = delete;
+
 	CCryptPropertySheet(UINT nIDCaption, CWnd* pParentWnd = NULL, UINT iSelectPage = 0);
 	CCryptPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd = NULL, UINT iSelectPage = 0);
 	virtual ~CCryptPropertySheet();

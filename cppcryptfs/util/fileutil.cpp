@@ -138,7 +138,7 @@ read_dir_iv(const TCHAR *path, unsigned char *diriv, FILETIME& LastWriteTime)
 	DWORD nRead = 0;
 
 	try {
-		std::wstring path_str;
+		wstring path_str;
 
 		path_str.append(path);
 
@@ -205,7 +205,7 @@ get_dir_iv(CryptContext *con, const WCHAR *path, unsigned char *diriv)
 }
 
 static bool
-convert_fdata(CryptContext *con, BOOL isRoot, const BYTE *dir_iv, const WCHAR *path, WIN32_FIND_DATAW& fdata, std::string *actual_encrypted)
+convert_fdata(CryptContext *con, BOOL isRoot, const BYTE *dir_iv, const WCHAR *path, WIN32_FIND_DATAW& fdata, string *actual_encrypted)
 {
 
 	if (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))
@@ -233,7 +233,7 @@ convert_fdata(CryptContext *con, BOOL isRoot, const BYTE *dir_iv, const WCHAR *p
 	
 
 	if (wcscmp(fdata.cFileName, L".") && wcscmp(fdata.cFileName, L"..")) {
-		std::wstring storage;
+		wstring storage;
 		const WCHAR *dname;
 		
 		if (isReverseConfig) {
@@ -290,11 +290,11 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 
 	bool plaintext_names = con->GetConfig()->m_PlaintextNames;
 
-	std::list<std::wstring> files; // used only if case-insensitive
+	list<wstring> files; // used only if case-insensitive
 
 	try {
 
-		std::wstring enc_path_search = path;
+		wstring enc_path_search = path;
 
 		WIN32_FIND_DATAW fdata, fdata_dot;
 
@@ -326,7 +326,7 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 
 		bool isRoot = !wcscmp(pt_path, L"\\");
 
-		std::string actual_encrypted;
+		string actual_encrypted;
 
 		do {
 			if (reverse && !wcscmp(fdata.cFileName, L".")) {
@@ -392,7 +392,7 @@ bool
 read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset)
 {
 	if (rt_is_dir_iv_file(con, FileName)) {
-		std::wstring dirpath;
+		wstring dirpath;
 		if (!get_file_directory(FileName, dirpath))
 			return false;
 		BYTE dir_iv[DIR_IV_LEN];
@@ -407,7 +407,7 @@ read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD
 		*pNread = (DWORD)count;
 		return true;
 	} else if (rt_is_name_file(con, FileName)) {
-		std::string actual_encrypted;
+		string actual_encrypted;
 		if (!get_actual_encrypted(con, FileName, actual_encrypted))
 			return false;
 		LONGLONG count = min(actual_encrypted.length() - offset, buflen);
@@ -457,7 +457,7 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 		}
 
 		if (is_dir_iv) {
-			std::wstring dirpath;
+			wstring dirpath;
 			if (!get_file_directory(FileName, dirpath))
 				throw((int)ERROR_ACCESS_DENIED);
 
@@ -485,11 +485,11 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 
 		} else if (is_name_file) {
 
-			std::wstring enc_filename;
+			wstring enc_filename;
 
 			remove_longname_suffix(inputPath, enc_filename);
 
-			std::wstring decrypted_name;
+			wstring decrypted_name;
 
 			if (!decrypt_path(con, &enc_filename[0], decrypted_name))
 				throw((int)ERROR_ACCESS_DENIED);
@@ -510,7 +510,7 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 
 			CloseHandle(hFile);
 
-			std::string actual_encrypted;
+			string actual_encrypted;
 
 			if (!get_actual_encrypted(con, &enc_filename[0], actual_encrypted))
 				throw((int)ERROR_ACCESS_DENIED);
@@ -610,7 +610,7 @@ create_dir_iv(CryptContext *con, LPCWSTR path)
 		if (!get_random_bytes(con, diriv, DIR_IV_LEN))
 			throw ((int)(GetLastError() ? GetLastError() : ERROR_OUTOFMEMORY));
 
-		std::wstring path_str = path;
+		wstring path_str = path;
 
 		LPCWSTR encpath = &path_str[0];
 
@@ -683,7 +683,7 @@ is_empty_directory(LPCWSTR path, BOOL bMustReallyBeEmpty)
 
 	try {
 
-		std::wstring enc_path = path;
+		wstring enc_path = path;
 
 		const WCHAR *filePath = &enc_path[0];
 
@@ -757,7 +757,7 @@ delete_directory(CryptContext *con, LPCWSTR path)
 
 		if (con->GetConfig()->DirIV()) {
 
-			std::wstring diriv_file = path;
+			wstring diriv_file = path;
 
 			if (diriv_file[diriv_file.size() - 1] != '\\')
 				diriv_file.push_back('\\');
@@ -789,7 +789,7 @@ delete_directory(CryptContext *con, LPCWSTR path)
 		}
 
 		if (!con->GetConfig()->m_PlaintextNames && con->GetConfig()->m_LongNames && is_long_name(path)) {
-			std::wstring name_file = path;
+			wstring name_file = path;
 			if (name_file[name_file.size()-1] == '\\') {
 				name_file.erase(name_file.size() - 1);
 			}
@@ -822,7 +822,7 @@ bool delete_file(const CryptContext *con, const WCHAR *filename, bool cleanup_lo
 
 	if (!con->GetConfig()->m_PlaintextNames && con->GetConfig()->m_LongNames && is_long_name(filename)) {
 	
-		std::wstring path = filename;
+		wstring path = filename;
 
 		path += LONGNAME_SUFFIX_W;
 
@@ -841,7 +841,7 @@ bool delete_file(const CryptContext *con, const WCHAR *filename, bool cleanup_lo
 }
 
 bool
-get_dir_and_file_from_path(LPCWSTR path, std::wstring *dir, std::wstring *file)
+get_dir_and_file_from_path(LPCWSTR path, wstring *dir, wstring *file)
 {
 
 	if (!wcscmp(path, L"\\")) {
@@ -876,7 +876,7 @@ get_dir_and_file_from_path(LPCWSTR path, std::wstring *dir, std::wstring *file)
 
 
 bool	  
-get_file_stream(LPCWSTR filename, std::wstring *file, std::wstring *stream)
+get_file_stream(LPCWSTR filename, wstring *file, wstring *stream)
 {
 
 	LPCWSTR pStreamColon = wcschr(filename, ':');
@@ -899,7 +899,7 @@ get_file_stream(LPCWSTR filename, std::wstring *file, std::wstring *stream)
 }
 
 bool
-remove_stream_type(LPCWSTR stream, std::wstring& stream_without_type, std::wstring& type)
+remove_stream_type(LPCWSTR stream, wstring& stream_without_type, wstring& type)
 {
 	if (!stream || stream[0] != ':')
 		return false;
@@ -933,13 +933,13 @@ convert_find_stream_data(CryptContext *con, LPCWSTR pt_path, LPCWSTR path, WIN32
 
 	if (!plaintext_names && wcscmp(fdata.cStreamName, L"::$DATA")) {
 		if (reverse) {
-			std::wstring dirpath;
+			wstring dirpath;
 			if (!get_file_directory(pt_path, dirpath))
 				return false;
 			if (!derive_path_iv(con, dirpath.c_str(), dir_iv, TYPE_DIRIV))
 				return false;
 
-			std::wstring enc_stream;
+			wstring enc_stream;
 
 			if (!encrypt_stream_name(con, dir_iv, fdata.cStreamName, enc_stream))
 				return false;
@@ -947,13 +947,13 @@ convert_find_stream_data(CryptContext *con, LPCWSTR pt_path, LPCWSTR path, WIN32
 			wcscpy_s(fdata.cStreamName, enc_stream.c_str());
 
 		} else {
-			std::wstring dirpath;
+			wstring dirpath;
 			if (!get_file_directory(path, dirpath))
 				return false;
 			if (!get_dir_iv(con, dirpath.c_str(), dir_iv))
 				return false;
 
-			std::wstring pt_stream;
+			wstring pt_stream;
 
 			if (!decrypt_stream_name(con, dir_iv, fdata.cStreamName, pt_stream))
 				return false;

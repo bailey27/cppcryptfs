@@ -53,11 +53,14 @@ void IoBufferPool::unlock()
 	LeaveCriticalSection(&m_crit);
 }
 
-IoBufferPool::IoBufferPool(size_t buffer_size)
+void IoBufferPool::init(size_t buffer_size)
 {
-	InitializeCriticalSection(&m_crit);
-	m_num_buffers = 0;
+	if (buffer_size == 0) {
+		throw std::runtime_error("error: attempting to init IoBufferPool with buffer_size of 0");
+	}
 	m_buffer_size = buffer_size;
+	m_num_buffers = 0;
+	InitializeCriticalSection(&m_crit);
 }
 
 IoBufferPool::~IoBufferPool()
@@ -66,7 +69,9 @@ IoBufferPool::~IoBufferPool()
 		delete pBuf;
 	}
 
-	DeleteCriticalSection(&m_crit);
+	if (m_buffer_size) { // was initialized
+		DeleteCriticalSection(&m_crit);
+	}
 }
 
 IoBuffer * IoBufferPool::GetIoBuffer(size_t buffer_size)
@@ -111,4 +116,4 @@ void IoBufferPool::ReleaseIoBuffer(IoBuffer * pBuf)
 	}
 }
 
-IoBufferPool *g_IoBufferPool = NULL;
+

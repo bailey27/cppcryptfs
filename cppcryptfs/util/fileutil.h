@@ -32,6 +32,8 @@ THE SOFTWARE.
 
 #include <vector>
 
+using namespace std;
+
 class CryptContext;
 
 bool
@@ -83,14 +85,14 @@ bool
 read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset);
 
 bool
-get_dir_and_file_from_path(LPCWSTR path, std::wstring *dir, std::wstring *file);
+get_dir_and_file_from_path(LPCWSTR path, wstring *dir, wstring *file);
 
 		  // extracts the stream part if any and puts it with the colon in stream,
 bool	  // and puts the file name without the stream name in file
-get_file_stream(LPCWSTR filename, std::wstring *file, std::wstring *stream);
+get_file_stream(LPCWSTR filename, wstring *file, wstring *stream);
 
 bool  // for handling streams named like ":foo:$DATA".  The ":$DATA" which is the type of stream is not encrypted/decrypted
-remove_stream_type(LPCWSTR stream, std::wstring& stream_without_type, std::wstring& type);
+remove_stream_type(LPCWSTR stream, wstring& stream_without_type, wstring& type);
 
 bool
 convert_find_stream_data(CryptContext *con, LPCWSTR pt_path, LPCWSTR path, WIN32_FIND_STREAM_DATA& fdata);

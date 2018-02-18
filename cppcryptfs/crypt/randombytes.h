@@ -53,6 +53,11 @@ public:
 	bool GetRandomBytes(unsigned char *buf, DWORD len);
 
 	RandomBytes();
+
+	// disallow copying
+	RandomBytes(RandomBytes const&) = delete;
+	void operator=(RandomBytes const&) = delete;
+
 	virtual ~RandomBytes();
 };
 

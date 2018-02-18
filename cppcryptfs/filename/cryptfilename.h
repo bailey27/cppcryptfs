@@ -58,24 +58,24 @@ bool // used for reverse mode
 derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const char *type);
 
 const WCHAR * // returns UNICODE plaintext filename
-decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, std::wstring& storage);
+decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, wstring& storage);
 
 const WCHAR * // get decrypted path (used only in reverse mode)
-decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage);
+decrypt_path(CryptContext *con, const WCHAR *path, wstring& storage);
 
 const WCHAR * // returns base64-encoded, encrypted filename
-encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::wstring& storage, std::string *actual_encrypted = NULL);
+encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, wstring& storage, string *actual_encrypted = NULL);
 
 const WCHAR * // get encrypted path
-encrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage, std::string *actual_encrypted = NULL);
+encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *actual_encrypted = NULL);
 
-bool write_encrypted_long_name(const WCHAR *filePath, const std::string& enc_data);
+bool write_encrypted_long_name(const WCHAR *filePath, const string& enc_data);
 
 bool
 derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const char *type);
 
 const WCHAR *
-decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path, const BYTE *dir_iv, std::wstring& decrypted_name);
+decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path, const BYTE *dir_iv, wstring& decrypted_name);
 
 // tests that are true only in reverse mode (rt is forreverse-test)
 bool
@@ -94,19 +94,19 @@ bool
 rt_is_virtual_file(CryptContext *con, LPCWSTR FileName);
 
 bool
-get_file_directory(LPCWSTR filepath, std::wstring& dirpath);
+get_file_directory(LPCWSTR filepath, wstring& dirpath);
 
 bool
-get_bare_filename(LPCWSTR filepath, std::wstring& filename);
+get_bare_filename(LPCWSTR filepath, wstring& filename);
 
 bool
-get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_encrypted);
+get_actual_encrypted(CryptContext *con, LPCWSTR FileName, string& actual_encrypted);
 
 const WCHAR *
-remove_longname_suffix(const WCHAR *filepath, std::wstring& storage);
+remove_longname_suffix(const WCHAR *filepath, wstring& storage);
 
 const WCHAR * // returns base64-encoded, encrypted stream name.  input stream name is expected to start with colon
-encrypt_stream_name(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *stream, std::wstring& storage);
+encrypt_stream_name(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *stream, wstring& storage);
 
 const WCHAR * // returns UNICODE plaintext stream name.  input stream name is expected to start with colon
-decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *stream, std::wstring& storage);
+decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *stream, wstring& storage);

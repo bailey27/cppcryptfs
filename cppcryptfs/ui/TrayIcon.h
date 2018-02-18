@@ -84,6 +84,10 @@ You implement it using the methods described for the previous two classes.
 
 class CTrayIcon : public CWnd {
 public:
+  // disallow copying
+  CTrayIcon(CTrayIcon const&) = delete;
+  void operator=(CTrayIcon const&) = delete;
+
   CTrayIcon() {}
   CTrayIcon(LPCTSTR szTip, HICON hIcon) {Create(szTip, hIcon);}
   virtual ~CTrayIcon() {

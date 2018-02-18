@@ -54,6 +54,9 @@ public:
 private:
 	bool m_caseinsensitive;
 public:
+	// disallow copying
+	CryptContext(CryptContext const&) = delete;
+	void operator=(CryptContext const&) = delete;
 
 	bool IsCaseInsensitive() { return m_caseinsensitive && !m_config->m_reverse && !m_config->m_PlaintextNames; };
 	void SetCaseSensitive(bool bCaseSensitive) { m_caseinsensitive = bCaseSensitive; };

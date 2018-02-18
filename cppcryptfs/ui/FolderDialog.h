@@ -16,6 +16,10 @@ friend static int CALLBACK BrowseDirectoryCallback(
 				HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
 
 public:
+	// disallow copying
+	CFolderDialog(CFolderDialog const&) = delete;
+	void operator=(CFolderDialog const&) = delete;
+
 	CFolderDialog(	LPCTSTR lpszFolderName = NULL, 
 					DWORD dwFlags = NULL/*BIF_RETURNONLYFSDIRS*/, 
 					CWnd* pParentWnd = NULL);

@@ -259,7 +259,7 @@ int decrypt_siv(const unsigned char *ciphertext, int ciphertext_len, unsigned ch
 	return ciphertext_len;
 }
 
-bool sha256(const std::string& str, BYTE *sum)
+bool sha256(const string& str, BYTE *sum)
 {
 	EVP_MD_CTX *mdctx = NULL;
 	bool ret = true;
@@ -370,7 +370,7 @@ bool sha512(const BYTE *data, int datalen, BYTE *sum)
 
 }
 
-bool encrypt_string_gcm(const std::wstring& str, const BYTE *key, std::string& base64_out)
+bool encrypt_string_gcm(const wstring& str, const BYTE *key, string& base64_out)
 {
 	BYTE iv[BLOCK_IV_LEN];
 
@@ -387,7 +387,7 @@ bool encrypt_string_gcm(const std::wstring& str, const BYTE *key, std::string& b
 		return false;
 
 	try {
-		std::string utf8;
+		string utf8;
 		if (!unicode_to_utf8(&str[0], utf8))
 			throw(-1);
 
@@ -419,7 +419,7 @@ bool encrypt_string_gcm(const std::wstring& str, const BYTE *key, std::string& b
 	return rval;
 }
 
-bool decrypt_string_gcm(const std::string& base64_in, const BYTE *key, std::wstring& str)
+bool decrypt_string_gcm(const string& base64_in, const BYTE *key, wstring& str)
 {
 	bool rval = true;
 
@@ -429,7 +429,7 @@ bool decrypt_string_gcm(const std::string& base64_in, const BYTE *key, std::wstr
 		return false;
 
 	try {
-		std::vector<BYTE> v;
+		vector<BYTE> v;
 
 		BYTE adata[8];
 		memset(adata, 0, sizeof(adata));

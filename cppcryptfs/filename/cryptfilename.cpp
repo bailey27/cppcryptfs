@@ -48,10 +48,10 @@ static const WCHAR longname_suffix[] = LONGNAME_SUFFIX_W;
 
 bool is_long_name(const WCHAR *filename)
 {
-	std::wstring path = filename;
+	wstring path = filename;
 
 	size_t last_slash = path.find_last_of('\\');
-	if (last_slash != std::wstring::npos) {
+	if (last_slash != wstring::npos) {
 		filename = &path[last_slash + 1];
 	} 
 	return !wcsncmp(filename, longname_prefix, sizeof(longname_prefix) / sizeof(longname_prefix[0]) - 1);
@@ -70,7 +70,7 @@ derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const ch
 
 	DbgPrint(L"derive_path_iv path = %s, type = %S\n", path, type);
 
-	std::wstring wpath;
+	wstring wpath;
 
 	const WCHAR *pathstr = path;
 
@@ -91,7 +91,7 @@ derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const ch
 			wpath[i] = '/';
 	}
 
-	std::string utf8path;
+	string utf8path;
 
 	if (!unicode_to_utf8(&wpath[0], utf8path))
 		return false;
@@ -124,9 +124,9 @@ derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const ch
 
 
 const WCHAR * // returns base64-encoded, encrypted filename
-encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, std::wstring& storage, std::string *actual_encrypted)
+encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, wstring& storage, string *actual_encrypted)
 {
-	std::string utf8_str;
+	string utf8_str;
 
 	const WCHAR *rs = NULL;
 
@@ -135,8 +135,8 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 		return storage.c_str();
 	}
 
-	std::wstring file_without_stream;
-	std::wstring stream;
+	wstring file_without_stream;
+	wstring stream;
 
 	bool have_stream = get_file_stream(filename, &file_without_stream, &stream);
 
@@ -169,7 +169,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 	}
 
 	if (con->GetConfig()->m_LongNames && storage.length() > MAX_FILENAME_LEN) {
-		std::string utf8;
+		string utf8;
 		if (!unicode_to_utf8(storage.c_str(), utf8))
 			return NULL;
 		if (actual_encrypted) {
@@ -178,7 +178,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 		BYTE sum[32];
 		if (!sha256(utf8, sum))
 			return NULL;
-		std::wstring base64_sum;
+		wstring base64_sum;
 		if (!base64_encode(sum, sizeof(sum), base64_sum, true, !con->GetConfig()->m_Raw64))
 			return NULL;
 		storage = longname_prefix;
@@ -188,7 +188,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 	}
 
 	if (have_stream && rs) {
-		std::wstring enc_stream;
+		wstring enc_stream;
 		if (encrypt_stream_name(con, dir_iv, stream.c_str(), enc_stream)) {
 			storage += enc_stream;
 			rs = storage.c_str();
@@ -205,23 +205,23 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 
 
 const WCHAR * // returns UNICODE plaintext filename
-decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, std::wstring& storage)
+decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, wstring& storage)
 {
 	if (con->GetConfig()->m_PlaintextNames) {
 		storage = filename;
 		return &storage[0];
 	}
 
-	std::wstring file_without_stream;
-	std::wstring stream;
+	wstring file_without_stream;
+	wstring stream;
 
 	bool have_stream = get_file_stream(filename, &file_without_stream, &stream);
 
-	std::vector<unsigned char> ctstorage;
+	vector<unsigned char> ctstorage;
 
 	char longname_buf[4096];
 
-	std::wstring longname_storage;
+	wstring longname_storage;
 
 	if (!wcsncmp(file_without_stream.c_str(), longname_prefix, sizeof(longname_prefix)/sizeof(longname_prefix[0])-1)) {
 		if (con->GetConfig()->m_reverse) {
@@ -230,7 +230,7 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 			else
 				return false;
 		} else {
-			std::wstring fullpath = path;
+			wstring fullpath = path;
 			if (fullpath[fullpath.size() - 1] != '\\')
 				fullpath.push_back('\\');
 
@@ -288,7 +288,7 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 		delete[] pt;
 
 		if (have_stream && ws) {
-			std::wstring dec_stream;
+			wstring dec_stream;
 			if (decrypt_stream_name(con, dir_iv, stream.c_str(), dec_stream)) {
 				storage += dec_stream;
 				ws = storage.c_str();
@@ -307,7 +307,7 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 }
 
 static const WCHAR *
-extract_lfn_base64_hash(const WCHAR *lfn, std::wstring& storage)
+extract_lfn_base64_hash(const WCHAR *lfn, wstring& storage)
 {
 	storage.clear();
 
@@ -323,19 +323,19 @@ extract_lfn_base64_hash(const WCHAR *lfn, std::wstring& storage)
 
 
 const WCHAR *
-decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path, const BYTE *dir_iv, std::wstring& decrypted_name)
+decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path, const BYTE *dir_iv, wstring& decrypted_name)
 {
 	HANDLE hFind = INVALID_HANDLE_VALUE;
 	bool found = false;
 
 	try {
 		
-		std::wstring storage = plain_path;
+		wstring storage = plain_path;
 
-		std::wstring base64_hash;
+		wstring base64_hash;
 		if (!extract_lfn_base64_hash(filename /* &s[0] */, base64_hash))
 			throw(-1);
-		std::wstring lfn_path;
+		wstring lfn_path;
 		if (con->m_lfn_cache.lookup(&base64_hash[0], &lfn_path, NULL)) {
 			const WCHAR *ps = wcsrchr(&lfn_path[0], '\\');
 			decrypted_name = ps ? ps + 1 : &lfn_path[0];
@@ -348,17 +348,17 @@ decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path
 			// store any we generate in the lfn cache for later use
 
 			WIN32_FIND_DATA fdata;
-			std::wstring findspec = storage;
+			wstring findspec = storage;
 			findspec += L"*";
 			hFind = FindFirstFile(&findspec[0], &fdata);
 			if (hFind == INVALID_HANDLE_VALUE)
 				throw(-1);
 
-			std::string utf8name;
-			std::wstring find_enc;
-			std::string actual_encrypted;
-			std::wstring find_base64_hash;
-			std::wstring find_path;
+			string utf8name;
+			wstring find_enc;
+			string actual_encrypted;
+			wstring find_base64_hash;
+			wstring find_path;
 
 			do {
 
@@ -407,7 +407,7 @@ decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path
 }
 
 const WCHAR * // get decrypted path (used only in reverse mode)
-decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage)
+decrypt_path(CryptContext *con, const WCHAR *path, wstring& storage)
 {
 	const WCHAR *rval = NULL;
 
@@ -438,11 +438,11 @@ decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage)
 			if (last_elem) {
 				last_elem++;
 				if (is_long_name(last_elem)) {
-					std::wstring base64_hash;
+					wstring base64_hash;
 					if (!extract_lfn_base64_hash(&last_elem[0], base64_hash)) {
 						throw(-1);
 					}
-					std::wstring lfn_path;
+					wstring lfn_path;
 					if (con->m_lfn_cache.lookup(&base64_hash[0], &storage, NULL)) {
 						done = true;
 					}
@@ -453,7 +453,7 @@ decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage)
 
 			if (!done) {
 
-				std::wstring diriv_path = L"";
+				wstring diriv_path = L"";
 
 				if (*path && path[0] == '\\') {
 					storage.push_back('\\');
@@ -474,9 +474,9 @@ decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage)
 					throw(-1);
 				}
 
-				std::wstring s;
+				wstring s;
 
-				std::wstring uni_plain_elem;
+				wstring uni_plain_elem;
 
 				while (*p) {
 
@@ -527,7 +527,7 @@ decrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage)
 
 
 const WCHAR * // get encrypted path
-encrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage, std::string *actual_encrypted)
+encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *actual_encrypted)
 {
 
 	const WCHAR *rval = NULL;
@@ -564,9 +564,9 @@ encrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage, std::s
 				throw(-1);
 			}
 
-			std::wstring s;
+			wstring s;
 
-			std::wstring uni_crypt_elem;
+			wstring uni_crypt_elem;
 
 			while (*p) {
 
@@ -608,7 +608,7 @@ encrypt_path(CryptContext *con, const WCHAR *path, std::wstring& storage, std::s
 
 }
 
-bool write_encrypted_long_name(const WCHAR *filePath, const std::string& enc_data)
+bool write_encrypted_long_name(const WCHAR *filePath, const string& enc_data)
 {
 	if (enc_data.size() < 1)
 		return false;
@@ -616,7 +616,7 @@ bool write_encrypted_long_name(const WCHAR *filePath, const std::string& enc_dat
 	if (!PathFileExists(filePath))
 		return true;
 
-	std::wstring path = filePath;
+	wstring path = filePath;
 
 	if (path[path.size() - 1] == '\\')
 		path.erase(path.size() - 1);
@@ -704,7 +704,7 @@ rt_is_virtual_file(CryptContext *con, LPCWSTR FileName)
 }
 
 const WCHAR *
-remove_longname_suffix(const WCHAR *filepath, std::wstring& storage)
+remove_longname_suffix(const WCHAR *filepath, wstring& storage)
 {
 	storage = filepath;
 
@@ -716,15 +716,15 @@ remove_longname_suffix(const WCHAR *filepath, std::wstring& storage)
 }
 
 bool
-get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_encrypted)
+get_actual_encrypted(CryptContext *con, LPCWSTR FileName, string& actual_encrypted)
 {
 	
-	std::wstring encrypted_name;
+	wstring encrypted_name;
 
 	if (!get_bare_filename(FileName, encrypted_name))
 		return false;
 
-	std::wstring base64_hash;
+	wstring base64_hash;
 
 	if (extract_lfn_base64_hash(&encrypted_name[0], base64_hash)) {
 		if (con->m_lfn_cache.lookup(&base64_hash[0], NULL, &actual_encrypted)) {
@@ -732,8 +732,8 @@ get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_en
 		}
 	}
 
-	std::wstring dirpath;
-	std::wstring decrypted_name;
+	wstring dirpath;
+	wstring decrypted_name;
 
 	BYTE dir_iv[DIR_IV_LEN];
 
@@ -755,7 +755,7 @@ get_actual_encrypted(CryptContext *con, LPCWSTR FileName, std::string& actual_en
 }
 
 bool
-get_bare_filename(LPCWSTR filepath, std::wstring& filename)
+get_bare_filename(LPCWSTR filepath, wstring& filename)
 {
 	size_t len = wcslen(filepath);
 
@@ -775,7 +775,7 @@ get_bare_filename(LPCWSTR filepath, std::wstring& filename)
 }
 
 bool 
-get_file_directory(LPCWSTR filepath, std::wstring& dirpath)
+get_file_directory(LPCWSTR filepath, wstring& dirpath)
 {
 	size_t len = wcslen(filepath);
 
@@ -800,14 +800,14 @@ get_file_directory(LPCWSTR filepath, std::wstring& dirpath)
 }
 
 const WCHAR * // returns base64-encoded, encrypted stream name.  input stream name is expected to start with colon
-encrypt_stream_name(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *stream, std::wstring& storage)
+encrypt_stream_name(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *stream, wstring& storage)
 {
 
 	if (!stream || stream[0] != ':')
 		return NULL;
 
-	std::wstring stream_without_type;
-	std::wstring type;
+	wstring stream_without_type;
+	wstring type;
 
 	if (!remove_stream_type(stream, stream_without_type, type))
 		return false;
@@ -833,7 +833,7 @@ encrypt_stream_name(const CryptContext *con, const unsigned char *dir_iv, const 
 }
 
 const WCHAR * // returns UNICODE plaintext stream name.  input stream name is expected to start with colon
-decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *stream, std::wstring& storage)
+decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *stream, wstring& storage)
 {
 	if (!stream || stream[0] != ':')
 		return NULL;
@@ -841,8 +841,8 @@ decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *stream, 
 	if (is_long_name(stream + 1))
 		return NULL;
 
-	std::wstring stream_without_type;
-	std::wstring type;
+	wstring stream_without_type;
+	wstring type;
 
 	if (!remove_stream_type(stream, stream_without_type, type))
 		return false;

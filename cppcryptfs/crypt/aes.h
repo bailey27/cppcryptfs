@@ -49,6 +49,10 @@ public:
 	// decrypt single AES block (16 bytes)
 	void decrypt(const unsigned char *cipher, unsigned char *plain) const;
   
+
+	// disallow copying
+	AES(AES const&) = delete;
+	void operator=(AES const&) = delete;
 	AES();
 
 	virtual ~AES();

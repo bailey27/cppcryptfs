@@ -41,7 +41,9 @@ class SivContext {
 public:
 
 	bool SetKey(const unsigned char *key, int keylen, bool hkdf); // keylen must be 32
-
+																  // disallow copying
+	SivContext(SivContext const&) = delete;
+	void operator=(SivContext const&) = delete;
 	SivContext();
 	virtual ~SivContext();
 

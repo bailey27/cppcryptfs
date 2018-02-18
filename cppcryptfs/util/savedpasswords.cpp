@@ -59,7 +59,7 @@ int SavedPasswords::ClearSavedPasswords(BOOL bDelete)
 
 	DWORD type;
 
-	std::list<std::wstring> hashes;
+	list<wstring> hashes;
 
 	hash_len = sizeof(hash) / sizeof(hash[0]);
 
@@ -97,7 +97,7 @@ int SavedPasswords::ClearSavedPasswords(BOOL bDelete)
 
 BOOL SavedPasswords::SavePassword(LPCWSTR path, LPCWSTR password)
 {
-	std::wstring hash;
+	wstring hash;
 
 	if (!GetPathHash(path, hash)) {
 		return FALSE;
@@ -149,7 +149,7 @@ BOOL SavedPasswords::SavePassword(LPCWSTR path, LPCWSTR password)
 
 BOOL SavedPasswords::RetrievePassword(LPCWSTR path, LPWSTR password_buf, DWORD password_buf_len)
 {
-	std::wstring hash;
+	wstring hash;
 
 	if (!GetPathHash(path, hash))
 		return FALSE;

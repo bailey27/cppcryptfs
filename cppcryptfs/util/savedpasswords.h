@@ -49,6 +49,10 @@ public:
 
 	int GetSavedPasswordsCount();
 
+	// disallow copying
+	SavedPasswords(SavedPasswords const&) = delete;
+	void operator=(SavedPasswords const&) = delete;
+
 	SavedPasswords();
 	virtual ~SavedPasswords();
 };

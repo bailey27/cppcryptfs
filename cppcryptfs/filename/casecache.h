@@ -31,17 +31,22 @@ THE SOFTWARE.
 #include <unordered_map>
 #include <string>
 
+using namespace std;
+
 #define CASE_CACHE_ENTRIES 100
 
 class CaseCacheNode {
 
 public:
-	std::wstring m_key; // upercased  path
-	std::wstring m_path; // correct-case path of directory
-	std::unordered_map<std::wstring, std::wstring> m_files;  // map of uppercase filenames to correct-case names
-	std::list<CaseCacheNode*>::iterator m_list_it;  // holds position in lru list
+	wstring m_key; // upercased  path
+	wstring m_path; // correct-case path of directory
+	unordered_map<wstring, wstring> m_files;  // map of uppercase filenames to correct-case names
+	list<CaseCacheNode*>::iterator m_list_it;  // holds position in lru list
 	LONGLONG m_timestamp; 
 	FILETIME m_filetime;
+	// disallow copying
+	CaseCacheNode(CaseCacheNode const&) = delete;
+	void operator=(CaseCacheNode const&) = delete;
 	CaseCacheNode();
 	virtual ~CaseCacheNode();
 };
@@ -59,10 +64,10 @@ class CaseCache
 {
 private:
 	ULONGLONG m_ttl;
-	std::unordered_map<std::wstring, CaseCacheNode *> m_map;
-	std::list<CaseCacheNode*> m_lru_list;
+	unordered_map<wstring, CaseCacheNode *> m_map;
+	list<CaseCacheNode*> m_lru_list;
 
-	std::list<CaseCacheNode*> m_spare_node_list;
+	list<CaseCacheNode*> m_spare_node_list;
 
 	CRITICAL_SECTION m_crit;
 public:
@@ -71,16 +76,16 @@ public:
 private:
 	void lock();
 	void unlock();
-	void remove_node(std::unordered_map<std::wstring, CaseCacheNode *>::iterator it);
+	void remove_node(unordered_map<wstring, CaseCacheNode *>::iterator it);
 	bool check_node_clean(CaseCacheNode *node);
 	void update_lru(CaseCacheNode *node);
 public:
 	void SetTTL(int nSecs) { m_ttl = (ULONGLONG)nSecs * 1000; };
 
-	bool store(LPCWSTR dirpath, const std::list<std::wstring>& files);
+	bool store(LPCWSTR dirpath, const list<wstring>& files);
 	bool store(LPCWSTR dirpath, LPCWSTR file);
 	bool store(LPCWSTR filepath);
-	int lookup(LPCWSTR path, std::wstring& result_path, bool force_not_found = false);
+	int lookup(LPCWSTR path, wstring& result_path, bool force_not_found = false);
 	bool remove(LPCWSTR path, LPCWSTR file);
 	bool remove(LPCWSTR path);
 	bool purge(LPCWSTR path);
@@ -88,6 +93,10 @@ public:
 
 	// used to load dir into cache if there is a miss
 	bool load_dir(LPCWSTR filepath);
+
+	// disallow copying
+	CaseCache(CaseCache const&) = delete;
+	void operator=(CaseCache const&) = delete;
 
 	CaseCache();
 	virtual ~CaseCache();

@@ -38,7 +38,7 @@ THE SOFTWARE.
 	Thid file implements a cache that replaces the least-recently-used (LRU)
 	item when a new item is inserted and the cache is full.
 
-	The node pointers are kept in both a std::unordered_map and a std::list
+	The node pointers are kept in both a unordered_map and a list
 
 	The map is for lookups, and the list is for doing the LRU replacement.
 */
@@ -95,7 +95,7 @@ void LongFilenameCache::unlock()
 	LeaveCriticalSection(&m_crit);
 }
 
-bool LongFilenameCache::check_node_clean(LongFilenameCacheNode *node, const std::wstring& path)
+bool LongFilenameCache::check_node_clean(LongFilenameCacheNode *node, const wstring& path)
 {
 #ifndef LFN_CACHE_NOTTL
 
@@ -110,7 +110,7 @@ bool LongFilenameCache::check_node_clean(LongFilenameCacheNode *node, const std:
 
 
 
-bool LongFilenameCache::lookup(LPCWSTR base64_hash, std::wstring *path, std::string *actual_encrypted)
+bool LongFilenameCache::lookup(LPCWSTR base64_hash, wstring *path, string *actual_encrypted)
 {
 
 	const WCHAR *key = base64_hash;

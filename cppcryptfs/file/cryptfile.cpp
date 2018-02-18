@@ -182,7 +182,7 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 		if (blocks_spanned > 1 && m_con->m_bufferblocks > 1) {
 			inputbuflen = min(m_con->m_bufferblocks, blocks_spanned)*CIPHER_BS;
-			iobuf = g_IoBufferPool->GetIoBuffer(inputbuflen);
+			iobuf = IoBufferPool::getInstance()->GetIoBuffer(inputbuflen);
 			if (iobuf == NULL) {
 				SetLastError(ERROR_OUTOFMEMORY);
 				throw(-1);
@@ -280,7 +280,7 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 		free_crypt_context(context);
 
 	if (iobuf)
-		g_IoBufferPool->ReleaseIoBuffer(iobuf);
+		IoBufferPool::getInstance()->ReleaseIoBuffer(iobuf);
 
 	return bRet;
 }
@@ -435,7 +435,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 		if (blocks_spanned > 1 && m_con->m_bufferblocks > 1) {
 			outputbuflen = min(m_con->m_bufferblocks, blocks_spanned)*CIPHER_BS;
-			iobuf = g_IoBufferPool->GetIoBuffer(outputbuflen);
+			iobuf = IoBufferPool::getInstance()->GetIoBuffer(outputbuflen);
 			if (iobuf == NULL) {
 				SetLastError(ERROR_OUTOFMEMORY);
 				throw(-1);
@@ -535,7 +535,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 	*pNwritten = min(*pNwritten, buflen);
 
 	if (iobuf)
-		g_IoBufferPool->ReleaseIoBuffer(iobuf);
+		IoBufferPool::getInstance()->ReleaseIoBuffer(iobuf);
 
 	if (context)
 		free_crypt_context(context);

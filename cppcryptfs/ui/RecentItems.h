@@ -37,6 +37,10 @@ private:
 private:
 	void AppendIndex(CString& str, int index);
 public:
+	// disallow copying
+	RecentItems(RecentItems const&) = delete;
+	void operator=(RecentItems const&) = delete;
+
 	RecentItems(LPCTSTR section, LPCTSTR base, int count);
 	void Add(LPCTSTR item);
 	void Populate(CString *items, LPCTSTR initial_default = NULL);

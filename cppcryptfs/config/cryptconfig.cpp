@@ -105,7 +105,7 @@ CryptConfig::~CryptConfig()
 
 
 bool
-CryptConfig::read(std::wstring& mes, const WCHAR *config_file_path, bool reverse)
+CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 {
 
 	FILE *fl = NULL;
@@ -118,7 +118,7 @@ CryptConfig::read(std::wstring& mes, const WCHAR *config_file_path, bool reverse
 		m_reverse = reverse;
 	} else {
 
-		std::wstring config_path;
+		wstring config_path;
 
 		if (m_basedir.size() < 1) {
 			mes = L"cannot read config because base dir is empty";
@@ -130,7 +130,7 @@ CryptConfig::read(std::wstring& mes, const WCHAR *config_file_path, bool reverse
 		if (config_path[config_path.size() - 1] != '\\')
 			config_path.push_back('\\');
 
-		std::wstring config_file = config_path + REVERSE_CONFIG_NAME;
+		wstring config_file = config_path + REVERSE_CONFIG_NAME;
 
 		if (_wfopen_s(&fl, &config_file[0], L"rb")) {
 			config_file = config_path + CONFIG_NAME;
@@ -274,9 +274,9 @@ CryptConfig::read(std::wstring& mes, const WCHAR *config_file_path, bool reverse
 
 		if (d.HasMember("VolumeName") && !d["VolumeName"].IsNull() && d["VolumeName"].IsString()) {
 			rapidjson::Value& volume_name = d["VolumeName"];
-			std::string utf8name;
+			string utf8name;
 			utf8name = volume_name.GetString();
-			std::wstring storage;
+			wstring storage;
 			const WCHAR *vname = utf8_to_unicode(&utf8name[0], storage);
 			if (vname)
 				m_VolumeName = vname;
@@ -305,7 +305,7 @@ CryptConfig::read(std::wstring& mes, const WCHAR *config_file_path, bool reverse
 					} else if (!strcmp(itr->GetString(), "HKDF")) {
 						m_HKDF = true;
 					} else {
-						std::wstring wflag;
+						wstring wflag;
 						if (utf8_to_unicode(itr->GetString(), wflag)) {
 							mes = L"unkown feature flag: ";
 							mes += wflag;
@@ -340,13 +340,13 @@ bool CryptConfig::init_serial(CryptContext *con)
 
 	if (!this->m_serial) {
 
-		std::wstring str = L"XjyG7KDokdqpxtjUh6oCVJ92FmPFJ1Fg"; // salt
+		wstring str = L"XjyG7KDokdqpxtjUh6oCVJ92FmPFJ1Fg"; // salt
 
 		str += this->m_basedir;
 
 		BYTE sum[32];
 
-		std::string utf8;
+		string utf8;
 
 		if (unicode_to_utf8(&str[0], utf8)) {
 
@@ -371,13 +371,13 @@ bool CryptConfig::write_volume_name()
 
 
 	try {
-		std::wstring vol = m_VolumeName;
+		wstring vol = m_VolumeName;
 
-		std::string volume_name_utf8_enc;
+		string volume_name_utf8_enc;
 
 		if (vol.size() > 0) {
 			if (vol.size() > MAX_VOLUME_NAME_LENGTH)
-				vol.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
+				vol.erase(MAX_VOLUME_NAME_LENGTH, wstring::npos);
 			if (!encrypt_string_gcm(vol, GetGcmContentKey(), volume_name_utf8_enc)) {
 				return false;
 			}
@@ -386,7 +386,7 @@ bool CryptConfig::write_volume_name()
 		if (m_basedir.size() < 1)
 			return false;
 
-		std::wstring config_path;
+		wstring config_path;
 
 		config_path = m_basedir;
 
@@ -439,7 +439,7 @@ bool CryptConfig::write_volume_name()
 		else {
 			d.AddMember("VolumeName", vname, d.GetAllocator());
 		}
-		std::wstring tmp_path = config_path;
+		wstring tmp_path = config_path;
 		tmp_path += L".tmp";
 		if (_wfopen_s(&fl, &tmp_path[0], L"wb"))
 			throw (-1);
@@ -456,7 +456,7 @@ bool CryptConfig::write_volume_name()
 		CryptConfig test_cfg;
 
 		try {
-			std::wstring config_err_mes;
+			wstring config_err_mes;
 			if (!test_cfg.read(config_err_mes, &tmp_path[0])) {
 				throw(-1);
 			}
@@ -535,7 +535,7 @@ WCHAR CryptConfig::get_base_drive_letter()
 	}
 }
 
-bool CryptConfig::check_config(std::wstring& mes)
+bool CryptConfig::check_config(wstring& mes)
 {
 	mes = L"";
 
@@ -636,12 +636,12 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 		}
 
 		if (m_VolumeName.size() > 0) {
-			std::string vol;
+			string vol;
 			if (unicode_to_utf8(&m_VolumeName[0], vol)) {
 				if (!decrypt_string_gcm(vol, GetGcmContentKey(), m_VolumeName))
 					m_VolumeName = L"";
 				if (m_VolumeName.size() > MAX_VOLUME_NAME_LENGTH)
-					m_VolumeName.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
+					m_VolumeName.erase(MAX_VOLUME_NAME_LENGTH, wstring::npos);
 			} else {
 				m_VolumeName = L"";
 			}
@@ -659,7 +659,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 
 
 
-bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, std::wstring& error_mes)
+bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, wstring& error_mes)
 {
 
 	LockZeroBuffer<char> utf8pass(256);
@@ -709,7 +709,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 
 	try {
 
-		std::wstring config_path;
+		wstring config_path;
 
 		if (specified_config_file_path) {
 			config_path = specified_config_file_path;
@@ -810,12 +810,12 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 			throw(-1);
 		}
 
-		std::string volume_name_utf8;
+		string volume_name_utf8;
 
 		if (volume_name && wcslen(volume_name)) {
-			std::wstring vol = volume_name;
+			wstring vol = volume_name;
 			if (vol.size() > MAX_VOLUME_NAME_LENGTH)
-				vol.erase(MAX_VOLUME_NAME_LENGTH, std::wstring::npos);
+				vol.erase(MAX_VOLUME_NAME_LENGTH, wstring::npos);
 			if (!encrypt_string_gcm(vol, GetGcmContentKey(), volume_name_utf8)) {
 				error_mes = L"cannot encrypt volume name\n";
 				throw(-1);
@@ -843,7 +843,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 			throw(-1);
 		}
 
-		std::string storage;
+		string storage;
 
 		ASSERT(m_HKDF);
 		const char *base64_key = base64_encode(encrypted_key, GetMasterKeyLength() + HKDF_MASTER_IV_LEN + BLOCK_TAG_LEN, storage, false, true);
@@ -865,11 +865,11 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 
 		fprintf(fl, "{\n");
 
-		std::wstring prodName, prodVersion, prodCopyright;
+		wstring prodName, prodVersion, prodCopyright;
 
 		if (GetProductVersionInfo(prodName, prodVersion, prodCopyright)) {
-			std::string creator_str;
-			std::wstring wcreator = prodName + L" v" + prodVersion;
+			string creator_str;
+			wstring wcreator = prodName + L" v" + prodVersion;
 			const char *creator = unicode_to_utf8(&wcreator[0], creator_str);
 			if (creator)
 				fprintf(fl, "\t\"Creator\": \"%s\",\n", creator);

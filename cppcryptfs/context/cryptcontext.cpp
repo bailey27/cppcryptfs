@@ -39,6 +39,7 @@ bool CryptContext::InitEme(const BYTE *key, bool hkdf)
 
 }
 
+
 CryptContext::CryptContext()
 {
 
@@ -56,6 +57,7 @@ CryptContext::CryptContext()
 	m_prand_bytes = &random_bytes;
 
 	m_case_cache.m_con = this;
+
 }
 
 

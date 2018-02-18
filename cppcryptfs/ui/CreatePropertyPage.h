@@ -47,6 +47,11 @@ public:
 	const int m_numLastConfigs = 10;
 
 	virtual void DefaultAction();
+
+	// disallow copying
+	CCreatePropertyPage(CCreatePropertyPage const&) = delete;
+	void operator=(CCreatePropertyPage const&) = delete;
+
 	CCreatePropertyPage();
 	virtual ~CCreatePropertyPage();
 
