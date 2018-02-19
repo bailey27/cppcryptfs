@@ -73,7 +73,7 @@ THE SOFTWARE.
 #include "file/cryptfile.h"
 #include "crypt/cryptdefs.h"
 #include "util/util.h"
-#include "cryptdokan.h"
+
 #include "file/iobufferpool.h"
 
 #include <vector>
@@ -94,28 +94,16 @@ THE SOFTWARE.
 
 #include <unordered_map>
 
-#define UNMOUNT_TIMEOUT 30000
-#define MOUNT_TIMEOUT 30000
+#include "cryptdokan.h"
+#include "cryptdokanpriv.h"
+#include "FileNameEnc.h"
+#include "MountPointManager.h"
 
-#define ENABLE_FILE_NAMED_STREAMS_FLAG 1
+
 
 BOOL g_UseStdErr;
 BOOL g_DebugMode;
 BOOL g_HasSeSecurityPrivilege;
-
-struct struct_CryptThreadData {
-  DOKAN_OPERATIONS operations;
-  DOKAN_OPTIONS options;
-  CryptContext con;
-  wstring mountpoint;
-};
-
-typedef struct struct_CryptThreadData CryptThreadData;
-
-unordered_map<wstring, HANDLE> g_DriveThreadHandles;
-
-
-unordered_map<wstring, CryptThreadData*> g_ThreadDatas;
 
 void DbgPrint(LPCWSTR format, ...) {
   if (g_DebugMode) {
@@ -143,19 +131,8 @@ void DbgPrint(LPCWSTR format, ...) {
   }
 }
 
-#define GetContext()                                                           \
-  ((CryptContext *)DokanFileInfo->DokanOptions->GlobalContext)
 
-typedef int(WINAPI *PCryptStoreStreamName)(
-    PWIN32_FIND_STREAM_DATA, LPCWSTR encrypted_name,
-    unordered_map<wstring, wstring> *pmap);
-
-NTSTATUS DOKAN_CALLBACK CryptFindStreamsInternal(
-    LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
-    PDOKAN_FILE_INFO DokanFileInfo, PCryptStoreStreamName,
-    unordered_map<wstring, wstring> *pmap);
-
-static int WINAPI
+int WINAPI
 CryptCaseStreamsCallback(PWIN32_FIND_STREAM_DATA pfdata, LPCWSTR encrypted_name,
                          unordered_map<wstring, wstring> *pmap) {
   wstring stream_without_type;
@@ -170,222 +147,6 @@ CryptCaseStreamsCallback(PWIN32_FIND_STREAM_DATA pfdata, LPCWSTR encrypted_name,
   pmap->insert(make_pair(uc_stream, stream_without_type.c_str()));
 
   return 0;
-}
-
-// The FileNameEnc class has a contstructor that takes the necessary inputs
-// for doing the filename encryption.  It saves them for later, at almost zero cost.
-//
-// If the encrypted filename is actually needed, then the instance of FileNameEnc
-// is passed to one of various functions that take a const WCHAR * for the encrypted path
-// (and possibly an actual_encrypted parameter).
-//
-// When the overloaded cast to const WCHAR * is performed, the filename will be encrypted, and
-// the actual_encrypted data (if any) will be retrieved.
-//
-// A note on actual_encrypted:
-//
-// When creating a new file or directory, if a file or directory with a long name is being created,
-// then the actual encrypted name must be written to the special gocryptfs.longname.XXXXX.name file.
-// actual_encrypted will contain this data in that case.
-//
-
-class FileNameEnc {
-private:
-  PDOKAN_FILE_INFO m_dokan_file_info;
-  wstring m_enc_path;
-  wstring m_correct_case_path;
-  string *m_actual_encrypted;
-  wstring m_plain_path;
-  CryptContext *m_con;
-  bool m_tried;
-  bool m_failed;
-  bool m_file_existed; // valid only if case cache is used
-  bool m_force_case_cache_notfound;
-
-public:
-  LPCWSTR CorrectCasePath() {
-    if (m_con->IsCaseInsensitive()) {
-      Convert();
-      return m_correct_case_path.c_str();
-    } else {
-      return m_plain_path.c_str();
-    }
-  };
-
-  bool FileExisted() {
-    _ASSERT(m_con->IsCaseInsensitive());
-    Convert();
-    return m_file_existed;
-  };
-
-  operator const WCHAR *() { return Convert(); };
-
-private:
-  const WCHAR *Convert();
-  void AssignPlainPath(LPCWSTR plain_path);
-
-public:
-  FileNameEnc(PDOKAN_FILE_INFO DokanFileInfo, const WCHAR *fname,
-              string *actual_encrypted = NULL,
-              bool ignorecasecache = false);
-  virtual ~FileNameEnc();
-};
-
-// Due to a bug in the Dokany driver (as of Dokany 1.03), if we set FILE_NAMED_STREAMS in
-// the volume flags (in CryptGetVolumeInformation())
-// to announce that we support alternate data streams in files,
-// then whenever a path with a stream is sent down to us by File Explorer, there's an extra slash after the filename
-// and before the colon (e.g. \foo\boo\foo.txt\:blah:$DATA).
-// So here we git rid of that extra slash if necessary.
-
-void FileNameEnc::AssignPlainPath(LPCWSTR plain_path) {
-
-  m_plain_path = plain_path;
-
-  // The bug mentioned above is now fixed in Dokany.  The fix should be in Dokany 1.04.
-  // When Dokany 1.04 comes out, we should verify that the fix is actually there
-  // and use the version to determine if we still need to do this or not.
-  // But it won't hurt to leave this code in.
-
-  LPCWSTR pColon = wcschr(plain_path, ':');
-
-  if (!pColon)
-    return;
-
-  if (pColon == plain_path)
-    return;
-
-  if (pColon[-1] != '\\')
-    return;
-
-  m_plain_path.erase(pColon - plain_path - 1);
-
-  m_plain_path += pColon;
-
-  DbgPrint(L"converted file with stream path %s -> %s\n", plain_path,
-           m_plain_path.c_str());
-}
-
-FileNameEnc::FileNameEnc(PDOKAN_FILE_INFO DokanFileInfo, const WCHAR *fname,
-                         string *actual_encrypted,
-                         bool forceCaseCacheNotFound) {
-  m_dokan_file_info = DokanFileInfo;
-  m_con = GetContext();
-  AssignPlainPath(fname);
-  m_actual_encrypted = actual_encrypted;
-  m_tried = false;
-  m_failed = false;
-  m_file_existed = false;
-  m_force_case_cache_notfound = forceCaseCacheNotFound;
-}
-
-FileNameEnc::~FileNameEnc() {}
-
-const WCHAR *FileNameEnc::Convert() {
-
-  if (!m_tried) {
-
-    m_tried = true;
-
-    try {
-      if (m_con->GetConfig()->m_reverse) {
-        if (rt_is_config_file(m_con, m_plain_path.c_str())) {
-          m_enc_path = m_con->GetConfig()->m_basedir + L"\\";
-          m_enc_path += REVERSE_CONFIG_NAME;
-        } else if (rt_is_virtual_file(m_con, m_plain_path.c_str())) {
-          wstring dirpath;
-          if (!get_file_directory(m_plain_path.c_str(), dirpath))
-            throw(-1);
-          if (!decrypt_path(m_con, &dirpath[0], m_enc_path))
-            throw(-1);
-          m_enc_path += L"\\";
-          wstring filename;
-          if (!get_bare_filename(m_plain_path.c_str(), filename))
-            throw(-1);
-          m_enc_path += filename;
-        } else {
-          if (!decrypt_path(m_con, m_plain_path.c_str(), m_enc_path)) {
-            throw(-1);
-          }
-        }
-      } else {
-
-        LPCWSTR plain_path = m_plain_path.c_str();
-        int cache_status = CASE_CACHE_NOTUSED;
-        if (m_con->IsCaseInsensitive()) {
-          cache_status = m_con->m_case_cache.lookup(
-              m_plain_path.c_str(), m_correct_case_path,
-              m_force_case_cache_notfound);
-          if (cache_status == CASE_CACHE_FOUND ||
-              cache_status == CASE_CACHE_NOT_FOUND) {
-            m_file_existed = cache_status == CASE_CACHE_FOUND;
-            plain_path = m_correct_case_path.c_str();
-          } else if (cache_status == CASE_CACHE_MISS) {
-            if (m_con->m_case_cache.load_dir(m_plain_path.c_str())) {
-              cache_status = m_con->m_case_cache.lookup(
-                  m_plain_path.c_str(), m_correct_case_path,
-                  m_force_case_cache_notfound);
-              if (cache_status == CASE_CACHE_FOUND ||
-                  cache_status == CASE_CACHE_NOT_FOUND) {
-                m_file_existed = cache_status == CASE_CACHE_FOUND;
-                plain_path = m_correct_case_path.c_str();
-              }
-            }
-          }
-          wstring stream;
-          wstring file_without_stream;
-          bool have_stream =
-              get_file_stream(plain_path, &file_without_stream, &stream);
-          if (have_stream) {
-            unordered_map<wstring, wstring> streams_map;
-            wstring stream_without_type;
-            wstring type;
-
-            if (!remove_stream_type(stream.c_str(), stream_without_type,
-                                    type)) {
-              throw(-1);
-            }
-
-            if (CryptFindStreamsInternal(
-                    file_without_stream.c_str(), NULL, m_dokan_file_info,
-                    CryptCaseStreamsCallback, &streams_map) == 0) {
-
-              wstring uc_stream;
-
-              if (!touppercase(stream_without_type.c_str(), uc_stream))
-                throw(-1);
-
-              auto it = streams_map.find(uc_stream);
-
-              if (it != streams_map.end()) {
-                m_correct_case_path = file_without_stream + it->second + type;
-                plain_path = m_correct_case_path.c_str();
-                DbgPrint(L"stream found %s -> %s\n", m_plain_path, plain_path);
-              } else {
-                DbgPrint(L"stream not found %s -> %s\n", m_plain_path,
-                         plain_path);
-              }
-            }
-          }
-        }
-        if (!encrypt_path(m_con, plain_path, m_enc_path, m_actual_encrypted)) {
-          throw(-1);
-        }
-      }
-    } catch (...) {
-      m_failed = true;
-    }
-  }
-
-  const WCHAR *rs = !m_failed ? &m_enc_path[0] : NULL;
-
-  if (rs) {
-    DbgPrint(L"\tconverted filename %s => %s\n", m_plain_path.c_str(), rs);
-  } else {
-    DbgPrint(L"\terror converting filename %s\n", m_plain_path.c_str());
-  }
-
-  return rs;
 }
 
 static void PrintUserName(PDOKAN_FILE_INFO DokanFileInfo) {
@@ -2128,9 +1889,9 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 	  return -1;
   }
 
-  auto it = g_DriveThreadHandles.find(mountpoint);
+  CryptThreadData *fdata = MountPointManager::getInstance()->get(mountpoint);
 
-  if (it != g_DriveThreadHandles.end()) {
+  if (fdata != NULL) {
     mes = L"drive letter/mount point already in use\n";
     return -1;
   }
@@ -2353,8 +2114,14 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
       throw(-1);
     }
 
-    g_DriveThreadHandles.emplace(mountpoint, hThread);
-    g_ThreadDatas.emplace(mountpoint, tdata);
+	tdata->hThread = hThread;
+
+	// MountPointManager owns tdata from this point on, even if it fails to add (will delete it)
+
+	if (!MountPointManager::getInstance()->add(mountpoint, tdata)) {
+		mes = L"unable to add mount point to MountPointManager\n";
+		throw(-1);
+	}
 
     HANDLE handles[2];
     handles[0] = con->m_mountEvent;
@@ -2382,14 +2149,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
   }
 
   if (retval != 0) {
-    if (hThread) {
-      CloseHandle(hThread);
-    }
-	g_DriveThreadHandles.erase(mountpoint);
-    if (tdata) {
-      delete tdata;
-    }
-	g_ThreadDatas.erase(mountpoint);
+	MountPointManager::getInstance()->destroy(mountpoint);
   }
 
   return retval;
@@ -2397,90 +2157,24 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
 BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait) {
 
-  BOOL result = DokanRemoveMountPoint(mountpoint);
-
-  if (!result)
-    return FALSE;
-
-  auto it = g_DriveThreadHandles.find(mountpoint);
-
-  if (it == g_DriveThreadHandles.end())
+  if (!DokanRemoveMountPoint(mountpoint))
     return FALSE;
 
   if (wait) {
-    DWORD wait_timeout = UNMOUNT_TIMEOUT;
-    DWORD status = WaitForSingleObject(it->second,
-                                       wait_timeout);
-
-    if (status == WAIT_OBJECT_0) {
-      result = TRUE;
-      CloseHandle(it->second);
-      g_DriveThreadHandles.erase(mountpoint);
-	  auto tdit = g_ThreadDatas.find(mountpoint);
-      if (tdit != g_ThreadDatas.end()) {
-        delete tdit->second;
-        g_ThreadDatas.erase(mountpoint);
-      }
-    } else {
-      result = FALSE;
-    }
+	  return MountPointManager::getInstance()->wait_and_destroy(mountpoint);
+  } else {
+	  return TRUE;
   }
-
-  return result;
+    
 }
 
-static BOOL do_wait_all(int count, HANDLE handles[], wstring mountpoints[])
-{
 
-	const DWORD timeout = UNMOUNT_TIMEOUT;
-
-	DWORD status = WaitForMultipleObjects(count, handles, TRUE, timeout);
-
-	DWORD first = WAIT_OBJECT_0;
-	DWORD last = WAIT_OBJECT_0 + (count - 1);
-
-	if (status >= first && status <= last) {
-		for (int i = 0; i < count; i++) {
-			CloseHandle(handles[i]);
-			g_DriveThreadHandles.erase(mountpoints[i]);
-			
-			auto it = g_ThreadDatas.find(mountpoints[i]);
-
-			if (it != g_ThreadDatas.end()) {
-	
-				delete it->second;
-				g_ThreadDatas.erase(it);
-				
-			}
-		}
-		return TRUE;
-	} else {
-		return FALSE;
-	}
-}
 
 BOOL wait_for_all_unmounted() {
-
-  HANDLE handles[MAXIMUM_WAIT_OBJECTS];
-  wstring mountpoints[MAXIMUM_WAIT_OBJECTS];
-
-  int count = 0;
-  for (auto &it : g_DriveThreadHandles) {
-	  mountpoints[count] = it.first;
-	  handles[count++] = it.second;
-	  if (count == MAXIMUM_WAIT_OBJECTS) {
-		  if (!do_wait_all(count, handles, mountpoints))
-			  return FALSE;
-		  count = 0;
-	  }
-  }
-
-  if (count)
-	  return do_wait_all(count, handles, mountpoints);
-  else
-	  return TRUE;  
-
+	return MountPointManager::getInstance()->wait_all_and_destroy();
 }
+
+
 
 BOOL write_volume_name_if_changed(WCHAR dl) {
 
@@ -2490,9 +2184,7 @@ BOOL write_volume_name_if_changed(WCHAR dl) {
   fs_root.push_back(dl);
   fs_root.push_back(':');
 
-  auto it = g_ThreadDatas.find(fs_root);
-
-  CryptThreadData *tdata = it != g_ThreadDatas.end() ? it->second : NULL;
+  CryptThreadData *tdata = MountPointManager::getInstance()->get(fs_root.c_str());
 
   if (!tdata)
     return FALSE;
@@ -2553,6 +2245,7 @@ static int WINAPI crypt_fill_find_data_list(PWIN32_FIND_DATAW fdata,
   return 0;
 }
 
+// called to list files from the command line (not by Dokany)
 BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
                 wstring &err_mes) {
   err_mes = L"";
@@ -2595,13 +2288,30 @@ BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
 
   CryptThreadData *tdata = NULL;
 
-  for (auto it = g_ThreadDatas.begin(); it != g_ThreadDatas.end(); it++) {
-	  if (!_wcsnicmp(it->first.c_str(), path, it->first.length())) {
+  MountPointManager *man = MountPointManager::getInstance();
+
+  // according to Microsoft, _wcsnicmp() uses the "C" locale by default, and it won't treat the lower and uppercase
+  // versions of non-ascii characters the same unless you call setlocale() to some other locale first.
+  // In order to avoid possible side-effects of setting the locale, we create a locale with "" (current thread locale)
+  // and pass that in to _wcsnicmp()
+  // this function is invoked from the command line, so performance isn't an issue
+  
+  _locale_t locale = _create_locale(LC_ALL, ""); // so _wcsnicmp will compare non-English characters properly
+
+  // iterate through MountPointManager's (our friend's) mount points and try to find a match
+  // between a mount point and the path passed in.
+
+  // This is needed to find the CryptContext for the mount point.
+
+  for (auto it = man->m_tdatas.begin(); it != man->m_tdatas.end(); it++) {
+	  if (!_wcsnicmp_l(it->first.c_str(), path, it->first.length(), locale)) {
 		  tdata = it->second;
 		  path += it->first.length();
 		  break;
 	  }
   }
+
+  _free_locale(locale);
 
   if (!tdata) {
     err_mes = L"drive not mounted";

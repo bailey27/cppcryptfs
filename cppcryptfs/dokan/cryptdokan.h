@@ -32,6 +32,8 @@ THE SOFTWARE.
 #include <string>
 #include <list>
 
+using namespace std;
+
 typedef struct _struct_win32_find_data_pair {
 	WIN32_FIND_DATAW fdata;
 	WIN32_FIND_DATAW fdata_orig;
@@ -52,3 +54,4 @@ void init_security_name_privilege();
 BOOL list_files(const WCHAR *path, list<FindDataPair> &fileDatas, wstring& err_mes);
 
 bool check_dokany_version(wstring& mes);
+
