@@ -2298,6 +2298,11 @@ BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
   
   _locale_t locale = _create_locale(LC_ALL, ""); // so _wcsnicmp will compare non-English characters properly
 
+  if (locale == NULL) {
+	  err_mes = L"cannot create locale";
+	  return FALSE;
+  }
+
   // iterate through MountPointManager's (our friend's) mount points and try to find a match
   // between a mount point and the path passed in.
 

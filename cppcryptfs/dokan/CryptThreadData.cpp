@@ -1,4 +1,3 @@
-#pragma once
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
@@ -26,27 +25,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include "dokan/dokan.h"
-#include "context/cryptcontext.h"
-#include "cryptdokanpriv.h"
 
-class CryptThreadData {
-public:
-	DOKAN_OPERATIONS operations;
-	DOKAN_OPTIONS options;
-	CryptContext con;
-	wstring mountpoint;
-	HANDLE hThread;
-	// disallow copying
-	CryptThreadData(CryptThreadData const&) = delete;
-	void operator=(CryptThreadData const&) = delete;
-	CryptThreadData() {
-		memset(&operations, 0, sizeof(operations));
-		memset(&options, 0, sizeof(options));
-		hThread = NULL;
+#include "CryptThreadData.h"
+
+CryptThreadData::~CryptThreadData()
+{
+	if (hThread != NULL) {
+		CloseHandle(hThread);
 	}
-private:
-	friend class MountPointManager; // only MountPointManager can delete
-	virtual ~CryptThreadData();
-};
-
+}
