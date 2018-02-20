@@ -2293,10 +2293,10 @@ BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
   // according to Microsoft, _wcsnicmp() uses the "C" locale by default, and it won't treat the lower and uppercase
   // versions of non-ascii characters the same unless you call setlocale() to some other locale first.
   // In order to avoid possible side-effects of setting the locale, we create a locale with "" (current thread locale)
-  // and pass that in to _wcsnicmp()
-  // this function is invoked from the command line, so performance isn't an issue
+  // and pass that in to _wcsnicmp_l()
+  // this function is invoked from the command line, so performance isn't an issue.
   
-  _locale_t locale = _create_locale(LC_ALL, ""); // so _wcsnicmp_l() will compare non-English characters properly
+  _locale_t locale = _create_locale(LC_ALL, ""); 
 
   if (locale == NULL) {
 	  err_mes = L"cannot create locale";
