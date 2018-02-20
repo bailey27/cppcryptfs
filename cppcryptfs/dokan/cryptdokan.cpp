@@ -2296,7 +2296,7 @@ BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
   // and pass that in to _wcsnicmp()
   // this function is invoked from the command line, so performance isn't an issue
   
-  _locale_t locale = _create_locale(LC_ALL, ""); // so _wcsnicmp will compare non-English characters properly
+  _locale_t locale = _create_locale(LC_ALL, ""); // so _wcsnicmp_l() will compare non-English characters properly
 
   if (locale == NULL) {
 	  err_mes = L"cannot create locale";
