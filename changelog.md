@@ -6,7 +6,7 @@ v1.4.0.12, Feb 19, 2018
 * Use MountPointManager class to manage mounted filesystems.
 
 v1.4.0.11, Feb 16, 2018
-* Allow mounting using a dir from command line even if that dir wasn't previously configured as a mount point in the ui.
+* Allow mounting using an empty dir mount point from command line even if that dir wasn't previously configured as a mount point in the ui.
 
 v1.4.0.10, Feb 6, 2018
 * Support use of empty directory as a mount point instead of using a drive letter.
