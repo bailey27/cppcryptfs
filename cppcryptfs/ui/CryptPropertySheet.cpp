@@ -47,6 +47,8 @@ CCryptPropertySheet::CCryptPropertySheet(UINT nIDCaption, CWnd* pParentWnd, UINT
 {
 	m_nMountPageIndex = 0;
 	m_bHideAfterInit = FALSE;
+	m_psh.dwFlags |= PSH_NOAPPLYNOW;
+	m_psh.dwFlags &= ~PSH_HASHELP;
 }
 
 CCryptPropertySheet::CCryptPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
@@ -54,6 +56,8 @@ CCryptPropertySheet::CCryptPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd, U
 {
 	m_nMountPageIndex = 0;
 	m_bHideAfterInit = FALSE;
+	m_psh.dwFlags |= PSH_NOAPPLYNOW;
+	m_psh.dwFlags &= ~PSH_HASHELP;
 }
 
 CCryptPropertySheet::~CCryptPropertySheet()

@@ -212,12 +212,7 @@ BOOL CcppcryptfsApp::InitInstance()
 
 	CCryptPropertySheet dlg(L"cppcryptfs");
 
-	dlg.m_psh.dwFlags |= PSH_NOAPPLYNOW;
-	dlg.m_psh.dwFlags &= ~PSH_HASHELP;
-
 	CMountPropertyPage mount;
-
-	mount.m_psp.dwFlags &= ~PSP_HASHELP;
 
 	RecentItems ritems(TEXT("Folders"), TEXT("LastDir"), mount.m_numLastDirs);
 
@@ -233,8 +228,6 @@ BOOL CcppcryptfsApp::InitInstance()
 
 	CCreatePropertyPage create;
 
-	create.m_psp.dwFlags &= ~PSP_HASHELP;
-
 	RecentItems ritems2(TEXT("Folders"), TEXT("LastDir"), create.m_numLastDirs);
 
 	ritems2.Populate(create.m_lastDirs, TEXT("C:\\"));
@@ -247,13 +240,9 @@ BOOL CcppcryptfsApp::InitInstance()
 
 	CSettingsPropertyPage settings;
 
-	settings.m_psp.dwFlags &= ~PSP_HASHELP;
-
 	dlg.AddPage(&settings);
 
 	CCryptAboutPropertyPage about;
-
-	about.m_psp.dwFlags &= ~PSP_HASHELP;
 
 	dlg.AddPage(&about);
 

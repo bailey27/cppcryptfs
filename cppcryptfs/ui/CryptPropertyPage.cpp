@@ -42,13 +42,13 @@ IMPLEMENT_DYNAMIC(CCryptPropertyPage, CPropertyPage)
 CCryptPropertyPage::CCryptPropertyPage()
 	: CPropertyPage(IDD_CRYPTPROPERTYPAGE)
 {
-
+	m_psp.dwFlags &= ~PSP_HASHELP;
 }
 
 CCryptPropertyPage::CCryptPropertyPage(int id)
 	: CPropertyPage(id)
 {
-	
+	m_psp.dwFlags &= ~PSP_HASHELP;
 }
 
 CCryptPropertyPage::~CCryptPropertyPage()

@@ -39,7 +39,18 @@ typedef struct _struct_win32_find_data_pair {
 	WIN32_FIND_DATAW fdata_orig;
 } FindDataPair;
 
-int mount_crypt_fs(const WCHAR *mountpoint, const WCHAR *path, const WCHAR* config_path, const WCHAR *password, wstring& mes, bool readonly, bool reverse, int nThreads, int nBufferBlocks, int cachettl, bool caseinsensitive, bool mountmanager, bool mountmanagerwarn);
+typedef struct _struct_CryptMountOptions {
+	int numthreads;
+	int numbufferblocks;
+	int cachettl;
+	bool readonly;
+	bool reverse;
+	bool caseinsensitive;
+	bool mountmanager;
+	bool mountmanagerwarn;
+} CryptMountOptions;
+
+int mount_crypt_fs(const WCHAR *mountpoint, const WCHAR *path, const WCHAR* config_path, const WCHAR *password, wstring& mes, const CryptMountOptions& ops);
 
 BOOL unmount_crypt_fs(const WCHAR *mountpoint, bool wait);
 

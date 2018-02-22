@@ -1867,9 +1867,7 @@ static DWORD WINAPI CryptThreadProc(_In_ LPVOID lpParameter
 
 int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
                    const WCHAR *config_path, const WCHAR *password,
-                   wstring &mes, bool readonly, bool reverse, int nThreads,
-                   int nBufferBlocks, int cachettl, bool caseinsensitve,
-                   bool mountmanager, bool mountmanagerwarn) {
+                   wstring &mes, const CryptMountOptions& opts) {
   mes.clear();
 
   if (config_path && *config_path == '\0')
@@ -1959,7 +1957,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
     CryptContext *con = &tdata->con;
 
-    con->m_bufferblocks = min(256, max(1, nBufferBlocks));
+    con->m_bufferblocks = min(256, max(1, opts.numbufferblocks));
 
 	// initialize IoBufferPool singleton (will init if not already inited)
 	// block size is tuned for first mounted filesystem
@@ -1967,10 +1965,10 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 	// then those mounts buffers will come from the heap instead of the pool
     IoBufferPool::getInstance(con->m_bufferblocks * CIPHER_BS); 
 
-    con->m_dir_iv_cache.SetTTL(cachettl);
-    con->m_case_cache.SetTTL(cachettl);
+    con->m_dir_iv_cache.SetTTL(opts.cachettl);
+    con->m_case_cache.SetTTL(opts.cachettl);
 
-    con->SetCaseSensitive(caseinsensitve);
+    con->SetCaseSensitive(opts.caseinsensitive);
 
     CryptConfig *config = con->GetConfig();
 
@@ -1979,7 +1977,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     ZeroMemory(dokanOptions, sizeof(DOKAN_OPTIONS));
     dokanOptions->Version = DOKAN_VERSION;
 
-    dokanOptions->ThreadCount = nThreads;
+    dokanOptions->ThreadCount = opts.numthreads;
 
 #ifdef _DEBUG
     dokanOptions->Timeout = 900000;
@@ -2006,7 +2004,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
     dokanOptions->MountPoint = tdata->mountpoint.c_str();
 
-    if (!config->read(mes, config_path, reverse)) {
+    if (!config->read(mes, config_path, opts.reverse)) {
       if (mes.length() < 1)
         mes = L"unable to load config\n";
       throw(-1);
@@ -2089,10 +2087,10 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
       DbgPrint(L"GetVolumeInformation failed, lasterr = %u\n", lasterr);
     }
 
-    if (config->m_reverse || readonly) {
+    if (config->m_reverse || opts.readonly) {
       dokanOptions->Options |= DOKAN_OPTION_WRITE_PROTECT;
-    } else if (mountmanager) {
-      if (mountmanagerwarn && !have_security_name_privilege()) {
+    } else if (opts.mountmanager) {
+      if (opts.mountmanagerwarn && !have_security_name_privilege()) {
 
         if (!mountmanager_continue_mounting()) {
           mes = L"operation cancelled by user";
