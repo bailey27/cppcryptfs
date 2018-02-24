@@ -116,45 +116,8 @@ BOOL CcppcryptfsApp::InitInstance()
 
 		if (hWnd) {
 			if (have_args()) {
-				static_assert(sizeof(WCHAR) == sizeof(wchar_t), "sizeof(WCHAR) != sizeof(wchar_t).");
-				COPYDATASTRUCT cd;
-				memset(&cd, 0, sizeof(cd));
-				cd.dwData = CPPCRYPTFS_COPYDATA_CMDLINE;
-				LPCWSTR cmdLine = GetCommandLineW();
-				size_t cmdLineLen = wcslen(cmdLine);
-				size_t dataLen = sizeof(CopyDataCmdLine) + cmdLineLen*sizeof(WCHAR); // WCHAR in CmdLineCopyData accounts for null terminator
-				if (dataLen <= CPPCRYPTFS_COPYDATA_CMDLINE_MAXLEN) {
-					cd.cbData = (DWORD)dataLen;
-					LockZeroBuffer<BYTE> buf(cd.cbData);
-					if (buf.IsLocked()) {
-						CopyDataCmdLine *pcd = (CopyDataCmdLine*)buf.m_buf;
-						pcd->dwPid = getppid();
-						cd.lpData = (PVOID)pcd;
-						if (wcscpy_s(pcd->szCmdLine, cmdLineLen + 1, cmdLine) == 0) {
-							SetLastError(0);
-							SendMessageW(hWnd, WM_COPYDATA, NULL, (LPARAM)&cd);
-							DWORD dwErr = GetLastError();
-							if (dwErr) {
-								if (dwErr == ERROR_ACCESS_DENIED) {
-									ConsoleErrMes(L"SendMessage() returned error \"access denied\".\n\nPerhaps there is"
-										" already an instance of cppcryptfs running with administrator\nprivileges, but"
-										" you invoked this instance of cppcryptfs from a command prompt\nthat is not running"
-										" with administrator privileges.\n\nIf this is the case, then you should start a"
-										" CMD.exe window using\n\"Run as administrator\" and invoke cppcryptfs from within it.");
-								} else {
-									WCHAR buf[80];
-									_snwprintf_s(buf, _TRUNCATE, L"SendMessage() returned error code %u", dwErr);
-									ConsoleErrMes(buf);
-								}
-							}
-						}
-					} else {
-						ConsoleErrMes(L"unable to lock command line buffer in source");
-					}
-				} else {
-					ConsoleErrMes(L"command line too long");
-				}
-			} else {
+				SendArgsToRunningInstance(hWnd);
+			} else { // if no args, then restore window of running instance
 				ShowWindow(hWnd, SW_SHOWNORMAL);
 			}
 		} else {
@@ -189,7 +152,6 @@ BOOL CcppcryptfsApp::InitInstance()
 
 	CWinApp::InitInstance();
 
-
 	AfxEnableControlContainer();
 
 	// Create the shell manager, in case the dialog contains
@@ -207,8 +169,6 @@ BOOL CcppcryptfsApp::InitInstance()
 	// TODO: You should modify this string to be something appropriate
 	// such as the name of your company or organization
 	SetRegistryKey(_T("cppcryptfs"));
-
-
 
 	CCryptPropertySheet dlg(L"cppcryptfs");
 
@@ -287,3 +247,44 @@ BOOL CcppcryptfsApp::InitInstance()
 	return FALSE;
 }
 
+void CcppcryptfsApp::SendArgsToRunningInstance(HWND hWnd)
+{
+	static_assert(sizeof(WCHAR) == sizeof(wchar_t), "sizeof(WCHAR) != sizeof(wchar_t).");
+	COPYDATASTRUCT cd;
+	memset(&cd, 0, sizeof(cd));
+	cd.dwData = CPPCRYPTFS_COPYDATA_CMDLINE;
+	LPCWSTR cmdLine = GetCommandLineW();
+	size_t cmdLineLen = wcslen(cmdLine);
+	size_t dataLen = sizeof(CopyDataCmdLine) + cmdLineLen * sizeof(WCHAR); // WCHAR in CmdLineCopyData accounts for null terminator
+	if (dataLen <= CPPCRYPTFS_COPYDATA_CMDLINE_MAXLEN) {
+		cd.cbData = (DWORD)dataLen;
+		LockZeroBuffer<BYTE> buf(cd.cbData);
+		if (buf.IsLocked()) {
+			CopyDataCmdLine *pcd = (CopyDataCmdLine*)buf.m_buf;
+			pcd->dwPid = getppid();
+			cd.lpData = (PVOID)pcd;
+			if (wcscpy_s(pcd->szCmdLine, cmdLineLen + 1, cmdLine) == 0) {
+				SetLastError(0);
+				SendMessageW(hWnd, WM_COPYDATA, NULL, (LPARAM)&cd);
+				DWORD dwErr = GetLastError();
+				if (dwErr) {
+					if (dwErr == ERROR_ACCESS_DENIED) {
+						ConsoleErrMes(L"SendMessage() returned error \"access denied\".\n\nPerhaps there is"
+							" already an instance of cppcryptfs running with administrator\nprivileges, but"
+							" you invoked this instance of cppcryptfs from a command prompt\nthat is not running"
+							" with administrator privileges.\n\nIf this is the case, then you should start a"
+							" CMD.exe window using\n\"Run as administrator\" and invoke cppcryptfs from within it.");
+					} else {
+						WCHAR buf[80];
+						_snwprintf_s(buf, _TRUNCATE, L"SendMessage() returned error code %u", dwErr);
+						ConsoleErrMes(buf);
+					}
+				}
+			}
+		} else {
+			ConsoleErrMes(L"unable to lock command line buffer in source");
+		}
+	} else {
+		ConsoleErrMes(L"command line too long");
+	}
+}

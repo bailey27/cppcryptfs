@@ -57,6 +57,8 @@ typedef struct struct_CopyDataCmdLine {
 
 class CcppcryptfsApp : public CWinApp
 {
+private:
+	void SendArgsToRunningInstance(HWND hWnd);
 public:
 	CcppcryptfsApp();
 
