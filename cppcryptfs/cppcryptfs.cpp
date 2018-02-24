@@ -121,7 +121,7 @@ BOOL CcppcryptfsApp::InitInstance()
 				ShowWindow(hWnd, SW_SHOWNORMAL);
 			}
 		} else {
-			::MessageBox(NULL, L"cppcryptfs is already running!", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+			::MessageBox(NULL, L"cppcryptfs is already running, but window not found!", L"cppcryptfs", MB_OK | MB_ICONERROR);
 		}
 		
 		return FALSE;
