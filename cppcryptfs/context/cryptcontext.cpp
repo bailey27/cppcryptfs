@@ -78,7 +78,7 @@ void CryptContext::GetFsInfo(FsInfo & info)
 
 	long long hits, lookups;
 
-	if (info.reverse) {
+	if (info.reverse && info.longFileNames) {
 		hits = m_lfn_cache.hits();
 		lookups = m_lfn_cache.lookups();
 		info.lfnCacheHitRatio = lookups ? (float)hits / (float)lookups : 0.0f;
