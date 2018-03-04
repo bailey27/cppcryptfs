@@ -122,7 +122,7 @@ BOOL CFsInfoDialog::OnInitDialog()
 	float r;
 	r = m_info.caseCacheHitRatio;
 	if (r < 0.0f) {
-		txt = L"N/A";
+		txt = L"n/a";
 	} else {
 		_snwprintf_s(buf, _TRUNCATE, L"%.2f", r*100.0f);
 		txt = buf;
