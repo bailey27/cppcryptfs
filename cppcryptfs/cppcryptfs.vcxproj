@@ -207,6 +207,7 @@
   <ItemGroup>
     <ClInclude Include="config\cryptconfig.h" />
     <ClInclude Include="context\cryptcontext.h" />
+    <ClInclude Include="context\FsInfo.h" />
     <ClInclude Include="cppcryptfs.h" />
     <ClInclude Include="crypt\aes-siv\aes256-cmac.h" />
     <ClInclude Include="crypt\aes-siv\aes256-common.h" />
@@ -256,6 +257,7 @@
   <ItemGroup>
     <ClCompile Include="config\cryptconfig.cpp" />
     <ClCompile Include="context\cryptcontext.cpp" />
+    <ClCompile Include="context\FsInfo.cpp" />
     <ClCompile Include="cppcryptfs.cpp" />
     <ClCompile Include="crypt\aes-siv\aes256-cmac.cpp" />
     <ClCompile Include="crypt\aes-siv\aes256-common.cpp" />

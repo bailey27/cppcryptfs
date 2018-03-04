@@ -44,9 +44,6 @@ bool CryptContext::InitEme(const BYTE *key, bool hkdf)
 
 CryptContext::CryptContext()
 {
-
-	memset(&m_fsInfo, 0, sizeof(m_fsInfo));
-
 	m_mountEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	m_caseinsensitive = false;

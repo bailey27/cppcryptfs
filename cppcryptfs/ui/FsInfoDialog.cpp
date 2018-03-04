@@ -1,3 +1,32 @@
+
+/*
+cppcryptfs : user-mode cryptographic virtual overlay filesystem.
+
+Copyright (C) 2016-2018 Bailey Brown (github.com/bailey27/cppcryptfs)
+
+cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
+
+The MIT License (MIT)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 // FsInfoDialog.cpp : implementation file
 //
 
@@ -81,34 +110,39 @@ BOOL CFsInfoDialog::OnInitDialog()
 	SetDlgItemText(IDC_IO_BUFFER_SIZE, txt.c_str());
 	txt = to_wstring(m_info.fsThreads);
 	SetDlgItemText(IDC_THREADS, txt.c_str());
-	txt = to_wstring(m_info.cacheTTL);
-	txt += L" sec";
+	if (m_info.cacheTTL > 0) {
+		txt = to_wstring(m_info.cacheTTL);
+		txt += L" sec";
+	} else {
+		txt = L"infinite";
+	}
 	SetDlgItemText(IDC_CACHE_TTL, txt.c_str());
-	WCHAR buf[128];
+	WCHAR buf[32];
+	*buf = '\0';
 	float r;
 	r = m_info.caseCacheHitRatio;
 	if (r < 0.0f) {
 		txt = L"N/A";
 	} else {
-		_snwprintf_s(buf, sizeof(buf) / sizeof(buf[0]) - 1, L"%.2f", r*100.0f);
+		_snwprintf_s(buf, _TRUNCATE, L"%.2f", r*100.0f);
 		txt = buf;
 		txt += L"%";
 	}
 	SetDlgItemText(IDC_CASE_CACHE_HR, txt.c_str());
 	r = m_info.lfnCacheHitRatio;
 	if (r < 0.0f) {
-		txt = L"N/A";
+		txt = L"n/a";
 	} else {
-		_snwprintf_s(buf, sizeof(buf) / sizeof(buf[0]) - 1, L"%.2f", r*100.0f);
+		_snwprintf_s(buf, _TRUNCATE, L"%.2f", r*100.0f);
 		txt = buf;
 		txt += L"%";
 	}
 	SetDlgItemText(IDC_LFN_CACHE_HR, txt.c_str());
 	r = m_info.dirIvCacheHitRatio;
 	if (r < 0.0f) {
-		txt = L"N/A";
+		txt = L"n/a";
 	} else {
-		_snwprintf_s(buf, sizeof(buf) / sizeof(buf[0]) - 1, L"%.2f", r*100.0f);
+		_snwprintf_s(buf, _TRUNCATE, L"%.2f", r*100.0f);
 		txt = buf;
 		txt += L"%";
 	}

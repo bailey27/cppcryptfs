@@ -37,27 +37,9 @@ THE SOFTWARE.
 #include "filename/longfilenamecache.h"
 #include "crypt/siv.h"
 #include "filename/casecache.h"
+#include "context/FsInfo.h"
 
 
-class FsInfo {
-public:
-	wstring path;
-	wstring configPath;
-	wstring fileNameEncryption;
-	wstring dataEncryption;
-	float dirIvCacheHitRatio;
-	float lfnCacheHitRatio;
-	float caseCacheHitRatio;
-	int ioBufferSize;
-	int fsThreads;
-	int cacheTTL;
-	bool readOnly;
-	bool reverse;
-	bool mountManager;
-	bool caseInsensitive;
-
-	virtual ~FsInfo() {}
-};
 
 class CryptContext {
 private:

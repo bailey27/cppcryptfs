@@ -1895,7 +1895,6 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
   }
 
   FsInfo fsinfo;
-  memset(&fsinfo, 0, sizeof(fsinfo));
 
   int retval = 0;
   CryptThreadData *tdata = NULL;
