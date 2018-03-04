@@ -38,10 +38,32 @@ THE SOFTWARE.
 #include "crypt/siv.h"
 #include "filename/casecache.h"
 
+
+class FsInfo {
+public:
+	wstring path;
+	wstring configPath;
+	wstring fileNameEncryption;
+	wstring dataEncryption;
+	float dirIvCacheHitRatio;
+	float lfnCacheHitRatio;
+	float caseCacheHitRatio;
+	int ioBufferSize;
+	int fsThreads;
+	int cacheTTL;
+	bool readOnly;
+	bool reverse;
+	bool mountManager;
+	bool caseInsensitive;
+
+	virtual ~FsInfo() {}
+};
+
 class CryptContext {
 private:
 
 	CryptConfig *m_config;
+	FsInfo m_fsInfo;
 public:
 	RandomBytes *m_prand_bytes;
 	DirIvCache m_dir_iv_cache;
@@ -60,6 +82,9 @@ public:
 
 	bool IsCaseInsensitive() { return m_caseinsensitive && !m_config->m_reverse && !m_config->m_PlaintextNames; };
 	void SetCaseSensitive(bool bCaseSensitive) { m_caseinsensitive = bCaseSensitive; };
+
+	void SetFsInfo(const FsInfo& info) { m_fsInfo = info;  }
+	void GetFsInfo(FsInfo& info);
 
 	HANDLE m_mountEvent;
 

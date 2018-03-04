@@ -107,6 +107,8 @@ public:
 
 	void remove(LPCWSTR base64_hash);
 	
+	long long hits() { long long rval; lock(); rval = m_hits; unlock(); return rval; }
+	long long lookups() { long long rval; lock(); rval = m_lookups; unlock(); return rval; }
 };
 
 

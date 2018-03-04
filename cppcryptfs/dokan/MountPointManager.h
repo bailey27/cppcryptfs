@@ -66,5 +66,6 @@ public:
 
 	friend BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
 		wstring &err_mes);
+
 };
 

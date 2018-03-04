@@ -239,6 +239,7 @@
     <ClInclude Include="ui\CryptPropertyPage.h" />
     <ClInclude Include="ui\CryptPropertySheet.h" />
     <ClInclude Include="ui\FolderDialog.h" />
+    <ClInclude Include="ui\FsInfoDialog.h" />
     <ClInclude Include="ui\MountMangerDialog.h" />
     <ClInclude Include="ui\MountPropertyPage.h" />
     <ClInclude Include="ui\RecentItems.h" />
@@ -307,6 +308,7 @@
     <ClCompile Include="ui\CryptPropertyPage.cpp" />
     <ClCompile Include="ui\CryptPropertySheet.cpp" />
     <ClCompile Include="ui\FolderDialog.cpp" />
+    <ClCompile Include="ui\FsInfoDialog.cpp" />
     <ClCompile Include="ui\MountMangerDialog.cpp" />
     <ClCompile Include="ui\MountPropertyPage.cpp" />
     <ClCompile Include="ui\RecentItems.cpp" />

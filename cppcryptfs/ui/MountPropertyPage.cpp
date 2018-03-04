@@ -45,6 +45,7 @@ THE SOFTWARE.
 #include "util/getopt.h"
 #include "cryptdefaults.h"
 #include "util/savedpasswords.h"
+#include "ui/FsInfoDialog.h"
 
 
 // CMountPropertyPage dialog
@@ -328,7 +329,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 	opts.mountmanagerwarn = theApp.GetProfileInt(L"Settings", L"MountManagerWarn", MOUNTMANAGERWARN_DEFAULT) != 0;
 
 	bool bSavePassword = argMountPoint == NULL && (IsDlgButtonChecked(IDC_SAVE_PASSWORD) != 0);	
-
+	
 	theApp.DoWaitCursor(1);
 	int result = mount_crypt_fs(cmp, cpath, config_path, password.m_buf, error_mes, opts);
 	theApp.DoWaitCursor(-1);
@@ -339,6 +340,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 		return CString(&error_mes[0]);
 	}
 
+	
 	theApp.m_mountedMountPoints.emplace((LPCWSTR)cmp, cpath);
 
 	// otherwise if fs in root dir of the drive, we get "d:" displayed for the path instead of "d:\"
@@ -1450,7 +1452,7 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 
 	CListCtrl* pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
-	enum { DismountV=1, AddMountPointV, DeleteMountPointV };
+	enum { DismountV=1, AddMountPointV, DeleteMountPointV, Properties };
 
 	if ((CWnd*)pList == pWnd) {
 		CMenu menu;
@@ -1478,6 +1480,7 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 			} 
 			if (mounted) {
 				menu.AppendMenu(MF_ENABLED, DismountV, L"&Dismount");
+				menu.AppendMenu(MF_ENABLED, Properties, L"&Properties...");
 			}
 
 		}
@@ -1491,7 +1494,7 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 			if (cmp.GetLength() > 1) {
 				Dismount(cmp);
 			}
-			return;
+			break;
 		}
 		case AddMountPointV:
 			{	
@@ -1505,7 +1508,19 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 		case DeleteMountPointV:
 		{
 			DeleteMountPoint(item);
-			return;
+			break;
+
+		}
+		case Properties:
+		{	
+			if (cmp.GetLength() > 1) {
+				CFsInfoDialog idlg;
+				idlg.m_mountPoint = cmp;
+				get_fs_info(cmp, idlg.m_info);
+				idlg.DoModal();
+			}
+			
+			break;
 
 		}
 		default:

@@ -70,6 +70,9 @@ CaseCache::CaseCache()
 {
 	m_ttl = 0;
 
+	m_hits = 0;
+	m_lookups = 0;
+
 	m_map.reserve(CASE_CACHE_ENTRIES);
 
 	InitializeCriticalSection(&m_crit);
@@ -323,6 +326,8 @@ int CaseCache::lookup(LPCWSTR path, wstring& result_path, bool force_not_found)
 
 	lock();
 
+	m_lookups++;
+
 	try {
 
 		auto it = m_map.find(ucdir);
@@ -347,6 +352,7 @@ int CaseCache::lookup(LPCWSTR path, wstring& result_path, bool force_not_found)
 				if (nit != node->m_files.end()) {
 					result_path = node->m_path + (isRoot ? L"" : L"\\") + nit->second + stream;
 					ret = CASE_CACHE_FOUND;
+					m_hits++;
 				} else {
 					result_path = node->m_path + (isRoot ? L"" : L"\\") + file_without_stream.c_str() + stream;
 					ret = CASE_CACHE_NOT_FOUND;

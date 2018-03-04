@@ -32,6 +32,8 @@ THE SOFTWARE.
 
 static RandomBytes random_bytes;
 
+
+
 bool CryptContext::InitEme(const BYTE *key, bool hkdf)
 {
 
@@ -42,6 +44,8 @@ bool CryptContext::InitEme(const BYTE *key, bool hkdf)
 
 CryptContext::CryptContext()
 {
+
+	memset(&m_fsInfo, 0, sizeof(m_fsInfo));
 
 	m_mountEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
@@ -69,4 +73,31 @@ CryptContext::~CryptContext()
 	if (m_config)
 		delete m_config;
 
+}
+
+void CryptContext::GetFsInfo(FsInfo & info)
+{
+	info = m_fsInfo;
+
+	long long hits, lookups;
+
+	if (info.reverse) {
+		hits = m_lfn_cache.hits();
+		lookups = m_lfn_cache.lookups();
+		info.lfnCacheHitRatio = lookups ? (float)hits / (float)lookups : 0.0f;
+	} else {
+		info.lfnCacheHitRatio = -1.0;
+	}
+	
+	if (info.caseInsensitive) {
+		hits = m_case_cache.hits();
+		lookups = m_case_cache.lookups();
+		info.caseCacheHitRatio = lookups ? (float)hits / (float)lookups : 0.0f;
+	} else {
+		info.caseCacheHitRatio = -1.0f;
+	}
+
+	hits = m_dir_iv_cache.hits();
+	lookups = m_dir_iv_cache.lookups();
+	info.dirIvCacheHitRatio = lookups ? (float)hits / (float)lookups : 0.0f;
 }

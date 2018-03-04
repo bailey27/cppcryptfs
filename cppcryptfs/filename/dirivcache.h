@@ -95,6 +95,9 @@ public:
 	bool store(LPCWSTR path, const unsigned char *dir_iv, const FILETIME& last_write_time);
 
 	void remove(LPCWSTR path);
+
+	long long hits() { long long rval; lock(); rval = m_hits; unlock(); return rval; }
+	long long lookups() { long long rval; lock(); rval = m_lookups; unlock(); return rval; }
 	
 };
 

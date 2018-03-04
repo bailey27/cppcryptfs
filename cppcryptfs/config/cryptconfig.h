@@ -52,6 +52,7 @@ private:
 	LockZeroBuffer<BYTE> *m_pGcmContentKey;
 	bool m_DirIV;
 public:
+	wstring m_configPath;
 	bool DirIV() { return m_DirIV; };
 	bool m_EMENames;
 	bool m_GCMIV128;

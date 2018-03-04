@@ -87,8 +87,9 @@ BOOL MountPointManager::wait_and_destroy(const WCHAR* mountpoint)
 
 	auto it = m_tdatas.find(mountpoint);
 
-	if (it == m_tdatas.end())
+	if (it == m_tdatas.end()) {
 		return FALSE;
+	}
 
 	BOOL result = TRUE;
 	
@@ -148,3 +149,5 @@ BOOL MountPointManager::wait_and_destroy(const WCHAR* mountpoint)
 			return TRUE;
 
 	}
+
+	

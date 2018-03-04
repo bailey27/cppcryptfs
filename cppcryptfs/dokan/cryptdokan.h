@@ -50,6 +50,8 @@ typedef struct _struct_CryptMountOptions {
 	bool mountmanagerwarn;
 } CryptMountOptions;
 
+class FsInfo;
+
 int mount_crypt_fs(const WCHAR *mountpoint, const WCHAR *path, const WCHAR* config_path, const WCHAR *password, wstring& mes, const CryptMountOptions& ops);
 
 BOOL unmount_crypt_fs(const WCHAR *mountpoint, bool wait);
@@ -65,4 +67,6 @@ void init_security_name_privilege();
 BOOL list_files(const WCHAR *path, list<FindDataPair> &fileDatas, wstring& err_mes);
 
 bool check_dokany_version(wstring& mes);
+
+bool get_fs_info(const wchar_t *mountpoint, FsInfo& info);
 

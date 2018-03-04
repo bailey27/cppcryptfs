@@ -70,6 +70,10 @@ private:
 	list<CaseCacheNode*> m_spare_node_list;
 
 	CRITICAL_SECTION m_crit;
+
+	long long m_lookups;
+	long long m_hits;
+
 public:
 	CryptContext *m_con;
 
@@ -90,6 +94,8 @@ public:
 	bool remove(LPCWSTR path);
 	bool purge(LPCWSTR path);
 	bool rename(LPCWSTR oldpath, LPCWSTR newpath);
+	long long hits() { long long rval; lock(); rval = m_hits; unlock(); return rval; }
+	long long lookups() { long long rval; lock(); rval = m_lookups; unlock(); return rval; }
 
 	// used to load dir into cache if there is a miss
 	bool load_dir(LPCWSTR filepath);

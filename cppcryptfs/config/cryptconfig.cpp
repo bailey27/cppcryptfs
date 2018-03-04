@@ -115,6 +115,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 			mes = L"failed to open config file";
 			return false;
 		}
+		m_configPath = config_file_path;
 		m_reverse = reverse;
 	} else {
 
@@ -139,9 +140,11 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 				return false;
 			}
 			m_reverse = false;
-		} else {
+		} else {	
 			m_reverse = true;
 		}
+
+		m_configPath = config_file;
 	}
 
 	if (fseek(fl, 0, SEEK_END)) {
