@@ -38,6 +38,7 @@ FsInfo::FsInfo()
 	this->fsThreads = 0;
 	this->ioBufferSize = 0;
 	this->lfnCacheHitRatio = 0.0f;
+	this->longFileNames = false;
 	this->mountManager = false;
 	this->readOnly = false;
 	this->reverse = false;

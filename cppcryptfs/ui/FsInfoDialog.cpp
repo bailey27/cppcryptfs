@@ -103,6 +103,7 @@ BOOL CFsInfoDialog::OnInitDialog()
 	SetDlgItemText(IDC_MODE, m_info.reverse ? L"reverse" : L"forward");
 	SetDlgItemText(IDC_RECYCLE_BIN, m_info.mountManager ? yes : no);
 	SetDlgItemText(IDC_CASE_INSENSITIVE, m_info.caseInsensitive ? yes : no);
+	SetDlgItemText(IDC_LONG_FILE_NAMES, m_info.longFileNames ? yes : no);
 
 	wstring txt;
 	txt = to_wstring(m_info.ioBufferSize);

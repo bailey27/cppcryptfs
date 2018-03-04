@@ -47,6 +47,7 @@ public:
 	bool reverse;
 	bool mountManager;
 	bool caseInsensitive;
+	bool longFileNames;
 
 	FsInfo();
 	virtual ~FsInfo();

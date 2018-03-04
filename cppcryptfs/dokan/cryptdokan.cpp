@@ -2124,6 +2124,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 	fsinfo.ioBufferSize = con->m_bufferblocks * 4;
 	fsinfo.path = path;
 	fsinfo.reverse = con->GetConfig()->m_reverse;
+	fsinfo.longFileNames = con->GetConfig()->m_LongNames;
 
 	con->SetFsInfo(fsinfo);
 
