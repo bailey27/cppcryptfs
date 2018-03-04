@@ -101,14 +101,14 @@ BOOL CFsInfoDialog::OnInitDialog()
 	SetDlgItemText(IDC_DATA_ENCRYPTION, m_info.dataEncryption.c_str());
 	SetDlgItemText(IDC_READ_ONLY, m_info.readOnly ? yes : no);
 	SetDlgItemText(IDC_MODE, m_info.reverse ? L"reverse" : L"forward");
-	SetDlgItemText(IDC_RECYCLE_BIN, m_info.mountManager ? yes : no);
+	SetDlgItemText(IDC_MOUNT_MANAGER, m_info.mountManager ? yes : no);
 	SetDlgItemText(IDC_CASE_INSENSITIVE, m_info.caseInsensitive ? yes : no);
 	SetDlgItemText(IDC_LONG_FILE_NAMES, m_info.longFileNames ? yes : no);
 
 	wstring txt;
 	txt = to_wstring(m_info.ioBufferSize);
 	txt += L"KB";
-	SetDlgItemText(IDC_IO_BUFFER_SIZE, txt.c_str());
+	SetDlgItemText(IDC_IO_BUF_SIZE, txt.c_str());
 	txt = to_wstring(m_info.fsThreads);
 	SetDlgItemText(IDC_THREADS, txt.c_str());
 	if (m_info.cacheTTL > 0) {
