@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "SettingsPropertyPage.h"
 #include "afxdialogex.h"
 #include "cppcryptfs.h"
+#include "context/cryptcontext.h"
 #include "ui/cryptdefaults.h"
 #include "util/savedpasswords.h"
 
@@ -101,7 +102,6 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, bEnableSavingPasswords);
 }
 
-
 BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords)
 {
 
@@ -122,7 +122,13 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	for (i = 0; i < 15; i++) {
 		if (i == 0) {
-			pBox->AddString(L"Dokany default (5)");
+			CString def = L"Dokany default (";
+			WCHAR buf[32];
+			*buf = '\0';
+			_snwprintf_s(buf, _TRUNCATE, L"%d", CRYPT_DOKANY_DEFAULT_NUM_THREADS);
+			def += buf;
+			def += L")";
+			pBox->AddString(def);
 		} else {
 			swprintf_s(buf, L"%d", i);
 			pBox->AddString(buf);

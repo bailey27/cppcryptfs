@@ -1894,7 +1894,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     return -1;
   }
 
-  FsInfo fsinfo;
+  
 
   int retval = 0;
   CryptThreadData *tdata = NULL;
@@ -1971,6 +1971,10 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     con->m_case_cache.SetTTL(opts.cachettl);
 
     con->SetCaseSensitive(opts.caseinsensitive);
+
+	con->m_cache_ttl = opts.cachettl;
+
+	con->m_threads = opts.numthreads ? opts.numthreads : 5;
 
     CryptConfig *config = con->GetConfig();
 
@@ -2083,7 +2087,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
 	  if (fs_flags & FILE_READ_ONLY_VOLUME) {
 		  dokanOptions->Options |= DOKAN_OPTION_WRITE_PROTECT;
-		  fsinfo.readOnly = true;
+		  con->m_read_only = true;
 	  }
 
     } else {
@@ -2093,7 +2097,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
     if (config->m_reverse || opts.readonly) {
       dokanOptions->Options |= DOKAN_OPTION_WRITE_PROTECT;
-	  fsinfo.readOnly = true;
+	  con->m_read_only = true;
     } else if (opts.mountmanager) {
       if (opts.mountmanagerwarn && !have_security_name_privilege()) {
 
@@ -2105,28 +2109,12 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
 	  if (have_security_name_privilege()) {
 		  dokanOptions->Options |= DOKAN_OPTION_MOUNT_MANAGER;
-		  fsinfo.mountManager = true;
+		  con->m_recycle_bin = true;
 	  }
     }
 
     dokanOptions->GlobalContext = (ULONG64)con;
     dokanOptions->Options |= DOKAN_OPTION_ALT_STREAM;
-
-
-	// some of the fields in fsinfo were set above
-	// the cache hit ratio ones won't be meaninful until after the the fs is mounted
-	fsinfo.cacheTTL = opts.cachettl;
-	fsinfo.caseInsensitive = con->IsCaseInsensitive();
-	fsinfo.configPath = con->GetConfig()->m_configPath;
-	fsinfo.dataEncryption = con->GetConfig()->m_AESSIV ? L"AES256-SIV" : L"AES256-GCM";
-	fsinfo.fileNameEncryption = con->GetConfig()->m_PlaintextNames ? L"None" : L"AES256-EME";
-	fsinfo.fsThreads = opts.numthreads ? opts.numthreads : 5;
-	fsinfo.ioBufferSize = con->m_bufferblocks * 4;
-	fsinfo.path = path;
-	fsinfo.reverse = con->GetConfig()->m_reverse;
-	fsinfo.longFileNames = con->GetConfig()->m_LongNames;
-
-	con->SetFsInfo(fsinfo);
 
     hThread = CreateThread(NULL, 0, CryptThreadProc, tdata, 0, NULL);
 

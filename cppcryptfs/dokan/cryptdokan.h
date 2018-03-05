@@ -34,6 +34,7 @@ THE SOFTWARE.
 
 using namespace std;
 
+
 typedef struct _struct_win32_find_data_pair {
 	WIN32_FIND_DATAW fdata;
 	WIN32_FIND_DATAW fdata_orig;

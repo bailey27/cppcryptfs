@@ -48,7 +48,14 @@ CryptContext::CryptContext()
 
 	m_caseinsensitive = false;
 
+	m_recycle_bin = false;
+	m_read_only = false;
+
+	m_cache_ttl = 1;
+
 	m_bufferblocks = 1;
+
+	m_threads = 0;
 
 	if (!m_mountEvent)
 		throw((int)GetLastError());
@@ -74,7 +81,19 @@ CryptContext::~CryptContext()
 
 void CryptContext::GetFsInfo(FsInfo & info)
 {
-	info = m_fsInfo;
+	
+	info.cacheTTL = m_cache_ttl;
+	info.caseInsensitive = IsCaseInsensitive();
+	info.configPath = GetConfig()->m_configPath;
+	info.dataEncryption = GetConfig()->m_AESSIV ? L"AES256-SIV" : L"AES256-GCM";
+	info.fileNameEncryption = GetConfig()->m_PlaintextNames ? L"none" : L"AES256-EME";
+	info.fsThreads = m_threads ? m_threads : CRYPT_DOKANY_DEFAULT_NUM_THREADS;
+	info.ioBufferSize = m_bufferblocks * 4;
+	info.longFileNames = GetConfig()->m_LongNames;
+	info.mountManager = m_recycle_bin;
+	info.readOnly = m_read_only;
+	info.reverse = GetConfig()->m_reverse;
+	info.path = GetConfig()->m_basedir;
 
 	long long hits, lookups;
 

@@ -89,8 +89,11 @@ BOOL CFsInfoDialog::OnInitDialog()
 
 	LPCWSTR yes = L"Yes";
 	LPCWSTR no = L"No";
-
-	SetDlgItemText(IDC_PATH, m_info.path.c_str());
+	LPCWSTR path = m_info.path.c_str();
+	if (!wcsncmp(path, L"\\\\?\\", wcslen(L"\\\\?\\"))) {
+		path += wcslen(L"\\\\?\\");
+	}
+	SetDlgItemText(IDC_PATH, path);
 	SetDlgItemText(IDC_MOUNT_POINT, m_mountPoint);
 	LPCWSTR cfgpath = m_info.configPath.c_str();
 	if (!wcsncmp(cfgpath, L"\\\\?\\", wcslen(L"\\\\?\\"))) {

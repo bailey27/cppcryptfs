@@ -39,13 +39,14 @@ THE SOFTWARE.
 #include "filename/casecache.h"
 #include "context/FsInfo.h"
 
-
+// number of threads Dokany uses if threads is 0. Found from code inspection, not in header file
+#define CRYPT_DOKANY_DEFAULT_NUM_THREADS 5 
 
 class CryptContext {
 private:
 
 	CryptConfig *m_config;
-	FsInfo m_fsInfo;
+	
 public:
 	RandomBytes *m_prand_bytes;
 	DirIvCache m_dir_iv_cache;
@@ -54,7 +55,10 @@ public:
 	EmeCryptContext m_eme;
 	SivContext m_siv;
 	int m_bufferblocks;
-	
+	int m_cache_ttl;
+	int m_threads;
+	bool m_recycle_bin;
+	bool m_read_only;
 private:
 	bool m_caseinsensitive;
 public:
@@ -65,7 +69,6 @@ public:
 	bool IsCaseInsensitive() { return m_caseinsensitive && !m_config->m_reverse && !m_config->m_PlaintextNames; };
 	void SetCaseSensitive(bool bCaseSensitive) { m_caseinsensitive = bCaseSensitive; };
 
-	void SetFsInfo(const FsInfo& info) { m_fsInfo = info;  }
 	void GetFsInfo(FsInfo& info);
 
 	HANDLE m_mountEvent;
