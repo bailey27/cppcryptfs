@@ -334,6 +334,7 @@ Misc:
   -x, --exit            exit if no drives mounted
   -l, --list            list available and mounted drive letters (with paths)
   -ld:\p, --list=d:\p   list encrypted and plaintext filenames
+  -i, --info=D          show information about mounted filesystem
   -v, --version         print version
   -h, --help            display this help message
 

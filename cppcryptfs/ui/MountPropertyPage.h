@@ -69,7 +69,7 @@ public:
 
 	virtual void ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnStartup = FALSE);
 
-	virtual void DeviceChange();
+	virtual void DeviceChange() override;
 
 	CString Mount(LPCWSTR argPath = NULL, LPCWSTR argMountPoint = NULL, LPCWSTR argPassword = NULL, bool argReadOnly = false, LPCWSTR argConfigPath = NULL, bool argReverse = false);
 
@@ -82,6 +82,8 @@ public:
 	BOOL IsDriveLetterAvailable(WCHAR dl);
 
 	BOOL IsValidMountPointColumnWidth(int cw);
+
+	void PrintInfo(LPCWSTR mountpoint);
 
 	virtual void OnExit() override;
 

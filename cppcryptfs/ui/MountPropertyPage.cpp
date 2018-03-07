@@ -1117,6 +1117,7 @@ static void usage()
 	fprintf(stderr, "  -x, --exit\t\texit if no drives mounted\n");
 	fprintf(stderr, "  -l, --list\t\tlist available and mounted drive letters (with paths)\n");
 	fprintf(stderr, "  -ld:\\p, --list=d:\\p\tlist encrypted and plaintext filenames\n");
+	fprintf(stderr, "  -i, --info=D\t\tshow information about mounted filesystem\n");
 	fprintf(stderr, "  -v, --version\t\tprint version\n");
 	fprintf(stderr, "  -h, --help\t\tdisplay this help message\n");
 	
@@ -1163,6 +1164,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	BOOL invalid_opt = FALSE;
 
 	BOOL do_help = FALSE;
+	BOOL do_info = FALSE;
 	BOOL do_version = FALSE;
 	BOOL exit_if_no_mounted = FALSE;
 	BOOL hide_to_system_tray = FALSE;
@@ -1180,6 +1182,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 		{
 			{L"mount",   required_argument,  0, 'm'},
 			{L"drive",   required_argument,  0, 'd'},
+			{ L"info",   required_argument,  0, 'i' },
 			{L"password", required_argument, 0, 'p'},
 			{ L"config", required_argument, 0, 'c' },
 			{L"unmount",  required_argument, 0, 'u'},
@@ -1199,7 +1202,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 
 		while (1) {
 
-			c = getopt_long(argc, argv, L"m:d:p:u:vhxtl::rsc:P", long_options, &option_index);
+			c = getopt_long(argc, argv, L"m:d:p:u:vhxtl::rsc:Pi:", long_options, &option_index);
 
 			if (c == -1)
 				break;
@@ -1213,6 +1216,10 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 				break;
 			case 's':
 				reverse = true;
+				break;
+			case 'i':
+				do_info = TRUE;
+				mountPoint = optarg;
 				break;
 			case 'm':
 				mount = TRUE;
@@ -1290,6 +1297,8 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 		}
 		if (do_help)
 			usage();
+	} else if (do_info) {
+		PrintInfo(mountPoint);
 	} else if (do_list) {
 		CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS); 
 		if (pList) {
@@ -1673,4 +1682,48 @@ void CMountPropertyPage::OnExit()
 BOOL CMountPropertyPage::IsValidMountPointColumnWidth(int cw)
 {
 	return cw >= 50 && cw <= 350;
+}
+
+void CMountPropertyPage::PrintInfo(LPCWSTR mountpoint)
+{
+	WCHAR mpbuf[3];
+	bool is_dl = wcslen(mountpoint) < 3;
+	if (is_dl) {
+		mpbuf[0] = *mountpoint;
+		mpbuf[1] = ':';
+		mpbuf[2] = '\0';
+	}
+	FsInfo info;
+	wstring mpstr;
+	if (!MountPointManager::getInstance()->find(is_dl ? mpbuf : mountpoint, mpstr)) {
+		fwprintf(stderr, L"no fileystem is mounted on %s\n", mountpoint);
+		return;
+	}
+	if (!get_fs_info(mpstr.c_str(), info)) {
+		fwprintf(stderr, L"unable to get info for %s\n", mountpoint);
+		return;
+	}
+	LPCWSTR yes = L"Yes";
+	LPCWSTR no = L"No";
+	fwprintf(stdout, L"Path:                  %s\n", info.path.c_str());
+	fwprintf(stdout, L"Mount Point:           %s\n", mpstr.c_str());
+	fwprintf(stdout, L"Config Path:           %s\n", info.configPath.c_str());
+	fwprintf(stdout, L"Mode:                  %s\n", info.reverse ? L"reverse" : L"forward");
+	fwprintf(stdout, L"Read Only:             %s\n", info.readOnly ? yes : no);
+	fwprintf(stdout, L"Data Encryption:       %s\n", info.dataEncryption.c_str());
+	fwprintf(stdout, L"File Name Encryption:  %s\n", info.fileNameEncryption.c_str());
+	fwprintf(stdout, L"Case Insensitive:      %s\n", info.caseInsensitive ? yes : no);
+	fwprintf(stdout, L"Long File Names:       %s\n", info.longFileNames ? yes : no);
+	fwprintf(stdout, L"Recycle Bin:           %s\n", info.mountManager ? yes : no);
+	fwprintf(stdout, L"Threads                %d\n", info.fsThreads);
+	fwprintf(stdout, L"I/O Buffer Size:       %dKB\n", info.ioBufferSize);
+	fwprintf(stdout, L"Cache TTL:             %d sec\n", info.cacheTTL);
+	WCHAR buf[32];
+	swprintf_s(buf, L"%0.2f%%", info.dirIvCacheHitRatio*100);
+	fwprintf(stdout, L"DirIV Cache Hit Ratio: %s\n", info.dirIvCacheHitRatio < 0 ? L"n/a" : buf);
+	swprintf_s(buf, L"%0.2f%%", info.caseCacheHitRatio*100);
+	fwprintf(stdout, L"Case Cache Hit Ratio:  %s\n", info.caseCacheHitRatio < 0 ? L"n/a" : buf);
+	swprintf_s(buf, L"%0.2f%%", info.lfnCacheHitRatio*100);
+	fwprintf(stdout, L"LFN Cache Hit Ratio:   %s\n", info.lfnCacheHitRatio < 0 ? L"n/a" : buf);
+
 }
