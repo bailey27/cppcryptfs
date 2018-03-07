@@ -37,6 +37,7 @@ THE SOFTWARE.
 #include "dokan/cryptdokan.h"
 #include "util/LockZeroBuffer.h"
 #include "util/util.h"
+#include "dokan/MountPointManager.h"
 
 // CryptPropertySheet
 
@@ -66,7 +67,7 @@ CCryptPropertySheet::~CCryptPropertySheet()
 
 BOOL CCryptPropertySheet::CanClose()
 {
-	if (!theApp.m_mountedMountPoints.empty()) {
+	if (!MountPointManager::getInstance()->empty()) {
 		
 		if (MessageBox(L"All mounted cppcryptfs filesystems will be dismounted. Do you really wish to exit?", L"cppcryptfs",
 			MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
@@ -77,9 +78,7 @@ BOOL CCryptPropertySheet::CanClose()
 					write_volume_name_if_changed(i + 'A');
 				}
 			}
-			for (auto it = theApp.m_mountedMountPoints.begin(); it != theApp.m_mountedMountPoints.end(); it++) {
-				unmount_crypt_fs(it->first.c_str(), false);
-			}
+			unmount_all(false);
 			theApp.DoWaitCursor(1);
 			wait_for_all_unmounted();
 			theApp.DoWaitCursor(-1);

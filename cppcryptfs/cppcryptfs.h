@@ -61,9 +61,10 @@ private:
 	void SendArgsToRunningInstance(HWND hWnd);
 public:
 	CcppcryptfsApp();
-
+#if 0
 	unordered_map<wstring, wstring> m_mountedMountPoints; // used for tracking all mounted mountpoints (dirs and drive letters)
 																		 // drive letters are stored with colon e.g drive M as L"M:"
+#endif
 	DWORD m_mountedLetters;  // used for tracking mounted (by cpppcryptfs) drive letters
 
 // Overrides

@@ -27,6 +27,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <unordered_map>
+
 typedef int(WINAPI *PCryptStoreStreamName)(
 	PWIN32_FIND_STREAM_DATA, LPCWSTR encrypted_name,
 	unordered_map<wstring, wstring> *pmap);

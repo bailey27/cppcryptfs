@@ -46,7 +46,8 @@ THE SOFTWARE.
 #include "cryptdefaults.h"
 #include "util/savedpasswords.h"
 #include "ui/FsInfoDialog.h"
-
+#include "dokan/MountPointManager.h"
+#include <algorithm>
 
 // CMountPropertyPage dialog
 
@@ -339,9 +340,6 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 			theApp.m_mountedLetters &= ~(1 << (*(const WCHAR *)cmp - 'A'));
 		return CString(&error_mes[0]);
 	}
-
-	
-	theApp.m_mountedMountPoints.emplace((LPCWSTR)cmp, cpath);
 
 	// otherwise if fs in root dir of the drive, we get "d:" displayed for the path instead of "d:\"
 	if (cpath.GetLength() == 2 && ((LPCWSTR)cpath)[1] == ':')
@@ -647,11 +645,12 @@ void CMountPropertyPage::DeviceChange()
 
 		pList->InsertItem(LVIF_TEXT | (m_imageIndex >= 0 ? LVIF_IMAGE : 0) | LVIF_STATE, i, dls,
 			!lstrcmpi(dls, selected) ? LVIS_SELECTED : 0, LVIS_SELECTED, m_imageIndex >= 0 ? m_imageIndex : 0, 0);
-		auto it = theApp.m_mountedMountPoints.find((LPCWSTR)dls);
-		if (it != theApp.m_mountedMountPoints.end())
-			pList->SetItemText(i, 1, it->second.c_str());
-		
-		
+
+		wstring pathstr;
+		if (MountPointManager::getInstance()->get_path(dls, pathstr)) {
+			pList->SetItemText(i, 1, pathstr.c_str());
+		}
+			
 	}
 	if (pList->GetItemCount() > 0) {
 		if (!selected_something) {
@@ -788,8 +787,6 @@ CString CMountPropertyPage::Dismount(LPCWSTR argMountPoint)
 	if (is_mountpoint_a_drive(cmp))
 		theApp.m_mountedLetters &= ~(1 << (*(const WCHAR *)cmp - 'A'));
 
-	theApp.m_mountedMountPoints.erase((LPCWSTR)cmp);
-
 	pList->SetItemText(nItem, PATH_INDEX, L"");
 
 	return mes;
@@ -834,13 +831,14 @@ CString CMountPropertyPage::DismountAll()
 				continue;
 			}
 			if (is_mountpoint_a_drive(cmp)) {
-				if (!write_volume_name_if_changed(*(const WCHAR *)cmp))
+				if (!write_volume_name_if_changed(*(const WCHAR *)cmp)) {
 					volnameFailure = true;
+				}
 			}
 			if (unmount_crypt_fs(cmp, false)) {
-				if (is_mountpoint_a_drive(cmp))
+				if (is_mountpoint_a_drive(cmp)) {
 					mounted_letters &= ~(1 << (*(const WCHAR *)cmp - 'A'));
-				theApp.m_mountedMountPoints.erase((LPCWSTR)cmp);
+				}
 				hadSuccess = true;
 				pList->SetItemText(i, PATH_INDEX, L"");
 			} else {
@@ -1373,7 +1371,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	CCryptPropertySheet *pParent = (CCryptPropertySheet*)GetParent();
 
 	if (pParent) {
-		if (theApp.m_mountedMountPoints.empty() && exit_if_no_mounted) {
+		if (MountPointManager::getInstance()->empty() && exit_if_no_mounted) {
 			pParent->OnIdrExitcppcryptfs();
 		} else if (hide_to_system_tray) {
 			if (bOnStartup)
@@ -1474,7 +1472,8 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 		CString cmp;
 		if (item >= 0) {
 			cmp = pList->GetItemText(item, 0);
-			bool mounted = theApp.m_mountedMountPoints.find((LPCWSTR)cmp) != theApp.m_mountedMountPoints.end();
+			wstring mpstr;
+			bool mounted = MountPointManager::getInstance()->find(cmp, mpstr);
 			if (is_mountpoint_a_dir(cmp)) {
 				menu.AppendMenu(mounted ? MF_DISABLED : MF_ENABLED, DeleteMountPointV, L"Dele&te Mount Point");
 			} 
@@ -1570,32 +1569,56 @@ void CMountPropertyPage::AddMountPoint(const CString & path)
 
 }
 
+static bool compare_mps_ignore_case(const wstring& a, const wstring& b) {
+	return lstrcmpi(a.c_str(), b.c_str()) < 0;
+}
+
 // builds array of all mountpoints inclding available drive letters
 void CMountPropertyPage::GetMountPoints(CStringArray & mountPoints)
 {
 	CString mountpoints = theApp.GetProfileString(L"MountPoint", L"MountPoints", NULL);
 	
 	int i;
+	wstring mpstr;
 
 	for (i = 'A'; i <= 'Z'; i++) {
 		WCHAR buf[3];
 		buf[0] = (WCHAR)i;
 		buf[1] = ':';
 		buf[2] = '\0';
-		if (theApp.m_mountedMountPoints.find(buf) != theApp.m_mountedMountPoints.end() || IsDriveLetterAvailable((WCHAR)i)) {
-			WCHAR buf[3];
-			buf[0] = (WCHAR)i;
-			buf[1] = ':';
-			buf[2] = '\0';
+		// add drive letters, both available ones and mounted (by us) ones
+		if (MountPointManager::getInstance()->find(buf, mpstr) || IsDriveLetterAvailable((WCHAR)i)) {
 			mountPoints.Add(buf);
 		}
 	}
 
 	i = 0;
+	unordered_map<wstring, bool> dirmap;
+	CString lc;
+	// add pre-configured directory mount points, remembering which ones we've added
 	for (CString path = mountpoints.Tokenize(L"|", i); i >= 0; path = mountpoints.Tokenize(L"|", i)) {
 		mountPoints.Add(path);
+		lc = path;
+		lc.MakeLower();
+		dirmap.emplace((LPCWSTR)lc, true);
 	}
-
+	vector<wstring> mmps;
+	// get mounted mountpoints, filtering out non empty dir ones (filter out drive letter ones)
+	auto filter = [](const wchar_t* mp) -> bool { return is_mountpoint_a_dir(mp); };
+	MountPointManager::getInstance()->get_mount_points(mmps, filter);
+	// sort the mounted mount points ignoring case
+	sort(mmps.begin(), mmps.end(), compare_mps_ignore_case);
+	// Go through the mounted mount points adding any empty dir ones tha were not already added.
+	// These are the empty dir mount points that were not pre-cofigured that were
+	// mounted via the command line.
+	for (auto & mp : mmps) {
+		lc = mp.c_str();
+		lc.MakeLower();
+		auto it = dirmap.find((LPCWSTR)lc);
+		if (it == dirmap.end()) {
+			mountPoints.Add(mp.c_str());
+		}
+	}
 }
 
 void CMountPropertyPage::DeleteMountPoint(int item)

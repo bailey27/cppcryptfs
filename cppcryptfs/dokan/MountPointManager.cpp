@@ -29,7 +29,11 @@ THE SOFTWARE.
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
 
+#include "dokan/dokan.h"
 #include "cryptdokan.h"
+#include "cryptdokanpriv.h"
+#include "context/cryptcontext.h"
+#include "CryptThreadData.h"
 #include "MountPointManager.h"
 #include <unordered_map>
 #include <string>
@@ -61,7 +65,11 @@ bool MountPointManager::add(const wchar_t *mountpoint, CryptThreadData* tdata)
 
 CryptThreadData *MountPointManager::get(const wchar_t *mountpoint) 
 {
-	auto it = m_tdatas.find(mountpoint);
+	wstring mpstr;
+	if (!find(mountpoint, mpstr)) {
+		return NULL;
+	}
+	auto it = m_tdatas.find(mpstr);
 	if (it != m_tdatas.end()) {
 		return it->second;
 	} else {
@@ -71,8 +79,12 @@ CryptThreadData *MountPointManager::get(const wchar_t *mountpoint)
 
 bool MountPointManager::destroy(const wchar_t *mountpoint) 
 {
+	wstring mpstr;
+	if (!find(mountpoint, mpstr)) {
+		return false;
+	}
 	bool result = true;
-	auto it = m_tdatas.find(mountpoint);
+	auto it = m_tdatas.find(mpstr);
 	if (it != m_tdatas.end()) {
 		delete it->second;
 		m_tdatas.erase(it);
@@ -85,7 +97,12 @@ bool MountPointManager::destroy(const wchar_t *mountpoint)
 BOOL MountPointManager::wait_and_destroy(const WCHAR* mountpoint) 
 {
 
-	auto it = m_tdatas.find(mountpoint);
+	wstring mpstr;
+
+	if (!find(mountpoint, mpstr)) {
+		return FALSE;
+	}
+	auto it = m_tdatas.find(mpstr);
 
 	if (it == m_tdatas.end()) {
 		return FALSE;
@@ -104,6 +121,21 @@ BOOL MountPointManager::wait_and_destroy(const WCHAR* mountpoint)
 	}
 	
 
+	return result;
+}
+
+
+bool MountPointManager::unmount_all(bool wait)
+{
+	for (auto it = m_tdatas.begin(); it != m_tdatas.end(); it++) {
+		if (!unmount_crypt_fs(it->first.c_str(), false)) {
+			return false;
+		}
+	}
+	bool result = true;
+	if (wait) {
+		result = this->wait_all_and_destroy();
+	}
 	return result;
 }
 
@@ -150,4 +182,52 @@ BOOL MountPointManager::wait_and_destroy(const WCHAR* mountpoint)
 
 	}
 
+	bool MountPointManager::find(const WCHAR * mountpoint, wstring & mpstr) const
+	{
+		auto it = m_tdatas.find(mountpoint); 
+		if (it != m_tdatas.end()) {
+			mpstr = it->first;
+			return true;
+		}
 	
+		for (auto it = m_tdatas.begin(); it != m_tdatas.end(); it++) {
+			if (!lstrcmpi(it->first.c_str(), mountpoint)) {
+				mpstr = it->first;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool MountPointManager::get_path(const WCHAR *mountpoint, wstring& path)  const 
+	{
+		wstring mpstr;
+		if (!find(mountpoint, mpstr)) {
+			return false;
+		}
+		auto it = m_tdatas.find(mpstr);
+		if (it == m_tdatas.end()) {
+			return false;
+		}
+
+		path = it->second->con.GetConfig()->m_basedir;
+
+		// get rid of leading \\?\ for display
+		if (!wcsncmp(path.c_str(), L"\\\\?\\", wcslen(L"\\\\?\\"))) {
+			path = path.c_str() + wcslen(L"\\\\?\\");
+		}
+		return true;
+	}
+
+	void MountPointManager::get_mount_points(vector<wstring>& mps, function<bool(const wchar_t *)> filter) const
+	{
+		for (auto it = m_tdatas.begin(); it != m_tdatas.end(); it++) {
+			if (filter) {
+				if (filter(it->first.c_str())) {
+					mps.push_back(it->first);
+				}
+			} else {
+				mps.push_back(it->first);
+			}
+		}
+	}

@@ -93,13 +93,10 @@ BOOL CFsInfoDialog::OnInitDialog()
 	if (!wcsncmp(path, L"\\\\?\\", wcslen(L"\\\\?\\"))) {
 		path += wcslen(L"\\\\?\\");
 	}
-	SetDlgItemText(IDC_PATH, path);
+	SetDlgItemText(IDC_PATH, m_info.path.c_str());
 	SetDlgItemText(IDC_MOUNT_POINT, m_mountPoint);
-	LPCWSTR cfgpath = m_info.configPath.c_str();
-	if (!wcsncmp(cfgpath, L"\\\\?\\", wcslen(L"\\\\?\\"))) {
-		cfgpath += wcslen(L"\\\\?\\");
-	}
-	SetDlgItemText(IDC_CONFIG_PATH, cfgpath);
+	
+	SetDlgItemText(IDC_CONFIG_PATH, m_info.configPath.c_str());
 	SetDlgItemText(IDC_FILE_NAME_ENCRYPTION, m_info.fileNameEncryption.c_str());
 	SetDlgItemText(IDC_DATA_ENCRYPTION, m_info.dataEncryption.c_str());
 	SetDlgItemText(IDC_READ_ONLY, m_info.readOnly ? yes : no);

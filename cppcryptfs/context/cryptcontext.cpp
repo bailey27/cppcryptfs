@@ -95,6 +95,14 @@ void CryptContext::GetFsInfo(FsInfo & info)
 	info.reverse = GetConfig()->m_reverse;
 	info.path = GetConfig()->m_basedir;
 
+	// get rid of leading \\?\ for display
+	if (!wcsncmp(info.path.c_str(), L"\\\\?\\", wcslen(L"\\\\?\\"))) {
+		info.path = info.path.c_str() + wcslen(L"\\\\?\\");
+	}
+	if (!wcsncmp(info.configPath.c_str(), L"\\\\?\\", wcslen(L"\\\\?\\"))) {
+		info.configPath = info.configPath.c_str() + wcslen(L"\\\\?\\");
+	}
+
 	long long hits, lookups;
 
 	if (info.reverse && info.longFileNames) {

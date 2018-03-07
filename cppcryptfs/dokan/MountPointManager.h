@@ -26,11 +26,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include "dokan/dokan.h"
-#include "context/cryptcontext.h"
-#include "cryptdokanpriv.h"
-#include "CryptThreadData.h"
 
+#include <functional>
+
+class CryptThreadData;
 
 class MountPointManager {
 
@@ -49,23 +48,40 @@ public:
 
 		return &instance;
 	}
-
+	
+	
+	
+private:
+	bool destroy(const wchar_t *mountpoint);
+	BOOL wait_multiple_and_destroy(int count, HANDLE handles[], wstring mountpoints[]);
+	bool unmount_all(bool wait);
+	BOOL wait_and_destroy(const WCHAR* mountpoint);
+	BOOL wait_all_and_destroy();
 	// MountPointManager becomes owner of tdata
 	bool add(const wchar_t *mountpoint, CryptThreadData* tdata);
 
 	CryptThreadData *get(const wchar_t *mountpoint);
-
-	bool destroy(const wchar_t *mountpoint);
-
-	BOOL wait_and_destroy(const WCHAR* mountpoint);
-private:
-	BOOL wait_multiple_and_destroy(int count, HANDLE handles[], wstring mountpoints[]);
-	
 public:
-	BOOL wait_all_and_destroy();
+	bool empty() const { return m_tdatas.empty(); }
+	bool get_path (const WCHAR *mountpoint, wstring& path) const;
+	// returns actual mount point (in case used to mount it 
+	// which is how the key is stored
+	bool find (const WCHAR *mountpoint, wstring& mpstr) const;
+	void get_mount_points(vector<wstring>& mps, function<bool(const wchar_t *)> filter = NULL) const;
+	
 
+	// these functions in cryptdokan use the private methods of MountPointManager()
+
+	friend int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
+		const WCHAR *config_path, const WCHAR *password,
+		wstring &mes, const CryptMountOptions& opts);
+	friend BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait);
+	friend bool unmount_all(bool wait);
+	friend BOOL wait_for_all_unmounted();
 	friend BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
 		wstring &err_mes);
-
+	friend BOOL write_volume_name_if_changed(WCHAR dl);
+	friend bool get_fs_info(const wchar_t *mountpoint, FsInfo& info);
+	
 };
 

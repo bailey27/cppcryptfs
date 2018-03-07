@@ -71,3 +71,4 @@ bool check_dokany_version(wstring& mes);
 
 bool get_fs_info(const wchar_t *mountpoint, FsInfo& info);
 
+bool unmount_all(bool wait);

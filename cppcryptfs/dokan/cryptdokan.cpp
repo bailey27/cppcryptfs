@@ -83,6 +83,7 @@ THE SOFTWARE.
 #include <windows.h>
 #include <Shlwapi.h>
 #include "dokan/dokan.h"
+#include "dokan/CryptThreadData.h"
 #include "dokan/fileinfo.h"
 #include <malloc.h>
 #include <ntstatus.h>
@@ -2166,16 +2167,25 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
 BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait) {
 
-  
-  if (!DokanRemoveMountPoint(mountpoint))
+
+  wstring mpstr;
+  if (!MountPointManager::getInstance()->find(mountpoint, mpstr)) {
+		return FALSE;
+  }
+  if (!DokanRemoveMountPoint(mpstr.c_str()))
     return FALSE;
 
   if (wait) {
-	  return MountPointManager::getInstance()->wait_and_destroy(mountpoint);
+	  return MountPointManager::getInstance()->wait_and_destroy(mpstr.c_str());
   } else {
 	  return TRUE;
   }
     
+}
+
+bool unmount_all(bool wait)
+{
+	return MountPointManager::getInstance()->unmount_all(wait);
 }
 
 
