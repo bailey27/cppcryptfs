@@ -647,7 +647,7 @@ void CMountPropertyPage::DeviceChange()
 			!lstrcmpi(dls, selected) ? LVIS_SELECTED : 0, LVIS_SELECTED, m_imageIndex >= 0 ? m_imageIndex : 0, 0);
 
 		wstring pathstr;
-		if (MountPointManager::getInstance()->get_path(dls, pathstr)) {
+		if (MountPointManager::getInstance().get_path(dls, pathstr)) {
 			pList->SetItemText(i, 1, pathstr.c_str());
 		}
 			
@@ -1380,7 +1380,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	CCryptPropertySheet *pParent = (CCryptPropertySheet*)GetParent();
 
 	if (pParent) {
-		if (MountPointManager::getInstance()->empty() && exit_if_no_mounted) {
+		if (MountPointManager::getInstance().empty() && exit_if_no_mounted) {
 			pParent->OnIdrExitcppcryptfs();
 		} else if (hide_to_system_tray) {
 			if (bOnStartup)
@@ -1482,7 +1482,7 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 		if (item >= 0) {
 			cmp = pList->GetItemText(item, 0);
 			wstring mpstr;
-			bool mounted = MountPointManager::getInstance()->find(cmp, mpstr);
+			bool mounted = MountPointManager::getInstance().find(cmp, mpstr);
 			if (is_mountpoint_a_dir(cmp)) {
 				menu.AppendMenu(mounted ? MF_DISABLED : MF_ENABLED, DeleteMountPointV, L"Dele&te Mount Point");
 			} 
@@ -1596,7 +1596,7 @@ void CMountPropertyPage::GetMountPoints(CStringArray & mountPoints)
 		buf[1] = ':';
 		buf[2] = '\0';
 		// add drive letters, both available ones and mounted (by us) ones
-		if (MountPointManager::getInstance()->find(buf, mpstr) || IsDriveLetterAvailable((WCHAR)i)) {
+		if (MountPointManager::getInstance().find(buf, mpstr) || IsDriveLetterAvailable((WCHAR)i)) {
 			mountPoints.Add(buf);
 		}
 	}
@@ -1614,7 +1614,7 @@ void CMountPropertyPage::GetMountPoints(CStringArray & mountPoints)
 	vector<wstring> mmps;
 	// get mounted mountpoints, filtering out non empty dir ones (filter out drive letter ones)
 	auto filter = [](const wchar_t* mp) -> bool { return is_mountpoint_a_dir(mp); };
-	MountPointManager::getInstance()->get_mount_points(mmps, filter);
+	MountPointManager::getInstance().get_mount_points(mmps, filter);
 	// sort the mounted mount points ignoring case
 	sort(mmps.begin(), mmps.end(), compare_mps_ignore_case);
 	// Go through the mounted mount points adding any empty dir ones tha were not already added.
@@ -1695,7 +1695,7 @@ void CMountPropertyPage::PrintInfo(LPCWSTR mountpoint)
 	}
 	FsInfo info;
 	wstring mpstr;
-	if (!MountPointManager::getInstance()->find(is_dl ? mpbuf : mountpoint, mpstr)) {
+	if (!MountPointManager::getInstance().find(is_dl ? mpbuf : mountpoint, mpstr)) {
 		fwprintf(stderr, L"no fileystem is mounted on %s\n", mountpoint);
 		return;
 	}

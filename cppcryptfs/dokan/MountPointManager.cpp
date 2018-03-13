@@ -231,3 +231,12 @@ bool MountPointManager::unmount_all(bool wait)
 			}
 		}
 	}
+
+	void MountPointManager::apply(function<bool(const wchar_t*mountpoint, CryptThreadData*tdata)> f)
+	{
+		for (auto it = m_tdatas.begin(); it != m_tdatas.end(); it++) {
+			if (!f(it->first.c_str(), it->second)) {
+				return;
+			}
+		}
+	}

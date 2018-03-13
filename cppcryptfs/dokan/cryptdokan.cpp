@@ -1888,9 +1888,10 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 	  return -1;
   }
 
-  CryptThreadData *fdata = MountPointManager::getInstance()->get(mountpoint);
+  wstring dummy;
+  bool already_mounted = MountPointManager::getInstance().find(mountpoint, dummy);
 
-  if (fdata != NULL) {
+  if (already_mounted) {
     mes = L"drive letter/mount point already in use\n";
     return -1;
   }
@@ -2128,7 +2129,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
 	// MountPointManager owns tdata from this point on, even if it fails to add (will delete it)
 
-	if (!MountPointManager::getInstance()->add(mountpoint, tdata)) {
+	if (!MountPointManager::getInstance().add(mountpoint, tdata)) {
 		mes = L"unable to add mount point to MountPointManager\n";
 		throw(-1);
 	}
@@ -2159,7 +2160,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
   }
 
   if (retval != 0) {
-	MountPointManager::getInstance()->destroy(mountpoint);
+	MountPointManager::getInstance().destroy(mountpoint);
   }
 
   return retval;
@@ -2169,14 +2170,14 @@ BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait) {
 
 
   wstring mpstr;
-  if (!MountPointManager::getInstance()->find(mountpoint, mpstr)) {
+  if (!MountPointManager::getInstance().find(mountpoint, mpstr)) {
 		return FALSE;
   }
   if (!DokanRemoveMountPoint(mpstr.c_str()))
     return FALSE;
 
   if (wait) {
-	  return MountPointManager::getInstance()->wait_and_destroy(mpstr.c_str());
+	  return MountPointManager::getInstance().wait_and_destroy(mpstr.c_str());
   } else {
 	  return TRUE;
   }
@@ -2185,13 +2186,13 @@ BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait) {
 
 bool unmount_all(bool wait)
 {
-	return MountPointManager::getInstance()->unmount_all(wait);
+	return MountPointManager::getInstance().unmount_all(wait);
 }
 
 
 
 BOOL wait_for_all_unmounted() {
-	return MountPointManager::getInstance()->wait_all_and_destroy();
+	return MountPointManager::getInstance().wait_all_and_destroy();
 }
 
 
@@ -2204,7 +2205,7 @@ BOOL write_volume_name_if_changed(WCHAR dl) {
   fs_root.push_back(dl);
   fs_root.push_back(':');
 
-  CryptThreadData *tdata = MountPointManager::getInstance()->get(fs_root.c_str());
+  CryptThreadData *tdata = MountPointManager::getInstance().get(fs_root.c_str());
 
   if (!tdata)
     return FALSE;
@@ -2306,9 +2307,6 @@ BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
     return FALSE;
   }
 
-  CryptThreadData *tdata = NULL;
-
-  MountPointManager *man = MountPointManager::getInstance();
 
   // according to Microsoft, _wcsnicmp() uses the "C" locale by default, and it won't treat the lower and uppercase
   // versions of non-ascii characters the same unless you call setlocale() to some other locale first.
@@ -2328,13 +2326,19 @@ BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
 
   // This is needed to find the CryptContext for the mount point.
 
-  for (auto it = man->m_tdatas.begin(); it != man->m_tdatas.end(); it++) {
-	  if (!_wcsnicmp_l(it->first.c_str(), path, it->first.length(), locale)) {
-		  tdata = it->second;
-		  path += it->first.length();
-		  break;
+  CryptThreadData *tdata = NULL;
+
+  auto findit = [&tdata, &path, &locale] (const wchar_t *mp, CryptThreadData *td) -> bool {
+	  if (!_wcsnicmp_l(mp, path, wcslen(mp), locale)) {
+		  tdata = td;
+		  path += wcslen(mp);
+		  return false; // stop looking
+	  } else {
+		  return true; // keep looking
 	  }
-  }
+  };
+
+  MountPointManager::getInstance().apply(findit);
 
   _free_locale(locale);
 
@@ -2493,9 +2497,9 @@ bool check_dokany_version(wstring& mes)
 
 bool get_fs_info(const wchar_t *mountpoint, FsInfo& info)
 {
-	MountPointManager *man = MountPointManager::getInstance();
+	MountPointManager& mp_man = MountPointManager::getInstance();
 
-	CryptThreadData *tdata = man->get(mountpoint);
+	CryptThreadData *tdata = mp_man.get(mountpoint);
 	if (!tdata) {
 		return false;
 	}

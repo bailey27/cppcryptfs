@@ -67,7 +67,7 @@ CCryptPropertySheet::~CCryptPropertySheet()
 
 BOOL CCryptPropertySheet::CanClose()
 {
-	if (!MountPointManager::getInstance()->empty()) {
+	if (!MountPointManager::getInstance().empty()) {
 		
 		if (MessageBox(L"All mounted cppcryptfs filesystems will be dismounted. Do you really wish to exit?", L"cppcryptfs",
 			MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {

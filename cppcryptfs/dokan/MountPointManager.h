@@ -43,10 +43,10 @@ public:
 
 	virtual ~MountPointManager();
 
-	static MountPointManager* getInstance() {
+	static MountPointManager& getInstance() {
 		static MountPointManager instance;
 
-		return &instance;
+		return instance;
 	}
 	
 	
@@ -61,6 +61,8 @@ private:
 	bool add(const wchar_t *mountpoint, CryptThreadData* tdata);
 
 	CryptThreadData *get(const wchar_t *mountpoint);
+
+	void apply(function<bool(const wchar_t *mountpoint, CryptThreadData *tdata)> f );
 public:
 	bool empty() const { return m_tdatas.empty(); }
 	bool get_path (const WCHAR *mountpoint, wstring& path) const;
