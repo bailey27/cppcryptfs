@@ -122,10 +122,11 @@ just created the filesystem in.  Then enter the password and click on the "Mount
 
 You can also right-click in the list of drive letters and select "Add Mount Point".  This will let you add an empty directory to the list of drive letters.  This empty directory, which must be on an NTFS volume, can serve as a mount point in place of a drive letter.  The added mount point will be added to the list below the drive letters.  You can also right click on an added mount point and delete it from the list.  The mount point directories you add are saved in the Windows registry.
 
-You can also right-click on a mounted filesystem and dismount it or  view its properties.
-![view its properties](/screenshots/screenshot_properties.png?raw=true) 
 
 Note: Currently, if an empty directory can be used as a mount point only in normal (forward) mode.  See  [issue #22](/../../issues/22) for an explanation.
+
+You can also right-click on a mounted filesystem and dismount it or  view its properties.
+[properties screenshot](/screenshots/screenshot_properties.png?raw=true") 
 
 If you specified a custom path for the config file when you created the filesystem, then you must specify it here also.
 
