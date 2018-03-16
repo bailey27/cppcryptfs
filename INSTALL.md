@@ -26,7 +26,7 @@ When installing Visual Studio 2017, select "Desktop development with C++", and b
 
 Here is a screenshot that shows what to select when installing Visual Studio.
 
-[Visual Studio install screenshot](/screenshots/visual_studio_2017_install.png?raw=true") 
+[Visual Studio install screenshot](/screenshots/visual_studio_2017_install.png?raw=true) 
 
 In order to build OpenSSL, you will also need perl and nasm.  
 
@@ -70,7 +70,7 @@ You will need an elevated (administrator) command prompt for running the command
 
 To start an elevated command prompt in Windows 10, click on the search (magnifying glass) icon in the lower left of the screen and type "cmd". Then right-click on "Command Prompt" and select "Run as administrator".
 
-[how to start an elevated command prompt screenshot](/screenshots/cmd_as_administrator.png?raw=true")
+[how to start an elevated command prompt screenshot](/screenshots/cmd_as_administrator.png?raw=true)
 
 Whether or not you are using git, everything will go easier if you put everything in c:\git.
 
@@ -160,7 +160,7 @@ Then change the build configuration to "Release" and the target platform to "x64
 
 Here is a screenshot that shows where to set the build configuration and target platform (see the red underlines).
 
-[Visual Studio build configuration and target platform screenshot](/screenshots/build_config_and_target.png?raw=true") 
+[Visual Studio build configuration and target platform screenshot](/screenshots/build_config_and_target.png?raw=true) 
 
 Then do Build -> Build Solution, or just press the F7 key.
 
@@ -177,9 +177,9 @@ To change the library path, go to "Linker" and then "Input" and edit "Additional
 
 Here are links to screenshots: 
 
-[Visual Studio include paths screenshot](/screenshots/include_paths.png?raw=true") 
+[Visual Studio include paths screenshot](/screenshots/include_paths.png?raw=true) 
 
-[Visual Studio library paths screenshot](/screenshots/library_paths.png?raw=true") 
+[Visual Studio library paths screenshot](/screenshots/library_paths.png?raw=true) 
 
 The screenshots were made with Visual Studio 2015 when Dokany 1.0.2 was the Dokany version that cppcryptfs was expecting to use, but Dokany 1.0.3 was installed.  The UI for changing these things in Visual Studio 2017 is the same.
 

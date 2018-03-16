@@ -247,7 +247,7 @@ Currently, the default and recommended settings are the same.
 
 You can view the previous default settings here
 
-[Previous default settings screenshot](/screenshots/screenshot_previous_defaults.png?raw=true") 
+[Previous default settings screenshot](/screenshots/screenshot_previous_defaults.png?raw=true) 
 
 **Reset Warnings**
 
