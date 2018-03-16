@@ -125,8 +125,7 @@ You can also right-click in the list of drive letters and select "Add Mount Poin
 
 Note: Currently, if an empty directory can be used as a mount point only in normal (forward) mode.  See  [issue #22](/../../issues/22) for an explanation.
 
-You can also right-click on a mounted filesystem and dismount it or  view its properties.
-[properties screenshot](/screenshots/screenshot_properties.png?raw=true") 
+You can also right-click on a mounted filesystem and dismount it or [view its properties.](/screenshots/screenshot_properties.png?raw=true) 
 
 If you specified a custom path for the config file when you created the filesystem, then you must specify it here also.
 
