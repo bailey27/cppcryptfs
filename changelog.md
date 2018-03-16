@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.0.13, Mar 16, 2018
+* Add properties right-click menu item and -i for showing info about
+  mounted filesystems.
+
 v1.4.0.12, Feb 19, 2018
 * Use MountPointManager class to manage mounted filesystems.
 
