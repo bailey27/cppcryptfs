@@ -2,6 +2,9 @@
 
 Changelog
 ------------
+v1.4.0.14, Mar 17, 2018
+* Fix typo in settings dialog
+
 v1.4.0.13, Mar 16, 2018
 * Add properties right-click menu item and -i for showing info about
   mounted filesystems.
