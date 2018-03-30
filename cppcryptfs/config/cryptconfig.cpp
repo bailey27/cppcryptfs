@@ -94,13 +94,8 @@ CryptConfig::CryptConfig()
 
 CryptConfig::~CryptConfig()
 {
-	if (m_pKeyBuf) {
-		delete m_pKeyBuf;
-	}
-
-	if (m_pGcmContentKey) {
-		delete m_pGcmContentKey;
-	}
+	delete m_pKeyBuf;	
+	delete m_pGcmContentKey;	
 }
 
 
