@@ -203,7 +203,4 @@ namespace cppcryptfs
 				  std::forward<Function>(function),
 				  std::forward<Arguments>(args)...);
 	}
-
-}
-
 }
