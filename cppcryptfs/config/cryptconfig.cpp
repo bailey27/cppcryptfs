@@ -445,6 +445,8 @@ bool CryptConfig::write_volume_name()
 
 		CryptConfig test_cfg;
 
+		fl1.reset();
+
 		try {
 			wstring config_err_mes;
 			if (!test_cfg.read(config_err_mes, &tmp_path[0])) {
