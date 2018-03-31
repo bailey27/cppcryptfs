@@ -449,20 +449,20 @@ bool CryptConfig::write_volume_name()
 
 		fl1.reset();
 
+		auto deleteFile = cppcryptfs::unique_rsc([](auto s){return s;}, DeleteFile,tmp_path.c_str() ) ;
+
 		try {
 			wstring config_err_mes;
 			if (!test_cfg.read(config_err_mes, &tmp_path[0])) {
 				throw(-1);
 			}
 		} catch (...) {
-			DeleteFile(&tmp_path[0]);
 			throw (-1);
 		}
 
 		DWORD dwAttr = GetFileAttributes(&config_path[0]);
 
 		if (dwAttr == INVALID_FILE_ATTRIBUTES) {
-			DeleteFile(&tmp_path[0]);
 			throw (-1);
 		}
 
@@ -475,15 +475,15 @@ bool CryptConfig::write_volume_name()
 			dwAttr &= ~FILE_ATTRIBUTE_READONLY;
 
 			if (!SetFileAttributes(&config_path[0], dwAttr)) {
-				DeleteFile(&tmp_path[0]);
 				throw (-1);
 			}
 		}
 
 		if (!MoveFileEx(&tmp_path[0], &config_path[0], MOVEFILE_REPLACE_EXISTING)) {
-			DeleteFile(&tmp_path[0]);
 			throw (-1);
 		}
+
+		deleteFile.release();
 
 		if (bWasReadOnly) {
 			dwAttr = GetFileAttributes(&config_path[0]);
