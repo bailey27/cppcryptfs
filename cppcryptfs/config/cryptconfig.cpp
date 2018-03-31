@@ -360,8 +360,6 @@ bool CryptConfig::write_volume_name()
 {
 	bool bret = true;
 
-	char *writeBuffer = NULL;
-
 	try {
 		wstring vol = m_VolumeName;
 
@@ -371,21 +369,14 @@ bool CryptConfig::write_volume_name()
 			if (vol.size() > MAX_VOLUME_NAME_LENGTH)
 				vol.erase(MAX_VOLUME_NAME_LENGTH, wstring::npos);
 			if (!encrypt_string_gcm(vol, GetGcmContentKey(), volume_name_utf8_enc)) {
-				return false;
+				throw(-1);
 			}
 		}
 
-		if (m_basedir.size() < 1)
-			return false;
+		if (m_configPath.size() < 1)
+			throw(-1);
 
-		wstring config_path;
-
-		config_path = m_basedir;
-
-		if (config_path[config_path.size() - 1] != '\\')
-			config_path.push_back('\\');
-
-		config_path += m_reverse ? REVERSE_CONFIG_NAME : CONFIG_NAME;
+		wstring config_path = m_configPath;
 
 		const WCHAR *path = &config_path[0];
 
@@ -393,35 +384,30 @@ bool CryptConfig::write_volume_name()
 		auto fl = File.get();
 
 		if (!fl)
-			return false;
+			throw(-1);
 
 		if (fseek(fl, 0, SEEK_END))
-			return false;
+			throw(-1);
 
 		long filesize = ftell(fl);
 
 		if (fseek(fl, 0, SEEK_SET))
-			return false;
+			throw(-1);
 
-		char *buf = new char[filesize + 1];
+		std::vector<char> buf(filesize+1);
 
-		if (!buf)
-			return false;
-
-		size_t len = fread(buf, 1, filesize, fl);
+		size_t len = fread(&buf[0], 1, filesize, fl);
 
 		File.reset();
 
 		if (len < 0)
-			return false;
+			throw(-1);
 
 		buf[len] = '\0';
 
 		rapidjson::Document d;
 
-		d.Parse(buf);
-
-		delete[] buf;
+		d.Parse(&buf[0]);
 
 		rapidjson::Value vname(volume_name_utf8_enc.c_str(), d.GetAllocator());
 
@@ -434,17 +420,15 @@ bool CryptConfig::write_volume_name()
 		wstring tmp_path = config_path;
 		tmp_path += L".tmp";
 
-		auto fl1 = cppcryptfs::unique_ptr<FILE>(_wfopen_s, fclose, &tmp_path[0], L"wb");
+		auto fl1 = cppcryptfs::unique_ptr<FILE>(_wfopen_s, fclose, tmp_path.c_str(), L"wb");
 		if (!fl1)
 			throw (-1);
 		const size_t writeBuffer_len = 128 * 1024;
-		writeBuffer = new char[writeBuffer_len];
-		rapidjson::FileWriteStream os(fl1.get(), writeBuffer, writeBuffer_len);
+		std::vector<char> writeBuffer(writeBuffer_len);
+		rapidjson::FileWriteStream os(fl1.get(), &writeBuffer[0], writeBuffer_len);
 		rapidjson::PrettyWriter<rapidjson::FileWriteStream> writer(os);
 		d.Accept(writer);
-		delete[] writeBuffer;
-		writeBuffer = NULL;
-
+		
 		CryptConfig test_cfg;
 
 		fl1.reset();
@@ -453,14 +437,14 @@ bool CryptConfig::write_volume_name()
 
 		try {
 			wstring config_err_mes;
-			if (!test_cfg.read(config_err_mes, &tmp_path[0])) {
+			if (!test_cfg.read(config_err_mes, tmp_path.c_str())) {
 				throw(-1);
 			}
 		} catch (...) {
 			throw (-1);
 		}
 
-		DWORD dwAttr = GetFileAttributes(&config_path[0]);
+		DWORD dwAttr = GetFileAttributes(config_path.c_str());
 
 		if (dwAttr == INVALID_FILE_ATTRIBUTES) {
 			throw (-1);
@@ -502,10 +486,6 @@ bool CryptConfig::write_volume_name()
 		}
 	} catch (...) {
 		bret = false;
-	}
-
-	if (writeBuffer) {
-		delete[] writeBuffer;
 	}
 
 	return bret;
