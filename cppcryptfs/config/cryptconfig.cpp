@@ -410,6 +410,8 @@ bool CryptConfig::write_volume_name()
 
 		size_t len = fread(buf, 1, filesize, fl);
 
+		File.reset();
+
 		if (len < 0)
 			return false;
 
