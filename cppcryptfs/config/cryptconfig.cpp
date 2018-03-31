@@ -94,13 +94,8 @@ CryptConfig::CryptConfig()
 
 CryptConfig::~CryptConfig()
 {
-	if (m_pKeyBuf) {
-		delete m_pKeyBuf;
-	}
-
-	if (m_pGcmContentKey) {
-		delete m_pGcmContentKey;
-	}
+	delete m_pKeyBuf;	
+	delete m_pGcmContentKey;	
 }
 
 
@@ -108,9 +103,11 @@ bool
 CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 {
 
+	auto File = cppcryptfs::unique_ptr(static_cast<FILE*>(nullptr), fclose);
 	FILE *fl = NULL;
 
 	if (config_file_path) {
+		
 		if (_wfopen_s(&fl, config_file_path, L"rb")) {
 			mes = L"failed to open config file";
 			return false;
@@ -147,9 +144,10 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 		m_configPath = config_file;
 	}
 
+	File.reset(fl);
+
 	if (fseek(fl, 0, SEEK_END)) {
 		mes = L"unable to seek to end of config file";
-		fclose(fl);
 		return false;
 	}
 
@@ -157,19 +155,16 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 
 	if (filesize > MAX_CONFIG_FILE_SIZE) {
 		mes = L"config file is too big";
-		fclose(fl);
 		return false;
 	}
 
 	if (filesize < 1) {
 		mes = L"config file is empty";
-		fclose(fl);
 		return false;
 	}
 
 	if (fseek(fl, 0, SEEK_SET)) {
 		mes = L"unable to seek to beginning of config file";
-		fclose(fl);
 		return false;
 	}
 
@@ -183,13 +178,10 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 
 	if (!buf) {
 		mes = L"cannot allocate buffer for reading config file";
-		fclose(fl);
 		return false;
 	}
 
 	size_t len = fread(buf, 1, filesize, fl);
-
-	fclose(fl);
 
 	if (len < 0) {
 		mes = L"read error when reading config file";
@@ -370,9 +362,6 @@ bool CryptConfig::write_volume_name()
 
 	char *writeBuffer = NULL;
 
-	FILE *fl = NULL;
-
-
 	try {
 		wstring vol = m_VolumeName;
 
@@ -400,9 +389,10 @@ bool CryptConfig::write_volume_name()
 
 		const WCHAR *path = &config_path[0];
 
-		fl = NULL;
+		auto File = cppcryptfs::unique_ptr<FILE>(_wfopen_s, fclose, path, L"rb");
+		auto fl = File.get();
 
-		if (_wfopen_s(&fl, path, L"rb"))
+		if (!fl)
 			return false;
 
 		if (fseek(fl, 0, SEEK_END))
@@ -420,8 +410,7 @@ bool CryptConfig::write_volume_name()
 
 		size_t len = fread(buf, 1, filesize, fl);
 
-		fclose(fl);
-		fl = NULL;
+		File.reset();
 
 		if (len < 0)
 			return false;
@@ -444,19 +433,23 @@ bool CryptConfig::write_volume_name()
 		}
 		wstring tmp_path = config_path;
 		tmp_path += L".tmp";
-		if (_wfopen_s(&fl, &tmp_path[0], L"wb"))
+
+		auto fl1 = cppcryptfs::unique_ptr<FILE>(_wfopen_s, fclose, &tmp_path[0], L"wb");
+		if (!fl1)
 			throw (-1);
 		const size_t writeBuffer_len = 128 * 1024;
 		writeBuffer = new char[writeBuffer_len];
-		rapidjson::FileWriteStream os(fl, writeBuffer, writeBuffer_len);
+		rapidjson::FileWriteStream os(fl1.get(), writeBuffer, writeBuffer_len);
 		rapidjson::PrettyWriter<rapidjson::FileWriteStream> writer(os);
 		d.Accept(writer);
-		fclose(fl);
-		fl = NULL;
 		delete[] writeBuffer;
 		writeBuffer = NULL;
 
 		CryptConfig test_cfg;
+
+		fl1.reset();
+
+		auto deleteFile = cppcryptfs::unique_rsc([](auto s){return s;}, DeleteFile,tmp_path.c_str() ) ;
 
 		try {
 			wstring config_err_mes;
@@ -464,14 +457,12 @@ bool CryptConfig::write_volume_name()
 				throw(-1);
 			}
 		} catch (...) {
-			DeleteFile(&tmp_path[0]);
 			throw (-1);
 		}
 
 		DWORD dwAttr = GetFileAttributes(&config_path[0]);
 
 		if (dwAttr == INVALID_FILE_ATTRIBUTES) {
-			DeleteFile(&tmp_path[0]);
 			throw (-1);
 		}
 
@@ -484,15 +475,15 @@ bool CryptConfig::write_volume_name()
 			dwAttr &= ~FILE_ATTRIBUTE_READONLY;
 
 			if (!SetFileAttributes(&config_path[0], dwAttr)) {
-				DeleteFile(&tmp_path[0]);
 				throw (-1);
 			}
 		}
 
 		if (!MoveFileEx(&tmp_path[0], &config_path[0], MOVEFILE_REPLACE_EXISTING)) {
-			DeleteFile(&tmp_path[0]);
 			throw (-1);
 		}
+
+		deleteFile.release();
 
 		if (bWasReadOnly) {
 			dwAttr = GetFileAttributes(&config_path[0]);
@@ -516,9 +507,6 @@ bool CryptConfig::write_volume_name()
 	if (writeBuffer) {
 		delete[] writeBuffer;
 	}
-
-	if (fl)
-		fclose(fl);
 
 	return bret;
 }
@@ -677,8 +665,6 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 	m_basedir = path;
 
 	bool bret = true;
-
-	FILE *fl = NULL;
 
 	LockZeroBuffer<unsigned char> pwkey(MASTER_KEY_LEN);
 	LockZeroBuffer<unsigned char> pwkeyHKDF(MASTER_KEY_LEN);
@@ -856,7 +842,10 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 			throw(-1);
 		}
 
-		if (_wfopen_s(&fl, &config_path[0], L"wb")) {
+		auto File = cppcryptfs::unique_ptr<FILE>(_wfopen_s, fclose, &config_path[0], L"wb");
+		auto fl = File.get();
+
+		if (!fl) {
 			error_mes = L"cannot create config file\n";
 			throw(-1);
 		}
@@ -909,9 +898,6 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 		fprintf(fl, "\t]\n");
 		fprintf(fl, "}\n");
 
-		fclose(fl);
-		fl = NULL;
-
 		DWORD attr = GetFileAttributesW(&config_path[0]);
 		if (attr != INVALID_FILE_ATTRIBUTES) {
 			attr |= FILE_ATTRIBUTE_READONLY | (m_reverse && !specified_config_file_path ? FILE_ATTRIBUTE_HIDDEN : 0);
@@ -939,9 +925,6 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 
 	if (context)
 		free_crypt_context(context);
-
-	if (fl)
-		fclose(fl);
 
 	return bret;
 }
