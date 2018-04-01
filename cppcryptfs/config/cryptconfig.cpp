@@ -440,6 +440,9 @@ bool CryptConfig::write_volume_name()
 			if (!test_cfg.read(config_err_mes, tmp_path.c_str())) {
 				throw(-1);
 			}
+			if (!test_cfg.check_config(config_err_mes)) {
+				throw(-1);
+			}
 			if (m_encrypted_key != test_cfg.m_encrypted_key ||
 				m_encrypted_key_salt != test_cfg.m_encrypted_key_salt ||
 				m_N != test_cfg.m_N || m_R != test_cfg.m_R || m_P != test_cfg.m_P) {
