@@ -391,6 +391,12 @@ bool CryptConfig::write_volume_name()
 
 		long filesize = ftell(fl);
 
+		if (filesize < 0)
+			throw(-1);
+
+		if (filesize > MAX_CONFIG_FILE_SIZE)
+			throw(-1);
+
 		if (fseek(fl, 0, SEEK_SET))
 			throw(-1);
 
@@ -413,8 +419,7 @@ bool CryptConfig::write_volume_name()
 
 		if (d.HasMember("VolumeName")) {
 			d["VolumeName"] = vname;
-		}
-		else {
+		} else {
 			d.AddMember("VolumeName", vname, d.GetAllocator());
 		}
 		wstring tmp_path = config_path;
