@@ -120,6 +120,8 @@ You can right click on the mounted drive letter in File Explorer, select "Proper
 Then go to the "Mount" tab and select a drive letter and select the folder you
 just created the filesystem in.  Then enter the password and click on the "Mount" button.
 
+![Alt text](/screenshots/screenshot_mount.png?raw=true "Mount tab")
+
 You can also right-click in the list of drive letters and select "Add Mount Point".  This will let you add an empty directory to the list of drive letters.  This empty directory, which must be on an NTFS volume, can serve as a mount point in place of a drive letter.  The added mount point will be added to the list below the drive letters.  You can also right click on an added mount point and delete it from the list.  The mount point directories you add are saved in the Windows registry.
 
 
@@ -133,7 +135,6 @@ If you specified a custom path for the config file, you must also select "revers
 
 Note:  cppcryptfs uses the path to the encrypted filesystem as a key for rembering the custom path to the config file (if there is one) and other settings like reverse and read only.  So when you select a path to mount, be sure to verify that these settings are what you wish to use this time.
 
-![Alt text](/screenshots/screenshot_mount.png?raw=true "Mount tab")
 
 After you mount the filesystem, you will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is encrypted and saved in files in the folder you specified.
 
