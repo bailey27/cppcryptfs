@@ -2,6 +2,13 @@
 
 Changelog
 ------------
+v1.4.0.15, Apr 05, 2018
+* Fix bug preventing changing volume name if separate config file is used.
+* Integrate @mhogomchungu's RAII code to fix leak on error condition in 
+  cryptconfig::write_volume_name().
+* Add additional checks to verify integrity of re-written config file in 
+  cryptconfig::write_volume_name().
+
 v1.4.0.14, Mar 17, 2018
 * Fix typo in settings dialog
 
