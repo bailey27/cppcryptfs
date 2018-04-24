@@ -6,7 +6,7 @@ cppcryptfs
 
 cppcryptfs is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs), an encrypted overlay filesystem written in Go.
 
-cppcryptfs is an implementation of the gocryptfs filesystem in C++ for Windows.
+cppcryptfs is an implementation of the gocryptfs filesystem in C++ for Windows.  cppcryptfs is binary compatible with gocryptfs.  Filesystems created with one can generally be mounted (and synced) with the other.   Please see the statement on compatibility near the ned of this document.
 
 It uses the the [Dokany](https://github.com/dokan-dev/dokany) driver and library to provide a virtual fileystem in user mode under Windows.
 
