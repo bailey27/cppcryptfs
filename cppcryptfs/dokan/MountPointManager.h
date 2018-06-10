@@ -77,12 +77,12 @@ public:
 	friend int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 		const WCHAR *config_path, const WCHAR *password,
 		wstring &mes, const CryptMountOptions& opts);
-	friend BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait);
+	friend BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait, wstring& mes);
 	friend bool unmount_all(bool wait);
 	friend BOOL wait_for_all_unmounted();
 	friend BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
 		wstring &err_mes);
-	friend BOOL write_volume_name_if_changed(WCHAR dl);
+	friend BOOL write_volume_name_if_changed(WCHAR dl, wstring& mes);
 	friend bool get_fs_info(const wchar_t *mountpoint, FsInfo& info);
 	
 };

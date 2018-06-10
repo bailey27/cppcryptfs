@@ -128,7 +128,8 @@ BOOL MountPointManager::wait_and_destroy(const WCHAR* mountpoint)
 bool MountPointManager::unmount_all(bool wait)
 {
 	for (auto it = m_tdatas.begin(); it != m_tdatas.end(); it++) {
-		if (!unmount_crypt_fs(it->first.c_str(), false)) {
+		wstring wmes;
+		if (!unmount_crypt_fs(it->first.c_str(), false, wmes)) {
 			return false;
 		}
 	}

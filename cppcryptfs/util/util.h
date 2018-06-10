@@ -106,6 +106,8 @@ bool mountmanager_continue_mounting();
 
 BOOL GetPathHash(LPCWSTR path, wstring& hashstr);
 
+wstring GetWindowsErrorString(DWORD dwLastErr);
+
 namespace cppcryptfs
 {
 	/*

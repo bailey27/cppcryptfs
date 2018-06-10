@@ -75,7 +75,8 @@ BOOL CCryptPropertySheet::CanClose()
 			int i;
 			for (i = 0; i < 26; i++) {
 				if (theApp.m_mountedLetters & (1<<i)) {
-					write_volume_name_if_changed(i + 'A');
+					wstring mes;
+					write_volume_name_if_changed(i + 'A', mes);
 				}
 			}
 			unmount_all(false);

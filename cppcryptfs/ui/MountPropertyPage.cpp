@@ -768,19 +768,25 @@ CString CMountPropertyPage::Dismount(LPCWSTR argMountPoint)
 	CString mes;
 
 	if (is_mountpoint_a_drive(cmp)) {
-		if (!write_volume_name_if_changed(*(const WCHAR *)cmp))
-			mes += L"unable to update volume label";
+		wstring wmes;
+		if (!write_volume_name_if_changed(*(const WCHAR *)cmp, wmes))
+			mes += wmes.c_str();
 	}
 
 	theApp.DoWaitCursor(1);
-	BOOL bresult = unmount_crypt_fs(cmp, true);
+	wstring wmes;
+	BOOL bresult = unmount_crypt_fs(cmp, true, wmes);
 	theApp.DoWaitCursor(-1);
 
 	if (!bresult) {
 		if (mes.GetLength() > 0)
 			mes += L". ";
-		mes += L"cannot umount ";
+		mes += L"cannot unmount ";
 		mes.Append(cmp);
+		if (wmes.length() > 0) {
+			mes += L" ";
+			mes += wmes.c_str();
+		}
 		return mes;
 	}
 
@@ -831,11 +837,13 @@ CString CMountPropertyPage::DismountAll()
 				continue;
 			}
 			if (is_mountpoint_a_drive(cmp)) {
-				if (!write_volume_name_if_changed(*(const WCHAR *)cmp)) {
+				wstring wmes;
+				if (!write_volume_name_if_changed(*(const WCHAR *)cmp, wmes)) {
 					volnameFailure = true;
 				}
 			}
-			if (unmount_crypt_fs(cmp, false)) {
+			wstring wmes;
+			if (unmount_crypt_fs(cmp, false, wmes)) {
 				if (is_mountpoint_a_drive(cmp)) {
 					mounted_letters &= ~(1 << (*(const WCHAR *)cmp - 'A'));
 				}
@@ -1110,8 +1118,8 @@ static void usage()
 	fprintf(stderr, "  -c, --config=PATH\tpath to config file\n");
 	fprintf(stderr, "  -s, --reverse\t\tmount reverse filesystem\n");
 	fprintf(stderr, "\nUnmounting:\n");
-	fprintf(stderr, "  -u, --unmount=D\tumount drive letter D or dir DIR\n");
-	fprintf(stderr, "  -u, --umount=all\tunmount all drives\n");
+	fprintf(stderr, "  -u, --unmount=D\tunmount drive letter D or dir DIR\n");
+	fprintf(stderr, "  -u, --unmount=all\tunmount all drives\n");
 	fprintf(stderr, "\nMisc:\n");
 	fprintf(stderr, "  -t, --tray\t\thide in system tray\n");
 	fprintf(stderr, "  -x, --exit\t\texit if no drives mounted\n");

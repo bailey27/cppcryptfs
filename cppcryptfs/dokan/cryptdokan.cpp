@@ -2166,18 +2166,25 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
   return retval;
 }
 
-BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait) {
+BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait, wstring& mes) {
 
 
   wstring mpstr;
   if (!MountPointManager::getInstance().find(mountpoint, mpstr)) {
+	  mes += L"unable to find mount point";
 		return FALSE;
   }
-  if (!DokanRemoveMountPoint(mpstr.c_str()))
-    return FALSE;
+  if (!DokanRemoveMountPoint(mpstr.c_str())) {
+	  mes += GetWindowsErrorString(GetLastError());
+	  return FALSE;
+  }
 
   if (wait) {
-	  return MountPointManager::getInstance().wait_and_destroy(mpstr.c_str());
+	  bool res = MountPointManager::getInstance().wait_and_destroy(mpstr.c_str());
+	  if (!res) {
+		  mes += L"wait on umount returned an error " + GetWindowsErrorString(GetLastError());
+	  }
+	  return res;
   } else {
 	  return TRUE;
   }
@@ -2197,7 +2204,7 @@ BOOL wait_for_all_unmounted() {
 
 
 
-BOOL write_volume_name_if_changed(WCHAR dl) {
+BOOL write_volume_name_if_changed(WCHAR dl, wstring& mes) {
 
   
   wstring fs_root;
@@ -2207,15 +2214,19 @@ BOOL write_volume_name_if_changed(WCHAR dl) {
 
   CryptThreadData *tdata = MountPointManager::getInstance().get(fs_root.c_str());
 
-  if (!tdata)
-    return FALSE;
+  if (!tdata) {
+	  mes += L"mount point not found";
+	  return FALSE;
+  }
 
   fs_root.push_back('\\');
 
   CryptContext *con = &tdata->con;
 
-  if (!con)
-    return false;
+  if (!con) {
+	  mes += L"mount point has null context";
+	  return FALSE;
+  }
 
   WCHAR volbuf[256];
 
@@ -2224,12 +2235,17 @@ BOOL write_volume_name_if_changed(WCHAR dl) {
                              NULL, NULL, 0)) {
     DWORD error = GetLastError();
     DbgPrint(L"update volume name error = %u\n", error);
+	mes += L"Unable to get volume information, " + GetWindowsErrorString(error);
     return FALSE;
   }
 
   if (con->GetConfig()->m_VolumeName != volbuf) {
     con->GetConfig()->m_VolumeName = volbuf;
-    return con->GetConfig()->write_volume_name();
+    bool res = con->GetConfig()->write_volume_name();
+	if (!res) {
+		mes += L"unable to write new volume name to config file";
+		return FALSE;
+	}
   }
 
   return TRUE;

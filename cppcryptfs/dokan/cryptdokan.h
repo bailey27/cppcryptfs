@@ -55,11 +55,11 @@ class FsInfo;
 
 int mount_crypt_fs(const WCHAR *mountpoint, const WCHAR *path, const WCHAR* config_path, const WCHAR *password, wstring& mes, const CryptMountOptions& ops);
 
-BOOL unmount_crypt_fs(const WCHAR *mountpoint, bool wait);
+BOOL unmount_crypt_fs(const WCHAR *mountpoint, bool wait, wstring& mes);
 
 BOOL wait_for_all_unmounted();
 
-BOOL write_volume_name_if_changed(WCHAR dl);
+BOOL write_volume_name_if_changed(WCHAR dl, wstring& mes);
 
 BOOL have_security_name_privilege();
 

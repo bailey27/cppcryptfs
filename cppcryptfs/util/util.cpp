@@ -772,3 +772,51 @@ BOOL GetPathHash(LPCWSTR path, wstring& hashstr)
 
 	return TRUE;
 }
+
+wstring GetWindowsErrorString(DWORD dwLastErr)
+{
+	wstring mes;
+
+	if (dwLastErr == 0) {
+		mes += L"unknown windows error 0";
+		return mes;
+	}
+
+	LPTSTR errorText = NULL;
+
+	if (!::FormatMessageW(
+		// use system message tables to retrieve error text
+		FORMAT_MESSAGE_FROM_SYSTEM
+		// allocate buffer on local heap for error text
+		| FORMAT_MESSAGE_ALLOCATE_BUFFER
+		// Important! will fail otherwise, since we're not 
+		// (and CANNOT) pass insertion parameters
+		| FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,    // unused with FORMAT_MESSAGE_FROM_SYSTEM
+		dwLastErr,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&errorText,  // output 
+		0, // minimum size for output buffer
+		NULL)) {   // arguments - see note 
+
+		mes += L"unable to get message for error " + to_wstring(dwLastErr);
+
+		if (errorText) {
+			LocalFree(errorText);
+		}
+
+		return mes;
+	} 
+
+	if (errorText) {
+		// ... do something with the string `errorText` - log it, display it to the user, etc.
+		mes += errorText;
+		// release memory allocated by FormatMessage()
+		LocalFree(errorText);
+		errorText = NULL;
+	} else {
+		mes += L"got null message for error " + to_wstring(dwLastErr);
+	}
+
+	return mes;
+}
