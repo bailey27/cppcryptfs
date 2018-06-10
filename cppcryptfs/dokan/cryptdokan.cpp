@@ -2172,7 +2172,7 @@ BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait, wstring& mes) {
   wstring mpstr;
   if (!MountPointManager::getInstance().find(mountpoint, mpstr)) {
 	  mes += L"unable to find mount point";
-		return FALSE;
+	  return FALSE;
   }
   if (!DokanRemoveMountPoint(mpstr.c_str())) {
 	  mes += GetWindowsErrorString(GetLastError());

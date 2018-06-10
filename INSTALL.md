@@ -84,7 +84,9 @@ git clone https://github.com/openssl/openssl.git
 cd openssl
 ```
 
-Microsoft has announced a compiler-based mitigation for one variant of the Spectre vulnerability.  To use it, you need to have version 15.5 or higher of Visual Studio.  To use the mitigation, you need to add the /d2guardspecload flag to the compiler optimization flags for OpenSSL.  OpenSSL currently does not use this flag.  So to use it, you need to edit c:\\git\openssl\\Configurations\\10-main.conf and change "/O2" to "/O2 /d2guardspecload".  This flag will be renamed /Qspectre in future Visual Studio releases (starting with 15.6).  Hopefully, OpenSSL will include this flag in future releases.
+Microsoft has announced a compiler-based mitigation for one variant of the Spectre vulnerability.  To use it, you need to have version 15.5 or higher of Visual Studio.  To use the mitigation, you need to add the /Qspectre flag to the compiler optimization flags for OpenSSL.  OpenSSL currently does not use this flag.  So to use it, you need to edit c:\\git\openssl\\Configurations\\10-main.conf and change "/O2" to "/O2 /Qspectre".  
+
+The /Qspectre flag is new.  Older versions of Visual Studio 2017 have an undocumented /d2guardspecload flag that provides a similar mitigation.  
 
 Run this command to put nasm in your path (assuming you used the nasm installer).
 
