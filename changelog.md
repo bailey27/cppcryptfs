@@ -2,6 +2,12 @@
 
 Changelog
 ------------
+v1.4.0.16, Jun 10, 2018
+* Change /d2guardspecload to /Qspectre.  /Qspectre is now the preferred compiler
+  flag for Spectre vulnerability mitigation according to Microsoft.
+* Improve error messages if an error occurs during unmounting.
+* Fix typos in messages and documentation.
+
 v1.4.0.15, Apr 05, 2018
 * Fix bug preventing changing volume name if separate config file is used.
 * Integrate @mhogomchungu's RAII code to fix leak on error condition in 
