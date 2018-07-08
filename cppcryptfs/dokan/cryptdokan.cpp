@@ -2001,8 +2001,22 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
     wstring holder = config->m_basedir;
 
-    config->m_basedir =
-        L"\\\\?\\"; // this prefix enables up to 32K long file paths on NTFS
+	WCHAR drive[_MAX_DRIVE] = { 0 };
+	WCHAR dir[_MAX_DIR];
+	WCHAR fname[_MAX_FNAME];
+	WCHAR ext[_MAX_EXT];
+
+	_wsplitpath_s(holder.c_str(), drive, dir, fname, ext);
+
+	bool unc = wcslen(drive) == 0;
+
+	// for UNC paths, need to eat all leading \ for them to work
+	while (unc && holder.length() > 1 && holder[0] == '\\') {
+		holder = holder.c_str() + 1;
+	}
+
+    config->m_basedir = !unc ? 
+        L"\\\\?\\" : L"\\\\?\\UNC\\"; // this prefix enables up to 32K long file paths on NTFS
 
     config->m_basedir += holder;
 
