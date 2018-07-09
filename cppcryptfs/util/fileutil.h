@@ -106,4 +106,5 @@ is_mountpoint_a_dir(LPCWSTR mountpoint);
 bool
 is_mountpoint_a_drive(LPCWSTR mountpoint);
 
-
+wstring
+prepare_basedir(const wchar_t *path);

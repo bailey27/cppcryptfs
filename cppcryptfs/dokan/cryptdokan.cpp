@@ -1992,33 +1992,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     g_DebugMode = 1;
 #endif
 
-    config->m_basedir = path;
-
-    // strip any trailing backslashes
-    while (config->m_basedir.size() > 0 &&
-           config->m_basedir[config->m_basedir.size() - 1] == '\\')
-      config->m_basedir.erase(config->m_basedir.size() - 1);
-
-    wstring holder = config->m_basedir;
-
-	WCHAR drive[_MAX_DRIVE] = { 0 };
-	WCHAR dir[_MAX_DIR];
-	WCHAR fname[_MAX_FNAME];
-	WCHAR ext[_MAX_EXT];
-
-	_wsplitpath_s(holder.c_str(), drive, dir, fname, ext);
-
-	bool unc = wcslen(drive) == 0;
-
-	// for UNC paths, need to eat all leading \ for them to work
-	while (unc && holder.length() > 1 && holder[0] == '\\') {
-		holder = holder.c_str() + 1;
-	}
-
-    config->m_basedir = !unc ? 
-        L"\\\\?\\" : L"\\\\?\\UNC\\"; // this prefix enables up to 32K long file paths on NTFS
-
-    config->m_basedir += holder;
+    config->m_basedir = prepare_basedir(path);
 
     config->m_mountpoint = mountpoint;
 

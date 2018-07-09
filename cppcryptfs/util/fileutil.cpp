@@ -1017,3 +1017,35 @@ bool is_mountpoint_a_drive(LPCWSTR mountpoint)
 	return !is_mountpoint_a_dir(mountpoint);
 }
 
+wstring prepare_basedir(const wchar_t *path)
+{
+	wstring basedir = path;
+
+	// strip any trailing backslashes
+	while (basedir.size() > 0 &&
+		basedir[basedir.size() - 1] == '\\')
+		basedir.erase(basedir.size() - 1);
+
+	wstring holder = basedir;
+
+	WCHAR drive[_MAX_DRIVE] = { 0 };
+	WCHAR dir[_MAX_DIR];
+	WCHAR fname[_MAX_FNAME];
+	WCHAR ext[_MAX_EXT];
+
+	const auto err = _wsplitpath_s(holder.c_str(), drive, dir, fname, ext);
+
+	const bool unc = !err && wcslen(drive) == 0;
+
+	// for UNC paths, need to eat all leading \ for them to work
+	while (unc && holder.length() > 1 && holder[0] == '\\') {
+		holder = holder.c_str() + 1;
+	}
+
+	basedir = !unc ?
+		L"\\\\?\\" : L"\\\\?\\UNC\\"; // this prefix enables up to 32K long file paths on NTFS
+
+	basedir += holder;
+
+	return basedir;
+}
