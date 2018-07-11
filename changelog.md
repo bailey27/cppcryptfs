@@ -2,6 +2,9 @@
 
 Changelog
 ------------
+v1.4.0.17, Jul 8 2018
+* Fix problem with mounting encrypted filesystems from UNC paths.
+
 v1.4.0.16, Jun 10, 2018
 * Change /d2guardspecload to /Qspectre.  /Qspectre is now the preferred compiler
   flag for Spectre vulnerability mitigation according to Microsoft.
