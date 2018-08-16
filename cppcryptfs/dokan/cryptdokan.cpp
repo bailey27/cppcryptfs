@@ -2457,8 +2457,8 @@ static bool get_dokany_version(wstring& ver, vector<int>& v)
 bool check_dokany_version(wstring& mes)
 {
 	const int required_major = 1;
-	const int required_middle = 1;
-	const wstring required_ver = L"1.1.x.x";
+	const int required_middle = 2;
+	const wstring required_ver = L"1.2.x.x";
 	
 	mes = L"";
 
