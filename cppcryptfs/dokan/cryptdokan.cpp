@@ -2013,6 +2013,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
       throw(-1);
     }
 
+#ifdef WINDOWS_GRATUITOUS_UPPERCASING // was fixed by Dokany 1.2.0.1000
 	// reverse-mode filesystems won't work when mounted to an empty dir for the reason given below.
 	// i.e. because we don't support case-insensitive in reverse mode.
 	if (config->m_reverse && is_mountpoint_a_dir(mountpoint)) {
@@ -2025,6 +2026,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 		mes = L"Filesystems mounted using a directory for the mount point must be mounted case-insensitive.\n";
 		throw(-1);
 	}
+#endif
 	
     if (!config->decrypt_key(password)) {
       mes = L"password incorrect\n";

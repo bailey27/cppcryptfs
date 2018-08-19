@@ -2,6 +2,17 @@
 
 Changelog
 ------------
+v1.4.0.19, Aug 19 2018
+* Remove restriction that filesystems mounted with an empty NTFS direcory as the mount
+  point must be mounted case-insensitive.  Also remove similar restriction that reverse-
+  mode filesystems cannot be mounted using empty NTFS directory as the mount point (for
+  the reason that reverse-mode filesystems must be case-sensitive).  This was done 
+  because Dokany 1.2 fixes the gratuitous uppercasing of filenames that was happening
+  when an empty NTFS directory is used as the mount point.
+  
+v1.4.0.18, Aug 16 2018
+* Compile and link with Dokany 1.2.0.1000
+
 v1.4.0.17, Jul 8 2018
 * Fix problem with mounting encrypted filesystems from UNC paths.
 
