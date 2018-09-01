@@ -1300,10 +1300,10 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			wstring prod, ver, copyright;
 			GetProductVersionInfo(prod, ver, copyright);
 			if (haveConsole) fwprintf(stderr, L"%s %s %s\n", prod.c_str(), ver.c_str(), copyright.c_str());
-			if (do_help)
+			if (do_help && haveConsole)
 				fwprintf(stderr, L"\n");
 		}
-		if (do_help)
+		if (do_help && haveConsole)
 			usage();
 	} else if (do_info) {
 		if (haveConsole) PrintInfo(mountPoint);
@@ -1326,7 +1326,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 					} else {
 						findDatas.sort(compair_find_datas);
 						for (auto &it : findDatas) {
-							fwprintf(stdout, L"%s => %s\n", it.fdata.cFileName, it.fdata_orig.cFileName);
+							if (haveConsole) fwprintf(stdout, L"%s => %s\n", it.fdata.cFileName, it.fdata_orig.cFileName);
 						}
 					}
 				}  

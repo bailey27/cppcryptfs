@@ -535,9 +535,10 @@ CloseConsole()
 void 
 ConsoleErrMes(LPCWSTR err, DWORD pid)
 {
-	OpenConsole(pid);
-	fwprintf(stderr, L"cppcryptfs: %s\n", err);
-	CloseConsole();
+	if (OpenConsole(pid)) {
+		fwprintf(stderr, L"cppcryptfs: %s\n", err);
+		CloseConsole();
+	}
 }
 
 
