@@ -2,7 +2,7 @@
 
 Changelog
 ------------
-v1.4.0.20, Aug 19 2018
+v1.4.0.20, Sep 1 2018
 * Fix unhandled exception if started with command line options from a windows program that does not have a console and there is an error mounting the fs.
 
 v1.4.0.19, Aug 19 2018
