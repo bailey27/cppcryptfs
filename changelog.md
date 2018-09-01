@@ -2,6 +2,9 @@
 
 Changelog
 ------------
+v1.4.0.20, Aug 19 2018
+* Fix unhandled exception if started with command line options from a windows program that does not have a console and there is an error mounting the fs.
+
 v1.4.0.19, Aug 19 2018
 * Remove restriction that filesystems mounted with an empty NTFS direcory as the mount
   point must be mounted case-insensitive.  Also remove similar restriction that reverse-

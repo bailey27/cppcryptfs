@@ -86,7 +86,7 @@ DWORD getppid();
 
 bool have_args();
 
-void OpenConsole(DWORD pid = 0);
+bool OpenConsole(DWORD pid = 0);
 
 void CloseConsole();
 

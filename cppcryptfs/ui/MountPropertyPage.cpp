@@ -1160,7 +1160,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 		return;
 	}
 
-	OpenConsole(bOnStartup ? 0 : pid);
+	const auto haveConsole= OpenConsole(bOnStartup ? 0 : pid);
 
 	CString path;
 	CString mountPoint;
@@ -1292,21 +1292,21 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	LocalFree(argv);
 
 	if (errMes.GetLength() > 0) {
-		fwprintf(stderr, L"cppcryptfs: %s\n", (LPCWSTR)errMes);
+		if (haveConsole) fwprintf(stderr, L"cppcryptfs: %s\n", (LPCWSTR)errMes);
 	} else if (invalid_opt) {
-		fwprintf(stderr, L"Try 'cppcryptfs --help' for more information.\n");
+		if (haveConsole) fwprintf(stderr, L"Try 'cppcryptfs --help' for more information.\n");
 	} else if (do_version || do_help) {
 		if (do_version) {
 			wstring prod, ver, copyright;
 			GetProductVersionInfo(prod, ver, copyright);
-			fwprintf(stderr, L"%s %s %s\n", prod.c_str(), ver.c_str(), copyright.c_str());
+			if (haveConsole) fwprintf(stderr, L"%s %s %s\n", prod.c_str(), ver.c_str(), copyright.c_str());
 			if (do_help)
 				fwprintf(stderr, L"\n");
 		}
 		if (do_help)
 			usage();
 	} else if (do_info) {
-		PrintInfo(mountPoint);
+		if (haveConsole) PrintInfo(mountPoint);
 	} else if (do_list) {
 		CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS); 
 		if (pList) {
@@ -1334,7 +1334,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 					LPCWSTR str = errMes;
 					if (str[wcslen(str) - 1] != '\n')
 						errMes += L"\n";
-					fwprintf(stderr, L"cppcryptfs: %s", (LPCWSTR)errMes);
+					if (haveConsole) fwprintf(stderr, L"cppcryptfs: %s", (LPCWSTR)errMes);
 				}
 			} else {
 				int nItems = pList->GetItemCount();
@@ -1343,13 +1343,13 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 				for (i = 0; i < nItems; i++) {
 					cmp = pList->GetItemText(i, 0);
 					if (cmp.GetLength() > 0) {
-						fwprintf(stdout, L"%s", (LPCWSTR)cmp);
+						if (haveConsole) fwprintf(stdout, L"%s", (LPCWSTR)cmp);
 						
 						cpath = pList->GetItemText(i, 1);
 						if (cpath.GetLength() > 0)
-							fwprintf(stdout, L" %s", (LPCWSTR)cpath);
+							if (haveConsole) fwprintf(stdout, L" %s", (LPCWSTR)cpath);
 						
-						fwprintf(stdout, L"\n");
+						if (haveConsole) fwprintf(stdout, L"\n");
 					}
 				}
 			}
@@ -1381,7 +1381,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			LPCWSTR str = errMes;
 			if (str[wcslen(str) - 1] != '\n')
 				errMes += L"\n";
-			fwprintf(stderr, L"cppcryptfs: %s", (LPCWSTR)errMes);
+			if (haveConsole) fwprintf(stderr, L"cppcryptfs: %s", (LPCWSTR)errMes);
 		}
 	}
 

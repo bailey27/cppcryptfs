@@ -502,7 +502,7 @@ have_args()
 	return argc > 1;
 }
 
-void 
+bool 
 OpenConsole(DWORD pid)
 {
 	FreeConsole();
@@ -510,9 +510,16 @@ OpenConsole(DWORD pid)
 	if (AttachConsole(pid ? pid : ATTACH_PARENT_PROCESS)) {
 #pragma warning( push )
 #pragma warning(disable : 4996)
-		freopen("CONOUT$", "wt", stdout);
-		freopen("CONOUT$", "wt", stderr);
+		if (!freopen("CONOUT$", "wt", stdout)) {
+			return false;
+		}
+		if (!freopen("CONOUT$", "wt", stderr)) {
+			return false;
+		}
 #pragma warning( pop )
+		return true;
+	} else {
+		return false;
 	}
 }
 
