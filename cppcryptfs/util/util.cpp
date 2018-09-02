@@ -511,9 +511,12 @@ OpenConsole(DWORD pid)
 #pragma warning( push )
 #pragma warning(disable : 4996)
 		if (!freopen("CONOUT$", "wt", stdout)) {
+			FreeConsole();
 			return false;
 		}
 		if (!freopen("CONOUT$", "wt", stderr)) {
+			fclose(stdout);
+			FreeConsole();
 			return false;
 		}
 #pragma warning( pop )
