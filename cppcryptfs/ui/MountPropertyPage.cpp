@@ -390,7 +390,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 DWORD CMountPropertyPage::GetUsedDrives()
 {
-	return ::GetLogicalDrives() | 1; // A: doesn't work
+	return ::GetLogicalDrives() | 0*1; // A: works since Dokany 1.2.0.1000
 }
 
 BOOL CMountPropertyPage::IsDriveLetterAvailable(WCHAR dl)
@@ -1160,7 +1160,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 		return;
 	}
 
-	const auto haveConsole= OpenConsole(bOnStartup ? 0 : pid);
+	const auto haveConsole = OpenConsole(bOnStartup ? 0 : pid);
 
 	CString path;
 	CString mountPoint;
@@ -1398,7 +1398,8 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 		}
 	}
 
-	CloseConsole();
+	if (haveConsole)
+		CloseConsole();
 
 }
 
