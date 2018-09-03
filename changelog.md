@@ -2,6 +2,9 @@
 
 Changelog
 ------------
+v1.4.0.21, Sep 3 2018
+* Allow A: to be used for mounting.  Works since Dokany 1.2.0.1000
+
 v1.4.0.20, Sep 1 2018
 * Fix unhandled exception if started with command line options from a windows program that does not have a console and there is an error mounting the fs.
 
