@@ -48,6 +48,7 @@ CSettingsPropertyPage::CSettingsPropertyPage()
 	m_bCaseInsensitive = false;
 	m_bMountManager = false;
 	m_bEnableSavingPasswords = false;
+	m_bNeverSaveHistory = false;
 }
 
 CSettingsPropertyPage::~CSettingsPropertyPage()
@@ -70,6 +71,7 @@ BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_MOUNTMANAGER, &CSettingsPropertyPage::OnClickedMountmanager)
 	ON_BN_CLICKED(IDC_RESETWARNINGS, &CSettingsPropertyPage::OnClickedResetwarnings)
 	ON_BN_CLICKED(IDC_ENABLE_SAVING_PASSWORDS, &CSettingsPropertyPage::OnClickedEnableSavingPasswords)
+	ON_BN_CLICKED(IDC_NEVER_SAVE_HISTORY, &CSettingsPropertyPage::OnClickedNeverSaveHistory)
 END_MESSAGE_MAP()
 
 
@@ -99,10 +101,13 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 
 	bool bEnableSavingPasswords = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
 
-	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, bEnableSavingPasswords);
+	bool bNeverSaveHistory = theApp.GetProfileIntW(L"Settings", L"NeverSaveHistory", NEVER_SAVE_HISTORY_DEFAULT) != 0;
+
+	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, bEnableSavingPasswords, bNeverSaveHistory);
 }
 
-BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords)
+BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords,
+										bool bNeverSaveHistory)
 {
 
 	m_bCaseInsensitive =  bCaseInsensitive;
@@ -185,6 +190,8 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	CheckDlgButton(IDC_ENABLE_SAVING_PASSWORDS, m_bEnableSavingPasswords ? 1 : 0);
 
+	CheckDlgButton(IDC_NEVER_SAVE_HISTORY, m_bNeverSaveHistory ? 1 : 0);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -259,17 +266,20 @@ void CSettingsPropertyPage::SaveSettings()
 	m_bCaseInsensitive = !m_bCaseInsensitive; // OnBnClickedCaseinsensitive() flips it
 	m_bMountManager = !m_bMountManager; // ditto
 	m_bEnableSavingPasswords = !m_bEnableSavingPasswords; // ditto
+	m_bNeverSaveHistory = !m_bNeverSaveHistory; // ditto
 
 	OnBnClickedCaseinsensitive();
 	OnClickedMountmanager();
 	OnClickedEnableSavingPasswords();
+	OnClickedNeverSaveHistory();
 }
 
 void CSettingsPropertyPage::OnBnClickedDefaults()
 {
 	// TODO: Add your control notification handler code here
 
-	SetControls(PER_FILESYSTEM_THREADS_DEFAULT, BUFFERBLOCKS_DEFAULT, CACHETTL_DEFAULT, CASEINSENSITIVE_DEFAULT, MOUNTMANAGER_DEFAULT, ENABLE_SAVING_PASSWORDS_DEFAULT);
+	SetControls(PER_FILESYSTEM_THREADS_DEFAULT, BUFFERBLOCKS_DEFAULT, CACHETTL_DEFAULT, CASEINSENSITIVE_DEFAULT, MOUNTMANAGER_DEFAULT, ENABLE_SAVING_PASSWORDS_DEFAULT,
+		NEVER_SAVE_HISTORY_RECOMMENDED);
 
 	SaveSettings();
 }
@@ -279,7 +289,8 @@ void CSettingsPropertyPage::OnBnClickedRecommended()
 {
 	// TODO: Add your control notification handler code here
 
-	SetControls(PER_FILESYSTEM_THREADS_RECOMMENDED, BUFFERBLOCKS_RECOMMENDED, CACHETTL_RECOMMENDED, CASEINSENSITIVE_RECOMMENDED, MOUNTMANAGER_RECOMMENDED, ENABLE_SAVING_PASSWORDS_RECOMMENDED);
+	SetControls(PER_FILESYSTEM_THREADS_RECOMMENDED, BUFFERBLOCKS_RECOMMENDED, CACHETTL_RECOMMENDED, CASEINSENSITIVE_RECOMMENDED, MOUNTMANAGER_RECOMMENDED, ENABLE_SAVING_PASSWORDS_RECOMMENDED,
+		NEVER_SAVE_HISTORY_RECOMMENDED);
 
 	SaveSettings();
 }
@@ -329,5 +340,57 @@ void CSettingsPropertyPage::OnClickedEnableSavingPasswords()
 				}
 			}
 		}
+	}
+}
+
+
+void CSettingsPropertyPage::OnClickedNeverSaveHistory()
+{
+	// TODO: Add your control notification handler code here
+
+	m_bNeverSaveHistory = !m_bNeverSaveHistory;
+
+	CheckDlgButton(IDC_NEVER_SAVE_HISTORY, !!m_bNeverSaveHistory);
+
+	theApp.WriteProfileInt(L"Settings", L"NeverSaveHistory", !!m_bNeverSaveHistory);
+
+	if (m_bNeverSaveHistory) {
+		HKEY hkey;
+		LSTATUS status = ::RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\cppcryptfs\\cppcryptfs\\Folders", 0, KEY_ALL_ACCESS, &hkey);
+		if (status != ERROR_SUCCESS) {
+			if (status != ERROR_FILE_NOT_FOUND) {
+				MessageBox(L"unable to open history", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
+			}
+			return;
+		}
+		DWORD index = 0;
+		DWORD type;
+		WCHAR val[256];
+		DWORD val_len = _countof(val);
+		list<std::wstring> values;
+		while ((status = ::RegEnumValue(hkey, index, val, &val_len, NULL, &type, NULL, NULL)) == ERROR_SUCCESS) {
+			index++;
+			val_len = _countof(val);
+			if (type != REG_SZ)
+				continue;
+			values.push_back(val);
+		}
+
+		if (status != ERROR_NO_MORE_ITEMS) {
+			::RegCloseKey(hkey);
+			MessageBox(L"error while deleting history", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
+			return;
+		}
+
+		for (auto it : values) {
+			status = RegDeleteValue(hkey, it.c_str());
+			if (status != ERROR_SUCCESS) {
+				::RegCloseKey(hkey);
+				MessageBox(L"error while deleting history entry", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
+				return;
+			}
+		}
+
+		::RegCloseKey(hkey);
 	}
 }
