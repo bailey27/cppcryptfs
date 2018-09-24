@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include "recentitems.h"
 #include "cppcryptfs.h"
 #include "cryptdefaults.h"
+#include "util/util.h"
 
 RecentItems::RecentItems(LPCTSTR section, LPCTSTR base, int count)
 {
@@ -75,7 +76,7 @@ RecentItems::Add(LPCTSTR item)
 {
 	int i;
 
-	bool bSave = !theApp.GetProfileInt(L"Settings", L"NeverSaveHistory", NEVER_SAVE_HISTORY_DEFAULT);
+	bool bSave = !NeverSaveHistory();
 
 	CString *lastitems = new CString[m_count];
 

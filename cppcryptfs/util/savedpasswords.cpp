@@ -44,7 +44,7 @@ int SavedPasswords::ClearSavedPasswords(BOOL bDelete)
 
 	HKEY hk_pws;
 
-	LSTATUS status = RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\cppcryptfs\\cppcryptfs\\" SAVED_PASSWORDS_SECTION, 0, KEY_ALL_ACCESS, &hk_pws);
+	LSTATUS status = RegOpenKeyEx(HKEY_CURRENT_USER, CPPCRYPTFS_REG_PATH SAVED_PASSWORDS_SECTION, 0, KEY_ALL_ACCESS, &hk_pws);
 
 	if (status == ERROR_FILE_NOT_FOUND)
 		return count;

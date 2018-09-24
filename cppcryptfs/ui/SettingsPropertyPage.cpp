@@ -33,7 +33,7 @@ THE SOFTWARE.
 #include "cppcryptfs.h"
 #include "SettingsPropertyPage.h"
 #include "afxdialogex.h"
-#include "cppcryptfs.h"
+#include "util/util.h"
 #include "context/cryptcontext.h"
 #include "ui/cryptdefaults.h"
 #include "util/savedpasswords.h"
@@ -101,7 +101,7 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 
 	bool bEnableSavingPasswords = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
 
-	bool bNeverSaveHistory = theApp.GetProfileIntW(L"Settings", L"NeverSaveHistory", NEVER_SAVE_HISTORY_DEFAULT) != 0;
+	bool bNeverSaveHistory = NeverSaveHistory();
 
 	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, bEnableSavingPasswords, bNeverSaveHistory);
 }
@@ -113,6 +113,7 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	m_bCaseInsensitive =  bCaseInsensitive;
 	m_bMountManager = bMountManager;
 	m_bEnableSavingPasswords = bEnableSavingPasswords;
+	m_bNeverSaveHistory = bNeverSaveHistory;
 
 	int i;
 
@@ -355,42 +356,27 @@ void CSettingsPropertyPage::OnClickedNeverSaveHistory()
 	theApp.WriteProfileInt(L"Settings", L"NeverSaveHistory", !!m_bNeverSaveHistory);
 
 	if (m_bNeverSaveHistory) {
-		HKEY hkey;
-		LSTATUS status = ::RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\cppcryptfs\\cppcryptfs\\Folders", 0, KEY_ALL_ACCESS, &hkey);
-		if (status != ERROR_SUCCESS) {
-			if (status != ERROR_FILE_NOT_FOUND) {
-				MessageBox(L"unable to open history", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
-			}
-			return;
-		}
-		DWORD index = 0;
-		DWORD type;
-		WCHAR val[256];
-		DWORD val_len = _countof(val);
-		list<std::wstring> values;
-		while ((status = ::RegEnumValue(hkey, index, val, &val_len, NULL, &type, NULL, NULL)) == ERROR_SUCCESS) {
-			index++;
-			val_len = _countof(val);
-			if (type != REG_SZ)
-				continue;
-			values.push_back(val);
-		}
+		wstring mes;
+		wstring error;
 
-		if (status != ERROR_NO_MORE_ITEMS) {
-			::RegCloseKey(hkey);
-			MessageBox(L"error while deleting history", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
-			return;
+		// DeleteAllRegistryValues() returns false if there is nothing to delete and
+		// with an empty error message.  So use the message to accumulate real errors
+		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH CPPCRYPTFS_FOLDERS_SECTION, mes);
+		error += mes;
+		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH CPPCRYPTFS_CONFIGPATHS_SECTION, mes);
+		error += mes;
+		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH CPPCRYPTFS_MOUNTPOINTS_SECTION, mes);
+		error += mes;
+		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH L"MountPoint", mes);
+		error += mes;
+		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH L"MountFlags", mes);
+		error += mes;
+		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH L"MountOptions", mes);
+		error += mes;
+		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH L"CreateOptions", mes);
+		error += mes;
+		if (!error.empty()) {
+			MessageBox(L"unable to delete history from registry", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		}
-
-		for (auto it : values) {
-			status = RegDeleteValue(hkey, it.c_str());
-			if (status != ERROR_SUCCESS) {
-				::RegCloseKey(hkey);
-				MessageBox(L"error while deleting history entry", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
-				return;
-			}
-		}
-
-		::RegCloseKey(hkey);
 	}
 }

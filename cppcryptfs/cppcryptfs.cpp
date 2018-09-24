@@ -174,11 +174,11 @@ BOOL CcppcryptfsApp::InitInstance()
 
 	CMountPropertyPage mount;
 
-	RecentItems ritems(TEXT("Folders"), TEXT("LastDir"), mount.m_numLastDirs);
+	RecentItems ritems(CPPCRYPTFS_FOLDERS_SECTION, TEXT("LastDir"), mount.m_numLastDirs);
 
 	ritems.Populate(mount.m_lastDirs, TEXT("C:\\"));
 
-	RecentItems ritems4(TEXT("ConfigPaths"), TEXT("LastConfig"), mount.m_numLastConfigs);
+	RecentItems ritems4(CPPCRYPTFS_CONFIGPATHS_SECTION, TEXT("LastConfig"), mount.m_numLastConfigs);
 
 	ritems4.Populate(mount.m_lastConfigs, TEXT("C:\\"));
 
@@ -188,11 +188,11 @@ BOOL CcppcryptfsApp::InitInstance()
 
 	CCreatePropertyPage create;
 
-	RecentItems ritems2(TEXT("Folders"), TEXT("LastDir"), create.m_numLastDirs);
+	RecentItems ritems2(CPPCRYPTFS_FOLDERS_SECTION, TEXT("LastDir"), create.m_numLastDirs);
 
 	ritems2.Populate(create.m_lastDirs, TEXT("C:\\"));
 
-	RecentItems ritems3(TEXT("ConfigPaths"), TEXT("LastConfig"), create.m_numLastConfigs);
+	RecentItems ritems3(CPPCRYPTFS_CONFIGPATHS_SECTION, TEXT("LastConfig"), create.m_numLastConfigs);
 
 	ritems3.Populate(create.m_lastConfigs, TEXT("C:\\"));
 
@@ -246,6 +246,34 @@ BOOL CcppcryptfsApp::InitInstance()
 
 	return FALSE;
 }
+
+BOOL CcppcryptfsApp::WriteProfileInt(LPCWSTR section, LPCWSTR entry, INT val)
+{
+	if (_wcsicmp(entry, L"Settings") && NeverSaveHistory()) {
+		return TRUE;
+	}
+
+	return CWinApp::WriteProfileInt(section, entry, val);
+}
+
+BOOL CcppcryptfsApp::WriteProfileString(LPCWSTR section, LPCWSTR entry, LPCWSTR val)
+{
+	if (_wcsicmp(entry, L"Settings") && NeverSaveHistory()) {
+		return TRUE;
+	}
+
+	return CWinApp::WriteProfileString(section, entry, val);
+}
+
+BOOL CcppcryptfsApp::WriteProfileBinary(LPCWSTR section, LPCWSTR entry, LPBYTE pData, UINT nBytes)
+{
+	if (_wcsicmp(entry, L"Settings") && NeverSaveHistory()) {
+		return TRUE;
+	}
+
+	return CWinApp::WriteProfileBinary(section, entry, pData, nBytes);
+}
+
 
 void CcppcryptfsApp::SendArgsToRunningInstance(HWND hWnd)
 {

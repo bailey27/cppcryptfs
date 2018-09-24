@@ -108,6 +108,10 @@ BOOL GetPathHash(LPCWSTR path, wstring& hashstr);
 
 wstring GetWindowsErrorString(DWORD dwLastErr);
 
+bool DeleteAllRegisteryValues(LPCWSTR regPath, wstring& mes);
+
+bool NeverSaveHistory();
+
 namespace cppcryptfs
 {
 	/*
