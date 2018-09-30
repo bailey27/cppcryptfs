@@ -103,6 +103,8 @@ BEGIN_MESSAGE_MAP(CCryptPropertySheet, CPropertySheet)
 	ON_WM_COPYDATA()
 	ON_WM_WINDOWPOSCHANGING()
 	ON_WM_DEVICECHANGE()
+//	ON_WM_QUERYENDSESSION()
+ON_WM_ENDSESSION()
 END_MESSAGE_MAP()
 
 
@@ -287,4 +289,15 @@ BOOL CCryptPropertySheet::OnDeviceChange( UINT nEventType, DWORD_PTR dwData )
 	}
 
 	return CPropertySheet::OnDeviceChange(nEventType, dwData);
+}
+
+
+void CCryptPropertySheet::OnEndSession(BOOL bEnding)
+{
+	CPropertySheet::OnEndSession(bEnding);
+
+	if (bEnding) {
+		unmount_all(false);
+		wait_for_all_unmounted();
+	}
 }
