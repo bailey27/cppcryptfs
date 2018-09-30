@@ -432,19 +432,19 @@ rsync .....
 File name and path length limits
 ------
 
-If "Long file names" (the default) is specfied when creating the fileystem, or if plain text file names are used, and if the filesystem is located on NTFS, then a file or directory name can be up to 255 characters long, and a full path can be up to 32,000 characters long.
+If "Long file names" (the default) is specfied when creating the fileystem, or if plain text file names are used, and if the underlying filesystem is reasonably modern (e.g. NTFS/exFAT/FAT32), then a file or directory name can be up to 255 characters long, and a full path can be approximately 32,000 characters long.
 
-If "Long file names" is not specified and plain text file names aren't used, then the maximum length of a file or directory name is 160 characters.  But the full path limit is still 32,000 characters (assuming NTFS).
+If "Long file names" is not specified and plain text file names aren't used, then the maximum length of a file or directory name is 160 characters.  But the full path limit is still approximately 32,000 characters (assuming NTFS/exFAT/FAT32).
 
 When a file name is encrypted, it is converted from UNICODE-16 to UTF-8 which, depending the language, might cause the number of characters to increase.  Then it is encrypted, which causes it to be padded by up to 16 bytes. Then it is base64 encoded, which typically results in a 33% increase in length.  The encrypted file names can therefore be signifcantly longer than the unencrypted names.
 
 Also, the path to the directory in which the encrypted fileystem resides must be pre-pended to the path of the encrypted file names.
 
-Older filesystems, such as FAT32, will limit the total path length to 259 characters.
+Older filesystems, such as FAT16, will limit the total path length to 259 characters.
 
-It is therefore strongly recommended to use NTFS whenever possible.
+It is therefore strongly recommended to use a modern file system like NTFS, exFAT, or FAT32 whenever possible.
 
-A lot of Windows progams, including File Explorer that comes with Windows, have problems with long paths.  If you use encrypted file names, then you might need to use a third-party file manager that handles long file paths if you want to move the root of your encrypted filesystem.  It's a good idea to copy it and then delete the old one instead of moving it in case your file manager has problems.
+A lot of Windows progams, including File Explorer that comes with Windows, have problems with paths longer than the old 259 character limit, regardless of which underlying filesystem is used.  If you use encrypted file names, then you might need to use a third-party file manager that handles long file paths if you want to move the root of your encrypted filesystem.  It's a good idea to copy it and then delete the old one instead of moving it in case your file manager has problems.
 
 
 Case Sensitivity
