@@ -143,7 +143,7 @@ RapidJSON is used for parsing the config file gocryptfs.conf.  cppcryptfs uses o
 ```
 c:
 cd \git
-git clone https://github.com/miloyip/rapidjson.git
+git clone https://github.com/Tencent/rapidjson.git
 ```
 
 cppcryptfs
