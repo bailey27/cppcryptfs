@@ -585,8 +585,9 @@ BOOL CMountPropertyPage::OnInitDialog()
 	m_password.SetLimitText(MAX_PASSWORD_LEN);
 
 	CComboBox *pCombo = (CComboBox*)GetDlgItem(IDC_PATH);
-	if (pCombo)
-		pCombo->LimitText(MAX_PATH);
+	if (pCombo) {
+		pCombo->LimitText(MAX_PATH);		
+	}
 
 	pCombo = (CComboBox*)GetDlgItem(IDC_CONFIG_PATH);
 	if (pCombo)
@@ -887,7 +888,8 @@ BOOL CMountPropertyPage::OnSetActive()
 
 	RecentItems ritems(TEXT("Folders"), TEXT("LastDir"), m_numLastDirs);
 
-	ritems.Populate(m_lastDirs, TEXT("C:\\"));
+	const auto path_initial_default = TEXT("C:\\");
+	ritems.Populate(m_lastDirs, path_initial_default);
 
 	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_PATH);
 
@@ -917,7 +919,7 @@ BOOL CMountPropertyPage::OnSetActive()
 
 	RecentItems ritems2(TEXT("ConfigPaths"), TEXT("LastConfig"), m_numLastConfigs);
 
-	ritems2.Populate(m_lastConfigs, TEXT("C:\\"));
+	ritems2.Populate(m_lastConfigs, path_initial_default);
 
 	BOOL save_passwords_enabled = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
 
@@ -984,14 +986,25 @@ BOOL CMountPropertyPage::OnSetActive()
 		}
 	}
 
-	
-
 	CWnd *pSavePwWnd = GetDlgItem(IDC_SAVE_PASSWORD);
 	if (pSavePwWnd)
 		pSavePwWnd->EnableWindow(save_passwords_enabled);
 
 	if (!save_passwords_enabled)
 		CheckDlgButton(IDC_SAVE_PASSWORD, FALSE);
+
+	// set focus to password if path contains text that is not the default path
+	CComboBox *pCombo = (CComboBox*)GetDlgItem(IDC_PATH);
+	if (pCombo) {
+		CString path;
+		pCombo->GetWindowTextW(path);
+		if (path.GetLength() > 0 && path != path_initial_default) {
+			auto pPass = GetDlgItem(IDC_PASSWORD);
+			if (pPass) {
+				pPass->PostMessageW(WM_SETFOCUS);
+			}
+		}
+	}
 
 	return CCryptPropertyPage::OnSetActive();
 }
