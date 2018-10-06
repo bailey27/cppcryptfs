@@ -993,19 +993,6 @@ BOOL CMountPropertyPage::OnSetActive()
 	if (!save_passwords_enabled)
 		CheckDlgButton(IDC_SAVE_PASSWORD, FALSE);
 
-	// set focus to password if path contains text that is not the default path
-	CComboBox *pCombo = (CComboBox*)GetDlgItem(IDC_PATH);
-	if (pCombo) {
-		CString path;
-		pCombo->GetWindowTextW(path);
-		if (path.GetLength() > 0 && path != path_initial_default) {
-			auto pPass = GetDlgItem(IDC_PASSWORD);
-			if (pPass) {
-				pPass->PostMessageW(WM_SETFOCUS);
-			}
-		}
-	}
-
 	return CCryptPropertyPage::OnSetActive();
 }
 
