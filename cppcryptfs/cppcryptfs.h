@@ -46,6 +46,12 @@ using namespace std;
 
 #define CPPCRYPTFS_COPYDATA_CMDLINE_MAXLEN (64*1024) // keep small because of VirtualLock()
 
+#define CPPCRYPTFS_REG_PATH L"Software\\cppcryptfs\\cppcryptfs\\"
+
+#define CPPCRYPTFS_FOLDERS_SECTION L"Folders"
+#define CPPCRYPTFS_CONFIGPATHS_SECTION L"ConfigPaths"
+#define CPPCRYPTFS_MOUNTPOINTS_SECTION L"MountPoints"
+
 typedef struct struct_CopyDataCmdLine {
 	DWORD dwPid;  // process whose console should be attached to for printing error messages
 	WCHAR szCmdLine[1]; // command line (null-terminated)
@@ -69,7 +75,11 @@ public:
 
 // Overrides
 public:
-	virtual BOOL InitInstance();
+	virtual BOOL InitInstance() override;
+
+	virtual BOOL WriteProfileInt(LPCWSTR section, LPCWSTR entry, INT val) override;
+	virtual BOOL WriteProfileString(LPCWSTR section, LPCWSTR entry, LPCWSTR val) override;
+	virtual BOOL WriteProfileBinary(LPCWSTR section, LPCWSTR entry, LPBYTE pData, UINT nBytes) override;
 
 // Implementation
 

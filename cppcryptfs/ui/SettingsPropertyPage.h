@@ -41,6 +41,7 @@ public:
 	bool m_bCaseInsensitive;
 	bool m_bMountManager;
 	bool m_bEnableSavingPasswords;
+	bool m_bNeverSaveHistory;
 
 	// disallow copying
 	CSettingsPropertyPage(CSettingsPropertyPage const&) = delete;
@@ -54,7 +55,8 @@ public:
 	enum { IDD = IDD_SETTINGS };
 #endif
 protected:
-	BOOL SetControls(int nThreads, int nBufferBlocks, int nCacheTTL, bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords);
+	BOOL SetControls(int nThreads, int nBufferBlocks, int nCacheTTL, bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords,
+						bool bNeverSaveHistory);
 	void SaveSettings();
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -71,4 +73,5 @@ public:
 	afx_msg void OnClickedMountmanager();
 	afx_msg void OnClickedResetwarnings();
 	afx_msg void OnClickedEnableSavingPasswords();
+	afx_msg void OnClickedNeverSaveHistory();
 };

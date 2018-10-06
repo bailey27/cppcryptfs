@@ -29,6 +29,8 @@ THE SOFTWARE.
 #include "stdafx.h"
 #include "recentitems.h"
 #include "cppcryptfs.h"
+#include "cryptdefaults.h"
+#include "util/util.h"
 
 RecentItems::RecentItems(LPCTSTR section, LPCTSTR base, int count)
 {
@@ -74,7 +76,7 @@ RecentItems::Add(LPCTSTR item)
 {
 	int i;
 
-
+	bool bSave = !NeverSaveHistory();
 
 	CString *lastitems = new CString[m_count];
 
@@ -97,11 +99,15 @@ RecentItems::Add(LPCTSTR item)
 	
 	for (i = index; i >= 1; i--) {
 		AppendIndex(itemname, i);
-		theApp.WriteProfileStringW(m_section, itemname, lastitems[i-1]);	
+		if (bSave) {
+			theApp.WriteProfileStringW(m_section, itemname, lastitems[i - 1]);
+		}
 	}
 
 	AppendIndex(itemname, 0);
-	theApp.WriteProfileString(m_section, itemname, item);
+	if (bSave) {
+		theApp.WriteProfileString(m_section, itemname, item);
+	}
 
 	delete[] lastitems;
 }

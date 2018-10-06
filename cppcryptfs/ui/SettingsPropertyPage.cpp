@@ -33,7 +33,7 @@ THE SOFTWARE.
 #include "cppcryptfs.h"
 #include "SettingsPropertyPage.h"
 #include "afxdialogex.h"
-#include "cppcryptfs.h"
+#include "util/util.h"
 #include "context/cryptcontext.h"
 #include "ui/cryptdefaults.h"
 #include "util/savedpasswords.h"
@@ -48,6 +48,7 @@ CSettingsPropertyPage::CSettingsPropertyPage()
 	m_bCaseInsensitive = false;
 	m_bMountManager = false;
 	m_bEnableSavingPasswords = false;
+	m_bNeverSaveHistory = false;
 }
 
 CSettingsPropertyPage::~CSettingsPropertyPage()
@@ -70,6 +71,7 @@ BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_MOUNTMANAGER, &CSettingsPropertyPage::OnClickedMountmanager)
 	ON_BN_CLICKED(IDC_RESETWARNINGS, &CSettingsPropertyPage::OnClickedResetwarnings)
 	ON_BN_CLICKED(IDC_ENABLE_SAVING_PASSWORDS, &CSettingsPropertyPage::OnClickedEnableSavingPasswords)
+	ON_BN_CLICKED(IDC_NEVER_SAVE_HISTORY, &CSettingsPropertyPage::OnClickedNeverSaveHistory)
 END_MESSAGE_MAP()
 
 
@@ -79,7 +81,10 @@ static int buffer_sizes[] = { 4, 8, 16, 32, 64, 128, 256, 512, 1024 };
 
 static int ttls[] = { 0, 1, 2, 5, 10, 15, 30, 45, 60, 90, 120, 300, 600, 900, 1800, 3600};
 
-static const WCHAR* ttl_strings[] = { L"infinite", L"1 second", L"2 seconds", L"5 seconds", L"10 seconds", L"15 seconds", L"30 seconds", L"45 seconds", L"60 seconds", L"90 seconds", L"2 minutes", L"5 minutes", L"10 minutes", L"15 minutes", L"30 minutes", L"1 hour" };
+static const WCHAR* ttl_strings[] = { L"infinite", L"1 second", L"2 seconds", L"5 seconds", 
+									  L"10 seconds", L"15 seconds", L"30 seconds", L"45 seconds", 
+									  L"60 seconds", L"90 seconds", L"2 minutes", L"5 minutes", 
+									  L"10 minutes", L"15 minutes", L"30 minutes", L"1 hour" };
 
 BOOL CSettingsPropertyPage::OnInitDialog()
 {
@@ -97,17 +102,23 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 
 	bool bMountManager = theApp.GetProfileInt(L"Settings", L"MountManager", MOUNTMANAGER_DEFAULT) != 0;
 
-	bool bEnableSavingPasswords = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
+	bool bEnableSavingPasswords = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", 
+											ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
 
-	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, bEnableSavingPasswords);
+	bool bNeverSaveHistory = NeverSaveHistory();
+
+	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, 
+								bEnableSavingPasswords, bNeverSaveHistory);
 }
 
-BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords)
+BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, 
+						bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords, bool bNeverSaveHistory)
 {
 
 	m_bCaseInsensitive =  bCaseInsensitive;
 	m_bMountManager = bMountManager;
 	m_bEnableSavingPasswords = bEnableSavingPasswords;
+	m_bNeverSaveHistory = bNeverSaveHistory;
 
 	int i;
 
@@ -166,7 +177,8 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	pBox->ResetContent();
 
-	static_assert(sizeof(ttls) / sizeof(ttls[0]) == sizeof(ttl_strings) / sizeof(ttl_strings[0]), "mismatch in sizes of ttls/ttl_strings");
+	static_assert(sizeof(ttls) / sizeof(ttls[0]) == sizeof(ttl_strings) / sizeof(ttl_strings[0]), 
+					"mismatch in sizes of ttls/ttl_strings");
 
 	int selitem = 0;
 
@@ -184,6 +196,8 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	CheckDlgButton(IDC_MOUNTMANAGER, m_bMountManager ? 1 : 0);
 
 	CheckDlgButton(IDC_ENABLE_SAVING_PASSWORDS, m_bEnableSavingPasswords ? 1 : 0);
+
+	CheckDlgButton(IDC_NEVER_SAVE_HISTORY, m_bNeverSaveHistory ? 1 : 0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
@@ -259,17 +273,21 @@ void CSettingsPropertyPage::SaveSettings()
 	m_bCaseInsensitive = !m_bCaseInsensitive; // OnBnClickedCaseinsensitive() flips it
 	m_bMountManager = !m_bMountManager; // ditto
 	m_bEnableSavingPasswords = !m_bEnableSavingPasswords; // ditto
+	m_bNeverSaveHistory = !m_bNeverSaveHistory; // ditto
 
 	OnBnClickedCaseinsensitive();
 	OnClickedMountmanager();
 	OnClickedEnableSavingPasswords();
+	OnClickedNeverSaveHistory();
 }
 
 void CSettingsPropertyPage::OnBnClickedDefaults()
 {
 	// TODO: Add your control notification handler code here
 
-	SetControls(PER_FILESYSTEM_THREADS_DEFAULT, BUFFERBLOCKS_DEFAULT, CACHETTL_DEFAULT, CASEINSENSITIVE_DEFAULT, MOUNTMANAGER_DEFAULT, ENABLE_SAVING_PASSWORDS_DEFAULT);
+	SetControls(PER_FILESYSTEM_THREADS_DEFAULT, BUFFERBLOCKS_DEFAULT, CACHETTL_DEFAULT, 
+		CASEINSENSITIVE_DEFAULT, MOUNTMANAGER_DEFAULT, ENABLE_SAVING_PASSWORDS_DEFAULT,
+		NEVER_SAVE_HISTORY_DEFAULT);
 
 	SaveSettings();
 }
@@ -279,7 +297,9 @@ void CSettingsPropertyPage::OnBnClickedRecommended()
 {
 	// TODO: Add your control notification handler code here
 
-	SetControls(PER_FILESYSTEM_THREADS_RECOMMENDED, BUFFERBLOCKS_RECOMMENDED, CACHETTL_RECOMMENDED, CASEINSENSITIVE_RECOMMENDED, MOUNTMANAGER_RECOMMENDED, ENABLE_SAVING_PASSWORDS_RECOMMENDED);
+	SetControls(PER_FILESYSTEM_THREADS_RECOMMENDED, BUFFERBLOCKS_RECOMMENDED, CACHETTL_RECOMMENDED, 
+		CASEINSENSITIVE_RECOMMENDED, MOUNTMANAGER_RECOMMENDED, ENABLE_SAVING_PASSWORDS_RECOMMENDED,
+		NEVER_SAVE_HISTORY_RECOMMENDED);
 
 	SaveSettings();
 }
@@ -315,6 +335,11 @@ void CSettingsPropertyPage::OnClickedEnableSavingPasswords()
 	CheckDlgButton(IDC_ENABLE_SAVING_PASSWORDS, m_bEnableSavingPasswords ? 1 : 0);
 
 	if (m_bEnableSavingPasswords) {
+
+		if (m_bNeverSaveHistory) {
+			MessageBox(L"Passwords will not be saved if \"Never save history\" is turned on.",
+				L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
+		}
 		theApp.WriteProfileInt(L"Settings", L"EnableSavingPasswords", TRUE);
 	} else {
 		theApp.WriteProfileInt(L"Settings", L"EnableSavingPasswords", FALSE);
@@ -328,6 +353,51 @@ void CSettingsPropertyPage::OnClickedEnableSavingPasswords()
 					MessageBox(L"unable to delete saved passwords", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
 				}
 			}
+		}
+	}
+}
+
+
+void CSettingsPropertyPage::OnClickedNeverSaveHistory()
+{
+	// TODO: Add your control notification handler code here
+
+	m_bNeverSaveHistory = !m_bNeverSaveHistory;
+
+	CheckDlgButton(IDC_NEVER_SAVE_HISTORY, !!m_bNeverSaveHistory);
+
+	theApp.WriteProfileInt(L"Settings", L"NeverSaveHistory", !!m_bNeverSaveHistory);
+
+	if (m_bNeverSaveHistory) {
+
+		if (m_bEnableSavingPasswords) {
+			MessageBox(L"If you turn on \"Never save history\", saved passwords will not be deleted, but new passwords will not "
+						   L"be saved.  To delete any saved passwords, uncheck \"Enable saved passwords\".",
+				L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
+		}
+		
+		wstring mes;
+		wstring error;
+
+		// DeleteAllRegistryValues() returns false if there is nothing to delete and
+		// with an empty error message.  So use the message to accumulate real errors
+		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH CPPCRYPTFS_FOLDERS_SECTION, mes);
+		error += mes;
+		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH CPPCRYPTFS_CONFIGPATHS_SECTION, mes);
+		error += mes;
+		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH CPPCRYPTFS_MOUNTPOINTS_SECTION, mes);
+		error += mes;
+		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH L"MountPoint", mes);
+		error += mes;
+		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH L"MountFlags", mes);
+		error += mes;
+		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH L"MountOptions", mes);
+		error += mes;
+		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH L"CreateOptions", mes);
+		error += mes;
+		if (!error.empty()) {
+			MessageBox(L"unable to delete history from registry", L"cppcryptfs", 
+							MB_OK | MB_ICONEXCLAMATION);
 		}
 	}
 }
