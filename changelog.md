@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.0.22, Oct 6 2018
+* Add "never save history" option to settings
+* Unmount all filesysystems when Windows session is ending
+
 v1.4.0.21, Sep 3 2018
 * Allow A: to be used for mounting.  Works since Dokany 1.2.0.1000
 
