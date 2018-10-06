@@ -238,6 +238,18 @@ If the "Enable saved passwords" setting is changed from checked to unchecked, th
 
 This setting is not enabled in either the Default or Recommended settings.
 
+**Never save history**
+
+This setting prevents cppcryptfs from saving any values in the Windows registry except the values described on this page.  E.g. it will prevent the saving of paths in the history and from saving
+passwords even if saved passwords has been enabled.
+
+When this setting is checked, all values stored by cppcryptfs in the Windows registry
+will be deleted except for the settings described on this page *except* for saved passwords.  However, no new passwords will be saved while this setting is in effect.
+
+To delete saved passwords, you must un-check the "save passwords" setting.
+
+This setting is not enabled in either the Default or Recommended settings.
+
 **Defaults and Recommended**
 
 Currently, the default and recommended settings are the same.
