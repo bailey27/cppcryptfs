@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2018 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2019 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -69,7 +69,7 @@ END_MESSAGE_MAP()
 
 
 static const WCHAR * components[] = {
-	L"cppcryptfs - Copyright (C) 2016-2018 Bailey Brown. All Rights Reserved.",
+	L"cppcryptfs - Copyright (C) 2016-2019 Bailey Brown. All Rights Reserved.",
 	L"OpenSSL - Copyright (c) 1998-2018 The OpenSSL Project.  All rights reserved.",
 	L"RapidJSON - Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip. All rights reserved.",
 	L"Dokany (mirror) - Copyright (C) 2015 - 2018 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
@@ -83,7 +83,7 @@ static const WCHAR * components[] = {
 static const WCHAR *licenses[] = {
 
 	// cppcryptfs
-	L"cppcryptfs - Copyright (C) 2016-2018 Bailey Brown. All rights reserved.\r\n\r\n"
+	L"cppcryptfs - Copyright (C) 2016-2019 Bailey Brown. All rights reserved.\r\n\r\n"
 	L"project url: github.com/bailey27/cppcryptfs\r\n\r\n"
 	L"cppcryptfs is a user-mode cryptographic virtual overlay filesystem\r\n\r\n"
 	L"cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)\r\n\r\n"
@@ -582,7 +582,7 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 
 	wstring prod = L"cppryptfs";
 	wstring ver = L"1.0";
-	wstring copyright = L"Copyright (C) 2016-2018 Bailey Brown.  All Rights Reserved.";
+	wstring copyright = L"Copyright (C) 2016-2019 Bailey Brown.  All Rights Reserved.";
 
 	GetProductVersionInfo(prod, ver, copyright);
 
@@ -641,6 +641,24 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 		pWnd->PostMessageW(WM_CLEAR, 0, 0);
 	}
 
+//#define DUMP_LICENSE_INFO 1
+#ifdef DUMP_LICENSE_INFO
+
+	FILE *fl = NULL;
+
+	if (fopen_s(&fl, "c:\\tmp\\foo4za8GeQG.txt", "wb") == 0) {
+
+		for (i = 0; components[i]; i++) {
+			std::string str;
+			unicode_to_utf8(components[i], str);
+			fwrite(str.c_str(), 1, str.length(), fl);
+			unicode_to_utf8(licenses[i], str);
+			fwrite(str.c_str(), 1, str.length(), fl);
+		}
+
+		fclose(fl);
+	}
+#endif
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE

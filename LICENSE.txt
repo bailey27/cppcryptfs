@@ -1,5 +1,5 @@
 
-cppcryptfs - Copyright (C) 2016-2018 Bailey Brown. All rights reserved. 
+cppcryptfs - Copyright (C) 2016-2019 Bailey Brown. All rights reserved. 
 
 This project links with and incorporates source from several 
 open source projects.
