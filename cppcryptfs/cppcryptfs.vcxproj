@@ -96,6 +96,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-1.2.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -124,6 +125,7 @@
       <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-1.2.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -154,6 +156,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-1.2.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -185,6 +188,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-1.2.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
