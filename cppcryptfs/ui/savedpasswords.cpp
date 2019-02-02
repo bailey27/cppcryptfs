@@ -30,8 +30,8 @@ THE SOFTWARE.
 #include <Wincrypt.h>
 #include "cppcryptfs.h"
 #include "savedpasswords.h"
-#include "util.h"
-#include "LockZeroBuffer.h"
+#include "util/util.h"
+#include "util/LockZeroBuffer.h"
 
 #include <list>
 

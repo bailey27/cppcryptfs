@@ -37,8 +37,7 @@ Bellow is the comment header from pad16.go
 // https://tools.ietf.org/html/rfc5652#section-6.3
 
 #include "stdafx.h"
-
-#include <windows.h>
+#include <stdlib.h>
 
 #include "pad16.h"
 

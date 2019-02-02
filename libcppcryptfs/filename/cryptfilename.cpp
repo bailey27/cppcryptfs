@@ -39,6 +39,10 @@ THE SOFTWARE.
 #include "util/fileutil.h"
 #include "util/pad16.h"
 
+#ifdef _WIN32
+#include <Shlwapi.h>
+#endif
+
 
 
 
@@ -608,6 +612,7 @@ encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *act
 
 }
 
+#ifdef _WIN32
 bool write_encrypted_long_name(const WCHAR *filePath, const string& enc_data)
 {
 	if (enc_data.size() < 1)
@@ -648,6 +653,8 @@ bool write_encrypted_long_name(const WCHAR *filePath, const string& enc_data)
 	return nWritten == enc_data.size();
 
 }
+
+#endif // _WIN32
 
 bool
 rt_is_config_file(CryptContext *con, LPCWSTR FileName)

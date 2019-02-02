@@ -80,7 +80,7 @@ public:
 	int GetMasterKeyLength() { return m_pKeyBuf ? m_pKeyBuf->m_len : 0; }
 	const WCHAR *GetMountPoint() { return m_mountpoint.c_str(); }
 	const WCHAR *GetBaseDir() { return m_basedir.c_str(); }
-	bool CryptConfig::InitGCMContentKey(const BYTE *key, bool hkdf);
+	bool InitGCMContentKey(const BYTE *key, bool hkdf);
 
 	const BYTE *GetGcmContentKey() { return m_HKDF ? m_pGcmContentKey->m_buf : GetMasterKey(); };
 

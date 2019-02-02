@@ -36,7 +36,8 @@ THE SOFTWARE.
 #include "util/util.h"
 #include "context/cryptcontext.h"
 #include "ui/cryptdefaults.h"
-#include "util/savedpasswords.h"
+#include "ui/savedpasswords.h"
+#include "ui/uiutil.h"
 
 // CSettingsPropertyPage dialog
 

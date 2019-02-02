@@ -73,6 +73,7 @@ THE SOFTWARE.
 #include "file/cryptfile.h"
 #include "crypt/cryptdefs.h"
 #include "util/util.h"
+#include "ui/uiutil.h"
 
 #include "file/iobufferpool.h"
 

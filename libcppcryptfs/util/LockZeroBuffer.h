@@ -27,7 +27,7 @@ THE SOFTWARE.
 */
 
 #pragma once
-
+#include "wintypes.h"
 #include <string>
 
 using namespace std;
@@ -35,6 +35,7 @@ using namespace std;
 template<typename T>
 class LockZeroBuffer
 {
+private:
 	BOOL m_IsLocked;
 public:
 	// disallow copying

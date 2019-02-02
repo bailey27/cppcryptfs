@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include "cppcryptfs.h"
 #include "cryptdefaults.h"
 #include "util/util.h"
+#include "uiutil.h"
 
 RecentItems::RecentItems(LPCTSTR section, LPCTSTR base, int count)
 {

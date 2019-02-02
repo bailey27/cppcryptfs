@@ -44,7 +44,7 @@ THE SOFTWARE.
 #include "util/fileutil.h"
 #include "util/getopt.h"
 #include "cryptdefaults.h"
-#include "util/savedpasswords.h"
+#include "ui/savedpasswords.h"
 #include "ui/FsInfoDialog.h"
 #include "dokan/MountPointManager.h"
 #include <algorithm>

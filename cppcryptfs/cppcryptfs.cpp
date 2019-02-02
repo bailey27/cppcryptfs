@@ -46,6 +46,7 @@ THE SOFTWARE.
 #include "util/LockZeroBuffer.h"
 #include "util/util.h"
 #include "crypt/crypt.h"
+#include "ui/uiutil.h"
 
 
 #ifdef _DEBUG

@@ -28,7 +28,9 @@ THE SOFTWARE.
 
 #include "stdafx.h"
 
+#ifdef _WIN32
 #include "Shlwapi.h"
+#endif
 
 #include "crypt/cryptdefs.h"
 #include "util/fileutil.h"
@@ -39,6 +41,7 @@ THE SOFTWARE.
 
 #include "filename/dirivcache.h"
 
+#ifdef _WIN32
 // derive attributes for virtual reverse-mode diriv file from 
 // the attributes of its directory
 static DWORD 
@@ -60,6 +63,8 @@ VirtualAttributesNameFile(DWORD attr)
 		attr = bForDir ? FILE_ATTRIBUTE_ARCHIVE : FILE_ATTRIBUTE_NORMAL;
 	return attr;
 }
+
+#endif // _WIN32
 
 bool
 adjust_file_offset_down(LARGE_INTEGER& l)
@@ -130,6 +135,7 @@ adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l)
 	return true;
 }
 
+#ifdef _WIN32
 static bool
 read_dir_iv(const TCHAR *path, unsigned char *diriv, FILETIME& LastWriteTime)
 {
@@ -171,6 +177,8 @@ read_dir_iv(const TCHAR *path, unsigned char *diriv, FILETIME& LastWriteTime)
 
 	return nRead == DIR_IV_LEN;
 }
+
+#endif // _WIN32
 
 bool
 get_dir_iv(CryptContext *con, const WCHAR *path, unsigned char *diriv)
@@ -280,6 +288,7 @@ static bool is_interesting_name(BOOL isRoot, const WIN32_FIND_DATAW& fdata, Cryp
 	}
 }
 
+#ifdef _WIN32
 DWORD
 find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFillFindData fillData, void * dokan_cb, void * dokan_ctx)
 {
@@ -385,7 +394,7 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 
 	return ret;
 }
-
+#endif // _WIN32
 
 
 bool
@@ -403,7 +412,7 @@ read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD
 			*pNread = 0;
 			return true;
 		}
-		memcpy(buf, dir_iv + offset, count);
+		memcpy(buf, dir_iv + offset, static_cast<size_t>(count));
 		*pNread = (DWORD)count;
 		return true;
 	} else if (rt_is_name_file(con, FileName)) {
@@ -415,7 +424,7 @@ read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD
 			*pNread = 0;
 			return true;
 		}
-		memcpy(buf, &actual_encrypted[0], count);
+		memcpy(buf, &actual_encrypted[0], static_cast<size_t>(count));
 		*pNread = (DWORD)count;
 		return true;
 	} else {
@@ -424,7 +433,7 @@ read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD
 }
 
 
-
+#ifdef _WIN32
 DWORD
 get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HANDLE handle, LPBY_HANDLE_FILE_INFORMATION pInfo)
 {
@@ -592,7 +601,10 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 
 	return dwRet;
 }
+#endif // _WIN32
 
+
+#ifdef _WIN32
 bool
 create_dir_iv(CryptContext *con, LPCWSTR path)
 {
@@ -668,8 +680,10 @@ create_dir_iv(CryptContext *con, LPCWSTR path)
 	return error == 0;
 }
 
+#endif // _WIN32
 
 
+#ifdef _WIN32
 bool
 is_empty_directory(LPCWSTR path, BOOL bMustReallyBeEmpty)
 {
@@ -839,6 +853,8 @@ bool delete_file(const CryptContext *con, const WCHAR *filename, bool cleanup_lo
 	}
 
 }
+#endif // _WIN32
+
 
 bool
 get_dir_and_file_from_path(LPCWSTR path, wstring *dir, wstring *file)
@@ -975,6 +991,7 @@ convert_find_stream_data(CryptContext *con, LPCWSTR pt_path, LPCWSTR path, WIN32
 	return true;
 }
 
+#ifdef _WIN32
 bool is_suitable_mountpoint(LPCWSTR path)
 {
 	if (!is_empty_directory(path, TRUE))
@@ -1049,3 +1066,5 @@ wstring prepare_basedir(const wchar_t *path)
 
 	return basedir;
 }
+
+#endif // __WIN32

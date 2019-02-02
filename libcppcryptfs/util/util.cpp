@@ -29,24 +29,24 @@ THE SOFTWARE.
 #include "stdafx.h"
 
 #include <stdio.h>
-#include  <tlhelp32.h>
+
 #include "util/util.h"
 #include "crypt/cryptdefs.h"
 #include "crypt/crypt.h"
 #include <openssl/rand.h>
-
-#include <wincrypt.h>
 
 #include <iostream>
 
 #include "crypt/randombytes.h"
 #include "context/cryptcontext.h"
 
-#include "ui/MountMangerDialog.h"
-
+#ifdef _WIN32
+#include <wincrypt.h>
+#include <tlhelp32.h>
 #include <atlenc.h>
+#include <shellapi.h>
+#endif
 
-#include "ui/cryptdefaults.h"
 
 template<typename T>
 T swapBytesVal(T x)
@@ -200,7 +200,7 @@ bool
 base64_decode(const char *str, vector<unsigned char>& storage, bool urlTransform, bool padding)
 {
 	if (!urlTransform) {
-		ASSERT(padding);
+		_ASSERT(padding);
 	}
 
 	string padded_storage;
@@ -251,7 +251,7 @@ base64_decode(const char *str, vector<unsigned char>& storage, bool urlTransform
 	}
 
 	if (p)
-		free(p);
+		::free(p);
 
 	if (bResult) {
 		storage.resize(len);
@@ -300,7 +300,7 @@ base64_encode(const BYTE *data, DWORD datalen, string& storage, bool urlTransfor
 {
 
 	if (!urlTransform) {
-		ASSERT(padding);
+		_ASSERT(padding);
 	}
 
 	if (!data || datalen < 1)
@@ -547,9 +547,9 @@ ConsoleErrMes(LPCWSTR err, DWORD pid)
 }
 
 
-static bool 
-GetProductVersionInfo(CString& strProductName, CString& strProductVersion,
-	CString& strLegalCopyright, HMODULE hMod)
+bool 
+GetProductVersionInfo(wstring& strProductName, wstring& strProductVersion,
+	wstring& strLegalCopyright, HMODULE hMod)
 {
 
 	TCHAR fullPath[MAX_PATH+1];
@@ -604,7 +604,7 @@ GetProductVersionInfo(CString& strProductName, CString& strProductVersion,
 		return false;
 	}
 
-	CString lang;
+	wstring lang;
 
 	WCHAR buf[16];
 
@@ -615,9 +615,9 @@ GetProductVersionInfo(CString& strProductName, CString& strProductVersion,
 	lang = buf;
 
 	// replace "040904e4" with the language ID of your resources
-	if (!VerQueryValue(pVersionResource, L"\\StringFileInfo\\" + lang + L"\\ProductName", &pvProductName, &iProductNameLen) ||
-		!VerQueryValue(pVersionResource, L"\\StringFileInfo\\" + lang + "\\ProductVersion", &pvProductVersion, &iProductVersionLen) ||
-		!VerQueryValue(pVersionResource, L"\\StringFileInfo\\" + lang + "\\LegalCopyright", &pvLegalCopyright, &iLegalCopyrightLen))
+	if (!VerQueryValue(pVersionResource, (L"\\StringFileInfo\\" + lang + L"\\ProductName").c_str(), &pvProductName, &iProductNameLen) ||
+		!VerQueryValue(pVersionResource, (L"\\StringFileInfo\\" + lang + L"\\ProductVersion").c_str(), &pvProductVersion, &iProductVersionLen) ||
+		!VerQueryValue(pVersionResource, (L"\\StringFileInfo\\" + lang + L"\\LegalCopyright").c_str(), &pvLegalCopyright, &iLegalCopyrightLen))
 	{
 		free(pVersionResource);
 		return false;
@@ -628,29 +628,13 @@ GetProductVersionInfo(CString& strProductName, CString& strProductVersion,
 		return false;
 	}
 
-	strProductName.SetString((LPCTSTR)pvProductName, iProductNameLen-1);
-	strProductVersion.SetString((LPCTSTR)pvProductVersion, iProductVersionLen-1);
-	strLegalCopyright.SetString((LPCTSTR)pvLegalCopyright, iLegalCopyrightLen-1);
+	strProductName = (LPCTSTR)pvProductName;
+	strProductVersion = (LPCTSTR)pvProductVersion;
+	strLegalCopyright = (LPCTSTR)pvLegalCopyright;
 
 	free(pVersionResource);
 
 	return true;
-}
-
-bool 
-GetProductVersionInfo(wstring& strProductName, wstring& strProductVersion,
-	wstring& strLegalCopyright, HMODULE hMod)
-{
-	CString cName, cVer, cCop;
-
-	if (GetProductVersionInfo(cName, cVer, cCop, hMod)) {
-		strProductName = cName;
-		strProductVersion = cVer;
-		strLegalCopyright = cCop;
-		return true;
-	} else {
-		return false;
-	}
 }
 
 
@@ -727,14 +711,7 @@ bool is_all_zeros(const BYTE *buf, size_t len)
 	return test_zero_bytes<uint8_t>(buf, len);
 }
 
-bool mountmanager_continue_mounting()
-{
-	CMountMangerDialog mdlg;
 
-	mdlg.DoModal();
-
-	return mdlg.m_bOkPressed != 0;
-}
 
 BOOL GetPathHash(LPCWSTR path, wstring& hashstr)
 {
@@ -834,51 +811,3 @@ wstring GetWindowsErrorString(DWORD dwLastErr)
 	return mes;
 }
 
-bool DeleteAllRegisteryValues(LPCWSTR regPath, wstring& mes)
-{
-	mes.clear();
-
-	HKEY hkey;
-	LSTATUS status = ::RegOpenKeyEx(HKEY_CURRENT_USER, regPath, 0, KEY_ALL_ACCESS, &hkey);
-	if (status != ERROR_SUCCESS) {
-		if (status != ERROR_FILE_NOT_FOUND) {
-			mes = L"unable to open history";
-		}
-		return false;
-	}
-	DWORD index = 0;
-	DWORD type;
-	WCHAR val[256];
-	DWORD val_len = _countof(val);
-	list<std::wstring> values;
-	while ((status = ::RegEnumValue(hkey, index, val, &val_len, NULL, &type, NULL, NULL)) == ERROR_SUCCESS) {
-		index++;
-		val_len = _countof(val);		
-		values.push_back(val);
-	}
-
-	if (status != ERROR_NO_MORE_ITEMS) {
-		::RegCloseKey(hkey);
-		mes = L"error while deleting history";
-		return false;
-	}
-
-	for (auto it : values) {
-		status = RegDeleteValue(hkey, it.c_str());
-		if (status != ERROR_SUCCESS) {
-			::RegCloseKey(hkey);
-			mes = L"error while deleting registry value";
-			return false;
-		}
-	}
-
-	::RegCloseKey(hkey);
-
-	return true;
-}
-
-bool NeverSaveHistory()
-{
-	bool bNeverSaveHistory = AfxGetApp()->GetProfileIntW(L"Settings", L"NeverSaveHistory", NEVER_SAVE_HISTORY_DEFAULT) != 0;
-	return bNeverSaveHistory;
-}

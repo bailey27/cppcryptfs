@@ -94,7 +94,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.2.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-1.2.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -121,14 +121,14 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.2.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-1.2.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>C:\Program Files\Dokan\Dokan Library-1.2.1\lib\dokan1.lib;version.lib;C:\Program Files\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>$(OutputPath)\libcppcryptfs.lib;C:\Program Files\Dokan\Dokan Library-1.2.1\lib\dokan1.lib;version.lib;C:\Program Files\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
@@ -152,7 +152,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.2.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-1.2.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -183,7 +183,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files\Dokan\Dokan Library-1.2.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-1.2.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -209,30 +209,13 @@
   <ItemGroup>
     <ClInclude Include="config\cryptconfig.h" />
     <ClInclude Include="context\cryptcontext.h" />
-    <ClInclude Include="context\FsInfo.h" />
     <ClInclude Include="cppcryptfs.h" />
-    <ClInclude Include="crypt\aes-siv\aes256-cmac.h" />
-    <ClInclude Include="crypt\aes-siv\aes256-common.h" />
-    <ClInclude Include="crypt\aes-siv\aes256-ctr.h" />
-    <ClInclude Include="crypt\aes-siv\aes256-siv.h" />
-    <ClInclude Include="crypt\aes.h" />
-    <ClInclude Include="crypt\crypt.h" />
     <ClInclude Include="crypt\cryptdefs.h" />
-    <ClInclude Include="crypt\eme.h" />
-    <ClInclude Include="crypt\randombytes.h" />
-    <ClInclude Include="crypt\siv.h" />
     <ClInclude Include="dokan\cryptdokan.h" />
     <ClInclude Include="dokan\cryptdokanpriv.h" />
     <ClInclude Include="dokan\CryptThreadData.h" />
     <ClInclude Include="dokan\FileNameEnc.h" />
     <ClInclude Include="dokan\MountPointManager.h" />
-    <ClInclude Include="filename\casecache.h" />
-    <ClInclude Include="filename\cryptfilename.h" />
-    <ClInclude Include="filename\dirivcache.h" />
-    <ClInclude Include="filename\longfilenamecache.h" />
-    <ClInclude Include="file\cryptfile.h" />
-    <ClInclude Include="file\cryptio.h" />
-    <ClInclude Include="file\iobufferpool.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -246,30 +229,14 @@
     <ClInclude Include="ui\MountMangerDialog.h" />
     <ClInclude Include="ui\MountPropertyPage.h" />
     <ClInclude Include="ui\RecentItems.h" />
+    <ClInclude Include="ui\savedpasswords.h" />
     <ClInclude Include="ui\SecureEdit.h" />
     <ClInclude Include="ui\SettingsPropertyPage.h" />
     <ClInclude Include="ui\TrayIcon.h" />
-    <ClInclude Include="util\fileutil.h" />
-    <ClInclude Include="util\getopt.h" />
-    <ClInclude Include="util\LockZeroBuffer.h" />
-    <ClInclude Include="util\pad16.h" />
-    <ClInclude Include="util\savedpasswords.h" />
-    <ClInclude Include="util\util.h" />
+    <ClInclude Include="ui\uiutil.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="config\cryptconfig.cpp" />
-    <ClCompile Include="context\cryptcontext.cpp" />
-    <ClCompile Include="context\FsInfo.cpp" />
     <ClCompile Include="cppcryptfs.cpp" />
-    <ClCompile Include="crypt\aes-siv\aes256-cmac.cpp" />
-    <ClCompile Include="crypt\aes-siv\aes256-common.cpp" />
-    <ClCompile Include="crypt\aes-siv\aes256-ctr.cpp" />
-    <ClCompile Include="crypt\aes-siv\aes256-siv.cpp" />
-    <ClCompile Include="crypt\aes.cpp" />
-    <ClCompile Include="crypt\crypt.cpp" />
-    <ClCompile Include="crypt\eme.cpp" />
-    <ClCompile Include="crypt\randombytes.cpp" />
-    <ClCompile Include="crypt\siv.cpp" />
     <ClCompile Include="dokan\cryptdokan.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
@@ -294,13 +261,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="filename\casecache.cpp" />
-    <ClCompile Include="filename\cryptfilename.cpp" />
-    <ClCompile Include="filename\dirivcache.cpp" />
-    <ClCompile Include="filename\longfilenamecache.cpp" />
-    <ClCompile Include="file\cryptfile.cpp" />
-    <ClCompile Include="file\cryptio.cpp" />
-    <ClCompile Include="file\iobufferpool.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -316,18 +276,10 @@
     <ClCompile Include="ui\MountMangerDialog.cpp" />
     <ClCompile Include="ui\MountPropertyPage.cpp" />
     <ClCompile Include="ui\RecentItems.cpp" />
+    <ClCompile Include="ui\savedpasswords.cpp" />
     <ClCompile Include="ui\SecureEdit.cpp" />
     <ClCompile Include="ui\SettingsPropertyPage.cpp" />
-    <ClCompile Include="util\fileutil.cpp" />
-    <ClCompile Include="util\getopt.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="util\pad16.cpp" />
-    <ClCompile Include="util\savedpasswords.cpp" />
-    <ClCompile Include="util\util.cpp" />
+    <ClCompile Include="ui\uiutil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="cppcryptfs.rc" />

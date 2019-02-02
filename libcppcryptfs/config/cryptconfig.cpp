@@ -35,6 +35,8 @@ THE SOFTWARE.
 #include <openssl/evp.h>
 
 #include "cryptconfig.h"
+#include <assert.h>
+#include <Shlwapi.h>
 
 // min() and max() macros cause compiler warnings with rapidjson
 
@@ -768,7 +770,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 			throw(-1);
 		}
 
-		ASSERT(m_HKDF);
+		_ASSERT(m_HKDF);
 		unsigned char iv[HKDF_MASTER_IV_LEN];
 
 		if (!get_sys_random_bytes(iv, sizeof(iv))) {
@@ -804,7 +806,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 			}
 		}
 
-		ASSERT(m_HKDF);
+		_ASSERT(m_HKDF);
 		context = get_crypt_context(HKDF_MASTER_IV_LEN, AES_MODE_GCM);
 
 		if (!context) {
@@ -812,12 +814,12 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 			throw(-1);
 		}
 
-		ASSERT(m_HKDF);
+		_ASSERT(m_HKDF);
 		encrypted_key = new unsigned char[GetMasterKeyLength() + HKDF_MASTER_IV_LEN + BLOCK_TAG_LEN];
 
 		memcpy(encrypted_key, iv, sizeof(iv));
 
-		ASSERT(m_HKDF);
+		_ASSERT(m_HKDF);
 		int ctlen = encrypt(m_pKeyBuf->m_buf, GetMasterKeyLength(), adata, sizeof(adata), pwkeyHKDF.m_buf, iv, (encrypted_key + sizeof(iv)), encrypted_key + sizeof(iv) + GetMasterKeyLength(), context);
 
 		if (ctlen < 1) {
@@ -827,7 +829,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 
 		string storage;
 
-		ASSERT(m_HKDF);
+		_ASSERT(m_HKDF);
 		const char *base64_key = base64_encode(encrypted_key, GetMasterKeyLength() + HKDF_MASTER_IV_LEN + BLOCK_TAG_LEN, storage, false, true);
 
 		if (!base64_key) {

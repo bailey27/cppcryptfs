@@ -812,7 +812,7 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 		if (offset < sizeof(m_header)) {
 			long long copylen = min(sizeof(m_header) - offset, min(bytesleft, sizeof(m_header)));
-			memcpy(p, (BYTE*)&m_header + offset, copylen);
+			memcpy(p, (BYTE*)&m_header + offset, static_cast<size_t>(copylen));
 			bytesleft -= copylen;
 			offset += copylen;
 			p += copylen;

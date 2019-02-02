@@ -27,7 +27,7 @@ THE SOFTWARE.
 */
 
 #pragma once
-
+#include <windows.h>
 #include <unordered_map>
 #include <string>
 
