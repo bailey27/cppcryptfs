@@ -85,7 +85,7 @@ cd openssl
 ```
 
 NOTE: Getting OpenSSL from github will get you the latest development version of OpenSSL.  However, the cppcryptfs releases are built using the
-current released version of OpenSSL.  These are available from https://www.openssl.org/source/.  To use those, you will need to download
+current released version of OpenSSL (currently openssl-1.1.1b).  These are available from https://www.openssl.org/source/.  To use those, you will need to download
 the .tar.gz and extract it into a directory.  You can build it with the same instructions that follow regardless of how you get OpenSSL.
 
 Microsoft has announced a compiler-based mitigation for one variant of the Spectre vulnerability.  To use it, you need to have version 15.5 or higher of Visual Studio.  To use the mitigation, you need to add the /Qspectre flag to the compiler optimization flags for OpenSSL.  OpenSSL currently does not use this flag.  So to use it, you need to edit c:\\git\openssl\\Configurations\\10-main.conf and change "/O2" to "/O2 /Qspectre".  
