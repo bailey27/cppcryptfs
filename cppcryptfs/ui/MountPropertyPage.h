@@ -111,4 +111,5 @@ public:
 	afx_msg void OnEditchangePath();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/);
+	afx_msg void OnDblclkDriveLetters(NMHDR *pNMHDR, LRESULT *pResult);
 };

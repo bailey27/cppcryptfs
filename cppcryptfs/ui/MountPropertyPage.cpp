@@ -419,6 +419,7 @@ BEGIN_MESSAGE_MAP(CMountPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_SELECT_CONFIG_PATH, &CMountPropertyPage::OnClickedSelectConfigPath)
 	ON_CBN_EDITCHANGE(IDC_PATH, &CMountPropertyPage::OnEditchangePath)
 	ON_WM_CONTEXTMENU()
+	ON_NOTIFY(NM_DBLCLK, IDC_DRIVE_LETTERS, &CMountPropertyPage::OnDblclkDriveLetters)
 END_MESSAGE_MAP()
 
 
@@ -1735,4 +1736,24 @@ void CMountPropertyPage::PrintInfo(LPCWSTR mountpoint)
 	swprintf_s(buf, L"%0.2f%%", info.lfnCacheHitRatio*100);
 	fwprintf(stdout, L"LFN Cache Hit Ratio:   %s\n", info.lfnCacheHitRatio < 0 ? L"n/a" : buf);
 
+}
+
+
+void CMountPropertyPage::OnDblclkDriveLetters(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	// TODO: Add your control notification handler code here
+
+	int row = pNMItemActivate->iItem;
+
+	CListCtrl *pList = reinterpret_cast<CListCtrl*>(GetDlgItem(IDC_DRIVE_LETTERS));
+
+	if (pList) {
+		CString mp = pList->GetItemText(row, 0);
+		CString path = pList->GetItemText(row, 1);
+		if (path.GetLength() > 0)
+			::ShellExecute(NULL, L"open", mp, NULL, NULL, SW_SHOW);
+	}
+
+	*pResult = 0;
 }
