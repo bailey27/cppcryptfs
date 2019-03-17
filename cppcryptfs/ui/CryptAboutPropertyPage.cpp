@@ -588,10 +588,18 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 
 	string openssl_ver_s = SSLeay_version(SSLEAY_VERSION);
 
-	// get rid of unknown build date which is returned as "xx XXX xxxx"
-	if (strstr(openssl_ver_s.c_str(), "xx XXX xxxx")) {
-		while (openssl_ver_s.length() > 0 && (openssl_ver_s.back() == 'x' || openssl_ver_s.back() == 'X' || openssl_ver_s.back() == ' '))
-			openssl_ver_s.pop_back();
+	// get rid of openssl build date
+
+	int nspaces = 0;
+
+	for (size_t i = 0; i < openssl_ver_s.length(); i++) {
+		if (openssl_ver_s[i] == ' ') {
+			if (nspaces) {
+				openssl_ver_s.resize(i);
+				break;
+			}
+			nspaces++;
+		}
 	}
 
 	wstring openssl_ver_w;
