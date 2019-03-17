@@ -108,6 +108,7 @@ public:
 protected:
 	BOOL FlushOutput(LONGLONG& beginblock, BYTE *outputbuf, int& outputbytes); 
 	BOOL WriteVersionAndFileId();
+	BOOL SetEndOfFileInternal(LARGE_INTEGER& off);
 
 
 };

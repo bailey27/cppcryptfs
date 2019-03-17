@@ -106,6 +106,10 @@ BOOL GetPathHash(LPCWSTR path, wstring& hashstr);
 
 wstring GetWindowsErrorString(DWORD dwLastErr);
 
+void SetOverlapped(LPOVERLAPPED pOv, LONGLONG offset);
+
+void IncOverlapped(LPOVERLAPPED pOv, DWORD increment);
+
 
 namespace cppcryptfs
 {

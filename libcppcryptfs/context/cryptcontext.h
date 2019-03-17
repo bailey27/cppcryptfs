@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include "config/cryptconfig.h"
 #include <windows.h>
 #include <vector>
+#include <mutex>
 #include "crypt/eme.h"
 #include "crypt/randombytes.h"
 #include "filename/dirivcache.h"
@@ -54,6 +55,7 @@ public:
 	CaseCache m_case_cache;
 	EmeCryptContext m_eme;
 	SivContext m_siv;
+	mutex m_file_pointer_mutex;
 	int m_bufferblocks;
 	int m_cache_ttl;
 	int m_threads;

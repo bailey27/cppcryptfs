@@ -99,15 +99,12 @@ CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
 
 	l.QuadPart = 0;
 
-	if (!SetFilePointerEx(hfile, l, NULL, FILE_BEGIN)) {
-		DbgPrint(L"ASSOCIATE: failed to seek\n");
-		return FALSE;
-	}
-
+	OVERLAPPED ov;
+	SetOverlapped(&ov, l.QuadPart);
 
 	DWORD nread;
 
-	if (!ReadFile(hfile, &m_header, sizeof(m_header), &nread, NULL)) {
+	if (!ReadFile(hfile, &m_header, sizeof(m_header), &nread, &ov)) {
 		DWORD error = GetLastError();
 		DbgPrint(L"ASSOCIATE: failed to read header, error = %d\n", error);
 		return FALSE;
@@ -178,6 +175,9 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 	int blocks_spanned = (int)(((offset + buflen - 1) / PLAIN_BS) - (offset / PLAIN_BS)) + 1;
 
+	OVERLAPPED ov;
+	memset(&ov, 0, sizeof(ov));
+
 	try {
 
 		if (blocks_spanned > 1 && m_con->m_bufferblocks > 1) {
@@ -191,14 +191,7 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 			long long blockoff = FILE_HEADER_LEN + (offset / PLAIN_BS)*CIPHER_BS;
 
-			LARGE_INTEGER l;
-
-			l.QuadPart = blockoff;
-
-			if (!SetFilePointerEx(m_handle, l, NULL, FILE_BEGIN)) {
-				 throw(-1);
-			}
-			
+			SetOverlapped(&ov, blockoff);
 		}
 
 		while (bytesleft > 0) {
@@ -212,9 +205,14 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 				DWORD nRead = 0;
 				DWORD blocksleft =  (DWORD)(((offset + bytesleft - 1) / PLAIN_BS) - (offset / PLAIN_BS)) + 1;
 				DWORD readlen = min((DWORD)inputbuflen, blocksleft*CIPHER_BS);
-				if (!ReadFile(m_handle, inputbuf, readlen, &nRead, NULL)) {
-					throw(-1);
+				if (!ReadFile(m_handle, inputbuf, readlen, &nRead, &ov)) {
+					auto LastErr = ::GetLastError();
+					if (LastErr != ERROR_HANDLE_EOF)
+						throw(-1);
 				}
+				
+				IncOverlapped(&ov, nRead);
+
 				bytesinbuf = nRead;
 				inputbufpos = 0;
 			}
@@ -289,17 +287,13 @@ BOOL CryptFileForward::FlushOutput(LONGLONG& beginblock, BYTE *outputbuf, int& o
 {
 	long long outputoffset = FILE_HEADER_LEN + beginblock*CIPHER_BS;
 
-	LARGE_INTEGER l;
 
-	l.QuadPart = outputoffset;
-
-	if (!SetFilePointerEx(m_handle, l, NULL, FILE_BEGIN)) {
-		return FALSE;
-	}
+	OVERLAPPED ov;
+	SetOverlapped(&ov, outputoffset);
 
 	DWORD outputwritten;
 
-	if (!WriteFile(m_handle, outputbuf, outputbytes, &outputwritten, NULL)) {
+	if (!WriteFile(m_handle, outputbuf, outputbytes, &outputwritten, &ov)) {
 		return FALSE;
 	}
 
@@ -320,11 +314,8 @@ BOOL CryptFileForward::WriteVersionAndFileId()
 	if (m_real_file_size == (long long)-1)
 		return FALSE;
 
-	LARGE_INTEGER l;
-	l.QuadPart = 0;
-
-	if (!SetFilePointerEx(m_handle, l, NULL, FILE_BEGIN))
-		return FALSE;
+	OVERLAPPED ov;
+	memset(&ov, 0, sizeof(ov));
 
 	if (!get_random_bytes(m_con, m_header.fileid, FILE_ID_LEN))
 		return FALSE;
@@ -335,7 +326,7 @@ BOOL CryptFileForward::WriteVersionAndFileId()
 
 	DWORD nWritten = 0;
 
-	if (!WriteFile(m_handle, &m_header, sizeof(m_header), &nWritten, NULL)) {
+	if (!WriteFile(m_handle, &m_header, sizeof(m_header), &nWritten, &ov)) {
 		m_header.version = CRYPT_VERSION;
 		return FALSE;
 	}
@@ -605,7 +596,6 @@ CryptFileForward::UnlockFile(LONGLONG ByteOffset, LONGLONG Length)
 BOOL
 CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 {
-
 	if (m_real_file_size == (long long)-1)
 		return FALSE;
 
@@ -651,10 +641,7 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 
 	if (to_write == 0) { 
 		if (bSet) {
-			DbgPrint(L"setting end of file at %d\n", (int)up_off.QuadPart);
-			if (!SetFilePointerEx(m_handle, up_off, NULL, FILE_BEGIN))
-				return FALSE;
-			return ::SetEndOfFile(m_handle);
+			return SetEndOfFileInternal(up_off);
 		} else {
 			return TRUE;
 		}
@@ -688,10 +675,7 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 		free_crypt_context(context);
 
 		if (bSet) {
-			if (!SetFilePointerEx(m_handle, up_off, NULL, FILE_BEGIN)) {
-				return FALSE;
-			}
-			return ::SetEndOfFile(m_handle);
+			return SetEndOfFileInternal(up_off);
 		} else {
 			return TRUE;
 		}
@@ -711,14 +695,23 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 		return FALSE;
 
 	if (bSet) {
-		if (!SetFilePointerEx(m_handle, up_off, NULL, FILE_BEGIN))
-			return FALSE;
-
-		return ::SetEndOfFile(m_handle);
+		return SetEndOfFileInternal(up_off);
 	} else {
 		return TRUE;
 	}
 
+}
+
+BOOL CryptFileForward::SetEndOfFileInternal(LARGE_INTEGER& off)
+{
+	// the calls to set the file pointer and then the end of file
+	// need to be made atomic (serialized)
+	lock_guard<mutex> lock(m_con->m_file_pointer_mutex);
+
+	if (!SetFilePointerEx(m_handle, off, NULL, FILE_BEGIN))
+		return FALSE;
+
+	return ::SetEndOfFile(m_handle);
 }
 
 CryptFileReverse::CryptFileReverse()
@@ -825,14 +818,8 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 			int blockoff = (int)((offset - sizeof(m_header)) % CIPHER_BS);
 
-			LARGE_INTEGER l;
-
-			l.QuadPart = blockno * PLAIN_BS;
-
-			if (!SetFilePointerEx(m_handle, l, NULL, FILE_BEGIN)) {
-				bRet = FALSE;
-				break;
-			}	
+			OVERLAPPED ov;
+			SetOverlapped(&ov, blockno * PLAIN_BS);
 
 			int advance;
 
@@ -840,8 +827,13 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 			if (blockoff == 0 && bytesleft >= CIPHER_BS) {
 				DWORD nRead = 0;
-				if (!ReadFile(m_handle, plain_buf, sizeof(plain_buf), &nRead, NULL)) {
-					bRet = FALSE;
+				if (!ReadFile(m_handle, plain_buf, sizeof(plain_buf), &nRead, &ov)) {
+					auto LastErr = ::GetLastError();
+					if (LastErr == ERROR_HANDLE_EOF) {
+						bRet = TRUE;
+					} else {
+						bRet = FALSE;
+					}
 					break;
 				}
 
@@ -849,6 +841,7 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 					bRet = TRUE;
 					break;
 				}
+			
 				// advance = read_block(m_con, m_handle, m_header.fileid, blockno, p, context);
 				advance = write_block(m_con, p, INVALID_HANDLE_VALUE, m_header.fileid, blockno, plain_buf, (int)nRead, context, m_block0iv);
 
@@ -862,8 +855,13 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 				unsigned char blockbuf[CIPHER_BS];
 				DWORD nRead = 0;
-				if (!ReadFile(m_handle, plain_buf, sizeof(plain_buf), &nRead, NULL)) {
-					bRet = FALSE;
+				if (!ReadFile(m_handle, plain_buf, sizeof(plain_buf), &nRead, &ov)) {
+					auto LastErr = ::GetLastError();
+					if (LastErr == ERROR_HANDLE_EOF) {
+						bRet = TRUE;
+					} else {
+						bRet = FALSE;
+					}
 					break;
 				}
 

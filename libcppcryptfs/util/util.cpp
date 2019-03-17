@@ -811,3 +811,30 @@ wstring GetWindowsErrorString(DWORD dwLastErr)
 	return mes;
 }
 
+void SetOverlapped(LPOVERLAPPED pOv, LONGLONG offset)
+{
+	LARGE_INTEGER l;
+
+	l.QuadPart = offset;
+
+	memset(pOv, 0, sizeof(*pOv));
+
+	pOv->Offset = l.LowPart;
+	pOv->OffsetHigh = l.HighPart;
+}
+
+void IncOverlapped(LPOVERLAPPED pOv, DWORD increment)
+{
+	LARGE_INTEGER l;
+
+	l.LowPart = pOv->Offset;
+	l.HighPart = pOv->OffsetHigh;
+
+	l.QuadPart += increment;
+
+	memset(pOv, 0, sizeof(*pOv));
+
+	pOv->Offset = l.LowPart;
+	pOv->OffsetHigh = l.HighPart;
+}
+

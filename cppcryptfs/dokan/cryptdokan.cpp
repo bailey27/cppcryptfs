@@ -741,15 +741,13 @@ static NTSTATUS DOKAN_CALLBACK CryptReadFile(LPCWSTR FileName, LPVOID Buffer,
   CryptFile *file = CryptFile::NewInstance(GetContext());
 
   if (rt_is_config_file(GetContext(), FileName)) {
-    LARGE_INTEGER l;
-    l.QuadPart = Offset;
-    if (SetFilePointerEx(handle, l, NULL, FILE_BEGIN)) {
-      if (!ReadFile(handle, Buffer, BufferLength, ReadLength, NULL)) {
-        ret_status = ToNtStatus(GetLastError());
-      }
-    } else {
-      ret_status = ToNtStatus(GetLastError());
+    OVERLAPPED ov;
+    SetOverlapped(&ov, Offset);
+   
+    if (!ReadFile(handle, Buffer, BufferLength, ReadLength, &ov)) {
+		ret_status = ToNtStatus(GetLastError());
     }
+    
   } else if (is_virtual) {
     if (!read_virtual_file(GetContext(), FileName, (unsigned char *)Buffer,
                            BufferLength, ReadLength, Offset)) {

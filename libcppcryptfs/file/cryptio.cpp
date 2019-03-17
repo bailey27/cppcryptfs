@@ -44,14 +44,10 @@ read_block(CryptContext *con, HANDLE hfile, BYTE *inputbuf, int bytesinbuf, int 
 
 	long long offset = FILE_HEADER_LEN + block*CIPHER_BS;
 
-	LARGE_INTEGER l;
-
-	l.QuadPart = offset;
+	OVERLAPPED ov;
 
 	if (hfile != INVALID_HANDLE_VALUE) {
-		if (!SetFilePointerEx(hfile, l, NULL, FILE_BEGIN)) {
-			return -1;
-		}
+		SetOverlapped(&ov, offset);
 	}
 
 	unsigned long long be_block = MakeBigEndian(block);
@@ -72,9 +68,13 @@ read_block(CryptContext *con, HANDLE hfile, BYTE *inputbuf, int bytesinbuf, int 
 			*bytes_consumed = to_consume;
 		nread = to_consume;
 	} else {
-		if (!ReadFile(hfile, buf, sizeof(buf), &nread, NULL)) {
+		if (!ReadFile(hfile, buf, sizeof(buf), &nread, &ov)) {
 			DWORD error = GetLastError();
-			return -1;
+			if (error == ERROR_HANDLE_EOF) {
+				return 0;
+			} else {
+				return -1;
+			}
 		}
 	}
 
@@ -121,16 +121,11 @@ write_block(CryptContext *con, unsigned char *cipher_buf, HANDLE hfile, const un
 
 	long long offset = FILE_HEADER_LEN + block*CIPHER_BS;
 
-	LARGE_INTEGER l;
-
-	l.QuadPart = offset;
+	OVERLAPPED ov;
 
 	if (hfile != INVALID_HANDLE_VALUE) {
-		if (!SetFilePointerEx(hfile, l, NULL, FILE_BEGIN)) {
-			return -1;
-		}
+		SetOverlapped(&ov, offset);
 	}
-
 
 	unsigned long long be_block = MakeBigEndian(block);
 
@@ -191,7 +186,7 @@ write_block(CryptContext *con, unsigned char *cipher_buf, HANDLE hfile, const un
 
 		DWORD nWritten = 0;
 
-		if (!WriteFile(hfile, cipher_buf, BLOCK_IV_LEN + ctlen + sizeof(tag), &nWritten, NULL)) {
+		if (!WriteFile(hfile, cipher_buf, BLOCK_IV_LEN + ctlen + sizeof(tag), &nWritten, &ov)) {
 			return -1;
 		}
 		
