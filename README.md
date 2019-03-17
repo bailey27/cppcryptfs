@@ -68,7 +68,7 @@ Build Requirements
 
 There are detailed build instructions in [INSTALL.md](INSTALL.md).
 
-cppcryptfs is currently up-to-date with Dokany 1.2.1.2000
+cppcryptfs is currently up-to-date with Dokany 1.2.2.1000
 
 
 Use
