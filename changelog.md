@@ -2,6 +2,16 @@
 
 Changelog
 ------------
+v1.4.0.25, Mar 17 2019
+* Fix issues with TeraCopy and launching some programs from container
+* Add double-click on mounted volume opens explorer feature
+
+v1.4.0.24, Jan 13 2019
+* First binary 32-bit release (was only 64-bit before)
+
+v1.4.0.23, Jan 6 2019
+* Build with Dokany 1.2.2.2000
+
 v1.4.0.22, Oct 6 2018
 * Add "never save history" option to settings
 * Unmount all filesysystems when Windows session is ending
