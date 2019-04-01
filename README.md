@@ -125,6 +125,8 @@ You can also right-click in the list of drive letters and select "Add Mount Poin
 
 You can also right-click on a mounted filesystem and dismount it or [view its properties.](/screenshots/screenshot_properties.png?raw=true) 
 
+Double-clicking on a mounted volume will open a File Explorer window on it.
+
 If you specified a custom path for the config file when you created the filesystem, then you must specify it here also.
 
 If you specified a custom path for the config file, you must also select "reverse" if it is a reverse filesystem.  Otherwise, cppcryptfs will automatically detect if the filesytem should be mounted in forward or reverse mode.
