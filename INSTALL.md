@@ -162,7 +162,7 @@ git clone https://github.com/bailey27/cppcryptfs.git
 
 Then go to c:\\git\\cppcryptfs in Windows Explorer and double-click on cppcryptfs.sln.  This will load the project into Visual Studio.
 
-Then change the build configuration to "Release" and the target platform to "x64".
+Then change the build configuration to "Release" and the target platform to "x64". Select "x86" instead of "x64" if you are doing a 32-bit build.
 
 Here is a screenshot that shows where to set the build configuration and target platform (see the red underlines).
 
@@ -172,8 +172,6 @@ Then do Build -> Build Solution, or just press the F7 key.
 
 There is no installation program for cppcryptfs.  You will need to copy cppcryptfs.exe (e.g. C:\\git\\cppcryptfs\\x64\\Release\\cppcryptfs.exe) to some directory in your path or onto your desktop.
 
-
-A 32-bit build should work.  However, it has not been tested in a while.
 
 Whenever Dokany releases a new version, they install their header (include) and library files in a path that has the Dokany version number in its name.  Therefore, if cppcryptfs gets behind the current Dokany version, even a minor one, then you will need to change the include and library paths in the cppcryptfs Visual Studio project.  
 
