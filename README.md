@@ -257,7 +257,7 @@ This setting is not enabled in either the Default or Recommended settings.
 
 **Delete desktop.ini files**
 
-This setting was created for https://github.com/bailey27/cppcryptfs/issues/62.  Google Drive creates hidden desktop.ini files in every directory in the source folder of encrypted files.  These files were preventing users from deleting directories from the un-encrypted side.  If the filesystem is mounted with this setting on, then cppcryptfs will automatically delete unencrypted desktop.ini files when deleting a directory.  
+This setting was created for https://github.com/bailey27/cppcryptfs/issues/62.  It was reported that Google Drive can create hidden desktop.ini files in every directory in the source folder of encrypted files.  These files were preventing users from deleting directories from the un-encrypted side.  If the filesystem is mounted with this setting on, then cppcryptfs will automatically delete unencrypted desktop.ini files when deleting a directory.  
 
 This setting has effect only in forward mode and only if encrypted filenames are used.
 
