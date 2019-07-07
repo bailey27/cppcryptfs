@@ -84,7 +84,8 @@ static void get_deletable_files(CryptContext *con, vector<wstring>& files)
 		files.push_back(DIR_IV_NAME);
 	}
 
-	if (con->m_delete_spurrious_files) {
+	if (con->m_delete_spurrious_files && !con->GetConfig()->m_PlaintextNames 
+			&& !con->GetConfig()->m_reverse) {
 		files.push_back(L"desktop.ini");
 	}
 }

@@ -222,6 +222,10 @@ This setting has no effect on reverse filesystems or when filesystems are mounte
 
 Note:  If you are syncing the encrypted files of your filesystem with Dropbox, then if you enable mount manger (recycle bin), then Dropbox will not be able to sync the files in the recycle bin because it does not have sufficient privileges.  
 
+**Delete desktop.ini files**
+
+This setting was created for https://github.com/bailey27/cppcryptfs/issues/62.  Apparently, Google Drive creates hidden desktop.ini files in every directory in the source folder of encrypted files, which were preventing users from deleting directories from the un-encrypted side.  If the filesystem is mounted with this setting on, then cppcryptfs will automatically delete unencrypted desktop.ini files when deleting a directory.  This setting has effect only in forward mode and only if encrypted filenames are used.
+
 You should either run Dropbox as Administrator, or you should determine which encrypted folder name is the name of the recycle bin and exclude it using the selective sync feature of Dropbox.  If you are using plaintext file names, then the recycle bin will be simply "$RECYCLE.BIN". The --list command line switch, if given the (unencrypted) path to the root directory of the filesystem as an argument, can be used to find the encrypted name of the recycle bin.
 
 e.g.
