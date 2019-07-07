@@ -61,6 +61,8 @@ public:
 	int m_threads;
 	bool m_recycle_bin;
 	bool m_read_only;
+	bool m_delete_spurrious_files;
+	vector<wstring> m_deletable_files;
 private:
 	bool m_caseinsensitive;
 public:
@@ -80,6 +82,10 @@ public:
 	CryptContext();
 
 	CryptConfig *GetConfig() const { return m_config; };
+
+	bool FinalInitBeforeMounting();
+
+	const vector<wstring>& GetDeletableFiles() { return m_deletable_files; }
 
 	virtual ~CryptContext();
 };

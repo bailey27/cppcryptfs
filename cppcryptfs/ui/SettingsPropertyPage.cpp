@@ -73,6 +73,7 @@ BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_RESETWARNINGS, &CSettingsPropertyPage::OnClickedResetwarnings)
 	ON_BN_CLICKED(IDC_ENABLE_SAVING_PASSWORDS, &CSettingsPropertyPage::OnClickedEnableSavingPasswords)
 	ON_BN_CLICKED(IDC_NEVER_SAVE_HISTORY, &CSettingsPropertyPage::OnClickedNeverSaveHistory)
+	ON_BN_CLICKED(IDC_DELETE_SPURRIOUS_FILES, &CSettingsPropertyPage::OnClickedDeleteSpurriousFiles)
 END_MESSAGE_MAP()
 
 
@@ -108,18 +109,23 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 
 	bool bNeverSaveHistory = NeverSaveHistory();
 
+	bool bDeleteSpurriousFiles = theApp.GetProfileInt(L"Settings", L"DeleteSpurriousFiles",
+											DELETE_SPURRIOUS_FILES_DEFAULT) != 0;
+
 	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, 
-								bEnableSavingPasswords, bNeverSaveHistory);
+								bEnableSavingPasswords, bNeverSaveHistory, bDeleteSpurriousFiles);
 }
 
 BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, 
-						bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords, bool bNeverSaveHistory)
+						bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords, bool bNeverSaveHistory,
+						bool bDeleteSpurriousFiles)
 {
 
 	m_bCaseInsensitive =  bCaseInsensitive;
 	m_bMountManager = bMountManager;
 	m_bEnableSavingPasswords = bEnableSavingPasswords;
 	m_bNeverSaveHistory = bNeverSaveHistory;
+	m_bDeleteSpurriousFiles = bDeleteSpurriousFiles;
 
 	int i;
 
@@ -200,6 +206,8 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	CheckDlgButton(IDC_NEVER_SAVE_HISTORY, m_bNeverSaveHistory ? 1 : 0);
 
+	CheckDlgButton(IDC_DELETE_SPURRIOUS_FILES, m_bDeleteSpurriousFiles ? 1 : 0);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -275,11 +283,13 @@ void CSettingsPropertyPage::SaveSettings()
 	m_bMountManager = !m_bMountManager; // ditto
 	m_bEnableSavingPasswords = !m_bEnableSavingPasswords; // ditto
 	m_bNeverSaveHistory = !m_bNeverSaveHistory; // ditto
+	m_bDeleteSpurriousFiles = !m_bDeleteSpurriousFiles; // ditto
 
 	OnBnClickedCaseinsensitive();
 	OnClickedMountmanager();
 	OnClickedEnableSavingPasswords();
 	OnClickedNeverSaveHistory();
+	OnClickedDeleteSpurriousFiles();
 }
 
 void CSettingsPropertyPage::OnBnClickedDefaults()
@@ -288,7 +298,7 @@ void CSettingsPropertyPage::OnBnClickedDefaults()
 
 	SetControls(PER_FILESYSTEM_THREADS_DEFAULT, BUFFERBLOCKS_DEFAULT, CACHETTL_DEFAULT, 
 		CASEINSENSITIVE_DEFAULT, MOUNTMANAGER_DEFAULT, ENABLE_SAVING_PASSWORDS_DEFAULT,
-		NEVER_SAVE_HISTORY_DEFAULT);
+		NEVER_SAVE_HISTORY_DEFAULT, DELETE_SPURRIOUS_FILES_DEFAULT);
 
 	SaveSettings();
 }
@@ -300,7 +310,7 @@ void CSettingsPropertyPage::OnBnClickedRecommended()
 
 	SetControls(PER_FILESYSTEM_THREADS_RECOMMENDED, BUFFERBLOCKS_RECOMMENDED, CACHETTL_RECOMMENDED, 
 		CASEINSENSITIVE_RECOMMENDED, MOUNTMANAGER_RECOMMENDED, ENABLE_SAVING_PASSWORDS_RECOMMENDED,
-		NEVER_SAVE_HISTORY_RECOMMENDED);
+		NEVER_SAVE_HISTORY_RECOMMENDED, DELETE_SUPRRIOUS_FILES_RECOMMENDED);
 
 	SaveSettings();
 }
@@ -401,4 +411,15 @@ void CSettingsPropertyPage::OnClickedNeverSaveHistory()
 							MB_OK | MB_ICONEXCLAMATION);
 		}
 	}
+}
+
+
+void CSettingsPropertyPage::OnClickedDeleteSpurriousFiles()
+{
+	// TODO: Add your control notification handler code here
+	m_bDeleteSpurriousFiles = !m_bDeleteSpurriousFiles;
+
+	CheckDlgButton(IDC_DELETE_SPURRIOUS_FILES, m_bDeleteSpurriousFiles ? 1 : 0);
+
+	theApp.WriteProfileInt(L"Settings", L"DeleteSpurriousFiles", m_bDeleteSpurriousFiles ? 1 : 0);
 }

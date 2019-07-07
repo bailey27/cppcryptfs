@@ -329,6 +329,8 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 	opts.mountmanagerwarn = theApp.GetProfileInt(L"Settings", L"MountManagerWarn", MOUNTMANAGERWARN_DEFAULT) != 0;
 
+	opts.deletespurriousfiles = theApp.GetProfileInt(L"Settings", L"DeleteSpurriousFiles", MOUNTMANAGERWARN_DEFAULT) != 0;
+
 	bool bSavePassword = argMountPoint == NULL && (IsDlgButtonChecked(IDC_SAVE_PASSWORD) != 0);	
 	
 	theApp.DoWaitCursor(1);
@@ -1751,7 +1753,7 @@ void CMountPropertyPage::OnDblclkDriveLetters(NMHDR *pNMHDR, LRESULT *pResult)
 	if (pList) {
 		CString mp = pList->GetItemText(row, 0);
 		CString path = pList->GetItemText(row, 1);
-		if (path.GetLength() > 0)
+		if (path.GetLength() > 0 && ::PathIsDirectory(mp))
 			::ShellExecute(NULL, L"open", mp, NULL, NULL, SW_SHOW);
 	}
 

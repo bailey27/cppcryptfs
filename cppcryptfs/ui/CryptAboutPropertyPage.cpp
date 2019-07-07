@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "cppcryptfs.h"
 #include "CryptAboutPropertyPage.h"
 #include "afxdialogex.h"
+#include <dokan/cryptdokan.h>
 #include <string>
 #include "util/util.h"
 #include "crypt/aes.h"
@@ -609,18 +610,27 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 
 	CString openssl_ver = openssl_ver_w.c_str();
 
-	if (AES::use_aes_ni()) {
-		SetDlgItemText(IDC_AES_NI, L"linked with " + openssl_ver + L"; AES-NI detected");
-	} else {
-		SetDlgItemText(IDC_AES_NI, L"linked with " + openssl_ver + L"; AES-NI not detected");
+	std::vector<int> dv;
+	std::wstring dok_ver;
+	CString dokany_version;
+	if (get_dokany_version(dok_ver, dv)) {
+		dokany_version = CString(L"; using Dokany ") + dok_ver.c_str();
 	}
+	wstring aes_ni;
+	if (AES::use_aes_ni()) {
+		aes_ni =  L"; AES-NI detected";
+	} else {
+		aes_ni = L"; AES-NI not detected";
+	}
+ 
+	SetDlgItemText(IDC_LINKAGES, L"linked with " + openssl_ver + dokany_version);
 
-	CString prod_ver = &prod[0];
+	CString prod_ver = prod.c_str();
 	prod_ver += L", Version ";
 	prod_ver += &ver[0];
 
-	SetDlgItemText(IDC_PROD_VERSION, prod_ver);
-	SetDlgItemText(IDC_COPYRIGHT, &copyright[0]);
+	SetDlgItemText(IDC_PROD_VERSION, prod_ver + CString(aes_ni.c_str()));
+	SetDlgItemText(IDC_COPYRIGHT, copyright.c_str());
 
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_COMPONENTS_LIST);
 

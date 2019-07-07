@@ -682,10 +682,9 @@ create_dir_iv(CryptContext *con, LPCWSTR path)
 
 #endif // _WIN32
 
-
 #ifdef _WIN32
 bool
-is_empty_directory(LPCWSTR path, BOOL bMustReallyBeEmpty)
+is_empty_directory(LPCWSTR path, BOOL bMustReallyBeEmpty, CryptContext *con)
 {
 	bool bret = true;
 
@@ -718,10 +717,23 @@ is_empty_directory(LPCWSTR path, BOOL bMustReallyBeEmpty)
 			throw((int)error);
 		}
 
+		vector<wstring> dummy;
+
+		auto& deletable_files = con ? con->GetDeletableFiles() : dummy;
+
+		auto can_be_deleted = [](const vector<wstring>& deletable_files, LPCWSTR fname) -> bool {
+			auto count = deletable_files.size();
+			for (size_t i = 0; i < count; i++) {
+				if (lstrcmpi(deletable_files[i].c_str(), fname) == 0)
+					return true;
+			}
+			return false;
+		};
+
 		while (hFind != INVALID_HANDLE_VALUE) {
 			if (wcscmp(findData.cFileName, L"..") != 0 &&
 				wcscmp(findData.cFileName, L".") != 0 &&
-				(bMustReallyBeEmpty || wcscmp(findData.cFileName, DIR_IV_NAME) != 0)) {
+				(bMustReallyBeEmpty || !can_be_deleted(deletable_files, findData.cFileName))) {
 				throw((int)ERROR_DIR_NOT_EMPTY);
 			}
 			if (!FindNextFile(hFind, &findData)) {
@@ -752,9 +764,9 @@ is_empty_directory(LPCWSTR path, BOOL bMustReallyBeEmpty)
 }
 
 bool
-can_delete_directory(LPCWSTR path, BOOL bMustReallyBeEmpty)
+can_delete_directory(LPCWSTR path, BOOL bMustReallyBeEmpty, CryptContext *con)
 {
-	return is_empty_directory(path, bMustReallyBeEmpty);
+	return is_empty_directory(path, bMustReallyBeEmpty, con);
 }
 
 bool can_delete_file(LPCWSTR path)
@@ -769,33 +781,40 @@ delete_directory(CryptContext *con, LPCWSTR path)
 
 	try {
 
-		if (con->GetConfig()->DirIV()) {
+		wstring path_with_slash = path;	
 
-			wstring diriv_file = path;
+		if (path_with_slash[path_with_slash.size() - 1] != '\\')
+			path_with_slash.push_back('\\');
 
-			if (diriv_file[diriv_file.size() - 1] != '\\')
-				diriv_file.push_back('\\');
+		vector<wstring> dummy;
 
-			diriv_file.append(DIR_IV_NAME);
+		auto& files_to_delete = con ? con->GetDeletableFiles() : dummy;
 
-			DWORD attr = GetFileAttributes(&diriv_file[0]);
+		wstring file_to_delete;
+
+		for (size_t i = 0; i < files_to_delete.size(); i++) {
+
+			file_to_delete = path_with_slash + files_to_delete[i];
+
+			DWORD attr = GetFileAttributes(file_to_delete.c_str());
 
 			if (attr != INVALID_FILE_ATTRIBUTES) {
 
 				if (attr & FILE_ATTRIBUTE_READONLY) {
 					attr &= ~FILE_ATTRIBUTE_READONLY;
-					if (!SetFileAttributes(&diriv_file[0], attr)) {
+					if (!SetFileAttributes(file_to_delete.c_str(), attr)) {
 						throw((int)GetLastError());
 					}
 				}
 
-				con->m_dir_iv_cache.remove(path);
-
-				if (!DeleteFile(&diriv_file[0])) {
+				if (!DeleteFile(file_to_delete.c_str())) {
 					throw((int)GetLastError());
 				}
 			}
-			
+		}
+
+		if (con->GetConfig()->DirIV()) {
+			con->m_dir_iv_cache.remove(path);
 		}
 
 		if (!RemoveDirectory(path)) {

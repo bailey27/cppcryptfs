@@ -28,6 +28,7 @@ THE SOFTWARE.
 
 #include "stdafx.h"
 #include "crypt/crypt.h"
+#include "util/fileutil.h"
 #include "cryptcontext.h"
 
 static RandomBytes random_bytes;
@@ -50,6 +51,7 @@ CryptContext::CryptContext()
 
 	m_recycle_bin = false;
 	m_read_only = false;
+	m_delete_spurrious_files = false;
 
 	m_cache_ttl = 1;
 
@@ -66,6 +68,31 @@ CryptContext::CryptContext()
 
 	m_case_cache.m_con = this;
 
+}
+
+static void get_deletable_files(CryptContext *con, vector<wstring>& files)
+{
+
+	files.clear();
+
+	assert(con);
+
+	if (!con)
+		return;
+
+	if (con->GetConfig()->DirIV()) {
+		files.push_back(DIR_IV_NAME);
+	}
+
+	if (con->m_delete_spurrious_files) {
+		files.push_back(L"desktop.ini");
+	}
+}
+
+bool CryptContext::FinalInitBeforeMounting()
+{
+	get_deletable_files(this, m_deletable_files);
+	return true;
 }
 
 

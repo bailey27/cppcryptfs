@@ -96,6 +96,10 @@ It is strongly recommended that this directory reside on an NTFS filesystem.
 
 Then you need to choose a (hopefully strong) password and repeat it.  The dialog box will accept at most 255 characters for the password.
 
+The password field class treats one character as special. This character looks like a small x, but not the same. It's unicode 215 which is 0xd7 in hex.
+
+The result is you cannot use that character in a password.
+
 You can choose to have your file names encryped using AES256-EME or not to encrypt the file names (plain text).
 
 If "Long file names" is checked, then the names of files and directories can be up to 255 characters long when encrypted file names are used.  This option has no effect if plain text file names are used (plain text file names can be up to 255 characters long). See the section "File name and path length limits" near the end of this document for more information.  

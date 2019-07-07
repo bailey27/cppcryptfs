@@ -31,44 +31,50 @@ THE SOFTWARE.
 #include <windows.h>
 #include <string>
 #include <list>
+#include <vector>
 
 using namespace std;
 
-
 typedef struct _struct_win32_find_data_pair {
-	WIN32_FIND_DATAW fdata;
-	WIN32_FIND_DATAW fdata_orig;
+  WIN32_FIND_DATAW fdata;
+  WIN32_FIND_DATAW fdata_orig;
 } FindDataPair;
 
 typedef struct _struct_CryptMountOptions {
-	int numthreads;
-	int numbufferblocks;
-	int cachettl;
-	bool readonly;
-	bool reverse;
-	bool caseinsensitive;
-	bool mountmanager;
-	bool mountmanagerwarn;
+  int numthreads;
+  int numbufferblocks;
+  int cachettl;
+  bool readonly;
+  bool reverse;
+  bool caseinsensitive;
+  bool mountmanager;
+  bool mountmanagerwarn;
+  bool deletespurriousfiles;
 } CryptMountOptions;
 
 class FsInfo;
 
-int mount_crypt_fs(const WCHAR *mountpoint, const WCHAR *path, const WCHAR* config_path, const WCHAR *password, wstring& mes, const CryptMountOptions& ops);
+int mount_crypt_fs(const WCHAR *mountpoint, const WCHAR *path,
+                   const WCHAR *config_path, const WCHAR *password,
+                   wstring &mes, const CryptMountOptions &ops);
 
-BOOL unmount_crypt_fs(const WCHAR *mountpoint, bool wait, wstring& mes);
+BOOL unmount_crypt_fs(const WCHAR *mountpoint, bool wait, wstring &mes);
 
 BOOL wait_for_all_unmounted();
 
-BOOL write_volume_name_if_changed(WCHAR dl, wstring& mes);
+BOOL write_volume_name_if_changed(WCHAR dl, wstring &mes);
 
 BOOL have_security_name_privilege();
 
 void init_security_name_privilege();
 
-BOOL list_files(const WCHAR *path, list<FindDataPair> &fileDatas, wstring& err_mes);
+BOOL list_files(const WCHAR *path, list<FindDataPair> &fileDatas,
+                wstring &err_mes);
 
-bool check_dokany_version(wstring& mes);
+bool get_dokany_version(wstring &ver, vector<int> &v);
 
-bool get_fs_info(const wchar_t *mountpoint, FsInfo& info);
+bool check_dokany_version(wstring &mes);
+
+bool get_fs_info(const wchar_t *mountpoint, FsInfo &info);
 
 bool unmount_all(bool wait);

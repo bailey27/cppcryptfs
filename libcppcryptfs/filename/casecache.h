@@ -33,7 +33,7 @@ THE SOFTWARE.
 
 using namespace std;
 
-#define CASE_CACHE_ENTRIES 100
+#define CASE_CACHE_ENTRIES 100  // this is directories, not files
 
 class CaseCacheNode {
 

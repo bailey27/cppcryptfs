@@ -987,7 +987,7 @@ CryptDeleteDirectory(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
     return STATUS_SUCCESS;
   }
 
-  if (can_delete_directory(filePath)) {
+  if (can_delete_directory(filePath, FALSE, GetContext())) {
     return STATUS_SUCCESS;
   } else {
     DWORD error = GetLastError();
@@ -1973,6 +1973,8 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
     con->SetCaseSensitive(opts.caseinsensitive);
 
+	con->m_delete_spurrious_files = opts.deletespurriousfiles;
+
 	con->m_cache_ttl = opts.cachettl;
 
 	con->m_threads = opts.numthreads ? opts.numthreads : 5;
@@ -2103,6 +2105,11 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 		  con->m_recycle_bin = true;
 	  }
     }
+
+	if (!con->FinalInitBeforeMounting()) {
+      mes = L"context final init failed";
+      throw(-1);
+	}
 
     dokanOptions->GlobalContext = (ULONG64)con;
     dokanOptions->Options |= DOKAN_OPTION_ALT_STREAM;
@@ -2412,7 +2419,7 @@ BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
   return TRUE;
 }
 
-static bool get_dokany_version(wstring& ver, vector<int>& v)
+bool get_dokany_version(wstring& ver, vector<int>& v)
 {
 	// DokanVersion() is useless because it returns 100
 

@@ -67,10 +67,10 @@ bool
 adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l);
 
 bool
-is_empty_directory(LPCWSTR path, BOOL bMustReallyBeEmpty = FALSE);
+is_empty_directory(LPCWSTR path, BOOL bMustReallyBeEmpty = FALSE, CryptContext *con = nullptr);
 
 bool
-can_delete_directory(LPCWSTR path, BOOL bMustReallyBeEmpty = FALSE);
+can_delete_directory(LPCWSTR path, BOOL bMustReallyBeEmpty = FALSE, CryptContext *con = nullptr);
 
 bool 
 can_delete_file(LPCWSTR path);
