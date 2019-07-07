@@ -2,6 +2,9 @@
 
 Changelog
 ------------
+v1.4.0.26, Jul 7 2019
+* Add setting to enable auto-delete of desktop.ini files (issue #62)
+
 v1.4.0.25, Mar 17 2019
 * Fix issues with TeraCopy and launching some programs from container
 * Add double-click on mounted volume opens explorer feature
