@@ -47,6 +47,8 @@ THE SOFTWARE.
 #include "util/util.h"
 #include "crypt/crypt.h"
 #include "ui/uiutil.h"
+#include "namedpipe/server.h"
+#include "namedpipe/client.h"
 
 
 #ifdef _DEBUG
@@ -117,7 +119,8 @@ BOOL CcppcryptfsApp::InitInstance()
 
 		if (hWnd) {
 			if (have_args()) {
-				SendArgsToRunningInstance(hWnd);
+				SendArgsToRunningInstance(GetCommandLine());
+				::Sleep(60*1000);
 			} else { // if no args, then restore window of running instance
 				ShowWindow(hWnd, SW_SHOWNORMAL);
 			}
@@ -140,6 +143,7 @@ BOOL CcppcryptfsApp::InitInstance()
 		}
 	}
 
+	StartNamedPipeServer();
 
 	// InitCommonControlsEx() is required on Windows XP if an application
 	// manifest specifies use of ComCtl32.dll version 6 or later to enable
@@ -276,44 +280,52 @@ BOOL CcppcryptfsApp::WriteProfileBinary(LPCWSTR section, LPCWSTR entry, LPBYTE p
 }
 
 
-void CcppcryptfsApp::SendArgsToRunningInstance(HWND hWnd)
+void CcppcryptfsApp::SendCmdArgsToSelf(HANDLE hPipe)
 {
+
+	HWND hWnd = ::FindWindow(L"#32770", L"cppcryptfs");
+	if (!hWnd)
+		return;
+
+	DWORD win_proc_id = 0;
+
+	GetWindowThreadProcessId(hWnd, &win_proc_id);
+
+	if (win_proc_id != ::GetCurrentProcessId())
+		return;
+
 	static_assert(sizeof(WCHAR) == sizeof(wchar_t), "sizeof(WCHAR) != sizeof(wchar_t).");
 	COPYDATASTRUCT cd;
 	memset(&cd, 0, sizeof(cd));
 	cd.dwData = CPPCRYPTFS_COPYDATA_CMDLINE;
-	LPCWSTR cmdLine = GetCommandLineW();
-	size_t cmdLineLen = wcslen(cmdLine);
-	size_t dataLen = sizeof(CopyDataCmdLine) + cmdLineLen * sizeof(WCHAR); // WCHAR in CmdLineCopyData accounts for null terminator
-	if (dataLen <= CPPCRYPTFS_COPYDATA_CMDLINE_MAXLEN) {
-		cd.cbData = (DWORD)dataLen;
-		LockZeroBuffer<BYTE> buf(cd.cbData);
-		if (buf.IsLocked()) {
-			CopyDataCmdLine *pcd = (CopyDataCmdLine*)buf.m_buf;
-			pcd->dwPid = getppid();
-			cd.lpData = (PVOID)pcd;
-			if (wcscpy_s(pcd->szCmdLine, cmdLineLen + 1, cmdLine) == 0) {
-				SetLastError(0);
-				SendMessageW(hWnd, WM_COPYDATA, NULL, (LPARAM)&cd);
-				DWORD dwErr = GetLastError();
-				if (dwErr) {
-					if (dwErr == ERROR_ACCESS_DENIED) {
-						ConsoleErrMes(L"SendMessage() returned error \"access denied\".\n\nPerhaps there is"
-							" already an instance of cppcryptfs running with administrator\nprivileges, but"
-							" you invoked this instance of cppcryptfs from a command prompt\nthat is not running"
-							" with administrator privileges.\n\nIf this is the case, then you should start a"
-							" CMD.exe window using\n\"Run as administrator\" and invoke cppcryptfs from within it.");
-					} else {
-						WCHAR buf[80];
-						_snwprintf_s(buf, _TRUNCATE, L"SendMessage() returned error code %u", dwErr);
-						ConsoleErrMes(buf);
-					}
-				}
-			}
+	string encrypted_cmd;
+	if (!encrypt_string_gcm(wstring(args), m_wm_copydata_key, encrypted_cmd))
+		return;
+	size_t cmdLineLen = encrypted_cmd.size();
+	size_t dataLen = sizeof(CopyDataCmdLine);
+	
+	cd.cbData = (DWORD)dataLen;
+	vector<BYTE> data(dataLen);
+	CopyDataCmdLine *pcd = reinterpret_cast<CopyDataCmdLine*>(&data[0]);
+	pcd->hPipe = hPipe;
+	cd.lpData = (PVOID)pcd;
+	
+	SetLastError(0);
+	SendMessageW(hWnd, WM_COPYDATA, NULL, (LPARAM)&cd);
+	DWORD dwErr = GetLastError();
+	if (dwErr) {
+		if (dwErr == ERROR_ACCESS_DENIED) {
+			ConsoleErrMes(L"SendMessage() returned error \"access denied\".\n\nPerhaps there is"
+				" already an instance of cppcryptfs running with administrator\nprivileges, but"
+				" you invoked this instance of cppcryptfs from a command prompt\nthat is not running"
+				" with administrator privileges.\n\nIf this is the case, then you should start a"
+				" CMD.exe window using\n\"Run as administrator\" and invoke cppcryptfs from within it.");
 		} else {
-			ConsoleErrMes(L"unable to lock command line buffer in source");
+			WCHAR buf[80];
+			_snwprintf_s(buf, _TRUNCATE, L"SendMessage() returned error code %u", dwErr);
+			ConsoleErrMes(buf);
 		}
-	} else {
-		ConsoleErrMes(L"command line too long");
 	}
+				
 }
+

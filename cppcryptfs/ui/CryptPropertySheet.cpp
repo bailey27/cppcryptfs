@@ -38,6 +38,8 @@ THE SOFTWARE.
 #include "util/LockZeroBuffer.h"
 #include "util/util.h"
 #include "dokan/MountPointManager.h"
+#include "ui/uiutil.h"
+#include "crypt/crypt.h"
 
 // CryptPropertySheet
 
@@ -226,30 +228,43 @@ INT_PTR CCryptPropertySheet::DoModal()
 	
 }
 
+static bool ReadCommandLineFromPipe(HANDLE hPipe, wstring& cmdLine)
+{
+
+}
 
 BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 {
 	// TODO: Add your message handler code here and/or call default
 
-	if (pCopyDataStruct && pCopyDataStruct->dwData == CPPCRYPTFS_COPYDATA_CMDLINE && 
-		pCopyDataStruct->cbData >= sizeof(CopyDataCmdLine) &&
-		pCopyDataStruct->cbData <= CPPCRYPTFS_COPYDATA_CMDLINE_MAXLEN) {
 
-		DWORD consolePid = ((CopyDataCmdLine*)pCopyDataStruct->lpData)->dwPid;
+	if (pCopyDataStruct && pCopyDataStruct->dwData == CPPCRYPTFS_COPYDATA_CMDLINE) && 
+		pCopyDataStruct->cbData == sizeof(CopyDataCmdLine)) {
+
+		HANDLE hPipe = ((CopyDataCmdLine*)pCopyDataStruct->lpData)->hPipe;
+
+		DWORD client_process_id = 0;
+
+		if (!GetNamedPipeClientProcessId(hPipe, &client_process_id)) {
+			return FALSE;
+		}
+
+		if (!VerifyMessageSender(client_process_id)) {
+			return FALSE;
+		}
 
 		CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(m_nMountPageIndex);
 
 		if (page) {
-			// ensure that szCmdLine is null terminated by allocating extra WCHAR
-			LockZeroBuffer<BYTE> buf(pCopyDataStruct->cbData + sizeof(WCHAR));
-			if (!buf.IsLocked()) {
-				ConsoleErrMes(L"unable to lock command line buffer in target", consolePid);
+			
+			wstring cmdLine;
+			if (ReadCommandLineFromPipe(hPipe, cmdLine)) {
+				page->ProcessCommandLine(consolePid, cmdLine.c_str());
+				return TRUE;
+			} else {
+				ConsoleErrMes(L"unable to read command line", consolePid);
 				return FALSE;
 			}
-			memcpy(buf.m_buf, pCopyDataStruct->lpData, pCopyDataStruct->cbData);
-			CopyDataCmdLine *pcd = (CopyDataCmdLine*)buf.m_buf;
-			page->ProcessCommandLine(consolePid, pcd->szCmdLine);
-			return TRUE;
 		} else {
 			ConsoleErrMes(L"unable to get mount page", consolePid);
 			return FALSE;

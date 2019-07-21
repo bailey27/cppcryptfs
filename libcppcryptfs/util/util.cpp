@@ -455,11 +455,11 @@ get_random_bytes(CryptContext *con, unsigned char *buf, DWORD len)
 
 
 DWORD 
-getppid()
+getppid(DWORD dwPid)
 {
 	HANDLE hSnapshot;
 	PROCESSENTRY32 pe32;
-	DWORD ppid = 0, pid = GetCurrentProcessId();
+	DWORD ppid = 0, pid = dwPid;
 
 	hSnapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
 	__try{

@@ -39,10 +39,13 @@ THE SOFTWARE.
 
 #include <unordered_map>
 #include <string>
+#include "crypt/cryptdefs.h"
 
 using namespace std;
 
-#define CPPCRYPTFS_COPYDATA_CMDLINE 0x574cd9d1
+#define CPPCRYPTFS_COPYDATA_CMDLINE_OLD 0x574cd9d1
+
+#define CPPCRYPTFS_COPYDATA_CMDLINE 0x574cd9d2
 
 #define CPPCRYPTFS_COPYDATA_CMDLINE_MAXLEN (64*1024) // keep small because of VirtualLock()
 
@@ -53,8 +56,7 @@ using namespace std;
 #define CPPCRYPTFS_MOUNTPOINTS_SECTION L"MountPoints"
 
 typedef struct struct_CopyDataCmdLine {
-	DWORD dwPid;  // process whose console should be attached to for printing error messages
-	WCHAR szCmdLine[1]; // command line (null-terminated)
+	HANDLE hPipe; // handle of named pipe to read command line from
 } CopyDataCmdLine;
 
 // CcppcryptfsApp:
@@ -63,16 +65,15 @@ typedef struct struct_CopyDataCmdLine {
 
 class CcppcryptfsApp : public CWinApp
 {
-private:
-	void SendArgsToRunningInstance(HWND hWnd);
+public:
+	void SendCmdArgsToSelf(HANDLE hPipe);
 public:
 	CcppcryptfsApp();
 #if 0
 	unordered_map<wstring, wstring> m_mountedMountPoints; // used for tracking all mounted mountpoints (dirs and drive letters)
 																		 // drive letters are stored with colon e.g drive M as L"M:"
 #endif
-	DWORD m_mountedLetters;  // used for tracking mounted (by cpppcryptfs) drive letters
-
+	DWORD m_mountedLetters;        // used for tracking mounted (by cpppcryptfs) drive letters
 // Overrides
 public:
 	virtual BOOL InitInstance() override;

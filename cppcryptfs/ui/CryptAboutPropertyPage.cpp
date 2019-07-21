@@ -616,11 +616,14 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 	if (get_dokany_version(dok_ver, dv)) {
 		dokany_version = CString(L"; using Dokany ") + dok_ver.c_str();
 	}
+
+	wstring bit_str = sizeof(void *) == 8 ? L" 64-bit" : L" 32-bit";
+
 	wstring aes_ni;
 	if (AES::use_aes_ni()) {
-		aes_ni =  L"; AES-NI detected";
+		aes_ni = bit_str + L"; AES-NI detected";
 	} else {
-		aes_ni = L"; AES-NI not detected";
+		aes_ni = bit_str + L"; AES-NI not detected";
 	}
  
 	SetDlgItemText(IDC_LINKAGES, L"linked with " + openssl_ver + dokany_version);
