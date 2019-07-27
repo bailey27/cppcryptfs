@@ -216,7 +216,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 		rapidjson::Value& v = d["EncryptedKey"];
 
 		if (!base64_decode(v.GetString(), m_encrypted_key, false, true)) {
-			mes = L"failed to base64 decode key";
+			mes = L"failed to base64 decode key in config file";
 			throw (-1);
 		}
 
@@ -229,7 +229,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 
 
 		if (!base64_decode(scryptobject["Salt"].GetString(), m_encrypted_key_salt, false, true)) {
-			mes = L"failed to base64 decode Scrypt Salt";
+			mes = L"failed to base64 decode Scrypt Salt in config file";
 			throw (-1);
 		}
 
@@ -239,7 +239,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 
 		for (i = 0; i < sizeof(sstuff) / sizeof(sstuff[0]); i++) {
 			if (scryptobject[sstuff[i]].IsNull() || !scryptobject[sstuff[i]].IsInt()) {
-				mes = L"invalid Scrypt object";
+				mes = L"invalid Scrypt object in config file";
 				throw (-1);
 			}
 		}
@@ -250,19 +250,19 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 		int keyLen = scryptobject["KeyLen"].GetInt();
 
 		if (keyLen != 32) {
-			mes = L"invalid KeyLen";
+			mes = L"invalid KeyLen in config file";
 			throw(-1);
 		}
 
 		m_pKeyBuf = new LockZeroBuffer<unsigned char>(keyLen);
 
 		if (!m_pKeyBuf->IsLocked()) {
-			mes = L"failed to lock key buffer";
+			mes = L"failed to lock key buffer while reading config file";
 			throw(-1);
 		}
 
 		if (d["Version"].IsNull() || !d["Version"].IsInt()) {
-			mes = L"invalid Version";
+			mes = L"invalid Version in config file";
 			throw (-1);
 		}
 
@@ -283,7 +283,12 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 		if (d.HasMember("FsFeatureDisableMask") && !d["FsFeatureDisableMask"].IsNull() && d["FsFeatureDisableMask"].IsString()) {
 			rapidjson::Value& fs_val = d["FsFeatureDisableMask"];
 			string fs_str = fs_val.GetString();
-			m_fs_feature_disable_mask = stoul(fs_str, nullptr, 16);
+			try {
+				m_fs_feature_disable_mask = stoul(fs_str, nullptr, 16);
+			} catch (std::invalid_argument&) {
+				mes = L"invalid FsFeatureDisableMask in config file";
+				throw(-1);
+			}
 		}
 
 		if (d.HasMember("FeatureFlags") && !d["FeatureFlags"].IsNull() && d["FeatureFlags"].IsArray()) {
@@ -311,10 +316,10 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 					} else {
 						wstring wflag;
 						if (utf8_to_unicode(itr->GetString(), wflag)) {
-							mes = L"unkown feature flag: ";
+							mes = L"unkown feature flag in config file: ";
 							mes += wflag;
 						} else {
-							mes = L"unable to convert unkown flag to unicode";
+							mes = L"unable to convert unkown flag in config file to unicode";
 						}
 						throw(-1);
 					}
