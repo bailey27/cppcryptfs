@@ -1653,6 +1653,8 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
 #endif
                     );
 
+  defFlags &= ~config->m_fs_feature_disable_mask;
+
   if (FileSystemFlags)
     *FileSystemFlags = defFlags & (bGotVI ? fs_flags : 0xffffffff);
 

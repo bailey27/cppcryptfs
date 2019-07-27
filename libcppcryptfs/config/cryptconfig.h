@@ -97,6 +97,8 @@ public:
 
 	bool init_serial(CryptContext *con);
 
+	DWORD m_fs_feature_disable_mask;
+
 	WCHAR get_base_drive_letter();
 
 	// disallow copying

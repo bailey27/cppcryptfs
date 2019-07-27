@@ -91,6 +91,7 @@ CryptConfig::CryptConfig()
 
 	m_pGcmContentKey = NULL;
 
+	m_fs_feature_disable_mask = 0;
 }
 
 
@@ -277,6 +278,12 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 			const WCHAR *vname = utf8_to_unicode(&utf8name[0], storage);
 			if (vname)
 				m_VolumeName = vname;
+		}
+
+		if (d.HasMember("FsFeatureDisableMask") && !d["FsFeatureDisableMask"].IsNull() && d["FsFeatureDisableMask"].IsString()) {
+			rapidjson::Value& fs_val = d["FsFeatureDisableMask"];
+			string fs_str = fs_val.GetString();
+			m_fs_feature_disable_mask = stoul(fs_str, nullptr, 16);
 		}
 
 		if (d.HasMember("FeatureFlags") && !d["FeatureFlags"].IsNull() && d["FeatureFlags"].IsArray()) {
