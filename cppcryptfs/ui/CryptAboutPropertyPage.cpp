@@ -71,7 +71,7 @@ END_MESSAGE_MAP()
 
 static const WCHAR * components[] = {
 	L"cppcryptfs - Copyright (C) 2016-2019 Bailey Brown. All Rights Reserved.",
-	L"OpenSSL - Copyright (c) 1998-2018 The OpenSSL Project.  All rights reserved.",
+	L"OpenSSL - Copyright (c) 1998-2019 The OpenSSL Project.  All rights reserved.",
 	L"RapidJSON - Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip. All rights reserved.",
 	L"Dokany (mirror) - Copyright (C) 2015 - 2018 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
 	L"Dokany (library) - Copyright (C) 2015 - 2018 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
@@ -122,129 +122,129 @@ static const WCHAR *licenses[] = {
 	L"poject url: github.com/openssl/openssl\r\n\r\n"
 	L"cppcryptfs usage: statically linked library\r\n\r\n"
 	L"OpenSSL copyright and license:\r\n\r\n"
-	L" LICENSE ISSUES\r\n"
-	L"  ==============\r\n"
-	L"\r\n"
-	L"  The OpenSSL toolkit stays under a dual license, i.e. both the conditions of\r\n"
-	L"  the OpenSSL License and the original SSLeay license apply to the toolkit.\r\n"
-	L"  See below for the actual license texts.\r\n"
-	L"\r\n"
-	L"  OpenSSL License\r\n"
-	L"  ---------------\r\n"
-	L"\r\n"
-	L"/* ====================================================================\r\n"
-	L" * Copyright (c) 1998-2018 The OpenSSL Project.  All rights reserved.\r\n"
-	L" *\r\n"
-	L" * Redistribution and use in source and binary forms, with or without\r\n"
-	L" * modification, are permitted provided that the following conditions\r\n"
-	L" * are met:\r\n"
-	L" *\r\n"
-	L" * 1. Redistributions of source code must retain the above copyright\r\n"
-	L" *    notice, this list of conditions and the following disclaimer. \r\n"
-	L" *\r\n"
-	L" * 2. Redistributions in binary form must reproduce the above copyright\r\n"
-	L" *    notice, this list of conditions and the following disclaimer in\r\n"
-	L" *    the documentation and/or other materials provided with the\r\n"
-	L" *    distribution.\r\n"
-	L" *\r\n"
-	L" * 3. All advertising materials mentioning features or use of this\r\n"
-	L" *    software must display the following acknowledgment:\r\n"
-	L" *    \"This product includes software developed by the OpenSSL Project\r\n"
-	L" *    for use in the OpenSSL Toolkit. (http://www.openssl.org/)\"\r\n"
-	L" *\r\n"
-	L" * 4. The names \"OpenSSL Toolkit\" and \"OpenSSL Project\" must not be used to\r\n"
-	L" *    endorse or promote products derived from this software without\r\n"
-	L" *    prior written permission. For written permission, please contact\r\n"
-	L" *    openssl-core@openssl.org.\r\n"
-	L" *\r\n"
-	L" * 5. Products derived from this software may not be called \"OpenSSL\"\r\n"
-	L" *    nor may \"OpenSSL\" appear in their names without prior written\r\n"
-	L" *    permission of the OpenSSL Project.\r\n"
-	L" *\r\n"
-	L" * 6. Redistributions of any form whatsoever must retain the following\r\n"
-	L" *    acknowledgment:\r\n"
-	L" *    \"This product includes software developed by the OpenSSL Project\r\n"
-	L" *    for use in the OpenSSL Toolkit (http://www.openssl.org/)\"\r\n"
-	L" *\r\n"
-	L" * THIS SOFTWARE IS PROVIDED BY THE OpenSSL PROJECT ``AS IS'' AND ANY\r\n"
-	L" * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\r\n"
-	L" * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\r\n"
-	L" * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE OpenSSL PROJECT OR\r\n"
-	L" * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\r\n"
-	L" * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT\r\n"
-	L" * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\r\n"
-	L" * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)\r\n"
-	L" * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,\r\n"
-	L" * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)\r\n"
-	L" * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED\r\n"
-	L" * OF THE POSSIBILITY OF SUCH DAMAGE.\r\n"
-	L" * ====================================================================\r\n"
-	L" *\r\n"
-	L" * This product includes cryptographic software written by Eric Young\r\n"
-	L" * (eay@cryptsoft.com).  This product includes software written by Tim\r\n"
-	L" * Hudson (tjh@cryptsoft.com).\r\n"
-	L" *\r\n"
-	L" */\r\n"
-	L"\r\n"
-	L" Original SSLeay License\r\n"
-	L" -----------------------\r\n"
-	L"\r\n"
-	L"/* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)\r\n"
-	L" * All rights reserved.\r\n"
-	L" *\r\n"
-	L" * This package is an SSL implementation written\r\n"
-	L" * by Eric Young (eay@cryptsoft.com).\r\n"
-	L" * The implementation was written so as to conform with Netscapes SSL.\r\n"
-	L" * \r\n"
-	L" * This library is free for commercial and non-commercial use as long as\r\n"
-	L" * the following conditions are aheared to.  The following conditions\r\n"
-	L" * apply to all code found in this distribution, be it the RC4, RSA,\r\n"
-	L" * lhash, DES, etc., code; not just the SSL code.  The SSL documentation\r\n"
-	L" * included with this distribution is covered by the same copyright terms\r\n"
-	L" * except that the holder is Tim Hudson (tjh@cryptsoft.com).\r\n"
-	L" * \r\n"
-	L" * Copyright remains Eric Young's, and as such any Copyright notices in\r\n"
-	L" * the code are not to be removed.\r\n"
-	L" * If this package is used in a product, Eric Young should be given attribution\r\n"
-	L" * as the author of the parts of the library used.\r\n"
-	L" * This can be in the form of a textual message at program startup or\r\n"
-	L" * in documentation (online or textual) provided with the package.\r\n"
-	L" * \r\n"
-	L" * Redistribution and use in source and binary forms, with or without\r\n"
-	L" * modification, are permitted provided that the following conditions\r\n"
-	L" * are met:\r\n"
-	L" * 1. Redistributions of source code must retain the copyright\r\n"
-	L" *    notice, this list of conditions and the following disclaimer.\r\n"
-	L" * 2. Redistributions in binary form must reproduce the above copyright\r\n"
-	L" *    notice, this list of conditions and the following disclaimer in the\r\n"
-	L" *    documentation and/or other materials provided with the distribution.\r\n"
-	L" * 3. All advertising materials mentioning features or use of this software\r\n"
-	L" *    must display the following acknowledgement:\r\n"
-	L" *   \"This product includes cryptographic software written by\r\n"
-	L" *     Eric Young (eay@cryptsoft.com)\"\r\n"
-	L" *    The word 'cryptographic' can be left out if the rouines from the library\r\n"
-	L" *    being used are not cryptographic related :-).\r\n"
-	L" * 4. If you include any Windows specific code (or a derivative thereof) from \r\n"
-	L" *    the apps directory (application code) you must include an acknowledgement:\r\n"
-	L" *    \"This product includes software written by Tim Hudson (tjh@cryptsoft.com)\"\r\n"
-	L" * \r\n"
-	L" * THIS SOFTWARE IS PROVIDED BY ERIC YOUNG ``AS IS'' AND\r\n"
-	L" * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\r\n"
-	L" * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\r\n"
-	L" * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE\r\n"
-	L" * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\r\n"
-	L" * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS\r\n"
-	L" * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)\r\n"
-	L" * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\r\n"
-	L" * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY\r\n"
-	L" * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF\r\n"
-	L" * SUCH DAMAGE.\r\n"
-	L" * \r\n"
-	L" * The licence and distribution terms for any publically available version or\r\n"
-	L" * derivative of this code cannot be changed.  i.e. this code cannot simply be\r\n"
-	L" * copied and put under another distribution licence\r\n"
-	L" * [including the GNU Public Licence.]\r\n"
-	L" */\r\n",
+	LR"(LICENSE ISSUES
+  ==============
+
+  The OpenSSL toolkit stays under a double license, i.e.both the conditions of
+  the OpenSSL License and the original SSLeay license apply to the toolkit.
+  See below for the actual license texts.
+
+  OpenSSL License
+  -------------- -
+
+	/* ====================================================================
+	 * Copyright (c) 1998-2019 The OpenSSL Project.  All rights reserved.
+	 *
+	 * Redistribution and use in source and binary forms, with or without
+	 * modification, are permitted provided that the following conditions
+	 * are met:
+	 *
+	 * 1. Redistributions of source code must retain the above copyright
+	 *    notice, this list of conditions and the following disclaimer.
+	 *
+	 * 2. Redistributions in binary form must reproduce the above copyright
+	 *    notice, this list of conditions and the following disclaimer in
+	 *    the documentation and/or other materials provided with the
+	 *    distribution.
+	 *
+	 * 3. All advertising materials mentioning features or use of this
+	 *    software must display the following acknowledgment:
+	 *    "This product includes software developed by the OpenSSL Project
+	 *    for use in the OpenSSL Toolkit. (http://www.openssl.org/) "
+	 *
+	 * 4. The names "OpenSSL Toolkit" and "OpenSSL Project" must not be used to
+	 *    endorse or promote products derived from this software without
+	 *    prior written permission. For written permission, please contact
+	 *    openssl-core@openssl.org.
+	 *
+	 * 5. Products derived from this software may not be called "OpenSSL"
+	 *    nor may "OpenSSL" appear in their names without prior written
+	 *    permission of the OpenSSL Project.
+	 *
+	 * 6. Redistributions of any form whatsoever must retain the following
+	 *    acknowledgment:
+	 *    "This product includes software developed by the OpenSSL Project
+	 *    for use in the OpenSSL Toolkit (http://www.openssl.org/) "
+	 *
+	 * THIS SOFTWARE IS PROVIDED BY THE OpenSSL PROJECT ``AS IS'' AND ANY
+	 * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+	 * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+	 * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE OpenSSL PROJECT OR
+	 * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+	 * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+	 * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+	 * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+	 * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+	 * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+	 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+	 * OF THE POSSIBILITY OF SUCH DAMAGE.
+	 * ====================================================================
+	 *
+	 * This product includes cryptographic software written by Eric Young
+	 * (eay@cryptsoft.com).  This product includes software written by Tim
+	 * Hudson (tjh@cryptsoft.com).
+	 *
+	 */
+
+	 Original SSLeay License
+	 ---------------------- -
+
+	/* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
+	 * All rights reserved.
+	 *
+	 * This package is an SSL implementation written
+	 * by Eric Young (eay@cryptsoft.com).
+	 * The implementation was written so as to conform with Netscapes SSL.
+	 *
+	 * This library is free for commercial and non-commercial use as long as
+	 * the following conditions are aheared to.  The following conditions
+	 * apply to all code found in this distribution, be it the RC4, RSA,
+	 * lhash, DES, etc., code; not just the SSL code.  The SSL documentation
+	 * included with this distribution is covered by the same copyright terms
+	 * except that the holder is Tim Hudson (tjh@cryptsoft.com).
+	 *
+	 * Copyright remains Eric Young's, and as such any Copyright notices in
+	 * the code are not to be removed.
+	 * If this package is used in a product, Eric Young should be given attribution
+	 * as the author of the parts of the library used.
+	 * This can be in the form of a textual message at program startup or
+	 * in documentation (online or textual) provided with the package.
+	 *
+	 * Redistribution and use in source and binary forms, with or without
+	 * modification, are permitted provided that the following conditions
+	 * are met:
+	 * 1. Redistributions of source code must retain the copyright
+	 *    notice, this list of conditions and the following disclaimer.
+	 * 2. Redistributions in binary form must reproduce the above copyright
+	 *    notice, this list of conditions and the following disclaimer in the
+	 *    documentation and/or other materials provided with the distribution.
+	 * 3. All advertising materials mentioning features or use of this software
+	 *    must display the following acknowledgement:
+	 *    "This product includes cryptographic software written by
+	 *     Eric Young (eay@cryptsoft.com) "
+	 *    The word 'cryptographic' can be left out if the rouines from the library
+	 *    being used are not cryptographic related :-).
+	 * 4. If you include any Windows specific code (or a derivative thereof) from
+	 *    the apps directory (application code) you must include an acknowledgement:
+	 *    "This product includes software written by Tim Hudson (tjh@cryptsoft.com) "
+	 *
+	 * THIS SOFTWARE IS PROVIDED BY ERIC YOUNG ``AS IS'' AND
+	 * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+	 * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+	 * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+	 * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+	 * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+	 * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+	 * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+	 * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+	 * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+	 * SUCH DAMAGE.
+	 *
+	 * The licence and distribution terms for any publically available version or
+	 * derivative of this code cannot be changed.  i.e. this code cannot simply be
+	 * copied and put under another distribution licence
+	 * [including the GNU Public Licence.]
+	 */)",
 
 	// rapidjson
 	L"project url: github.com/miloyip/rapidjson\r\n\r\n"
@@ -572,6 +572,28 @@ static const WCHAR *licenses[] = {
 	NULL
 };
 
+static CString lf_to_crlf(const wchar_t* txt)
+{
+	CString fixed;
+
+	auto len = wcslen(txt);
+
+	if (len < 1)
+		return fixed;
+
+	fixed += txt[0];
+
+	for (size_t i = 1; i < len; i++) {
+		if (txt[i] == '\n' && txt[i - 1] != '\r') {
+			fixed += '\r';
+			fixed += '\n';
+		} else {
+			fixed += txt[i];
+		}
+	}
+	return fixed;
+}
+
 // CCryptAboutPropertyPage message handlers
 
 
@@ -657,7 +679,7 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 	CWnd *pWnd = GetDlgItem(IDC_INFO);
 
 	if (pWnd) {
-		pWnd->SetWindowTextW(licenses[0]);
+		pWnd->SetWindowTextW(lf_to_crlf(licenses[0]));
 		pWnd->PostMessageW(WM_CLEAR, 0, 0);
 	}
 
@@ -723,7 +745,7 @@ void CCryptAboutPropertyPage::OnItemchangedComponentsList(NMHDR *pNMHDR, LRESULT
 
 		if (pWnd) {
 			if (pNMLV->iItem < sizeof(licenses) / sizeof(licenses[0])) {
-				pWnd->SetWindowTextW(licenses[pNMLV->iItem]);
+				pWnd->SetWindowTextW(lf_to_crlf(licenses[pNMLV->iItem]));
 			} else {
 				pWnd->SetWindowTextW(L"");
 			}

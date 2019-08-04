@@ -46,7 +46,7 @@ It is always prudent to keep backups of your data in case something goes wrong.
 Testing
 -------  
 
-cppcryptfs passes 500/500 tests in [winfstest](https://github.com/bailey27/winfstest) when run as administrator.  Without administrator privileges, cppcryptfs passes 494/500 tests.  This winfstest is forked from the version
+cppcryptfs passes 506/506 tests in [winfstest](https://github.com/bailey27/winfstest) when run as administrator.  Without administrator privileges, cppcryptfs passes 500/506 tests.  This winfstest is forked from the version
 used by the Dokany project.  The Dokany team added additional tests.
 
 The tests that cppcryptfs fails when run without administrator privileges have to do with operations on DACLs (Discretionary Access Control Lists).  cppcryptfs must be run as administrator for these operations to work.  Running without administrator privileges doesn't seem to affect the normal usage of cppcryptfs.
