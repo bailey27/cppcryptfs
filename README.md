@@ -120,6 +120,8 @@ The volume label is AES256-GCM encrypted using the master key and a 128-bit rand
 
 You can right click on the mounted drive letter in File Explorer, select "Properties", and change the volume label.  However, doing so will cause cppcryptfs to re-write gocryptfs.conf when the drive is dismounted. This does entail some risk to your gocryptfs.conf.  Again, it's a good a idea to back up your gocryptfs.conf file somewhere.  
 
+The "Disable named streams" option may be needed if the underlying filesystem (e.g. a Linux filesystem shared via Samba) does not support named streams.  cppcryptfs normally automatically detects (at mount time) if the underlying filesystem supports named streams. However, in some configurations, the underlying filesystem is reporting that it supports named streams when it actually does not.  The developer has tested with Ubuntu 16.04 Samba and does not have this problem.  This feature was added to help a user who was having this problem with a different Linux version.  Please see https://github.com/bailey27/cppcryptfs/issues/63 if you are having issues with Samba and would like to retro-actively disable named streams after creating your filesystem.
+
 Then go to the "Mount" tab and select a drive letter and select the folder you
 just created the filesystem in.  Then enter the password and click on the "Mount" button.
 
