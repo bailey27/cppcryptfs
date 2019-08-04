@@ -616,6 +616,7 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 	if (get_dokany_version(dok_ver, dv)) {
 		dokany_version = CString(L"; using Dokany ") + dok_ver.c_str();
 	}
+
 	wstring aes_ni;
 	if (AES::use_aes_ni()) {
 		aes_ni =  L"; AES-NI detected";
@@ -628,6 +629,7 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 	CString prod_ver = prod.c_str();
 	prod_ver += L", Version ";
 	prod_ver += &ver[0];
+	prod_ver += sizeof(void*) == 8 ? L" 64-bit" : L" 32-bit";
 
 	SetDlgItemText(IDC_PROD_VERSION, prod_ver + CString(aes_ni.c_str()));
 	SetDlgItemText(IDC_COPYRIGHT, copyright.c_str());
