@@ -657,7 +657,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 
 
 
-bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, wstring& error_mes)
+bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, bool disablestreams, wstring& error_mes)
 {
 
 	LockZeroBuffer<char> utf8pass(256);
@@ -704,6 +704,8 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 		m_reverse = true;
 
 	try {
+
+		string fs_feature_disable_mask = disablestreams ? "40000" : "00000";
 
 		wstring config_path;
 
@@ -885,7 +887,8 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 		fprintf(fl, "\t\t\"KeyLen\": %d\n", GetMasterKeyLength());
 		fprintf(fl, "\t},\n");
 		fprintf(fl, "\t\"Version\": %d,\n", m_Version);
-		fprintf(fl, "\t\"VolumeName\": \"%s\",\n", &volume_name_utf8[0]);
+		fprintf(fl, "\t\"VolumeName\": \"%s\",\n", volume_name_utf8.c_str());
+		fprintf(fl, "\t\"FsFeatureDisableMask\": \"%s\",\n", fs_feature_disable_mask.c_str());
 		fprintf(fl, "\t\"FeatureFlags\": [\n");
 		if (m_EMENames)
 			fprintf(fl, "\t\t\"EMENames\",\n");
