@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.0.27, Aug 11 2019
+* Build with Dokany 1.3.0.1000
+* Add option to disable named streams when creating filesystem.
+
 v1.4.0.26, Jul 7 2019
 * Add setting to enable auto-delete of desktop.ini files (issue #62)
 * Show Dokany version on about tab
