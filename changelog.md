@@ -2,6 +2,12 @@
 
 Changelog
 ------------
+v1.4.0.28, Oct 26 2019
+* Return (NTSTATUS version of) ERROR_INVALID_NAME instead of
+  (NTSTATUS version of) ERROR_FILE_NOT_FOUND when asked
+  to open files with wildcard chars (* or ?) in them to fix
+  globbing issue with Windows CMD.exe.
+
 v1.4.0.27, Aug 11 2019
 * Build with Dokany 1.3.0.1000
 * Add option to disable named streams when creating filesystem.
