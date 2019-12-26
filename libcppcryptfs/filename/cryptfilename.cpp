@@ -817,7 +817,7 @@ encrypt_stream_name(const CryptContext *con, const unsigned char *dir_iv, const 
 	wstring type;
 
 	if (!remove_stream_type(stream, stream_without_type, type))
-		return false;
+		return NULL;
 
 	LPCWSTR rs;
 	
@@ -852,7 +852,7 @@ decrypt_stream_name(CryptContext *con, const BYTE *dir_iv, const WCHAR *stream, 
 	wstring type;
 
 	if (!remove_stream_type(stream, stream_without_type, type))
-		return false;
+		return NULL;
 
 	LPCWSTR rs;
 		

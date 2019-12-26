@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.0.29, Dec 26 2019
+* Compile with Microsoft Visual Studio 2019 (instead of 2017)
+  Build with Dokany 1.3.1.1000
+
 v1.4.0.28, Oct 26 2019
 * Return (NTSTATUS version of) ERROR_INVALID_NAME instead of
   (NTSTATUS version of) ERROR_FILE_NOT_FOUND when asked

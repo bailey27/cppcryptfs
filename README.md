@@ -55,7 +55,7 @@ The tests that cppcryptfs fails when run without administrator privileges have t
 Build Requirements
 -----
 	
-	Microsoft Visual Studio 2017 Community Edition, perl, nasm, and git (all free)
+	Microsoft Visual Studio 2019 Community Edition, perl, nasm, and git (all free)
 	OpenSSL - https://github.com/openssl/openssl (static build required)
 	RapidJSON - https://github.com/miloyip/rapidjson (for parsing gocryptfs.conf)
 	Dokany - https://github.com/dokan-dev/dokany
@@ -68,7 +68,7 @@ Build Requirements
 
 There are detailed build instructions in [INSTALL.md](INSTALL.md).
 
-cppcryptfs is currently up-to-date with Dokany 1.3.0.1000
+cppcryptfs is currently up-to-date with Dokany 1.3.1.1000
 
 
 Use
