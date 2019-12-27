@@ -170,7 +170,7 @@ Then do Build -> Build Solution, or just press the F7 key.
 
 You may get an compilation error in atlenc.h.  This file is from Microsoft.  They may have fixed the problem by the time you read this.
 
-If you gete a compilation error on line 726 of atlenc.h, then you need to start a text editor as administrator and edit the file.
+If you get a compilation error on line 726 of atlenc.h, then you need to start a text editor as administrator and edit the file.
 
 change on line 726
 
@@ -182,9 +182,7 @@ char* tmp = '\0';
 to
 
 ```
-
 char* tmp = nullptr;
-
 
 ```
 
