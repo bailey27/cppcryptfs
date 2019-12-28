@@ -91,6 +91,7 @@ CryptConfig::CryptConfig()
 
 	m_pGcmContentKey = NULL;
 
+	m_fs_feature_disable_mask = 0;
 }
 
 
@@ -215,7 +216,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 		rapidjson::Value& v = d["EncryptedKey"];
 
 		if (!base64_decode(v.GetString(), m_encrypted_key, false, true)) {
-			mes = L"failed to base64 decode key";
+			mes = L"failed to base64 decode key in config file";
 			throw (-1);
 		}
 
@@ -228,7 +229,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 
 
 		if (!base64_decode(scryptobject["Salt"].GetString(), m_encrypted_key_salt, false, true)) {
-			mes = L"failed to base64 decode Scrypt Salt";
+			mes = L"failed to base64 decode Scrypt Salt in config file";
 			throw (-1);
 		}
 
@@ -238,7 +239,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 
 		for (i = 0; i < sizeof(sstuff) / sizeof(sstuff[0]); i++) {
 			if (scryptobject[sstuff[i]].IsNull() || !scryptobject[sstuff[i]].IsInt()) {
-				mes = L"invalid Scrypt object";
+				mes = L"invalid Scrypt object in config file";
 				throw (-1);
 			}
 		}
@@ -249,19 +250,19 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 		int keyLen = scryptobject["KeyLen"].GetInt();
 
 		if (keyLen != 32) {
-			mes = L"invalid KeyLen";
+			mes = L"invalid KeyLen in config file";
 			throw(-1);
 		}
 
 		m_pKeyBuf = new LockZeroBuffer<unsigned char>(keyLen);
 
 		if (!m_pKeyBuf->IsLocked()) {
-			mes = L"failed to lock key buffer";
+			mes = L"failed to lock key buffer while reading config file";
 			throw(-1);
 		}
 
 		if (d["Version"].IsNull() || !d["Version"].IsInt()) {
-			mes = L"invalid Version";
+			mes = L"invalid Version in config file";
 			throw (-1);
 		}
 
@@ -277,6 +278,17 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 			const WCHAR *vname = utf8_to_unicode(&utf8name[0], storage);
 			if (vname)
 				m_VolumeName = vname;
+		}
+
+		if (d.HasMember("FsFeatureDisableMask") && !d["FsFeatureDisableMask"].IsNull() && d["FsFeatureDisableMask"].IsString()) {
+			rapidjson::Value& fs_val = d["FsFeatureDisableMask"];
+			string fs_str = fs_val.GetString();
+			try {
+				m_fs_feature_disable_mask = stoul(fs_str, nullptr, 16);
+			} catch (std::invalid_argument&) {
+				mes = L"invalid FsFeatureDisableMask in config file";
+				throw(-1);
+			}
 		}
 
 		if (d.HasMember("FeatureFlags") && !d["FeatureFlags"].IsNull() && d["FeatureFlags"].IsArray()) {
@@ -304,10 +316,10 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 					} else {
 						wstring wflag;
 						if (utf8_to_unicode(itr->GetString(), wflag)) {
-							mes = L"unkown feature flag: ";
+							mes = L"unkown feature flag in config file: ";
 							mes += wflag;
 						} else {
-							mes = L"unable to convert unkown flag to unicode";
+							mes = L"unable to convert unkown flag in config file to unicode";
 						}
 						throw(-1);
 					}
@@ -645,7 +657,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 
 
 
-bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, wstring& error_mes)
+bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, bool disablestreams, wstring& error_mes)
 {
 
 	LockZeroBuffer<char> utf8pass(256);
@@ -692,6 +704,8 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 		m_reverse = true;
 
 	try {
+
+		string fs_feature_disable_mask = disablestreams ? "40000" : "00000";
 
 		wstring config_path;
 
@@ -873,7 +887,8 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 		fprintf(fl, "\t\t\"KeyLen\": %d\n", GetMasterKeyLength());
 		fprintf(fl, "\t},\n");
 		fprintf(fl, "\t\"Version\": %d,\n", m_Version);
-		fprintf(fl, "\t\"VolumeName\": \"%s\",\n", &volume_name_utf8[0]);
+		fprintf(fl, "\t\"VolumeName\": \"%s\",\n", volume_name_utf8.c_str());
+		fprintf(fl, "\t\"FsFeatureDisableMask\": \"%s\",\n", fs_feature_disable_mask.c_str());
 		fprintf(fl, "\t\"FeatureFlags\": [\n");
 		if (m_EMENames)
 			fprintf(fl, "\t\t\"EMENames\",\n");

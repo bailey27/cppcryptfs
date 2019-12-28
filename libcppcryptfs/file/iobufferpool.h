@@ -31,6 +31,7 @@ THE SOFTWARE.
 
 #include <windows.h>
 #include <list>
+#include <stdexcept>
 
 using namespace std;
 

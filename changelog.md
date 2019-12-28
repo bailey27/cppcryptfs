@@ -2,6 +2,20 @@
 
 Changelog
 ------------
+v1.4.0.29, Dec 26 2019
+* Compile with Microsoft Visual Studio 2019 (instead of 2017)
+  Build with Dokany 1.3.1.1000
+
+v1.4.0.28, Oct 26 2019
+* Return (NTSTATUS version of) ERROR_INVALID_NAME instead of
+  (NTSTATUS version of) ERROR_FILE_NOT_FOUND when asked
+  to open files with wildcard chars (* or ?) in them to fix
+  globbing issue with Windows CMD.exe.
+
+v1.4.0.27, Aug 11 2019
+* Build with Dokany 1.3.0.1000
+* Add option to disable named streams when creating filesystem.
+
 v1.4.0.26, Jul 7 2019
 * Add setting to enable auto-delete of desktop.ini files (issue #62)
 * Show Dokany version on about tab

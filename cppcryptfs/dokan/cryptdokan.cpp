@@ -347,6 +347,15 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
     return ToNtStatus(ERROR_FILE_NOT_FOUND);
   }
 
+  // Windows sometimes gives us wildcarded filenames and expects us 
+  // to return ERROR_INVALID_NAME 
+  if (wcschr(FileName, L'*') || wcschr(FileName, L'?')) {
+    error = ERROR_INVALID_NAME;
+    SetLastError(error);
+    DbgPrint(L"\terror code = %d\n\n", error);
+    return ToNtStatus(error);
+  }
+
   // When filePath is a directory, needs to change the flag so that the file can
   // be opened.
   fileAttr = is_virtual ? FILE_ATTRIBUTE_NORMAL : GetFileAttributes(filePath);
@@ -1653,6 +1662,8 @@ static NTSTATUS DOKAN_CALLBACK CryptGetVolumeInformation(
 #endif
                     );
 
+  defFlags &= ~config->m_fs_feature_disable_mask;
+
   if (FileSystemFlags)
     *FileSystemFlags = defFlags & (bGotVI ? fs_flags : 0xffffffff);
 
@@ -2465,8 +2476,8 @@ bool get_dokany_version(wstring& ver, vector<int>& v)
 bool check_dokany_version(wstring& mes)
 {
 	const int required_major = 1;
-	const int required_middle = 2;
-	const wstring required_ver = L"1.2.x.x";
+	const int required_middle = 3;
+	const wstring required_ver = L"1.3.x.x";
 	
 	mes = L"";
 

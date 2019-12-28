@@ -89,13 +89,15 @@ public:
 	bool decrypt_key(LPCTSTR password);
 
 	bool create(const WCHAR *path, const WCHAR *specified_config_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, 
-					bool siv, bool reverse, const WCHAR *volume_name, wstring& error_mes);
+					bool siv, bool reverse, const WCHAR *volume_name, bool disablestreams, wstring& error_mes);
 
 	bool check_config(wstring& mes);
 
 	bool write_volume_name();
 
 	bool init_serial(CryptContext *con);
+
+	DWORD m_fs_feature_disable_mask;
 
 	WCHAR get_base_drive_letter();
 

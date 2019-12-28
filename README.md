@@ -8,7 +8,7 @@ cppcryptfs is based on the design of [gocryptfs](https://github.com/rfjakob/gocr
 
 cppcryptfs is an implementation of the gocryptfs filesystem in C++ for Windows.  cppcryptfs is compatible with gocryptfs.  Filesystems created with one can generally be mounted (and synced) with the other.   Please see the statement on compatibility near the end of this document.
 
-cppcrypts provides on-the-fly, at-rest and in-the-cloud encryption of files and file names in a virtual filesystem.  It uses the the [Dokany](https://github.com/dokan-dev/dokany) driver and library to provide a virtual fileystem in user mode under Windows.
+cppcrypts provides on-the-fly, at-rest and in-the-cloud encryption of files and file names in a virtual filesystem.  It uses the [Dokany](https://github.com/dokan-dev/dokany) driver and library to provide a virtual fileystem in user mode under Windows.
 
 
 You can use cppcryptfs to create an encrypted filesystem in a folder.  The encrypted filesystem is protected with a password that you choose.  
@@ -33,7 +33,7 @@ Another advantage of per-file encryption over container-based encryption is that
 Current Status
 --------------
 
-The developer has been using cppcryptfs in forward (normal) mode for over two years and hasn't lost
+The developer has been using cppcryptfs in forward (normal) mode for over three years and hasn't lost
 any data.  At least one other person is using it.
 
 Reverse mode has undergone only limited testing by the developer.
@@ -46,7 +46,7 @@ It is always prudent to keep backups of your data in case something goes wrong.
 Testing
 -------  
 
-cppcryptfs passes 500/500 tests in [winfstest](https://github.com/bailey27/winfstest) when run as administrator.  Without administrator privileges, cppcryptfs passes 494/500 tests.  This winfstest is forked from the version
+cppcryptfs passes 506/506 tests in [winfstest](https://github.com/bailey27/winfstest) when run as administrator.  Without administrator privileges, cppcryptfs passes 500/506 tests.  This winfstest is forked from the version
 used by the Dokany project.  The Dokany team added additional tests.
 
 The tests that cppcryptfs fails when run without administrator privileges have to do with operations on DACLs (Discretionary Access Control Lists).  cppcryptfs must be run as administrator for these operations to work.  Running without administrator privileges doesn't seem to affect the normal usage of cppcryptfs.
@@ -55,7 +55,7 @@ The tests that cppcryptfs fails when run without administrator privileges have t
 Build Requirements
 -----
 	
-	Microsoft Visual Studio 2017 Community Edition, perl, nasm, and git (all free)
+	Microsoft Visual Studio 2019 Community Edition, perl, nasm, and git (all free)
 	OpenSSL - https://github.com/openssl/openssl (static build required)
 	RapidJSON - https://github.com/miloyip/rapidjson (for parsing gocryptfs.conf)
 	Dokany - https://github.com/dokan-dev/dokany
@@ -68,7 +68,7 @@ Build Requirements
 
 There are detailed build instructions in [INSTALL.md](INSTALL.md).
 
-cppcryptfs is currently up-to-date with Dokany 1.2.2.1000
+cppcryptfs is currently up-to-date with Dokany 1.3.1.1000
 
 
 Use
@@ -119,6 +119,8 @@ If you choose to give the volume a label, then the label will be encrypted in go
 The volume label is AES256-GCM encrypted using the master key and a 128-bit random initialization vector and 8 zero bytes of auth data.  Then it is base64 encoded along with the initilization vector and saved in gocryptfs.conf.
 
 You can right click on the mounted drive letter in File Explorer, select "Properties", and change the volume label.  However, doing so will cause cppcryptfs to re-write gocryptfs.conf when the drive is dismounted. This does entail some risk to your gocryptfs.conf.  Again, it's a good a idea to back up your gocryptfs.conf file somewhere.  
+
+The "Disable named streams" option may be needed if the underlying filesystem (e.g. a Linux filesystem shared via Samba) does not support named streams.  cppcryptfs normally automatically detects (at mount time) if the underlying filesystem supports named streams. However, in some configurations, the underlying filesystem is reporting that it supports named streams when it actually does not.  The developer has tested with Ubuntu 16.04 Samba and does not have this problem.  This feature was added to help a user who was having this problem with a different Linux version.  Please see https://github.com/bailey27/cppcryptfs/issues/63 if you are having issues with Samba and would like to retro-actively disable named streams after creating your filesystem.
 
 Then go to the "Mount" tab and select a drive letter and select the folder you
 just created the filesystem in.  Then enter the password and click on the "Mount" button.
