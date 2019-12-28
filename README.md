@@ -33,7 +33,7 @@ Another advantage of per-file encryption over container-based encryption is that
 Current Status
 --------------
 
-The developer has been using cppcryptfs in forward (normal) mode for over two years and hasn't lost
+The developer has been using cppcryptfs in forward (normal) mode for over three years and hasn't lost
 any data.  At least one other person is using it.
 
 Reverse mode has undergone only limited testing by the developer.
