@@ -49,7 +49,7 @@ public:
 	enum { IDD = IDD_CRYPTPROPERTYPAGE };
 #endif
 	virtual void DefaultAction();
-	virtual void ProcessCommandLine(DWORD pid, LPCTSTR szCmd, BOOL bOnStartup = FALSE);
+	virtual void ProcessCommandLine(LPCTSTR szCmd, BOOL bOnStartup = FALSE, HANDLE hPipe = INVALID_HANDLE_VALUE);
 	virtual void DeviceChange();
 	virtual void OnExit();
 

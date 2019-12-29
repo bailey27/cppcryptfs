@@ -45,7 +45,7 @@ using namespace std;
 
 #define CPPCRYPTFS_COPYDATA_CMDLINE_OLD 0x574cd9d1
 
-#define CPPCRYPTFS_COPYDATA_CMDLINE 0x574cd9d2
+#define CPPCRYPTFS_COPYDATA_PIPE 0x574cd9d2
 
 #define CPPCRYPTFS_COPYDATA_CMDLINE_MAXLEN (64*1024) // keep small because of VirtualLock()
 

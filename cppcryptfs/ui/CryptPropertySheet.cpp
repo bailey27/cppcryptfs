@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include "stdafx.h"
 #include <Dbt.h>
 #include "cppcryptfs.h"
+#include "namedpipe/server.h"
 #include "CryptPropertySheet.h"
 #include "CryptPropertyPage.h"
 #include "dokan/cryptdokan.h"
@@ -230,7 +231,7 @@ INT_PTR CCryptPropertySheet::DoModal()
 
 static bool ReadCommandLineFromPipe(HANDLE hPipe, wstring& cmdLine)
 {
-
+	return ReadFromNamedPipe(hPipe, cmdLine) > 0;
 }
 
 BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
@@ -238,35 +239,35 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 	// TODO: Add your message handler code here and/or call default
 
 
-	if (pCopyDataStruct && pCopyDataStruct->dwData == CPPCRYPTFS_COPYDATA_CMDLINE) && 
-		pCopyDataStruct->cbData == sizeof(CopyDataCmdLine)) {
+	if (pCopyDataStruct && pCopyDataStruct->dwData == CPPCRYPTFS_COPYDATA_PIPE && 
+		pCopyDataStruct->cbData == sizeof(HANDLE)) {
 
-		HANDLE hPipe = ((CopyDataCmdLine*)pCopyDataStruct->lpData)->hPipe;
+		HANDLE hPipe = *(HANDLE*)pCopyDataStruct->lpData;
 
 		DWORD client_process_id = 0;
 
 		if (!GetNamedPipeClientProcessId(hPipe, &client_process_id)) {
 			return FALSE;
 		}
-
+#if 0
 		if (!VerifyMessageSender(client_process_id)) {
 			return FALSE;
 		}
-
+#endif
 		CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(m_nMountPageIndex);
 
 		if (page) {
 			
 			wstring cmdLine;
 			if (ReadCommandLineFromPipe(hPipe, cmdLine)) {
-				page->ProcessCommandLine(consolePid, cmdLine.c_str());
+				page->ProcessCommandLine(cmdLine.c_str(), FALSE, hPipe);
 				return TRUE;
 			} else {
-				ConsoleErrMes(L"unable to read command line", consolePid);
+				ConsoleErrMesPipe(L"unable to read command line", hPipe);
 				return FALSE;
 			}
 		} else {
-			ConsoleErrMes(L"unable to get mount page", consolePid);
+			ConsoleErrMesPipe(L"unable to get mount page", hPipe);
 			return FALSE;
 		}
 	} else {

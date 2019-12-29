@@ -538,12 +538,23 @@ CloseConsole()
 }
 
 void 
-ConsoleErrMes(LPCWSTR err, DWORD pid)
+ConsoleErrMesPipe(LPCWSTR err, HANDLE hPipe)
 {
-	if (OpenConsole(pid)) {
-		fwprintf(stderr, L"cppcryptfs: %s\n", err);
-		CloseConsole();
-	}
+	// Send a message to the pipe client. 
+
+	wstring mes = wstring(L"cppcryptfs: ") + err;
+
+	auto cbToWrite = (mes.length() + 1) * sizeof(WCHAR);
+
+	DWORD cbWritten = 0;
+	BOOL fSuccess = WriteFile(
+		hPipe,                  // pipe handle 
+		mes.c_str(),                   // message 
+		static_cast<DWORD>(cbToWrite),              // message length 
+		&cbWritten,             // bytes written 
+		NULL);                  // not overlapped 
+
+	CloseHandle(hPipe);
 }
 
 

@@ -47,6 +47,8 @@ THE SOFTWARE.
 #include "ui/savedpasswords.h"
 #include "ui/FsInfoDialog.h"
 #include "dokan/MountPointManager.h"
+#include "namedpipe/server.h"
+
 #include <algorithm>
 
 // CMountPropertyPage dialog
@@ -599,7 +601,7 @@ BOOL CMountPropertyPage::OnInitDialog()
 	if (!m_password.ArePasswordBuffersLocked())
 		MessageBox(L"unable to lock password buffer", L"cppcryptfs", MB_OK | MB_ICONERROR);
 
-	ProcessCommandLine(0, GetCommandLine(), TRUE);
+	ProcessCommandLine(GetCommandLine(), TRUE);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
@@ -1108,29 +1110,82 @@ void CMountPropertyPage::OnCbnSelchangePath()
 extern wchar_t *optarg;
 extern int optind, opterr, optopt;
 
-static void usage()
+static int print_message(HANDLE hPipe, bool have_console, int type, const wchar_t* fmt, ...)
+{
+	/*Declare a va_list type variable*/
+	va_list myargs;
+
+	/* Initialise the va_list variable with the ... after fmt */
+
+	va_start(myargs, fmt);
+
+	/* Forward the '...' to vprintf */
+
+	const size_t max_size = 1 * 1024 * 1024;
+	wchar_t* buf = new wchar_t[max_size];
+	auto ret = vswprintf_s(buf, max_size - 1, fmt, myargs);
+
+	/* Clean up the va_list */
+	va_end(myargs);
+
+	if (ret < 1) {
+		delete[] buf;
+		return ret;
+	}
+
+	bool have_pipe = hPipe != NULL && hPipe != INVALID_HANDLE_VALUE;
+
+	wstring str;
+
+	if (have_pipe) {
+		if (type == CMD_PIPE_SUCCESS) {
+			str = CMD_PIPE_SUCCESS_STR;
+		} else {
+			str = CMD_PIPE_ERROR_STR;
+		}
+	}
+
+	str += buf;
+
+	if (have_pipe) {
+		str += buf;
+		WriteToNamedPipe(hPipe, str);
+	} else if (have_console) {
+		if (type == CMD_PIPE_SUCCESS) {
+			fwprintf(stdout, L"%s\n", str.c_str());
+		} else {
+			fwprintf(stderr, L"%s\n", str.c_str());
+		}
+	} else {
+		::MessageBox(NULL, str.c_str(), L"cppcryptfs", MB_OK | (type == CMD_PIPE_SUCCESS ? 0 : MB_ICONERROR));
+	}
+
+	return ret;
+}
+
+static void usage(HANDLE hPipe, bool have_console)
 {
 
-	fprintf(stderr, "Usage: cppcryptfs [OPTIONS]\n");
-	fprintf(stderr, "\nMounting:\n");
-	fprintf(stderr, "  -m, --mount=PATH\tmount filesystem located at PATH\n");
-	fprintf(stderr, "  -d, --drive=D\t\tmount to drive letter D or empty dir DIR\n");
-	fprintf(stderr, "  -p, --password=PASS\tuse password PASS\n");
-	fprintf(stderr, "  -P, --saved-password\tuse saved password\n");
-	fprintf(stderr, "  -r, --readonly\tmount read-only\n");
-	fprintf(stderr, "  -c, --config=PATH\tpath to config file\n");
-	fprintf(stderr, "  -s, --reverse\t\tmount reverse filesystem\n");
-	fprintf(stderr, "\nUnmounting:\n");
-	fprintf(stderr, "  -u, --unmount=D\tunmount drive letter D or dir DIR\n");
-	fprintf(stderr, "  -u, --unmount=all\tunmount all drives\n");
-	fprintf(stderr, "\nMisc:\n");
-	fprintf(stderr, "  -t, --tray\t\thide in system tray\n");
-	fprintf(stderr, "  -x, --exit\t\texit if no drives mounted\n");
-	fprintf(stderr, "  -l, --list\t\tlist available and mounted drive letters (with paths)\n");
-	fprintf(stderr, "  -ld:\\p, --list=d:\\p\tlist encrypted and plaintext filenames\n");
-	fprintf(stderr, "  -i, --info=D\t\tshow information about mounted filesystem\n");
-	fprintf(stderr, "  -v, --version\t\tprint version\n");
-	fprintf(stderr, "  -h, --help\t\tdisplay this help message\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"Usage: cppcryptfs [OPTIONS]\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"\nMounting:\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -m, --mount=PATH\tmount filesystem located at PATH\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -d, --drive=D\t\tmount to drive letter D or empty dir DIR\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -p, --password=PASS\tuse password PASS\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -P, --saved-password\tuse saved password\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -r, --readonly\tmount read-only\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -c, --config=PATH\tpath to config file\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -s, --reverse\t\tmount reverse filesystem\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"\nUnmounting:\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -u, --unmount=D\tunmount drive letter D or dir DIR\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -u, --unmount=all\tunmount all drives\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"\nMisc:\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -t, --tray\t\thide in system tray\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -x, --exit\t\texit if no drives mounted\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -l, --list\t\tlist available and mounted drive letters (with paths)\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -ld:\\p, --list=d:\\p\tlist encrypted and plaintext filenames\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -i, --info=D\t\tshow information about mounted filesystem\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -v, --version\t\tprint version\n");
+	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -h, --help\t\tdisplay this help message\n");
 	
 }
 
@@ -1140,7 +1195,9 @@ static bool compair_find_datas(const FindDataPair& p1, const FindDataPair& p2)
 	return lstrcmpi(p1.fdata.cFileName, p2.fdata.cFileName) < 0;
 }
 
-void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnStartup)
+
+
+void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HANDLE hPipe)
 {
 
 	optarg = NULL;
@@ -1162,8 +1219,13 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			LocalFree(argv);
 		return;
 	}
+	bool have_pipe = hPipe != NULL && hPipe != INVALID_HANDLE_VALUE;
+	const auto printMessages = bOnStartup || have_pipe; // OpenConsole(bOnStartup ? 0 : pid);
 
-	const auto haveConsole = OpenConsole(bOnStartup ? 0 : pid);
+	bool have_console = false;
+	
+	if (!have_pipe)
+		have_console = OpenConsole(0);
 
 	CString path;
 	CString mountPoint;
@@ -1295,21 +1357,21 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 	LocalFree(argv);
 
 	if (errMes.GetLength() > 0) {
-		if (haveConsole) fwprintf(stderr, L"cppcryptfs: %s\n", (LPCWSTR)errMes);
+		if (printMessages) print_message(hPipe, have_console, CMD_PIPE_ERROR, L"cppcryptfs: %s\n", (LPCWSTR)errMes);
 	} else if (invalid_opt) {
-		if (haveConsole) fwprintf(stderr, L"Try 'cppcryptfs --help' for more information.\n");
+		if (printMessages) print_message(hPipe, have_console, CMD_PIPE_ERROR, L"Try 'cppcryptfs --help' for more information.\n");
 	} else if (do_version || do_help) {
 		if (do_version) {
 			wstring prod, ver, copyright;
 			GetProductVersionInfo(prod, ver, copyright);
-			if (haveConsole) fwprintf(stderr, L"%s %s %s\n", prod.c_str(), ver.c_str(), copyright.c_str());
-			if (do_help && haveConsole)
-				fwprintf(stderr, L"\n");
+			if (printMessages) print_message(hPipe, have_console, CMD_PIPE_ERROR, L"%s %s %s\n", prod.c_str(), ver.c_str(), copyright.c_str());
+			if (do_help && printMessages)
+				print_message(hPipe, have_console, CMD_PIPE_ERROR, L"\n");
 		}
-		if (do_help && haveConsole)
-			usage();
+		if (do_help && printMessages)
+			usage(hPipe, have_console);
 	} else if (do_info) {
-		if (haveConsole) PrintInfo(mountPoint);
+		if (printMessages) PrintInfo(mountPoint);
 	} else if (do_list) {
 		CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS); 
 		if (pList) {
@@ -1329,7 +1391,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 					} else {
 						findDatas.sort(compair_find_datas);
 						for (auto &it : findDatas) {
-							if (haveConsole) fwprintf(stdout, L"%s => %s\n", it.fdata.cFileName, it.fdata_orig.cFileName);
+							if (printMessages) print_message(hPipe, have_console, CMD_PIPE_SUCCESS, L"%s => %s\n", it.fdata.cFileName, it.fdata_orig.cFileName);
 						}
 					}
 				}  
@@ -1337,7 +1399,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 					LPCWSTR str = errMes;
 					if (str[wcslen(str) - 1] != '\n')
 						errMes += L"\n";
-					if (haveConsole) fwprintf(stderr, L"cppcryptfs: %s", (LPCWSTR)errMes);
+					if (printMessages) print_message(hPipe, have_console, CMD_PIPE_ERROR, L"cppcryptfs: %s", (LPCWSTR)errMes);
 				}
 			} else {
 				int nItems = pList->GetItemCount();
@@ -1346,13 +1408,13 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 				for (i = 0; i < nItems; i++) {
 					cmp = pList->GetItemText(i, 0);
 					if (cmp.GetLength() > 0) {
-						if (haveConsole) fwprintf(stdout, L"%s", (LPCWSTR)cmp);
+						if (printMessages) print_message(hPipe, have_console, CMD_PIPE_SUCCESS, L"%s", (LPCWSTR)cmp);
 						
 						cpath = pList->GetItemText(i, 1);
 						if (cpath.GetLength() > 0)
-							if (haveConsole) fwprintf(stdout, L" %s", (LPCWSTR)cpath);
+							if (printMessages) print_message(hPipe, have_console, CMD_PIPE_SUCCESS, L" %s", (LPCWSTR)cpath);
 						
-						if (haveConsole) fwprintf(stdout, L"\n");
+						if (printMessages) print_message(hPipe, have_console, CMD_PIPE_SUCCESS, L"\n");
 					}
 				}
 			}
@@ -1384,7 +1446,7 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 			LPCWSTR str = errMes;
 			if (str[wcslen(str) - 1] != '\n')
 				errMes += L"\n";
-			if (haveConsole) fwprintf(stderr, L"cppcryptfs: %s", (LPCWSTR)errMes);
+			if (printMessages) print_message(hPipe, have_console, CMD_PIPE_ERROR, L"cppcryptfs: %s", (LPCWSTR)errMes);
 		}
 	}
 
@@ -1401,7 +1463,11 @@ void CMountPropertyPage::ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnSt
 		}
 	}
 
-	if (haveConsole)
+	if (have_pipe) {
+		CloseHandle(hPipe);
+	}
+
+	if (have_console)
 		CloseConsole();
 
 }

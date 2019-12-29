@@ -67,7 +67,7 @@ public:
 public:
 	virtual void DefaultAction();
 
-	virtual void ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnStartup = FALSE);
+	virtual void ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup = FALSE, HANDLE hPipe = INVALID_HANDLE_VALUE) override;
 
 	virtual void DeviceChange() override;
 

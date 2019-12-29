@@ -59,7 +59,7 @@ void CCryptPropertyPage::DefaultAction()
 {
 }
 
-void CCryptPropertyPage::ProcessCommandLine(DWORD pid, LPCTSTR szCmd, BOOL bOnStartup)
+void CCryptPropertyPage::ProcessCommandLine(LPCTSTR szCmd, BOOL bOnStartup, HANDLE hPipe)
 {
 }
 

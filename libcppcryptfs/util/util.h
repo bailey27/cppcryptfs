@@ -91,7 +91,7 @@ bool OpenConsole(DWORD pid = 0);
 
 void CloseConsole();
 
-void ConsoleErrMes(LPCWSTR err, DWORD pid = 0);
+void ConsoleErrMesPipe(LPCWSTR err, HANDLE hPipe);
 
 bool
 GetProductVersionInfo(wstring& strProductName, wstring& strProductVersion,

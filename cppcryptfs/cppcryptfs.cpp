@@ -119,8 +119,7 @@ BOOL CcppcryptfsApp::InitInstance()
 
 		if (hWnd) {
 			if (have_args()) {
-				SendArgsToRunningInstance(GetCommandLine());
-				::Sleep(60*1000);
+				::MessageBox(NULL, L"use cppcryptfsctl.exe to send commands to a running cppcryptfs", L"cppcryptfs", MB_OK | MB_ICONERROR);
 			} else { // if no args, then restore window of running instance
 				ShowWindow(hWnd, SW_SHOWNORMAL);
 			}
@@ -297,33 +296,30 @@ void CcppcryptfsApp::SendCmdArgsToSelf(HANDLE hPipe)
 	static_assert(sizeof(WCHAR) == sizeof(wchar_t), "sizeof(WCHAR) != sizeof(wchar_t).");
 	COPYDATASTRUCT cd;
 	memset(&cd, 0, sizeof(cd));
-	cd.dwData = CPPCRYPTFS_COPYDATA_CMDLINE;
-	string encrypted_cmd;
-	if (!encrypt_string_gcm(wstring(args), m_wm_copydata_key, encrypted_cmd))
-		return;
-	size_t cmdLineLen = encrypted_cmd.size();
-	size_t dataLen = sizeof(CopyDataCmdLine);
+	cd.dwData = CPPCRYPTFS_COPYDATA_PIPE;
+
+	std::vector<HANDLE> pipe_v;
+
+	pipe_v.push_back(hPipe);
 	
-	cd.cbData = (DWORD)dataLen;
-	vector<BYTE> data(dataLen);
-	CopyDataCmdLine *pcd = reinterpret_cast<CopyDataCmdLine*>(&data[0]);
-	pcd->hPipe = hPipe;
-	cd.lpData = (PVOID)pcd;
+	cd.cbData =static_cast<DWORD>(sizeof(hPipe));
+	
+	cd.lpData = static_cast<PVOID>(&pipe_v[0]);
 	
 	SetLastError(0);
 	SendMessageW(hWnd, WM_COPYDATA, NULL, (LPARAM)&cd);
 	DWORD dwErr = GetLastError();
 	if (dwErr) {
 		if (dwErr == ERROR_ACCESS_DENIED) {
-			ConsoleErrMes(L"SendMessage() returned error \"access denied\".\n\nPerhaps there is"
+			ConsoleErrMesPipe(L"SendMessage() returned error \"access denied\".\n\nPerhaps there is"
 				" already an instance of cppcryptfs running with administrator\nprivileges, but"
 				" you invoked this instance of cppcryptfs from a command prompt\nthat is not running"
 				" with administrator privileges.\n\nIf this is the case, then you should start a"
-				" CMD.exe window using\n\"Run as administrator\" and invoke cppcryptfs from within it.");
+				" CMD.exe window using\n\"Run as administrator\" and invoke cppcryptfs from within it.", hPipe);
 		} else {
 			WCHAR buf[80];
 			_snwprintf_s(buf, _TRUNCATE, L"SendMessage() returned error code %u", dwErr);
-			ConsoleErrMes(buf);
+			ConsoleErrMesPipe(buf, hPipe);
 		}
 	}
 				
