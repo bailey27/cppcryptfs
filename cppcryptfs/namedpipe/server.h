@@ -8,6 +8,7 @@
 
 #define CMD_PIPE_SUCCESS 0
 #define CMD_PIPE_ERROR   1
+#define CMD_PIPE_RESPONSE_LENGTH 7
 #define CMD_PIPE_SUCCESS_STR L"SUCCESS"
 #define CMD_PIPE_ERROR_STR   L"ERROR  " // pad to 7 characters
  

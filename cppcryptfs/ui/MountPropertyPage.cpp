@@ -1110,6 +1110,8 @@ void CMountPropertyPage::OnCbnSelchangePath()
 extern wchar_t *optarg;
 extern int optind, opterr, optopt;
 
+static wstring pipe_msg;
+
 static int print_message(HANDLE hPipe, bool have_console, int type, const wchar_t* fmt, ...)
 {
 	/*Declare a va_list type variable*/
@@ -1138,18 +1140,22 @@ static int print_message(HANDLE hPipe, bool have_console, int type, const wchar_
 	wstring str;
 
 	if (have_pipe) {
-		if (type == CMD_PIPE_SUCCESS) {
-			str = CMD_PIPE_SUCCESS_STR;
-		} else {
-			str = CMD_PIPE_ERROR_STR;
+		if (pipe_msg.length() == 0) {
+			if (type == CMD_PIPE_SUCCESS) {
+				str = CMD_PIPE_SUCCESS_STR;
+			} else {
+				str = CMD_PIPE_ERROR_STR;
+			}
 		}
 	}
 
 	str += buf;
 
 	if (have_pipe) {
-		str += buf;
-		WriteToNamedPipe(hPipe, str);
+	
+		pipe_msg += str;
+		
+		//WriteToNamedPipe(hPipe, str);
 	} else if (have_console) {
 		if (type == CMD_PIPE_SUCCESS) {
 			fwprintf(stdout, L"%s\n", str.c_str());
@@ -1204,6 +1210,8 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 	optind = 1;
 	opterr = 1;
 	optopt = 0;
+
+	pipe_msg = L"";
 
 	CString errMes;
 
@@ -1464,6 +1472,10 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 	}
 
 	if (have_pipe) {
+		if (pipe_msg.length() > 0)
+			WriteToNamedPipe(hPipe, pipe_msg);
+		FlushFileBuffers(hPipe);
+		DisconnectNamedPipe(hPipe);
 		CloseHandle(hPipe);
 	}
 
