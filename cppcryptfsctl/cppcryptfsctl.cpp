@@ -5,11 +5,17 @@
 #include <iostream>
 #include <string>
 #include "../libipc/client.h"
+#include "../libipc/certutil.h"
 
 using namespace std;
 
 int wmain(int argc, const wchar_t *argv[])
 {
+#if 0
+    bool bResult = ValidateMessageSender(12956);
+
+    return 0;
+#endif
     if (argc < 2)
         return 0;
 

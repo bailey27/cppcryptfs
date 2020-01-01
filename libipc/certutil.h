@@ -28,10 +28,10 @@ THE SOFTWARE.
 
 #pragma once
 
-#include ""
+#include "pch.h"
 
 bool VerifyEmbeddedSignature(LPCWSTR pwszSourceFile);
 
-bool GetExePathFromProcessId(UINT processId, wstring& str);
+bool GetExePathFromProcessId(UINT processId, std::wstring& str);
 
 bool ValidateMessageSender(DWORD processId);

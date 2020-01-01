@@ -222,7 +222,7 @@ bool GetExePathFromProcessId(UINT processId, wstring& exePath)
 	HANDLE processHandle = NULL;
 	TCHAR filename[MAX_PATH];
 
-	processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, 1234);
+	processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
 	if (processHandle != NULL) {
 		if (GetModuleFileNameEx(processHandle, NULL, filename, MAX_PATH) == 0) {
 			return false;
