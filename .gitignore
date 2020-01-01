@@ -14,3 +14,8 @@ Report*.vspx
 Report*.diagsession
 enc_temp_folder/
 cppcryptfs/fileutil.cpp.security_attributes_on_diriv
+cppcryptfs/namedpipe/
+cppcryptfsctl/cppcryptfsctl.vcxproj.filters
+cppcryptfsctl/cppcryptfsctl.vcxproj.user
+libipc/libipc.vcxproj.filters
+libipc/libipc.vcxproj.user

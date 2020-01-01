@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "uiutil.h"
 
-#include <Psapi.h>
 #include <list>
 
 #include "ui/MountMangerDialog.h"
@@ -68,31 +67,3 @@ bool NeverSaveHistory()
 	return bNeverSaveHistory;
 }
 
-bool GetExePathFromProcessId(UINT processId, wstring & exePath)
-{
-	HANDLE processHandle = NULL;
-	TCHAR filename[MAX_PATH];
-
-	processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, 1234);
-	if (processHandle != NULL) {
-		if (GetModuleFileNameEx(processHandle, NULL, filename, MAX_PATH) == 0) {
-			return false;
-		} else {
-			exePath = filename;
-		}
-		CloseHandle(processHandle);
-		return true;
-	} else {
-		return false;
-	}
-}
-
-bool ValidateMessageSender(DWORD pid)
-{
-	wstring exePath;
-
-	if (!GetExePathFromProcessId(pid, exePath))
-		return false;
-
-	return VerifyEmbeddedSignature(exePath.c_str());
-}

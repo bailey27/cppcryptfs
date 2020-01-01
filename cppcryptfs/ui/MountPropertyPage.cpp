@@ -47,7 +47,7 @@ THE SOFTWARE.
 #include "ui/savedpasswords.h"
 #include "ui/FsInfoDialog.h"
 #include "dokan/MountPointManager.h"
-#include "namedpipe/server.h"
+#include "../libipc/server.h"
 
 #include <algorithm>
 
@@ -1110,10 +1110,37 @@ void CMountPropertyPage::OnCbnSelchangePath()
 extern wchar_t *optarg;
 extern int optind, opterr, optopt;
 
-static wstring pipe_msg;
-
-static int print_message(HANDLE hPipe, bool have_console, int type, const wchar_t* fmt, ...)
+OutputHandler::OutputHandler(HANDLE hPipe) 
 {
+	m_hPipe = hPipe;
+	if (!have_pipe()) {
+		m_have_console = OpenConsole(0);
+	} else {
+		m_have_console = false;
+	}
+}
+
+OutputHandler::~OutputHandler()
+{
+	if (have_pipe()) {
+		if (m_pipe_str.length() > 0)
+			WriteToNamedPipe(m_hPipe, m_pipe_str);
+		else
+			WriteToNamedPipe(m_hPipe, wstring(CMD_PIPE_SUCCESS_STR));
+		FlushFileBuffers(m_hPipe);
+		DisconnectNamedPipe(m_hPipe);
+		CloseHandle(m_hPipe);
+	}
+
+	if (m_have_console)
+		CloseConsole();
+}
+int OutputHandler::print(int type, const wchar_t* fmt, ...) 
+{
+	if (m_buf.size() < 1) {
+		m_buf.resize(1024 * 1024);
+	}
+
 	/*Declare a va_list type variable*/
 	va_list myargs;
 
@@ -1124,23 +1151,20 @@ static int print_message(HANDLE hPipe, bool have_console, int type, const wchar_
 	/* Forward the '...' to vprintf */
 
 	const size_t max_size = 1 * 1024 * 1024;
-	wchar_t* buf = new wchar_t[max_size];
-	auto ret = vswprintf_s(buf, max_size - 1, fmt, myargs);
+		
+	auto ret = vswprintf_s(&m_buf[0], m_buf.size() - 1, fmt, myargs);
 
 	/* Clean up the va_list */
 	va_end(myargs);
 
 	if (ret < 1) {
-		delete[] buf;
 		return ret;
 	}
 
-	bool have_pipe = hPipe != NULL && hPipe != INVALID_HANDLE_VALUE;
-
 	wstring str;
 
-	if (have_pipe) {
-		if (pipe_msg.length() == 0) {
+	if (have_pipe()) {
+		if (m_pipe_str.length() == 0) {
 			if (type == CMD_PIPE_SUCCESS) {
 				str = CMD_PIPE_SUCCESS_STR;
 			} else {
@@ -1149,18 +1173,17 @@ static int print_message(HANDLE hPipe, bool have_console, int type, const wchar_
 		}
 	}
 
-	str += buf;
+	str += &m_buf[0];
 
-	if (have_pipe) {
-	
-		pipe_msg += str;
-		
-		//WriteToNamedPipe(hPipe, str);
-	} else if (have_console) {
+	if (have_pipe()) {
+
+		m_pipe_str += str;
+
+	} else if (m_have_console) {
 		if (type == CMD_PIPE_SUCCESS) {
-			fwprintf(stdout, L"%s\n", str.c_str());
+			fwprintf(stdout, L"%s", str.c_str());
 		} else {
-			fwprintf(stderr, L"%s\n", str.c_str());
+			fwprintf(stderr, L"%s", str.c_str());
 		}
 	} else {
 		::MessageBox(NULL, str.c_str(), L"cppcryptfs", MB_OK | (type == CMD_PIPE_SUCCESS ? 0 : MB_ICONERROR));
@@ -1168,30 +1191,31 @@ static int print_message(HANDLE hPipe, bool have_console, int type, const wchar_
 
 	return ret;
 }
+	
 
-static void usage(HANDLE hPipe, bool have_console)
+static void usage(OutputHandler& output_handler)
 {
 
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"Usage: cppcryptfs [OPTIONS]\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"\nMounting:\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -m, --mount=PATH\tmount filesystem located at PATH\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -d, --drive=D\t\tmount to drive letter D or empty dir DIR\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -p, --password=PASS\tuse password PASS\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -P, --saved-password\tuse saved password\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -r, --readonly\tmount read-only\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -c, --config=PATH\tpath to config file\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -s, --reverse\t\tmount reverse filesystem\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"\nUnmounting:\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -u, --unmount=D\tunmount drive letter D or dir DIR\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -u, --unmount=all\tunmount all drives\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"\nMisc:\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -t, --tray\t\thide in system tray\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -x, --exit\t\texit if no drives mounted\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -l, --list\t\tlist available and mounted drive letters (with paths)\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -ld:\\p, --list=d:\\p\tlist encrypted and plaintext filenames\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -i, --info=D\t\tshow information about mounted filesystem\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -v, --version\t\tprint version\n");
-	print_message(hPipe, have_console, CMD_PIPE_ERROR, L"  -h, --help\t\tdisplay this help message\n");
+	output_handler.print(CMD_PIPE_ERROR, L"Usage: cppcryptfs [OPTIONS]\n");
+	output_handler.print(CMD_PIPE_ERROR, L"\nMounting:\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -m, --mount=PATH\tmount filesystem located at PATH\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -d, --drive=D\t\tmount to drive letter D or empty dir DIR\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -p, --password=PASS\tuse password PASS\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -P, --saved-password\tuse saved password\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -r, --readonly\tmount read-only\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -c, --config=PATH\tpath to config file\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -s, --reverse\t\tmount reverse filesystem\n");
+	output_handler.print(CMD_PIPE_ERROR, L"\nUnmounting:\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -u, --unmount=D\tunmount drive letter D or dir DIR\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -u, --unmount=all\tunmount all drives\n");
+	output_handler.print(CMD_PIPE_ERROR, L"\nMisc:\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -t, --tray\t\thide in system tray\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -x, --exit\t\texit if no drives mounted\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -l, --list\t\tlist available and mounted drive letters (with paths)\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -ld:\\p, --list=d:\\p\tlist encrypted and plaintext filenames\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -i, --info=D\t\tshow information about mounted filesystem\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -v, --version\t\tprint version\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -h, --help\t\tdisplay this help message\n");
 	
 }
 
@@ -1211,8 +1235,6 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 	opterr = 1;
 	optopt = 0;
 
-	pipe_msg = L"";
-
 	CString errMes;
 
 	int argc = 1;
@@ -1227,13 +1249,10 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 			LocalFree(argv);
 		return;
 	}
-	bool have_pipe = hPipe != NULL && hPipe != INVALID_HANDLE_VALUE;
-	const auto printMessages = bOnStartup || have_pipe; // OpenConsole(bOnStartup ? 0 : pid);
 
-	bool have_console = false;
-	
-	if (!have_pipe)
-		have_console = OpenConsole(0);
+	OutputHandler output_handler(hPipe);
+
+	const auto printMessages = bOnStartup || output_handler.have_pipe(); // OpenConsole(bOnStartup ? 0 : pid);
 
 	CString path;
 	CString mountPoint;
@@ -1365,21 +1384,21 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 	LocalFree(argv);
 
 	if (errMes.GetLength() > 0) {
-		if (printMessages) print_message(hPipe, have_console, CMD_PIPE_ERROR, L"cppcryptfs: %s\n", (LPCWSTR)errMes);
+		if (printMessages) output_handler.print(CMD_PIPE_ERROR, L"cppcryptfs: %s\n", (LPCWSTR)errMes);
 	} else if (invalid_opt) {
-		if (printMessages) print_message(hPipe, have_console, CMD_PIPE_ERROR, L"Try 'cppcryptfs --help' for more information.\n");
+		if (printMessages) output_handler.print(CMD_PIPE_ERROR, L"Try 'cppcryptfs --help' for more information.\n");
 	} else if (do_version || do_help) {
 		if (do_version) {
 			wstring prod, ver, copyright;
 			GetProductVersionInfo(prod, ver, copyright);
-			if (printMessages) print_message(hPipe, have_console, CMD_PIPE_ERROR, L"%s %s %s\n", prod.c_str(), ver.c_str(), copyright.c_str());
+			if (printMessages) output_handler.print(CMD_PIPE_ERROR, L"%s %s %s\n", prod.c_str(), ver.c_str(), copyright.c_str());
 			if (do_help && printMessages)
-				print_message(hPipe, have_console, CMD_PIPE_ERROR, L"\n");
+				output_handler.print(CMD_PIPE_ERROR, L"\n");
 		}
 		if (do_help && printMessages)
-			usage(hPipe, have_console);
+			usage(output_handler);
 	} else if (do_info) {
-		if (printMessages) PrintInfo(mountPoint);
+		if (printMessages) PrintInfo(output_handler, mountPoint);
 	} else if (do_list) {
 		CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS); 
 		if (pList) {
@@ -1399,7 +1418,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 					} else {
 						findDatas.sort(compair_find_datas);
 						for (auto &it : findDatas) {
-							if (printMessages) print_message(hPipe, have_console, CMD_PIPE_SUCCESS, L"%s => %s\n", it.fdata.cFileName, it.fdata_orig.cFileName);
+							if (printMessages) output_handler.print(CMD_PIPE_SUCCESS, L"%s => %s\n", it.fdata.cFileName, it.fdata_orig.cFileName);
 						}
 					}
 				}  
@@ -1407,7 +1426,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 					LPCWSTR str = errMes;
 					if (str[wcslen(str) - 1] != '\n')
 						errMes += L"\n";
-					if (printMessages) print_message(hPipe, have_console, CMD_PIPE_ERROR, L"cppcryptfs: %s", (LPCWSTR)errMes);
+					if (printMessages) output_handler.print(CMD_PIPE_ERROR, L"cppcryptfs: %s", (LPCWSTR)errMes);
 				}
 			} else {
 				int nItems = pList->GetItemCount();
@@ -1416,13 +1435,13 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 				for (i = 0; i < nItems; i++) {
 					cmp = pList->GetItemText(i, 0);
 					if (cmp.GetLength() > 0) {
-						if (printMessages) print_message(hPipe, have_console, CMD_PIPE_SUCCESS, L"%s", (LPCWSTR)cmp);
+						if (printMessages) output_handler.print(CMD_PIPE_SUCCESS, L"%s", (LPCWSTR)cmp);
 						
 						cpath = pList->GetItemText(i, 1);
 						if (cpath.GetLength() > 0)
-							if (printMessages) print_message(hPipe, have_console, CMD_PIPE_SUCCESS, L" %s", (LPCWSTR)cpath);
+							if (printMessages) output_handler.print(CMD_PIPE_SUCCESS, L" %s", (LPCWSTR)cpath);
 						
-						if (printMessages) print_message(hPipe, have_console, CMD_PIPE_SUCCESS, L"\n");
+						if (printMessages) output_handler.print(CMD_PIPE_SUCCESS, L"\n");
 					}
 				}
 			}
@@ -1454,7 +1473,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 			LPCWSTR str = errMes;
 			if (str[wcslen(str) - 1] != '\n')
 				errMes += L"\n";
-			if (printMessages) print_message(hPipe, have_console, CMD_PIPE_ERROR, L"cppcryptfs: %s", (LPCWSTR)errMes);
+			if (printMessages) output_handler.print(CMD_PIPE_ERROR, L"cppcryptfs: %s", (LPCWSTR)errMes);
 		}
 	}
 
@@ -1470,18 +1489,6 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 				pParent->ShowWindow(SW_HIDE);
 		}
 	}
-
-	if (have_pipe) {
-		if (pipe_msg.length() > 0)
-			WriteToNamedPipe(hPipe, pipe_msg);
-		FlushFileBuffers(hPipe);
-		DisconnectNamedPipe(hPipe);
-		CloseHandle(hPipe);
-	}
-
-	if (have_console)
-		CloseConsole();
-
 }
 
 
@@ -1774,7 +1781,7 @@ BOOL CMountPropertyPage::IsValidMountPointColumnWidth(int cw)
 	return cw >= 50 && cw <= 350;
 }
 
-void CMountPropertyPage::PrintInfo(LPCWSTR mountpoint)
+void CMountPropertyPage::PrintInfo(OutputHandler& output_handler, LPCWSTR mountpoint)
 {
 	WCHAR mpbuf[3];
 	bool is_dl = wcslen(mountpoint) < 3;
@@ -1786,7 +1793,7 @@ void CMountPropertyPage::PrintInfo(LPCWSTR mountpoint)
 	FsInfo info;
 	wstring mpstr;
 	if (!MountPointManager::getInstance().find(is_dl ? mpbuf : mountpoint, mpstr)) {
-		fwprintf(stderr, L"no fileystem is mounted on %s\n", mountpoint);
+		output_handler.print(CMD_PIPE_ERROR, L"no fileystem is mounted on %s\n", mountpoint);
 		return;
 	}
 	if (!get_fs_info(mpstr.c_str(), info)) {
@@ -1795,26 +1802,26 @@ void CMountPropertyPage::PrintInfo(LPCWSTR mountpoint)
 	}
 	LPCWSTR yes = L"Yes";
 	LPCWSTR no = L"No";
-	fwprintf(stdout, L"Path:                  %s\n", info.path.c_str());
-	fwprintf(stdout, L"Mount Point:           %s\n", mpstr.c_str());
-	fwprintf(stdout, L"Config Path:           %s\n", info.configPath.c_str());
-	fwprintf(stdout, L"Mode:                  %s\n", info.reverse ? L"reverse" : L"forward");
-	fwprintf(stdout, L"Read Only:             %s\n", info.readOnly ? yes : no);
-	fwprintf(stdout, L"Data Encryption:       %s\n", info.dataEncryption.c_str());
-	fwprintf(stdout, L"File Name Encryption:  %s\n", info.fileNameEncryption.c_str());
-	fwprintf(stdout, L"Case Insensitive:      %s\n", info.caseInsensitive ? yes : no);
-	fwprintf(stdout, L"Long File Names:       %s\n", info.longFileNames ? yes : no);
-	fwprintf(stdout, L"Recycle Bin:           %s\n", info.mountManager ? yes : no);
-	fwprintf(stdout, L"Threads                %d\n", info.fsThreads);
-	fwprintf(stdout, L"I/O Buffer Size:       %dKB\n", info.ioBufferSize);
-	fwprintf(stdout, L"Cache TTL:             %d sec\n", info.cacheTTL);
+	output_handler.print(CMD_PIPE_SUCCESS, L"Path:                  %s\n", info.path.c_str());
+	output_handler.print(CMD_PIPE_SUCCESS, L"Mount Point:           %s\n", mpstr.c_str());
+	output_handler.print(CMD_PIPE_SUCCESS, L"Config Path:           %s\n", info.configPath.c_str());
+	output_handler.print(CMD_PIPE_SUCCESS, L"Mode:                  %s\n", info.reverse ? L"reverse" : L"forward");
+	output_handler.print(CMD_PIPE_SUCCESS, L"Read Only:             %s\n", info.readOnly ? yes : no);
+	output_handler.print(CMD_PIPE_SUCCESS, L"Data Encryption:       %s\n", info.dataEncryption.c_str());
+	output_handler.print(CMD_PIPE_SUCCESS, L"File Name Encryption:  %s\n", info.fileNameEncryption.c_str());
+	output_handler.print(CMD_PIPE_SUCCESS, L"Case Insensitive:      %s\n", info.caseInsensitive ? yes : no);
+	output_handler.print(CMD_PIPE_SUCCESS, L"Long File Names:       %s\n", info.longFileNames ? yes : no);
+	output_handler.print(CMD_PIPE_SUCCESS, L"Recycle Bin:           %s\n", info.mountManager ? yes : no);
+	output_handler.print(CMD_PIPE_SUCCESS, L"Threads                %d\n", info.fsThreads);
+	output_handler.print(CMD_PIPE_SUCCESS, L"I/O Buffer Size:       %dKB\n", info.ioBufferSize);
+	output_handler.print(CMD_PIPE_SUCCESS, L"Cache TTL:             %d sec\n", info.cacheTTL);
 	WCHAR buf[32];
 	swprintf_s(buf, L"%0.2f%%", info.dirIvCacheHitRatio*100);
-	fwprintf(stdout, L"DirIV Cache Hit Ratio: %s\n", info.dirIvCacheHitRatio < 0 ? L"n/a" : buf);
+	output_handler.print(CMD_PIPE_SUCCESS, L"DirIV Cache Hit Ratio: %s\n", info.dirIvCacheHitRatio < 0 ? L"n/a" : buf);
 	swprintf_s(buf, L"%0.2f%%", info.caseCacheHitRatio*100);
-	fwprintf(stdout, L"Case Cache Hit Ratio:  %s\n", info.caseCacheHitRatio < 0 ? L"n/a" : buf);
+	output_handler.print(CMD_PIPE_SUCCESS, L"Case Cache Hit Ratio:  %s\n", info.caseCacheHitRatio < 0 ? L"n/a" : buf);
 	swprintf_s(buf, L"%0.2f%%", info.lfnCacheHitRatio*100);
-	fwprintf(stdout, L"LFN Cache Hit Ratio:   %s\n", info.lfnCacheHitRatio < 0 ? L"n/a" : buf);
+	output_handler.print(CMD_PIPE_SUCCESS, L"LFN Cache Hit Ratio:   %s\n", info.lfnCacheHitRatio < 0 ? L"n/a" : buf);
 
 }
 

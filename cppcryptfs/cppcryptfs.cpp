@@ -32,6 +32,7 @@ THE SOFTWARE.
 //
 
 #include "stdafx.h"
+#include <iostream>
 #include "cppcryptfs.h"
 #include "crypt/cryptdefs.h"
 #include "ui/CryptPropertySheet.h"
@@ -47,8 +48,8 @@ THE SOFTWARE.
 #include "util/util.h"
 #include "crypt/crypt.h"
 #include "ui/uiutil.h"
-#include "namedpipe/server.h"
-#include "namedpipe/client.h"
+#include "../libipc/server.h"
+#include "../libipc/client.h"
 
 
 #ifdef _DEBUG
@@ -90,49 +91,23 @@ CcppcryptfsApp::CcppcryptfsApp()
 CcppcryptfsApp theApp;
 
 
-static DWORD WINAPI ServerThreadProc(PVOID lpvParam)
+
+
+static void NamedPipeServerCallback(void* ctx, HANDLE hPipe) 
 {
-	//_tprintf(TEXT("\nPipe Server: Main thread awaiting client connection on %s\n"), lpszPipename);
+	auto pApp = reinterpret_cast<CcppcryptfsApp*>(ctx);
 
-
-	while (true) {
-		// Wait for the client to connect; if it succeeds, 
-		// the function returns a nonzero value. If the function
-		// returns zero, GetLastError returns ERROR_PIPE_CONNECTED. 
-
-		auto hPipe = CreateNamedPipe(
-			CMD_NAMED_PIPE,             // pipe name 
-			PIPE_ACCESS_DUPLEX,       // read/write access 
-			PIPE_TYPE_MESSAGE |       // message type pipe 
-			PIPE_READMODE_MESSAGE |   // message-read mode 
-			PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,  // blocking mode, local only 
-			PIPE_UNLIMITED_INSTANCES, // max. instances  
-			CMD_NAMED_PIPE_BUFSIZE,   // output buffer size 
-			CMD_NAMED_PIPE_BUFSIZE,   // input buffer size 
-			0,                        // client time-out 
-			NULL);                    // default security attribute 
-
-		if (hPipe == INVALID_HANDLE_VALUE)
-			return 1;
-
-		auto fConnected = ConnectNamedPipe(hPipe, NULL) ?
-			TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
-
-		if (fConnected) {
-			theApp.SendCmdArgsToSelf(hPipe);
-		} else {
-			// The client could not connect, so close the pipe. 
-			CloseHandle(hPipe);
-		}
-	}
-
-	return 0;
+	pApp->SendCmdArgsToSelf(hPipe);
 }
 
-
-bool StartNamedPipeServer()
+static bool StartNamedPipeServer()
 {
-	auto hThread = CreateThread(NULL, 0, ServerThreadProc, NULL, 0, NULL);
+	static NamedPipeServerContext ctx;
+
+	ctx.context = &theApp;
+	ctx.callback = NamedPipeServerCallback;
+
+	auto hThread = CreateThread(NULL, 0, NamedPipeServerThreadProc, &ctx, 0, NULL);
 
 	if (hThread != NULL)
 		CloseHandle(hThread);
@@ -169,7 +144,38 @@ BOOL CcppcryptfsApp::InitInstance()
 
 		if (hWnd) {
 			if (have_args()) {
-				::MessageBox(NULL, L"use cppcryptfsctl.exe to send commands to a running cppcryptfs", L"cppcryptfs", MB_OK | MB_ICONERROR);
+
+				bool have_console = OpenConsole(0); 
+
+				wstring err_mes;
+				wstring result;
+
+				if (!SendArgsToRunningInstance(GetCommandLine(), result)) {
+					err_mes = L"cppcryptfsctl: Unable to send command. Is cppcryptfs really already running?\n";
+				} else {
+					if (result.length() >= CMD_PIPE_RESPONSE_LENGTH) {
+						if (wcsncmp(result.c_str(), CMD_PIPE_SUCCESS_STR, CMD_PIPE_RESPONSE_LENGTH) == 0) {
+							if (have_console)
+								wcout << wstring(result.c_str() + CMD_PIPE_RESPONSE_LENGTH);
+						} else {
+							err_mes = wstring(result.c_str() + CMD_PIPE_RESPONSE_LENGTH);
+						}
+					} else {
+						err_mes = L"cppcryptfs: got a mal-formed response from running instance of cppcryptfs\n";
+					}
+				}
+
+				if (err_mes.length() > 0) {
+					if (have_console) {
+						wcerr << err_mes;
+					} else {
+						::MessageBox(NULL, err_mes.c_str(), L"cppcryptfs", MB_ICONERROR | MB_OK);
+					}
+				}
+
+				if (have_console)
+					CloseConsole();
+				
 			} else { // if no args, then restore window of running instance
 				ShowWindow(hWnd, SW_SHOWNORMAL);
 			}

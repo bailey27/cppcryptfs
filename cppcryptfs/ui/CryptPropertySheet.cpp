@@ -32,7 +32,7 @@ THE SOFTWARE.
 #include "stdafx.h"
 #include <Dbt.h>
 #include "cppcryptfs.h"
-#include "namedpipe/server.h"
+#include "../libipc/server.h"
 #include "CryptPropertySheet.h"
 #include "CryptPropertyPage.h"
 #include "dokan/cryptdokan.h"
@@ -229,11 +229,6 @@ INT_PTR CCryptPropertySheet::DoModal()
 	
 }
 
-static bool ReadCommandLineFromPipe(HANDLE hPipe, wstring& cmdLine)
-{
-	return ReadFromNamedPipe(hPipe, cmdLine) > 0;
-}
-
 BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 {
 	// TODO: Add your message handler code here and/or call default
@@ -258,9 +253,13 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 
 		if (page) {
 			
-			wstring cmdLine;
-			if (ReadCommandLineFromPipe(hPipe, cmdLine)) {
-				page->ProcessCommandLine(cmdLine.c_str(), FALSE, hPipe);
+			LockZeroBuffer<WCHAR> cmdLine(4096);
+			if (!cmdLine.IsLocked()) {
+				MessageBox(L"unable to lock command line buffer", L"cppcryptfs", MB_ICONERROR | MB_OK);
+				return FALSE;
+			}
+			if (ReadFromNamedPipe(hPipe, cmdLine.m_buf, cmdLine.m_len)) {
+				page->ProcessCommandLine(cmdLine.m_buf, FALSE, hPipe);
 				return TRUE;
 			} else {
 				ConsoleErrMesPipe(L"unable to read command line", hPipe);

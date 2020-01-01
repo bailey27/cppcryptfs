@@ -1,7 +1,7 @@
-#include <windows.h>
+#include "pch.h"
+
 #include <string>
 #include "client.h"
-#include "server.h"
 
 bool SendArgsToRunningInstance(LPCWSTR args, std::wstring& result)
 {
@@ -19,8 +19,13 @@ bool SendArgsToRunningInstance(LPCWSTR args, std::wstring& result)
 		DWORD lastErr = GetLastError();
 		return false;
 	}
-		
 
+	ULONG server_process_id;
+
+	if (!GetNamedPipeServerProcessId(hPipe, &server_process_id)) {
+		return FALSE;
+	}
+	
 	DWORD dwMode = PIPE_READMODE_MESSAGE;
 	auto fSuccess = SetNamedPipeHandleState(
 		hPipe,    // pipe handle 
@@ -33,7 +38,7 @@ bool SendArgsToRunningInstance(LPCWSTR args, std::wstring& result)
 
 	// Send a message to the pipe server. 
 
-	auto cbToWrite = (lstrlen(args) + 1) * sizeof(TCHAR);
+	auto cbToWrite = (lstrlen(args) + 1) * sizeof(args[0]);
 
 	DWORD cbRead = 0;
 
