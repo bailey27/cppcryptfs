@@ -1382,7 +1382,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 	}
 
 	for (auto i = 0; i < argc; i++) {
-		SecureZeroMemory(argv[i], wcslen(argv[i])*sizeof(*argv[i]));
+		SecureZeroMemory(argv[i], wcslen(argv[i])*sizeof(*argv[0]));
 	}
 
 	LocalFree(argv);
