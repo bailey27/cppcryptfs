@@ -1381,6 +1381,10 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 		}
 	}
 
+	for (auto i = 0; i < argc; i++) {
+		SecureZeroMemory(argv[i], lstrlen(argv[i]));
+	}
+
 	LocalFree(argv);
 
 	if (errMes.GetLength() > 0) {
