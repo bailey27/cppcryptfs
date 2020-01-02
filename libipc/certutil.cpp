@@ -35,6 +35,8 @@ THE SOFTWARE.
 #include <wintrust.h>
 #include <string>
 
+#include "certutil.h"
+
 using namespace std;
 
 // Link with the Wintrust.lib file.
@@ -236,13 +238,41 @@ bool GetExePathFromProcessId(UINT processId, wstring& exePath)
 	}
 }
 
-bool ValidateMessageSender(DWORD pid)
+bool ValidateNamedPipeConnection(DWORD remote_pid)
 {
-	wstring exePath;
+	wstring exePathSelf;
 
-	if (!GetExePathFromProcessId(pid, exePath))
+	if (!GetExePathFromProcessId(GetCurrentProcessId(), exePathSelf)) {
 		return false;
+	}
 
-	return VerifyEmbeddedSignature(exePath.c_str());
+	if (!VerifyEmbeddedSignature(exePathSelf.c_str())) {
+		// if we aren't signed, then allow the other end to not be signed
+		return true;
+	}
+
+	wstring cnSelf;
+
+	if (GetCommonName(exePathSelf.c_str(), cnSelf) != 0) {
+		return false;
+	}
+
+	wstring exePathRemote;
+
+	if (!GetExePathFromProcessId(remote_pid, exePathRemote)) {
+		return false;
+	}
+
+	if (!VerifyEmbeddedSignature(exePathRemote.c_str())) {
+		return false;
+	}
+
+	wstring cnRemote;
+
+	if (GetCommonName(exePathRemote.c_str(), cnRemote) != 0) {
+		return false;
+	}
+
+	return cnRemote == cnSelf;
 }
 

@@ -34,4 +34,6 @@ bool VerifyEmbeddedSignature(LPCWSTR pwszSourceFile);
 
 bool GetExePathFromProcessId(UINT processId, std::wstring& str);
 
-bool ValidateMessageSender(DWORD processId);
+bool ValidateNamedPipeConnection(DWORD remote_pid);
+
+int GetCommonName(LPCWSTR szFileName, std::wstring& common_name);

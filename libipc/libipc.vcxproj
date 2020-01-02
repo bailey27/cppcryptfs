@@ -165,6 +165,7 @@
   <ItemGroup>
     <ClCompile Include="certutil.cpp" />
     <ClCompile Include="client.cpp" />
+    <ClCompile Include="common_name.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

@@ -11,8 +11,10 @@ using namespace std;
 
 int wmain(int argc, const wchar_t *argv[])
 {
-#if 0
-    bool bResult = ValidateMessageSender(12956);
+#if 1
+    bool bResult = ValidateNamedPipeConnection(17296);
+
+    wstring cn;
 
     return 0;
 #endif
