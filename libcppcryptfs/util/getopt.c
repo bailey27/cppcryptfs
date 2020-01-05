@@ -42,7 +42,7 @@ int optopt;
 int optind = 1;
 int opterr;
 
-static wchar_t* optcursor = NULL;
+wchar_t* optcursor = NULL;
 
 /* Implemented based on [1] and [2] for optional arguments.
    optopt is handled FreeBSD-style, per [3].

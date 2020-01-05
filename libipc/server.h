@@ -5,8 +5,8 @@
 #include "common.h"
 
 struct NamedPipeServerContext {
+	void (*callback)(void* ctx, HANDLE hPipe);
 	void* context;
-	void (*callback)(void *ctx, HANDLE hPipe);
 };
 
 int ReadFromNamedPipe(HANDLE hPipe, WCHAR *buf, size_t buflen /* includes null terminator */);

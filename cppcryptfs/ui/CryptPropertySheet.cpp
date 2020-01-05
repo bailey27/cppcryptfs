@@ -33,6 +33,7 @@ THE SOFTWARE.
 #include <Dbt.h>
 #include "cppcryptfs.h"
 #include "../libipc/server.h"
+#include "../libipc/certutil.h"
 #include "CryptPropertySheet.h"
 #include "CryptPropertyPage.h"
 #include "dokan/cryptdokan.h"
@@ -233,8 +234,8 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 {
 	// TODO: Add your message handler code here and/or call default
 
-
-	if (pCopyDataStruct && pCopyDataStruct->dwData == CPPCRYPTFS_COPYDATA_PIPE && 
+	if (pCopyDataStruct && 
+		pCopyDataStruct->dwData == CPPCRYPTFS_COPYDATA_PIPE &&
 		pCopyDataStruct->cbData == sizeof(HANDLE)) {
 
 		HANDLE hPipe = *(HANDLE*)pCopyDataStruct->lpData;
@@ -244,11 +245,12 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 		if (!GetNamedPipeClientProcessId(hPipe, &client_process_id)) {
 			return FALSE;
 		}
-#if 0
-		if (!VerifyMessageSender(client_process_id)) {
+
+		if (!ValidateNamedPipeConnection(client_process_id)) {
+			CloseHandle(hPipe);
 			return FALSE;
 		}
-#endif
+
 		CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(m_nMountPageIndex);
 
 		if (page) {

@@ -1107,9 +1107,6 @@ void CMountPropertyPage::OnCbnSelchangePath()
 
 }
 
-extern wchar_t *optarg;
-extern int optind, opterr, optopt;
-
 OutputHandler::OutputHandler(HANDLE hPipe) 
 {
 	m_hPipe = hPipe;
@@ -1137,25 +1134,21 @@ OutputHandler::~OutputHandler()
 }
 int OutputHandler::print(int type, const wchar_t* fmt, ...) 
 {
-	if (m_buf.size() < 1) {
-		m_buf.resize(1024 * 1024);
+	va_list args;
+
+	va_start(args, fmt);
+
+	auto len = _vscwprintf(fmt, args) + 1; // _vscprintf doesn't count terminating null
+
+	if (len > m_buf.size()) {
+		len = max(len, 1024);
+		auto new_size = max(m_buf.size() * 2, len);
+		m_buf.resize(new_size);
 	}
-
-	/*Declare a va_list type variable*/
-	va_list myargs;
-
-	/* Initialise the va_list variable with the ... after fmt */
-
-	va_start(myargs, fmt);
-
-	/* Forward the '...' to vprintf */
-
-	const size_t max_size = 1 * 1024 * 1024;
 		
-	auto ret = vswprintf_s(&m_buf[0], m_buf.size() - 1, fmt, myargs);
+	auto ret = vswprintf_s(&m_buf[0], m_buf.size(), fmt, args);
 
-	/* Clean up the va_list */
-	va_end(myargs);
+	va_end(args);
 
 	if (ret < 1) {
 		return ret;
@@ -1225,12 +1218,11 @@ static bool compair_find_datas(const FindDataPair& p1, const FindDataPair& p2)
 	return lstrcmpi(p1.fdata.cFileName, p2.fdata.cFileName) < 0;
 }
 
-
-
 void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HANDLE hPipe)
 {
-
-	optarg = NULL;
+	// need to intialize these getop variables before we process a command line
+	optarg = nullptr;
+	optcursor = nullptr;
 	optind = 1;
 	opterr = 1;
 	optopt = 0;

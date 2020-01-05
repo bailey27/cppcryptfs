@@ -11,20 +11,20 @@ using namespace std;
 
 int wmain(int argc, const wchar_t *argv[])
 {
-#if 1
-    bool bResult = ValidateNamedPipeConnection(17296);
-
-    wstring cn;
-
-    return 0;
-#endif
     if (argc < 2)
         return 0;
 
     wstring result;
+
+    wstring err;
+
+    const WCHAR* args = GetCommandLine();
     
-    if (!SendArgsToRunningInstance(GetCommandLine(), result)) {
-        wcerr << L"cppcryptfsctl: Unable to send command. Is cppcryptfs running?\n";
+    if (!SendArgsToRunningInstance(args, result, err)) {
+        if (err.length() > 0)
+            wcerr << err << endl;
+        else
+            wcerr << L"cppcryptfsctl: Unable to send command. Is cppcryptfs running?" << endl;
         return 1;
     }
 

@@ -150,8 +150,11 @@ BOOL CcppcryptfsApp::InitInstance()
 				wstring err_mes;
 				wstring result;
 
-				if (!SendArgsToRunningInstance(GetCommandLine(), result)) {
-					err_mes = L"cppcryptfsctl: Unable to send command. Is cppcryptfs really already running?\n";
+				if (!SendArgsToRunningInstance(GetCommandLine(), result, err_mes)) {
+					if (err_mes.length() > 0)
+						err_mes += L"\n";
+					else
+						err_mes = L"cppcryptfsctl: Unable to send command. Is cppcryptfs really already running?\n";
 				} else {
 					if (result.length() >= CMD_PIPE_RESPONSE_LENGTH) {
 						if (wcsncmp(result.c_str(), CMD_PIPE_SUCCESS_STR, CMD_PIPE_RESPONSE_LENGTH) == 0) {

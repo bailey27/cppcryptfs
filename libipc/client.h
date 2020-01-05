@@ -4,4 +4,4 @@
 
 #include <string>
 
-bool SendArgsToRunningInstance(LPCWSTR args, std::wstring& result);
+bool SendArgsToRunningInstance(LPCWSTR args, std::wstring& result, std::wstring& err);

@@ -39,7 +39,7 @@ extern "C" {
 #define required_argument 2
 #define optional_argument 3
 
-extern wchar_t* optarg;
+extern wchar_t* optarg, *optcursor;
 extern int optind, opterr, optopt;
 
 struct option {

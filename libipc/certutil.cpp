@@ -257,6 +257,10 @@ bool ValidateNamedPipeConnection(DWORD remote_pid)
 		return false;
 	}
 
+	if (cnSelf.length() < 1) {
+		return false;
+	}
+
 	wstring exePathRemote;
 
 	if (!GetExePathFromProcessId(remote_pid, exePathRemote)) {
