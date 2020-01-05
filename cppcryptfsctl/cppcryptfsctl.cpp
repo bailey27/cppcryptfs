@@ -20,12 +20,12 @@ int wmain(int argc, const wchar_t *argv[])
 
     const WCHAR* args = GetCommandLine();
     
-    if (!SendArgsToRunningInstance(args, result, err)) {
+    if (auto ret = SendArgsToRunningInstance(args, result, err)) {
         if (err.length() > 0)
             wcerr << err << endl;
         else
-            wcerr << L"cppcryptfsctl: Unable to send command. Is cppcryptfs running?" << endl;
-        return 1;
+            wcerr << L"cppcryptfsctl: Unable to send command." << endl;
+        return ret;
     }
 
     if (result.length() >= CMD_PIPE_RESPONSE_LENGTH) {

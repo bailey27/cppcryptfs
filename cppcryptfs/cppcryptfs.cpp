@@ -150,7 +150,7 @@ BOOL CcppcryptfsApp::InitInstance()
 				wstring err_mes;
 				wstring result;
 
-				if (!SendArgsToRunningInstance(GetCommandLine(), result, err_mes)) {
+				if (SendArgsToRunningInstance(GetCommandLine(), result, err_mes)) {
 					if (err_mes.length() > 0)
 						err_mes += L"\n";
 					else
@@ -160,6 +160,8 @@ BOOL CcppcryptfsApp::InitInstance()
 						if (wcsncmp(result.c_str(), CMD_PIPE_SUCCESS_STR, CMD_PIPE_RESPONSE_LENGTH) == 0) {
 							if (have_console)
 								wcout << wstring(result.c_str() + CMD_PIPE_RESPONSE_LENGTH);
+							else
+								::MessageBox(NULL, result.c_str() + CMD_PIPE_RESPONSE_LENGTH, L"cppcryptfs", MB_OK);
 						} else {
 							err_mes = wstring(result.c_str() + CMD_PIPE_RESPONSE_LENGTH);
 						}
