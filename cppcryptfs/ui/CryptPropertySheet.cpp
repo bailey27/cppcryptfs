@@ -255,13 +255,13 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 
 		if (page) {
 			
-			LockZeroBuffer<WCHAR> cmdLine(4096);
+			LockZeroBuffer<WCHAR> cmdLine(CMD_PIPE_MAX_ARGS_LEN);
 			if (!cmdLine.IsLocked()) {
 				MessageBox(L"unable to lock command line buffer", L"cppcryptfs", MB_ICONERROR | MB_OK);
 				return FALSE;
 			}
-			if (ReadFromNamedPipe(hPipe, cmdLine.m_buf, cmdLine.m_len)) {
-				page->ProcessCommandLine(cmdLine.m_buf, FALSE, hPipe);
+			if (auto args = ReadFromNamedPipe(hPipe, cmdLine.m_buf, cmdLine.m_len)) {
+				page->ProcessCommandLine(args, FALSE, hPipe);
 				return TRUE;
 			} else {
 				ConsoleErrMesPipe(L"unable to read command line", hPipe);

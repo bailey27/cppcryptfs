@@ -4,6 +4,7 @@
 #include <vector>
 #include "client.h"
 #include "certutil.h"
+#include "../libcppcryptfs/util/LockZeroBuffer.h"
 
 using namespace std;
 
@@ -17,6 +18,27 @@ static wstring FormatErr(const WCHAR *basemes, DWORD lastErr)
 bool SendArgsToRunningInstance(LPCWSTR args, std::wstring& result, std::wstring& err)
 {
 	HANDLE hPipe;
+
+	auto args_len = wcslen(args);
+
+	if (args_len < 1)
+		return true;
+
+	if (args_len >= CMD_PIPE_MAX_ARGS_LEN) {
+		err = L"command to long.  max length is " + to_wstring(CMD_PIPE_MAX_ARGS_LEN_USER) + L" characters.";
+		return false;
+	}
+
+	LockZeroBuffer<WCHAR> buf(static_cast<DWORD>(args_len + CMD_PIPE_VERSION_LEN + 1));
+
+	if (!buf.IsLocked()) {
+		err = L"cannot lock command buffer.";
+		return false;
+	}
+
+	memcpy(buf.m_buf, CMD_PIPE_VERSION_STR, CMD_PIPE_VERSION_LEN * sizeof(WCHAR));
+
+	memcpy(buf.m_buf + CMD_PIPE_VERSION_LEN, args, (args_len + 1) * sizeof(WCHAR));
 	
 	while (true) {
 		hPipe = CreateFile(
@@ -78,7 +100,7 @@ bool SendArgsToRunningInstance(LPCWSTR args, std::wstring& result, std::wstring&
 
 	// Send a message to the pipe server. 
 
-	auto cbToWrite = (lstrlen(args) + 1) * sizeof(args[0]);
+	auto cbToWrite = buf.m_len*sizeof(buf.m_buf[0]);
 
 	DWORD cbRead = 0;
 
@@ -126,7 +148,7 @@ bool SendArgsToRunningInstance(LPCWSTR args, std::wstring& result, std::wstring&
 
 	fSuccess = TransactNamedPipe(
 		hPipe,                          // pipe handle 
-		(LPVOID)args,                   // message 
+		(LPVOID)buf.m_buf,                   // message 
 		static_cast<DWORD>(cbToWrite),  // message length 
 		&read_buf[0], 
 		static_cast<DWORD>(read_buf.size()),

@@ -9,7 +9,7 @@ struct NamedPipeServerContext {
 	void* context;
 };
 
-int ReadFromNamedPipe(HANDLE hPipe, WCHAR *buf, size_t buflen /* includes null terminator */);
+WCHAR *ReadFromNamedPipe(HANDLE hPipe, WCHAR *buf, size_t buflen /* includes null terminator */);
 
 int WriteToNamedPipe(HANDLE hPipe, const std::wstring& str);
 

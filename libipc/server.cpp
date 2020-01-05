@@ -4,13 +4,14 @@
 
 using namespace std;
 
-int ReadFromNamedPipe(HANDLE hPipe, WCHAR *buf, size_t buflen /* includes null terminator */)
+// returns ptr into buf where interesting data starts or nullptr on failure
+WCHAR *ReadFromNamedPipe(HANDLE hPipe, WCHAR *buf, size_t buflen /* includes null terminator */)
 {		
 	//_tprintf(TEXT("\nPipe Server: Main thread awaiting client connection on %s\n"), lpszPipename);
 	FlushFileBuffers(hPipe);
 
 	if (buflen < 1) {
-		return 0;
+		return nullptr;
 	}
 
 	*buf = '\0';
@@ -25,19 +26,30 @@ int ReadFromNamedPipe(HANDLE hPipe, WCHAR *buf, size_t buflen /* includes null t
 		NULL);        // not overlapped I/O 
 
 	if (!fSuccess) {
-		DWORD lastErr = GetLastError();
-		return -1;
+		CloseHandle(hPipe);
+		return nullptr;
 	}
 
 	if (cbBytesRead < 1) {
-		return 0;
+		CloseHandle(hPipe);
+		return nullptr;
 	}
 
 	if (buf[cbBytesRead - 1] != '\0') {
-		return -1;
+		CloseHandle(hPipe);
+		return nullptr;
+	}
+
+	if (wcslen(buf) < CMD_PIPE_VERSION_LEN) {
+		CloseHandle(hPipe);
+		return FALSE;
+	}
+	if (wcsncmp(buf, CMD_PIPE_VERSION_STR, CMD_PIPE_VERSION_LEN) != 0) {
+		CloseHandle(hPipe);
+		return FALSE;
 	}
 	
-	return cbBytesRead - 1;
+	return buf + CMD_PIPE_VERSION_LEN;
 }
 
 int WriteToNamedPipe(HANDLE hPipe, const wstring& str)
