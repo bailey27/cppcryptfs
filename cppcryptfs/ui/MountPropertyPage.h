@@ -38,7 +38,7 @@ THE SOFTWARE.
 class OutputHandler {
 private:
 	bool m_have_console;
-	wstring m_pipe_str;
+	wstring m_output_str;
 	vector<wchar_t> m_buf;
 	HANDLE m_hPipe = INVALID_HANDLE_VALUE;
 public:

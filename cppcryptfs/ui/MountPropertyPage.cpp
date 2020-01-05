@@ -1120,13 +1120,19 @@ OutputHandler::OutputHandler(HANDLE hPipe)
 OutputHandler::~OutputHandler()
 {
 	if (have_pipe()) {
-		if (m_pipe_str.length() > 0)
-			WriteToNamedPipe(m_hPipe, m_pipe_str);
+		if (m_output_str.length() > 0)
+			WriteToNamedPipe(m_hPipe, m_output_str);
 		else
 			WriteToNamedPipe(m_hPipe, wstring(CMD_PIPE_SUCCESS_STR));
 		FlushFileBuffers(m_hPipe);
 		DisconnectNamedPipe(m_hPipe);
 		CloseHandle(m_hPipe);
+	} else if (!m_have_console) {
+		if (m_output_str.length() >= CMD_PIPE_RESPONSE_LENGTH) {
+			bool success = wcsncmp(m_output_str.c_str(), CMD_PIPE_SUCCESS_STR, CMD_PIPE_RESPONSE_LENGTH) == 0;
+			::MessageBox(NULL, m_output_str.c_str() + CMD_PIPE_RESPONSE_LENGTH, 
+				L"cppcryptfs", MB_OK | (success ? 0 : MB_ICONERROR));
+		}
 	}
 
 	if (m_have_console)
@@ -1156,8 +1162,8 @@ int OutputHandler::print(int type, const wchar_t* fmt, ...)
 
 	wstring str;
 
-	if (have_pipe()) {
-		if (m_pipe_str.length() == 0) {
+	if (!m_have_console) {
+		if (m_output_str.length() == 0) {
 			if (type == CMD_PIPE_SUCCESS) {
 				str = CMD_PIPE_SUCCESS_STR;
 			} else {
@@ -1168,19 +1174,17 @@ int OutputHandler::print(int type, const wchar_t* fmt, ...)
 
 	str += &m_buf[0];
 
-	if (have_pipe()) {
+	if (!m_have_console) {
 
-		m_pipe_str += str;
+		m_output_str += str;
 
-	} else if (m_have_console) {
+	} else {
 		if (type == CMD_PIPE_SUCCESS) {
 			fwprintf(stdout, L"%s", str.c_str());
 		} else {
 			fwprintf(stderr, L"%s", str.c_str());
 		}
-	} else {
-		::MessageBox(NULL, str.c_str(), L"cppcryptfs", MB_OK | (type == CMD_PIPE_SUCCESS ? 0 : MB_ICONERROR));
-	}
+	} 
 
 	return ret;
 }
