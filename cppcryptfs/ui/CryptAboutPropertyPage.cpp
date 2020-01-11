@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2019 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2020 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -71,11 +71,11 @@ END_MESSAGE_MAP()
 
 
 static const WCHAR * components[] = {
-	L"cppcryptfs - Copyright (C) 2016-2019 Bailey Brown. All Rights Reserved.",
+	L"cppcryptfs - Copyright (C) 2016-2020 Bailey Brown. All Rights Reserved.",
 	L"OpenSSL - Copyright (c) 1998-2019 The OpenSSL Project.  All rights reserved.",
 	L"RapidJSON - Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip. All rights reserved.",
-	L"Dokany (mirror) - Copyright (C) 2015 - 2018 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
-	L"Dokany (library) - Copyright (C) 2015 - 2018 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
+	L"Dokany (mirror) - Copyright (C) 2015 - 2019 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
+	L"Dokany (library) - Copyright (C) 2015 - 2019 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
 	L"100% free Secure Edit control MFC class - Copyright (c) 2003 Dominik Reichl",
 	L"getopt_port - Copyright (c) 2012-2017, Kim Grasman <kim.grasman@gmail.com>. All rights reserved.",
 	L"aes-siv - Copyright (c) 2015 ARKconcepts / Sasha Kotlyar",
@@ -85,7 +85,7 @@ static const WCHAR * components[] = {
 static const WCHAR *licenses[] = {
 
 	// cppcryptfs
-	L"cppcryptfs - Copyright (C) 2016-2019 Bailey Brown. All rights reserved.\r\n\r\n"
+	L"cppcryptfs - Copyright (C) 2016-2020 Bailey Brown. All rights reserved.\r\n\r\n"
 	L"project url: github.com/bailey27/cppcryptfs\r\n\r\n"
 	L"cppcryptfs is a user-mode cryptographic virtual overlay filesystem\r\n\r\n"
 	L"cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)\r\n\r\n"
@@ -314,7 +314,7 @@ static const WCHAR *licenses[] = {
 	L"project url: github.com/dokan-dev/dokany\r\n\r\n"
 	L"cppcryptfs usage: code from the mirror.c sample program from Dokany was used in modifed form in cppcryptfs (in cryptdokan.cpp).\r\n\r\n"
 	L"Dokany mirror.c copyright and license (MIT license):\r\n\r\n"
-	L"Copyright (C) 2015 - 2018 Adrien J. <liryna.stark@gmail.com> and Maxime C. <maxime@islog.com>\r\n"
+	L"Copyright (C) 2015 - 2019 Adrien J. <liryna.stark@gmail.com> and Maxime C. <maxime@islog.com>\r\n"
 	L"Copyright (C) 2007 - 2011 Hiroki Asakawa <info@dokan-dev.net>\r\n"
 	L"\r\n"
 	L"Permission is hereby granted, free of charge, to any person obtaining a copy\r\n"
@@ -340,7 +340,7 @@ static const WCHAR *licenses[] = {
 	L"project url: github.com/dokan-dev/dokany\r\n\r\n"
 	L"cppcryptfs usage: dynamically linked library\r\n\r\n"
 	L"Dokany library copyright and license (GNU LGPL):\r\n\r\n"
-	L"Copyright (C) 2015 - 2017 Adrien J. <liryna.stark@gmail.com> and Maxime C. <maxime@islog.com>\r\n"
+	L"Copyright (C) 2015 - 2019 Adrien J. <liryna.stark@gmail.com> and Maxime C. <maxime@islog.com>\r\n"
 	L"Copyright (C) 2007 - 2011 Hiroki Asakawa <info@dokan-dev.net>\r\n\r\n"
 	L" GNU LESSER GENERAL PUBLIC LICENSE\r\n"
 	L"                       Version 3, 29 June 2007\r\n"
@@ -606,7 +606,7 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 
 	wstring prod = L"cppryptfs";
 	wstring ver = L"1.0";
-	wstring copyright = L"Copyright (C) 2016-2019 Bailey Brown.  All Rights Reserved.";
+	wstring copyright = L"Copyright (C) 2016-2020 Bailey Brown.  All Rights Reserved.";
 
 	GetProductVersionInfo(prod, ver, copyright);
 
