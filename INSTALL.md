@@ -34,6 +34,8 @@ flag for Spectre mitigation.  For this to be effective (and for the build to wor
 
 [Visual Studio install Spectre-mitigated libraries screenshot 1](/screenshots/visual_studio_2019_spectre_libs1.png?raw=true) 
 
+(scroll down to get to the selctions in the next screenshot)
+
 [Visual Studio install Spectre-mitigated libraries screenshot 2](/screenshots/visual_studio_2019_spectre_libs2.png?raw=true) 
 
 In order to build OpenSSL, you will also need perl and nasm.  
