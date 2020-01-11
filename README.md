@@ -375,6 +375,9 @@ Misc:
   -v, --version         print version
   -h, --help            display this help message
 
+
+cppcrytfsctl has a special option -V that if it is the only option given it will print its version instead of
+trying to send the command line to a running instance of cppcryptfs.
 ```
 
 Note: when using the short version of the option, you should not use the equal sign between the option and its argument.  When using the long version of the option, the equal sign is optional. e.g. these will work

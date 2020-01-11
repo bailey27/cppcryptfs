@@ -28,6 +28,14 @@ Here is a screenshot that shows what to select when installing Visual Studio.
 
 [Visual Studio install screenshot](/screenshots/visual_studio_2019_install.png?raw=true) 
 
+Also, the Visual Studio projects that make up cppcryptfs all use the /Qspectre
+flag for Spectre mitigation.  For this to be effective (and for the build to work staring with Visual Studio 2019), you will need to install the Spectre-mitigated libraries from Microsoft. Thise can be selected when you instal Visual Studio 2019 or installed later by running the Visual Studio 2019 installation program again. 
+
+
+[Visual Studio install Spectre-mitigated libraries screenshot 1](/screenshots/visual_studio_2019_spectre_libs1.png?raw=true) 
+
+[Visual Studio install Spectre-mitigated libraries screenshot 2](/screenshots/visual_studio_2019_spectre_libs2.png?raw=true) 
+
 In order to build OpenSSL, you will also need perl and nasm.  
 
 For Perl, the OpenSSL documentation recommends using the free ActiveState ActivePerl.
