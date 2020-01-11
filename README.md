@@ -338,7 +338,17 @@ Command Line Options
 ----
 cppcryptfs accepts some command line options for mounting and unmounting filesystems.  Currently, filesystems can be created only by using the gui.
 
-Passwords passed through the command line are not really secure.  cppcryptfs locks and zeros its internal copies of the command line, but, for example, it does not zero the command line stored in the Windows PEB (Process Environment Block). Also, if cppcyrptfs is already running, then an invocation of cppcryptfs from the command line will cause it to pass the command line to the already running instance in the clear using a WM_COPYDATA message. It is unknown how many times the command line might be copied by Windows out of cppcryptfs' control.  So there is some chance that a password passed via the command line might end up in the paging file if a paging file is being used.
+There can be only one main instance of cppcryptfs running.  If no other instance of cppcryptfs is running, then cppcryptfs processes any command line arguments and then continues
+to run.  If there is already another instance of cppcryptfs running, then cppcryptfs will send its command line arguments to the main, already-running, instance.  If run from a
+console window, it will print any output from processing the command line to the console. If not run from a console, it will display the output in a message box.
+
+There is also a companion program, cppcryptfsctl, that can be used to send commands to an already-running cppcryptfs.  cppcryptfsctl is a console program.  The
+advantage of using it is that it sets ERRORLEVEL so this can be tested in batch scripts.  Also, it is possible to redirect the output of cppcryptfsctl to a file
+or pipe it to another program like grep of findstr.  cppcryptfs does not set ERRORLEVEL, and its output cannot be redirected.
+
+cppcryptfsctl sets ERRORLEVEL to 0 on success, to 1 if an error occurs, and to 2 if it cannot connect which implies  that cppcryptfs isn't running.
+
+Passwords passed through the command line are not really secure.  cppcryptfs locks and zeros its internal copies of the command line, but, for example, it does not zero the command line stored in the Windows PEB (Process Environment Block). Also, if cppcyrptfs is already running, then an invocation of cppcryptfs (or cppcryptfsctl) from the command line will cause it to pass the command line to the already running instance. It tries to do this in a fairly secure way.  It communicates with the running instance using a WINDOWS named pipe. If the program running on either side is signed, then it verifies that the process on the other end of the pipe is also running from a signed executable and that the common name on both signatures are the same.  However, it is unknown how many times the command line might be copied by Windows out of cppcryptfs' control.  So there is some chance that a password passed via the command line might end up in the paging file if a paging file is being used.
 
 ```
 usage: cppcryptfs [OPTIONS]
@@ -379,7 +389,7 @@ cppcryptfs --mount c:\tmp\test --drive k --password XYZ
 The --list option has an optional argument.  If there is no argument given, then
 it lists the drive letters and shows the path to the root of the encrypted filesystem for mounted filesystems.  
 
-The list command also takes a full path as an optional agument.  The path should be the unencrypted name of a file or directory including the drive letter.  If the argument is a file, then cppcryptfs will print the unencrypted file path on the left and the encrypted path on the right.   If the argument is a directory, then cppcryptfs will print the unencrypted names of the files on the left and the encrypted names on the right.
+The list command also takes a full path as an optional argument.  The path should be the unencrypted name of a file or directory including the drive letter.  If the argument is a file, then cppcryptfs will print the unencrypted file path on the left and the encrypted path on the right.   If the argument is a directory, then cppcryptfs will print the unencrypted names of the files on the left and the encrypted names on the right.
 
 Because of the way optional arguments are handled, if you are using the short form of the list switch (-l), then you must put the path right after the -l with no space.  And if you are using the long form (--list), then you must use the "=" sign.  e.g.
 
@@ -390,17 +400,11 @@ cppcryptfs --list=k:\foo
 
 ```
 
-cppcryptfs is a Windows gui application and not a console application.  However, when started with command line options, it will try to write any error messages to the console (if any) that started it.
-
-Unfortunately, Windows does not seem to handle piping output that is generated this way.  You cannot pipe the output of cppcryptfs through other commands like sort or redirect it to a file.
-
 There can be only one instance of cppcryptfs running at any time.
 
 When cppcryptfs is invoked, it checks to see if there is another instance running.  If there is, then if there are no command line options, the second instance of cppcryptfs will simply exit.  If there isn't another instance running, then it will process the command line options (if any) and  will continue running unless --exit is specified and there are no mounted drives.
 
-If a second instance is invoked with command line options while another instance is running, the second instance will send its command line to the already-running instance using the WM_COPYDATA message.  It will block until the already-running instance has processed the command line and then exit.  Any error messages or other output that result from processing the command line will be printed in the cmd window in which the second instance was invoked.
-
-Therefore, if you plan to use cppcryptfs in batch files, you need to start an instance in the background first.  Then you should do the other operations in the foreground so they will block until completed.
+Therefore, if you plan to use cppcryptfs or cppcryptfsctl in batch files, you need to start an instance in the background first.  Then you should do the other operations in the foreground so they will block until completed.
 
 If you start "cppcryptfs --tray" in the background, then if there is already a running instance, then that instance will be told to hide itself in the system tray.  If there is not already an instance running, then you will have started cppcryptfs hidden in the system tray, running in the background. 
 

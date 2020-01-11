@@ -32,12 +32,16 @@ THE SOFTWARE.
 #include "stdafx.h"
 #include <Dbt.h>
 #include "cppcryptfs.h"
+#include "../libipc/server.h"
+#include "../libipc/certutil.h"
 #include "CryptPropertySheet.h"
 #include "CryptPropertyPage.h"
 #include "dokan/cryptdokan.h"
 #include "util/LockZeroBuffer.h"
 #include "util/util.h"
 #include "dokan/MountPointManager.h"
+#include "ui/uiutil.h"
+#include "crypt/crypt.h"
 
 // CryptPropertySheet
 
@@ -226,32 +230,45 @@ INT_PTR CCryptPropertySheet::DoModal()
 	
 }
 
-
 BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 {
 	// TODO: Add your message handler code here and/or call default
 
-	if (pCopyDataStruct && pCopyDataStruct->dwData == CPPCRYPTFS_COPYDATA_CMDLINE && 
-		pCopyDataStruct->cbData >= sizeof(CopyDataCmdLine) &&
-		pCopyDataStruct->cbData <= CPPCRYPTFS_COPYDATA_CMDLINE_MAXLEN) {
+	if (pCopyDataStruct && 
+		pCopyDataStruct->dwData == CPPCRYPTFS_COPYDATA_PIPE &&
+		pCopyDataStruct->cbData == sizeof(HANDLE)) {
 
-		DWORD consolePid = ((CopyDataCmdLine*)pCopyDataStruct->lpData)->dwPid;
+		auto hPipe = *reinterpret_cast<HANDLE*>(pCopyDataStruct->lpData);
+
+		DWORD client_process_id = 0;
+
+		if (!GetNamedPipeClientProcessId(hPipe, &client_process_id)) {
+			return FALSE;
+		}
+
+		if (!ValidateNamedPipeConnection(client_process_id)) {
+			CloseHandle(hPipe);
+			return FALSE;
+		}
 
 		CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(m_nMountPageIndex);
 
 		if (page) {
-			// ensure that szCmdLine is null terminated by allocating extra WCHAR
-			LockZeroBuffer<BYTE> buf(pCopyDataStruct->cbData + sizeof(WCHAR));
-			if (!buf.IsLocked()) {
-				ConsoleErrMes(L"unable to lock command line buffer in target", consolePid);
+			
+			LockZeroBuffer<WCHAR> cmdLine(CMD_PIPE_MAX_ARGS_LEN);
+			if (!cmdLine.IsLocked()) {
+				MessageBox(L"unable to lock command line buffer", L"cppcryptfs", MB_ICONERROR | MB_OK);
 				return FALSE;
 			}
-			memcpy(buf.m_buf, pCopyDataStruct->lpData, pCopyDataStruct->cbData);
-			CopyDataCmdLine *pcd = (CopyDataCmdLine*)buf.m_buf;
-			page->ProcessCommandLine(consolePid, pcd->szCmdLine);
-			return TRUE;
+			if (auto args = ReadFromNamedPipe(hPipe, cmdLine.m_buf, cmdLine.m_len)) {
+				page->ProcessCommandLine(args, FALSE, hPipe);
+				return TRUE;
+			} else {
+				ConsoleErrMesPipe(L"unable to read command line", hPipe);
+				return FALSE;
+			}
 		} else {
-			ConsoleErrMes(L"unable to get mount page", consolePid);
+			ConsoleErrMesPipe(L"unable to get mount page", hPipe);
 			return FALSE;
 		}
 	} else {

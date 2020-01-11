@@ -5,6 +5,7 @@
 
 #include "ui/MountMangerDialog.h"
 #include "ui/cryptdefaults.h"
+#include "ui/certutil.h"
 
 using namespace std;
 
@@ -65,3 +66,4 @@ bool NeverSaveHistory()
 	bool bNeverSaveHistory = AfxGetApp()->GetProfileIntW(L"Settings", L"NeverSaveHistory", NEVER_SAVE_HISTORY_DEFAULT) != 0;
 	return bNeverSaveHistory;
 }
+

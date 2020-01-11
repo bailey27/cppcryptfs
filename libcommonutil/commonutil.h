@@ -26,60 +26,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// CryptPropertyPage.cpp : implementation file
-//
 
-#include "stdafx.h"
-#include "cppcryptfs.h"
-#include "CryptPropertyPage.h"
-#include "afxdialogex.h"
+#pragma once
 
+#include "pch.h"
 
-// CCryptPropertyPage dialog
+#include <string>
 
-IMPLEMENT_DYNAMIC(CCryptPropertyPage, CPropertyPage)
+using namespace std;
 
-CCryptPropertyPage::CCryptPropertyPage()
-	: CPropertyPage(IDD_CRYPTPROPERTYPAGE)
-{
-	m_psp.dwFlags &= ~PSP_HASHELP;
-}
+bool GetProductVersionInfo(wstring& strProductName, wstring& strProductVersion,
+	wstring& strLegalCopyright, HMODULE hMod = NULL);
 
-CCryptPropertyPage::CCryptPropertyPage(int id)
-	: CPropertyPage(id)
-{
-	m_psp.dwFlags &= ~PSP_HASHELP;
-}
-
-CCryptPropertyPage::~CCryptPropertyPage()
-{
-}
-
-void CCryptPropertyPage::DefaultAction()
-{
-}
-
-void CCryptPropertyPage::ProcessCommandLine(LPCTSTR szCmd, BOOL bOnStartup, HANDLE hPipe)
-{
-}
-
-void CCryptPropertyPage::DeviceChange()
-{
-}
-
-void CCryptPropertyPage::OnExit()
-{
-	return;
-}
-
-void CCryptPropertyPage::DoDataExchange(CDataExchange* pDX)
-{
-	CPropertyPage::DoDataExchange(pDX);
-}
-
-
-BEGIN_MESSAGE_MAP(CCryptPropertyPage, CPropertyPage)
-END_MESSAGE_MAP()
-
-
-// CCryptPropertyPage message handlers
+wstring GetWindowsErrorString(DWORD dwLastErr);

@@ -26,60 +26,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// CryptPropertyPage.cpp : implementation file
-//
+#pragma once
 
-#include "stdafx.h"
-#include "cppcryptfs.h"
-#include "CryptPropertyPage.h"
-#include "afxdialogex.h"
-
-
-// CCryptPropertyPage dialog
-
-IMPLEMENT_DYNAMIC(CCryptPropertyPage, CPropertyPage)
-
-CCryptPropertyPage::CCryptPropertyPage()
-	: CPropertyPage(IDD_CRYPTPROPERTYPAGE)
-{
-	m_psp.dwFlags &= ~PSP_HASHELP;
-}
-
-CCryptPropertyPage::CCryptPropertyPage(int id)
-	: CPropertyPage(id)
-{
-	m_psp.dwFlags &= ~PSP_HASHELP;
-}
-
-CCryptPropertyPage::~CCryptPropertyPage()
-{
-}
-
-void CCryptPropertyPage::DefaultAction()
-{
-}
-
-void CCryptPropertyPage::ProcessCommandLine(LPCTSTR szCmd, BOOL bOnStartup, HANDLE hPipe)
-{
-}
-
-void CCryptPropertyPage::DeviceChange()
-{
-}
-
-void CCryptPropertyPage::OnExit()
-{
-	return;
-}
-
-void CCryptPropertyPage::DoDataExchange(CDataExchange* pDX)
-{
-	CPropertyPage::DoDataExchange(pDX);
-}
-
-
-BEGIN_MESSAGE_MAP(CCryptPropertyPage, CPropertyPage)
-END_MESSAGE_MAP()
-
-
-// CCryptPropertyPage message handlers
+bool VerifyEmbeddedSignature(LPCWSTR pwszSourceFile);

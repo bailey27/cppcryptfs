@@ -34,7 +34,19 @@ THE SOFTWARE.
 #define DL_INDEX 0
 #define PATH_INDEX 1
 
-
+// helper class for responses to command line usage
+class OutputHandler {
+private:
+	bool m_have_console;
+	wstring m_output_str;
+	vector<wchar_t> m_buf;
+	HANDLE m_hPipe = INVALID_HANDLE_VALUE;
+public:
+	OutputHandler(HANDLE hPipe);
+	virtual ~OutputHandler();
+	bool have_pipe() { return m_hPipe != INVALID_HANDLE_VALUE && m_hPipe != NULL; }
+	int print(int type, const wchar_t* fmt, ...);
+};
 
 // CMountPropertyPage dialog
 
@@ -67,7 +79,7 @@ public:
 public:
 	virtual void DefaultAction();
 
-	virtual void ProcessCommandLine(DWORD pid, LPCWSTR szCmd, BOOL bOnStartup = FALSE);
+	virtual void ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup = FALSE, HANDLE hPipe = INVALID_HANDLE_VALUE) override;
 
 	virtual void DeviceChange() override;
 
@@ -83,7 +95,7 @@ public:
 
 	BOOL IsValidMountPointColumnWidth(int cw);
 
-	void PrintInfo(LPCWSTR mountpoint);
+	void PrintInfo(OutputHandler& output_handler, LPCWSTR mountpoint);
 
 	virtual void OnExit() override;
 

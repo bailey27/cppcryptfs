@@ -49,6 +49,8 @@ struct option {
   int val;
 };
 
+void getopt_init();
+
 int getopt(int argc, wchar_t* const argv[], const wchar_t* optstring);
 
 int getopt_long(int argc, wchar_t* const argv[],

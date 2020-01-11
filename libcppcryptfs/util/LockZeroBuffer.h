@@ -27,7 +27,12 @@ THE SOFTWARE.
 */
 
 #pragma once
+
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include "wintypes.h"
+#endif
 #include <string>
 
 using namespace std;

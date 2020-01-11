@@ -1,14 +1,26 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cppcryptfs", "cppcryptfs\cppcryptfs.vcxproj", "{E21456E4-6518-425E-A6E8-D7D7E247FD0C}"
 	ProjectSection(ProjectDependencies) = postProject
 		{F647F2B8-6614-4D01-B237-F69E5DABF972} = {F647F2B8-6614-4D01-B237-F69E5DABF972}
+		{0FDDEFC3-9959-4FAF-95F9-12CFC3035BB5} = {0FDDEFC3-9959-4FAF-95F9-12CFC3035BB5}
+		{9D1343D4-1D7D-4EEA-933C-E2E3D56E8D90} = {9D1343D4-1D7D-4EEA-933C-E2E3D56E8D90}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcppcryptfs", "libcppcryptfs\libcppcryptfs.vcxproj", "{F647F2B8-6614-4D01-B237-F69E5DABF972}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cppcryptfsctl", "cppcryptfsctl\cppcryptfsctl.vcxproj", "{3EA53C5A-FDF6-4E83-9B29-B99E3FB2114D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0FDDEFC3-9959-4FAF-95F9-12CFC3035BB5} = {0FDDEFC3-9959-4FAF-95F9-12CFC3035BB5}
+		{9D1343D4-1D7D-4EEA-933C-E2E3D56E8D90} = {9D1343D4-1D7D-4EEA-933C-E2E3D56E8D90}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libipc", "libipc\libipc.vcxproj", "{9D1343D4-1D7D-4EEA-933C-E2E3D56E8D90}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcommonutil", "libcommonutil\libcommonutil.vcxproj", "{0FDDEFC3-9959-4FAF-95F9-12CFC3035BB5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,6 +46,30 @@ Global
 		{F647F2B8-6614-4D01-B237-F69E5DABF972}.Release|x64.Build.0 = Release|x64
 		{F647F2B8-6614-4D01-B237-F69E5DABF972}.Release|x86.ActiveCfg = Release|Win32
 		{F647F2B8-6614-4D01-B237-F69E5DABF972}.Release|x86.Build.0 = Release|Win32
+		{3EA53C5A-FDF6-4E83-9B29-B99E3FB2114D}.Debug|x64.ActiveCfg = Debug|x64
+		{3EA53C5A-FDF6-4E83-9B29-B99E3FB2114D}.Debug|x64.Build.0 = Debug|x64
+		{3EA53C5A-FDF6-4E83-9B29-B99E3FB2114D}.Debug|x86.ActiveCfg = Debug|Win32
+		{3EA53C5A-FDF6-4E83-9B29-B99E3FB2114D}.Debug|x86.Build.0 = Debug|Win32
+		{3EA53C5A-FDF6-4E83-9B29-B99E3FB2114D}.Release|x64.ActiveCfg = Release|x64
+		{3EA53C5A-FDF6-4E83-9B29-B99E3FB2114D}.Release|x64.Build.0 = Release|x64
+		{3EA53C5A-FDF6-4E83-9B29-B99E3FB2114D}.Release|x86.ActiveCfg = Release|Win32
+		{3EA53C5A-FDF6-4E83-9B29-B99E3FB2114D}.Release|x86.Build.0 = Release|Win32
+		{9D1343D4-1D7D-4EEA-933C-E2E3D56E8D90}.Debug|x64.ActiveCfg = Debug|x64
+		{9D1343D4-1D7D-4EEA-933C-E2E3D56E8D90}.Debug|x64.Build.0 = Debug|x64
+		{9D1343D4-1D7D-4EEA-933C-E2E3D56E8D90}.Debug|x86.ActiveCfg = Debug|Win32
+		{9D1343D4-1D7D-4EEA-933C-E2E3D56E8D90}.Debug|x86.Build.0 = Debug|Win32
+		{9D1343D4-1D7D-4EEA-933C-E2E3D56E8D90}.Release|x64.ActiveCfg = Release|x64
+		{9D1343D4-1D7D-4EEA-933C-E2E3D56E8D90}.Release|x64.Build.0 = Release|x64
+		{9D1343D4-1D7D-4EEA-933C-E2E3D56E8D90}.Release|x86.ActiveCfg = Release|Win32
+		{9D1343D4-1D7D-4EEA-933C-E2E3D56E8D90}.Release|x86.Build.0 = Release|Win32
+		{0FDDEFC3-9959-4FAF-95F9-12CFC3035BB5}.Debug|x64.ActiveCfg = Debug|x64
+		{0FDDEFC3-9959-4FAF-95F9-12CFC3035BB5}.Debug|x64.Build.0 = Debug|x64
+		{0FDDEFC3-9959-4FAF-95F9-12CFC3035BB5}.Debug|x86.ActiveCfg = Debug|Win32
+		{0FDDEFC3-9959-4FAF-95F9-12CFC3035BB5}.Debug|x86.Build.0 = Debug|Win32
+		{0FDDEFC3-9959-4FAF-95F9-12CFC3035BB5}.Release|x64.ActiveCfg = Release|x64
+		{0FDDEFC3-9959-4FAF-95F9-12CFC3035BB5}.Release|x64.Build.0 = Release|x64
+		{0FDDEFC3-9959-4FAF-95F9-12CFC3035BB5}.Release|x86.ActiveCfg = Release|Win32
+		{0FDDEFC3-9959-4FAF-95F9-12CFC3035BB5}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

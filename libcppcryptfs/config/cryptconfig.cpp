@@ -63,6 +63,7 @@ THE SOFTWARE.
 #include "util/fileutil.h"
 #include "util/LockZeroBuffer.h"
 #include "filename/cryptfilename.h"
+#include "../libcommonutil/commonutil.h"
 
 #define SCRYPT_MB 72 // 65 seems to be enough, but allow more just in case
 
