@@ -17,6 +17,7 @@ cppcryptfs/fileutil.cpp.security_attributes_on_diriv
 cppcryptfs/namedpipe/
 cppcryptfsctl/cppcryptfsctl.vcxproj.filters
 cppcryptfsctl/cppcryptfsctl.vcxproj.user
+cppcryptfsctl/cppcryptfsctl.aps
 libipc/libipc.vcxproj.filters
 libipc/libipc.vcxproj.user
 libcommonutil/libcommonutil.vcxproj.filters

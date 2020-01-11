@@ -161,6 +161,12 @@
   <ItemGroup>
     <ClCompile Include="cppcryptfsctl.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="cppcryptfsctl.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
