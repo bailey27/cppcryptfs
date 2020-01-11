@@ -62,8 +62,11 @@ int SendArgsToRunningInstance(LPCWSTR args, std::wstring& result, std::wstring& 
 			DWORD lastErr = GetLastError();
 			err = FormatErr(L"Unable to open pipe.", lastErr);
 			if (lastErr == ERROR_FILE_NOT_FOUND) {
-				err += L" Is cppcryptfs already running?";
-				return SEND_ARGS_STATUS_CANNOT_CONNECT;
+				err += L" Is cppcryptfs running?";
+				return SEND_ARGS_STATUS_CANNOT_CONNECT;  // startiing cppcryptfs or retry is worthwhile
+			} else if (lastErr == ERROR_ACCESS_DENIED) {
+				err += L" Is cppcryptfs running as administrator and you are not?";
+				return SEND_ARGS_STATUS_ERROR; // retry not worthwhile
 			} else {
 				return SEND_ARGS_STATUS_ERROR;
 			}

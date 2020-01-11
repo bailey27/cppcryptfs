@@ -238,7 +238,7 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 		pCopyDataStruct->dwData == CPPCRYPTFS_COPYDATA_PIPE &&
 		pCopyDataStruct->cbData == sizeof(HANDLE)) {
 
-		HANDLE hPipe = *(HANDLE*)pCopyDataStruct->lpData;
+		auto hPipe = *reinterpret_cast<HANDLE*>(pCopyDataStruct->lpData);
 
 		DWORD client_process_id = 0;
 

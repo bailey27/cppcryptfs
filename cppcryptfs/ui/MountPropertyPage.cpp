@@ -1225,11 +1225,7 @@ static bool compair_find_datas(const FindDataPair& p1, const FindDataPair& p2)
 void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HANDLE hPipe)
 {
 	// need to intialize these getop variables before we process a command line
-	optarg = nullptr;
-	optcursor = nullptr;
-	optind = 1;
-	opterr = 1;
-	optopt = 0;
+	getopt_init();
 
 	CString errMes;
 

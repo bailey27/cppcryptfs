@@ -42,7 +42,15 @@ int optopt;
 int optind = 1;
 int opterr;
 
-wchar_t* optcursor = NULL;
+static wchar_t* optcursor = NULL;
+
+void getopt_init()
+{
+    /* need to intialize these getop variables before we process a command line */
+
+    optcursor = NULL;
+    optind = 1;
+}
 
 /* Implemented based on [1] and [2] for optional arguments.
    optopt is handled FreeBSD-style, per [3].
