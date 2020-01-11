@@ -1141,19 +1141,27 @@ OutputHandler::~OutputHandler()
 }
 int OutputHandler::print(int type, const wchar_t* fmt, ...) 
 {
+	int ret = 0;
+
 	va_list args;
 
 	va_start(args, fmt);
 
 	auto len = _vscwprintf(fmt, args) + 1; // _vscprintf doesn't count terminating null
 
-	if (len > static_cast<int>(m_buf.size())) {
-		len = max(len, 1024);
-		auto new_size = max(static_cast<int>(m_buf.size()) * 2, len);
-		m_buf.resize(new_size);
+	if (len >= 0) {
+
+		if (len > static_cast<int>(m_buf.size())) {
+			len = max(len, 1024);
+			auto new_size = max(static_cast<int>(m_buf.size()) * 2, len);
+			m_buf.resize(new_size);
+		}
+
+		ret = vswprintf_s(&m_buf[0], m_buf.size(), fmt, args);
+
+	} else {
+		ret = len;
 	}
-		
-	auto ret = vswprintf_s(&m_buf[0], m_buf.size(), fmt, args);
 
 	va_end(args);
 
