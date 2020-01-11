@@ -1147,9 +1147,9 @@ int OutputHandler::print(int type, const wchar_t* fmt, ...)
 
 	auto len = _vscwprintf(fmt, args) + 1; // _vscprintf doesn't count terminating null
 
-	if (len > m_buf.size()) {
+	if (len > static_cast<int>(m_buf.size())) {
 		len = max(len, 1024);
-		auto new_size = max(m_buf.size() * 2, len);
+		auto new_size = max(static_cast<int>(m_buf.size()) * 2, len);
 		m_buf.resize(new_size);
 	}
 		
