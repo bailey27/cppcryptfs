@@ -34,7 +34,7 @@ flag for Spectre mitigation.  For this to be effective (and for the build to wor
 
 [Visual Studio install Spectre-mitigated libraries screenshot 1](/screenshots/visual_studio_2019_spectre_libs1.png?raw=true) 
 
-(scroll down to get to the selctions in the next screenshot)
+[scroll down to get to the selections in the next screenshot]
 
 [Visual Studio install Spectre-mitigated libraries screenshot 2](/screenshots/visual_studio_2019_spectre_libs2.png?raw=true) 
 
