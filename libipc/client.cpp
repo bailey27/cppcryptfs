@@ -5,14 +5,19 @@
 #include "client.h"
 #include "certutil.h"
 #include "../libcppcryptfs/util/LockZeroBuffer.h"
+#include "../libcommonutil/commonutil.h"
 
 using namespace std;
 
-wstring GetWindowsErrorStr(DWORD dwLastErr);
 
 static wstring FormatErr(const WCHAR *basemes, DWORD lastErr)
 {
-	return wstring(basemes) + L" lastErr = " + to_wstring(lastErr) + L" " + GetWindowsErrorStr(lastErr);
+	wstring err_str = GetWindowsErrorString(lastErr);
+	// eat trailing newline chars
+	while (err_str.length() && (err_str.back() == '\n' || err_str.back() == '\r')) {
+		err_str.pop_back();
+	}
+	return wstring(basemes) + L" lastErr = " + to_wstring(lastErr) + L" " + err_str;;
 }
 
 int SendArgsToRunningInstance(LPCWSTR args, std::wstring& result, std::wstring& err)
@@ -183,66 +188,4 @@ int SendArgsToRunningInstance(LPCWSTR args, std::wstring& result, std::wstring& 
 	CloseHandle(hPipe);
 
 	return SEND_ARGS_STATUS_SUCCESS;
-}
-
-// we have the same code in util, but were having linkage issues
-// linking cppcryptfsctl with util, so instead of making another
-// util library the code was copy and pasted here and the name
-// was changed from GetWindowsErrorStr to GetWindowsErrorStr
-// if we need more stuff from util then we'll consider breaking
-// out the really simple stuff from the stuff that depends
-// on openssl, for example
-
-// ALSO: we eat the trailing newline here
-static wstring GetWindowsErrorStr(DWORD dwLastErr)
-{
-	wstring mes;
-
-	if (dwLastErr == 0) {
-		mes += L"unknown windows error 0";
-		return mes;
-	}
-
-	LPTSTR errorText = NULL;
-
-	if (!::FormatMessageW(
-		// use system message tables to retrieve error text
-		FORMAT_MESSAGE_FROM_SYSTEM
-		// allocate buffer on local heap for error text
-		| FORMAT_MESSAGE_ALLOCATE_BUFFER
-		// Important! will fail otherwise, since we're not 
-		// (and CANNOT) pass insertion parameters
-		| FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL,    // unused with FORMAT_MESSAGE_FROM_SYSTEM
-		dwLastErr,
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR)&errorText,  // output 
-		0, // minimum size for output buffer
-		NULL)) {   // arguments - see note 
-
-		mes += L"unable to get message for error " + to_wstring(dwLastErr);
-
-		if (errorText) {
-			LocalFree(errorText);
-		}
-
-		return mes;
-	}
-
-	if (errorText) {
-		// ... do something with the string `errorText` - log it, display it to the user, etc.
-		mes += errorText;
-		// release memory allocated by FormatMessage()
-		LocalFree(errorText);
-		errorText = NULL;
-	} else {
-		mes += L"got null message for error " + to_wstring(dwLastErr);
-	}
-
-	// eat trailing newline chars
-	while (mes.length() && (mes.back() == '\n' || mes.back() == '\r')) {
-		mes.pop_back();
-	}
-
-	return mes;
 }

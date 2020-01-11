@@ -48,6 +48,7 @@ THE SOFTWARE.
 #include "ui/FsInfoDialog.h"
 #include "dokan/MountPointManager.h"
 #include "../libipc/server.h"
+#include "../libcommonutil/commonutil.h"
 
 #include <algorithm>
 

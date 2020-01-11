@@ -19,3 +19,5 @@ cppcryptfsctl/cppcryptfsctl.vcxproj.filters
 cppcryptfsctl/cppcryptfsctl.vcxproj.user
 libipc/libipc.vcxproj.filters
 libipc/libipc.vcxproj.user
+libcommonutil/libcommonutil.vcxproj.filters
+libcommonutil/libcommonutil.vcxproj.user

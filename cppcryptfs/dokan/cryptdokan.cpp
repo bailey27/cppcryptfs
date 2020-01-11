@@ -101,6 +101,8 @@ THE SOFTWARE.
 #include "FileNameEnc.h"
 #include "MountPointManager.h"
 
+#include "../libcommonutil/commonutil.h"
+
 
 
 BOOL g_UseStdErr;

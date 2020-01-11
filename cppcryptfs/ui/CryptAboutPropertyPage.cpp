@@ -39,6 +39,7 @@ THE SOFTWARE.
 #include "util/util.h"
 #include "crypt/aes.h"
 #include "openssl/crypto.h"
+#include "../libcommonutil/commonutil.h"
 
 
 // CCryptAboutPropertyPage dialog
