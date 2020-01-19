@@ -1863,10 +1863,16 @@ void CMountPropertyPage::OnDblclkDriveLetters(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-HINSTANCE CMountPropertyPage::OpenFileExplorer(const CString& mp)
+int CMountPropertyPage::OpenFileExplorer(const CString& mp)
 {
 	if (mp.GetLength() < 1)
 		return 0;
 
-	return ::ShellExecute(NULL, L"open", mp, NULL, NULL, SW_SHOW);
+	if (!::PathIsDirectory(mp))
+		return ERROR_PATH_NOT_FOUND;
+#pragma warning( push )
+#pragma warning(disable : 4311)
+#pragma warning(disable : 4302)
+	return (int)::ShellExecute(NULL, L"open", mp, NULL, NULL, SW_SHOW);
+#pragma warning( pop )
 }

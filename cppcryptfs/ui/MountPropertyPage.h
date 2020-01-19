@@ -56,6 +56,7 @@ class CMountPropertyPage : public CCryptPropertyPage
 
 private:
 	static  void HandleTooltipsActivation(MSG *pMsg, CWnd *This, CWnd *disabledCtrls[], int numOfCtrls, CToolTipCtrl *pTooltip);
+	int OpenFileExplorer(const CString& mp);
 protected:
 	CToolTipCtrl m_ToolTip;
 	void AddMountPoint(const CString& path);
@@ -65,8 +66,6 @@ public:
 	// disallow copying
 	CMountPropertyPage(CMountPropertyPage const&) = delete;
 	void operator=(CMountPropertyPage const&) = delete;
-
-	HINSTANCE OpenFileExplorer(const CString& mp);
 
 	CMountPropertyPage();
 	virtual ~CMountPropertyPage();
