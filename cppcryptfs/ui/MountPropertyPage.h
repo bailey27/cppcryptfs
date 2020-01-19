@@ -66,6 +66,8 @@ public:
 	CMountPropertyPage(CMountPropertyPage const&) = delete;
 	void operator=(CMountPropertyPage const&) = delete;
 
+	HINSTANCE OpenFileExplorer(const CString& mp);
+
 	CMountPropertyPage();
 	virtual ~CMountPropertyPage();
 

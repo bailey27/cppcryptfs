@@ -265,6 +265,12 @@ This setting has effect only in forward mode and only if encrypted filenames are
 
 This setting is not enabled in either the Default or Recommended settings.
 
+**Open on mounting**
+
+If this setting is enabled, then when an encrypted volume is mounted, it will automatically be opened using the default Windows file management program which is is normally File Explorer.
+
+This setting is not enabled in either the Default or Recommended settings.
+
 **Defaults and Recommended**
 
 Currently, the default and recommended settings are the same.
@@ -348,7 +354,7 @@ or pipe it to another program like grep of findstr.  cppcryptfs does not set ERR
 
 cppcryptfsctl sets ERRORLEVEL to 0 on success, to 1 if an error occurs, and to 2 if it cannot connect which implies  that cppcryptfs isn't running.
 
-Passwords passed through the command line are not really secure.  cppcryptfs locks and zeros its internal copies of the command line, but, for example, it does not zero the command line stored in the Windows PEB (Process Environment Block). Also, if cppcyrptfs is already running, then an invocation of cppcryptfs (or cppcryptfsctl) from the command line will cause it to pass the command line to the already running instance. It tries to do this in a fairly secure way.  It communicates with the running instance using a WINDOWS named pipe. If the program running on either side is signed, then it verifies that the process on the other end of the pipe is also running from a signed executable and that the common name on both signatures are the same.  However, it is unknown how many times the command line might be copied by Windows out of cppcryptfs' control.  So there is some chance that a password passed via the command line might end up in the paging file if a paging file is being used.
+Passwords passed through the command line are not really secure.  cppcryptfs locks and zeros its internal copies of the command line, but, for example, it does not zero the command line stored in the Windows PEB (Process Environment Block). Also, if cppcyrptfs is already running, then an invocation of cppcryptfs (or cppcryptfsctl) from the command line will cause it to pass the command line to the already running instance. It tries to do this in a fairly secure way.  It communicates with the running instance using a local Windows named pipe. If the program running on either side of the pipe is signed, then it verifies that the program on the other end of the pipe is also running from a signed executable and that the common name on both signatures are the same.  However, it is unknown how many times the command line might be copied by Windows out of cppcryptfs' control.  So there is some chance that a password passed via the command line might end up in the paging file if a paging file is being used.
 
 ```
 usage: cppcryptfs [OPTIONS]
@@ -381,6 +387,9 @@ trying to send the command line to a running instance of cppcryptfs.
 ```
 
 Note: when using the short version of the option, you should not use the equal sign between the option and its argument.  When using the long version of the option, the equal sign is optional. e.g. these will work
+
+Also, if you intend to mount a volume to a drive letter, then you should not include a \\ character in the argument to the drive option.  e.g. if you want to mount to drive "r:" use "-dr:" and not "-dr:\\".
+
 
 ```
 cppcryptfs -m c:\tmp\test -d k -p XYZ

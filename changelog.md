@@ -2,9 +2,13 @@
 
 Changelog
 ------------
+v1.4.1.1, Jan 18 2020
+* Add setting to automatically open files system upon mounting.
+
 v1.4.1.0, Jan 11 2020
 * use name pipe for passing command line to cppcryptfs and results
-  back to caller.  add cppcryptfsctl.
+  back to caller.  
+* Add cppcryptfsctl.
 
 v1.4.0.29, Dec 26 2019
 * Compile with Microsoft Visual Studio 2019 (instead of 2017)

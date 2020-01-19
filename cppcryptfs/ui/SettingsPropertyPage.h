@@ -43,6 +43,7 @@ public:
 	bool m_bEnableSavingPasswords;
 	bool m_bNeverSaveHistory;
 	bool m_bDeleteSpurriousFiles;
+	bool m_bOpenOnMounting;
 
 	// disallow copying
 	CSettingsPropertyPage(CSettingsPropertyPage const&) = delete;
@@ -57,7 +58,7 @@ public:
 #endif
 protected:
 	BOOL SetControls(int nThreads, int nBufferBlocks, int nCacheTTL, bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords,
-						bool bNeverSaveHistory, bool bDeleteSpurriousFiles);
+						bool bNeverSaveHistory, bool bDeleteSpurriousFiles, bool bOpenOnMounting);
 	void SaveSettings();
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -76,4 +77,5 @@ public:
 	afx_msg void OnClickedEnableSavingPasswords();
 	afx_msg void OnClickedNeverSaveHistory();
 	afx_msg void OnClickedDeleteSpurriousFiles();
+	afx_msg void OnClickedOpenOnMounting();
 };

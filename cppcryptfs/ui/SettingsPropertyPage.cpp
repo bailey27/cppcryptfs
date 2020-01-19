@@ -74,6 +74,7 @@ BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_ENABLE_SAVING_PASSWORDS, &CSettingsPropertyPage::OnClickedEnableSavingPasswords)
 	ON_BN_CLICKED(IDC_NEVER_SAVE_HISTORY, &CSettingsPropertyPage::OnClickedNeverSaveHistory)
 	ON_BN_CLICKED(IDC_DELETE_SPURRIOUS_FILES, &CSettingsPropertyPage::OnClickedDeleteSpurriousFiles)
+	ON_BN_CLICKED(IDC_OPEN_ON_MOUNTING, &CSettingsPropertyPage::OnClickedOpenOnMounting)
 END_MESSAGE_MAP()
 
 
@@ -112,13 +113,16 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 	bool bDeleteSpurriousFiles = theApp.GetProfileInt(L"Settings", L"DeleteSpurriousFiles",
 											DELETE_SPURRIOUS_FILES_DEFAULT) != 0;
 
+	bool bOpenOnMounting = theApp.GetProfileIntW(L"Settings", L"OpenOnMounting",
+											OPEN_ON_MOUNTING_DEFAULT) != 0;
+
 	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, 
-								bEnableSavingPasswords, bNeverSaveHistory, bDeleteSpurriousFiles);
+								bEnableSavingPasswords, bNeverSaveHistory, bDeleteSpurriousFiles, bOpenOnMounting);
 }
 
 BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, 
 						bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords, bool bNeverSaveHistory,
-						bool bDeleteSpurriousFiles)
+						bool bDeleteSpurriousFiles, bool bOpenOnMounting)
 {
 
 	m_bCaseInsensitive =  bCaseInsensitive;
@@ -126,6 +130,7 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	m_bEnableSavingPasswords = bEnableSavingPasswords;
 	m_bNeverSaveHistory = bNeverSaveHistory;
 	m_bDeleteSpurriousFiles = bDeleteSpurriousFiles;
+	m_bOpenOnMounting = bOpenOnMounting;
 
 	int i;
 
@@ -208,6 +213,8 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	CheckDlgButton(IDC_DELETE_SPURRIOUS_FILES, m_bDeleteSpurriousFiles ? 1 : 0);
 
+	CheckDlgButton(IDC_OPEN_ON_MOUNTING, m_bOpenOnMounting ? 1 : 0);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -284,12 +291,14 @@ void CSettingsPropertyPage::SaveSettings()
 	m_bEnableSavingPasswords = !m_bEnableSavingPasswords; // ditto
 	m_bNeverSaveHistory = !m_bNeverSaveHistory; // ditto
 	m_bDeleteSpurriousFiles = !m_bDeleteSpurriousFiles; // ditto
+	m_bOpenOnMounting = !m_bOpenOnMounting; // ditto
 
 	OnBnClickedCaseinsensitive();
 	OnClickedMountmanager();
 	OnClickedEnableSavingPasswords();
 	OnClickedNeverSaveHistory();
 	OnClickedDeleteSpurriousFiles();
+	OnClickedOpenOnMounting();
 }
 
 void CSettingsPropertyPage::OnBnClickedDefaults()
@@ -298,7 +307,7 @@ void CSettingsPropertyPage::OnBnClickedDefaults()
 
 	SetControls(PER_FILESYSTEM_THREADS_DEFAULT, BUFFERBLOCKS_DEFAULT, CACHETTL_DEFAULT, 
 		CASEINSENSITIVE_DEFAULT, MOUNTMANAGER_DEFAULT, ENABLE_SAVING_PASSWORDS_DEFAULT,
-		NEVER_SAVE_HISTORY_DEFAULT, DELETE_SPURRIOUS_FILES_DEFAULT);
+		NEVER_SAVE_HISTORY_DEFAULT, DELETE_SPURRIOUS_FILES_DEFAULT, OPEN_ON_MOUNTING_DEFAULT);
 
 	SaveSettings();
 }
@@ -310,7 +319,7 @@ void CSettingsPropertyPage::OnBnClickedRecommended()
 
 	SetControls(PER_FILESYSTEM_THREADS_RECOMMENDED, BUFFERBLOCKS_RECOMMENDED, CACHETTL_RECOMMENDED, 
 		CASEINSENSITIVE_RECOMMENDED, MOUNTMANAGER_RECOMMENDED, ENABLE_SAVING_PASSWORDS_RECOMMENDED,
-		NEVER_SAVE_HISTORY_RECOMMENDED, DELETE_SUPRRIOUS_FILES_RECOMMENDED);
+		NEVER_SAVE_HISTORY_RECOMMENDED, DELETE_SUPRRIOUS_FILES_RECOMMENDED, OPEN_ON_MOUNTING_RECOMMENDED);
 
 	SaveSettings();
 }
@@ -422,4 +431,16 @@ void CSettingsPropertyPage::OnClickedDeleteSpurriousFiles()
 	CheckDlgButton(IDC_DELETE_SPURRIOUS_FILES, m_bDeleteSpurriousFiles ? 1 : 0);
 
 	theApp.WriteProfileInt(L"Settings", L"DeleteSpurriousFiles", m_bDeleteSpurriousFiles ? 1 : 0);
+}
+
+
+void CSettingsPropertyPage::OnClickedOpenOnMounting()
+{
+	// TODO: Add your control notification handler code here
+	// TODO: Add your control notification handler code here
+	m_bOpenOnMounting = !m_bOpenOnMounting;
+
+	CheckDlgButton(IDC_OPEN_ON_MOUNTING, m_bOpenOnMounting ? 1 : 0);
+
+	theApp.WriteProfileInt(L"Settings", L"OpenOnMounting", m_bOpenOnMounting ? 1 : 0);
 }

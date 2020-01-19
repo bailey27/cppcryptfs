@@ -389,6 +389,13 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 		}
 
 	}
+
+	bool bOpenOnMounting = theApp.GetProfileIntW(L"Settings", L"OpenOnMounting",
+		OPEN_ON_MOUNTING_DEFAULT) != 0;
+
+	if (bOpenOnMounting) {
+		OpenFileExplorer(cmp);
+	}
 		
 	return CString(L"");
 }
@@ -1561,7 +1568,7 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 
 	CListCtrl* pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
-	enum { DismountV=1, AddMountPointV, DeleteMountPointV, Properties };
+	enum { DismountV=1, AddMountPointV, DeleteMountPointV, PropertiesV, OpenV };
 
 	if ((CWnd*)pList == pWnd) {
 		CMenu menu;
@@ -1569,7 +1576,7 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 		if (!menu.CreatePopupMenu())
 			return;
 
-		menu.AppendMenu(MF_ENABLED, AddMountPointV, L"&Add Mount Point");
+		menu.AppendMenu(MF_ENABLED, AddMountPointV, L"&Add Mount Point...");
 
 		int item = -1;
 
@@ -1585,19 +1592,18 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 			cmp = pList->GetItemText(item, 0);
 			wstring mpstr;
 			bool mounted = MountPointManager::getInstance().find(cmp, mpstr);
+			if (mounted) {
+				menu.AppendMenu(MF_ENABLED, OpenV, L"Open...\tdouble-click");
+				menu.AppendMenu(MF_ENABLED, PropertiesV, L"&Properties...");
+				menu.AppendMenu(MF_ENABLED, DismountV, L"&Dismount");
+			}
 			if (is_mountpoint_a_dir(cmp)) {
 				menu.AppendMenu(mounted ? MF_DISABLED : MF_ENABLED, DeleteMountPointV, L"Dele&te Mount Point");
-			} 
-			if (mounted) {
-				menu.AppendMenu(MF_ENABLED, DismountV, L"&Dismount");
-				menu.AppendMenu(MF_ENABLED, Properties, L"&Properties...");
 			}
 
 		}
 
 		int retVal = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NONOTIFY | TPM_RETURNCMD, point.x, point.y, this);
-
-		
 
 		switch (retVal) {
 		case DismountV: {
@@ -1621,7 +1627,7 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 			break;
 
 		}
-		case Properties:
+		case PropertiesV:
 		{	
 			if (cmp.GetLength() > 1) {
 				CFsInfoDialog idlg;
@@ -1630,6 +1636,12 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 				idlg.DoModal();
 			}
 			
+			break;
+
+		}
+		case OpenV:
+		{
+			OpenFileExplorer(cmp);
 			break;
 
 		}
@@ -1843,9 +1855,18 @@ void CMountPropertyPage::OnDblclkDriveLetters(NMHDR *pNMHDR, LRESULT *pResult)
 	if (pList) {
 		CString mp = pList->GetItemText(row, 0);
 		CString path = pList->GetItemText(row, 1);
-		if (path.GetLength() > 0 && ::PathIsDirectory(mp))
-			::ShellExecute(NULL, L"open", mp, NULL, NULL, SW_SHOW);
+		if (path.GetLength() > 0) {
+			OpenFileExplorer(mp);
+		}
 	}
 
 	*pResult = 0;
+}
+
+HINSTANCE CMountPropertyPage::OpenFileExplorer(const CString& mp)
+{
+	if (mp.GetLength() < 1)
+		return 0;
+
+	return ::ShellExecute(NULL, L"open", mp, NULL, NULL, SW_SHOW);
 }

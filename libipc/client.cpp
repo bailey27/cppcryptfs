@@ -146,7 +146,9 @@ int SendArgsToRunningInstance(LPCWSTR args, std::wstring& result, std::wstring& 
 
 	result.clear();
 
-	const size_t read_buf_size = 64*1024; // must be multiple of 2 bytes
+	const size_t read_buf_size = CMD_NAMED_PIPE_BUFSIZE; 
+	// must be multiple of 2 bytes
+	static_assert(read_buf_size % 2 == 0, "TransactNamedPipe read buffer size must multipe of 2 bytes");
 
 	vector<BYTE> read_buf(read_buf_size); 
 
