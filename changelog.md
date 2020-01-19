@@ -2,6 +2,9 @@
 
 Changelog
 ------------
+v1.4.1.2, Jan 18 2020
+* Make sure path is directory before opening with ShellExecute.
+
 v1.4.1.1, Jan 18 2020
 * Add setting to automatically open files system upon mounting.
 
