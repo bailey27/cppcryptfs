@@ -528,9 +528,7 @@ Delete linux-3.0                1m28.749s       0m10.144s       1m24.677s
 
 ```
 
-The above benchmarks were run a long time ago.  The creator of gocryptfs ran
-similar benchmarks more recently comparing cppcryptfs to other cryptographic 
-filesystems on Windows.  
+The above benchmarks were run a long time ago.  The creator of gocryptfs has published similar benchmarks more recently comparing cppcryptfs to other cryptographic filesystems on Windows.  
 
 https://nuetzlich.net/gocryptfs/comparison/#performance-on-windows
 
