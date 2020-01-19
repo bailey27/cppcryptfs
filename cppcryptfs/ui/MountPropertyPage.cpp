@@ -394,7 +394,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 		OPEN_ON_MOUNTING_DEFAULT) != 0;
 
 	if (bOpenOnMounting) {
-		OpenFileExplorer(cmp);
+		OpenFileManagementShell(cmp);
 	}
 		
 	return CString(L"");
@@ -1641,7 +1641,7 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 		}
 		case OpenV:
 		{
-			OpenFileExplorer(cmp);
+			OpenFileManagementShell(cmp);
 			break;
 
 		}
@@ -1856,23 +1856,26 @@ void CMountPropertyPage::OnDblclkDriveLetters(NMHDR *pNMHDR, LRESULT *pResult)
 		CString mp = pList->GetItemText(row, 0);
 		CString path = pList->GetItemText(row, 1);
 		if (path.GetLength() > 0) {
-			OpenFileExplorer(mp);
+			OpenFileManagementShell(mp);
 		}
 	}
 
 	*pResult = 0;
 }
 
-int CMountPropertyPage::OpenFileExplorer(const CString& mp)
+int CMountPropertyPage::OpenFileManagementShell(const CString& mp)
 {
 	if (mp.GetLength() < 1)
-		return 0;
+		return ERROR_INVALID_PARAMETER;
 
 	if (!::PathIsDirectory(mp))
 		return ERROR_PATH_NOT_FOUND;
-#pragma warning( push )
-#pragma warning(disable : 4311)
-#pragma warning(disable : 4302)
-	return (int)::ShellExecute(NULL, L"open", mp, NULL, NULL, SW_SHOW);
-#pragma warning( pop )
+
+	int result = static_cast<int>(reinterpret_cast<INT_PTR>(::ShellExecute(NULL, L"open", mp, NULL, NULL, SW_SHOW)));
+	if (result > 32) {
+		return 0; // according to docs > 32 is success (appears to be 42 always)
+	} else {
+		// can also return 0 if out of memory or out of resources
+		return result ? result : SE_ERR_OOM;
+	}
 }

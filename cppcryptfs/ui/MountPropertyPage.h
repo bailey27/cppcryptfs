@@ -56,7 +56,7 @@ class CMountPropertyPage : public CCryptPropertyPage
 
 private:
 	static  void HandleTooltipsActivation(MSG *pMsg, CWnd *This, CWnd *disabledCtrls[], int numOfCtrls, CToolTipCtrl *pTooltip);
-	int OpenFileExplorer(const CString& mp);
+	int OpenFileManagementShell(const CString& mp);
 protected:
 	CToolTipCtrl m_ToolTip;
 	void AddMountPoint(const CString& path);
