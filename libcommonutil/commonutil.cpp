@@ -31,6 +31,8 @@ THE SOFTWARE.
 #include "framework.h"
 #include "commonutil.h"
 
+#include<memory>
+
 #pragma comment(lib, "version.lib") 
 
 bool
@@ -49,9 +51,9 @@ GetProductVersionInfo(wstring& strProductName, wstring& strProductVersion,
 		return false;
 	}
 
-	void* pVersionResource = NULL;
+	auto pVersionResourceHandle = cppcryptfs::unique_rsc(malloc, free, vSize);
 
-	pVersionResource = malloc(vSize);
+	void* pVersionResource = pVersionResourceHandle.get();
 
 	if (pVersionResource == NULL)
 	{
@@ -59,7 +61,6 @@ GetProductVersionInfo(wstring& strProductName, wstring& strProductVersion,
 	}
 
 	if (!GetFileVersionInfo(fullPath, NULL, vSize, pVersionResource)) {
-		free(pVersionResource);
 		return false;
 	}
 
@@ -105,20 +106,16 @@ GetProductVersionInfo(wstring& strProductName, wstring& strProductVersion,
 		!VerQueryValue(pVersionResource, (L"\\StringFileInfo\\" + lang + L"\\ProductVersion").c_str(), &pvProductVersion, &iProductVersionLen) ||
 		!VerQueryValue(pVersionResource, (L"\\StringFileInfo\\" + lang + L"\\LegalCopyright").c_str(), &pvLegalCopyright, &iLegalCopyrightLen))
 	{
-		free(pVersionResource);
 		return false;
 	}
 
 	if (iProductNameLen < 1 || iProductVersionLen < 1 || iLegalCopyrightLen < 1) {
-		free(pVersionResource);
 		return false;
 	}
 
 	strProductName = (LPCTSTR)pvProductName;
 	strProductVersion = (LPCTSTR)pvProductVersion;
 	strLegalCopyright = (LPCTSTR)pvLegalCopyright;
-
-	free(pVersionResource);
 
 	return true;
 }
