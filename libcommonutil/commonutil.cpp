@@ -51,7 +51,7 @@ GetProductVersionInfo(wstring& strProductName, wstring& strProductVersion,
 		return false;
 	}
 
-	std::unique_ptr<void, void(*)(void*)> pVersionResourceHandle(malloc(vSize), free);
+	auto pVersionResourceHandle = cppcryptfs::unique_rsc(malloc, free, vSize);
 
 	void* pVersionResource = pVersionResourceHandle.get();
 
