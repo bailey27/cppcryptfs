@@ -47,7 +47,8 @@ int wmain(int argc, const wchar_t *argv[])
     if (argc == 2 && !lstrcmp(argv[1], L"-V")) {
         wstring prodname, prodver, copyright;
         if (GetProductVersionInfo(prodname, prodver, copyright)) {
-            wcerr << prodname + L" " + prodver + L" " + copyright << endl;
+            const wchar_t* bits = sizeof(void*) == 8 ? L" 64-bit " : L" 32-bit ";
+            wcerr << prodname + L" " + prodver + bits + copyright << endl;
         } else {
             wcerr << wstring(argv[0]) + L" error getting version" << endl;
         }

@@ -1225,18 +1225,15 @@ static void usage(OutputHandler& output_handler)
 	output_handler.print(CMD_PIPE_ERROR, L"  -t, --tray\t\thide in system tray\n");
 	output_handler.print(CMD_PIPE_ERROR, L"  -x, --exit\t\texit if no drives mounted\n");
 	output_handler.print(CMD_PIPE_ERROR, L"  -l, --list\t\tlist available and mounted drive letters (with paths)\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -ld:\\p, --list=d:\\p\tlist encrypted and plaintext filenames\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -ld:\\p, --list=d:\\p\tlist plaintext and encrypted filenames\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -C, --csv\t\tfile list is comma-delimited\n");
+	output_handler.print(CMD_PIPE_ERROR, L"  -D, --dir\t\tfile list dirs first and w/ trailing \"\\\"\n");
 	output_handler.print(CMD_PIPE_ERROR, L"  -i, --info=D\t\tshow information about mounted filesystem\n");
 	output_handler.print(CMD_PIPE_ERROR, L"  -v, --version\t\tprint version\n");
 	output_handler.print(CMD_PIPE_ERROR, L"  -h, --help\t\tdisplay this help message\n");
 	
 }
 
-
-static bool compair_find_datas(const FindDataPair& p1, const FindDataPair& p2)
-{
-	return lstrcmpi(p1.fdata.cFileName, p2.fdata.cFileName) < 0;
-}
 
 void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HANDLE hPipe)
 {
@@ -1273,7 +1270,9 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 
 	BOOL do_help = FALSE;
 	BOOL do_info = FALSE;
+	BOOL do_csv = FALSE;
 	BOOL do_version = FALSE;
+	BOOL do_dirsfirst = FALSE;
 	BOOL exit_if_no_mounted = FALSE;
 	BOOL hide_to_system_tray = FALSE;
 	BOOL do_list = FALSE;
@@ -1300,7 +1299,9 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 			{L"tray",  no_argument, 0, 't'},
 			{L"exit",  no_argument, 0, 'x'},
 			{L"list",  optional_argument, 0, 'l'},
-			{ L"version",  no_argument, 0, 'v' },
+			{L"csv",  no_argument, 0, 'C'},
+			{L"dir",  no_argument, 0, 'D'},
+			{L"version",  no_argument, 0, 'v' },
 			{L"help",  no_argument, 0, 'h'},
 			{0, 0, 0, 0}
 		};
@@ -1310,7 +1311,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 
 		while (1) {
 
-			c = getopt_long(argc, argv, L"m:d:p:u:vhxtl::rsc:Pi:", long_options, &option_index);
+			c = getopt_long(argc, argv, L"m:d:p:u:vhxtl::rsc:Pi:CD", long_options, &option_index);
 
 			if (c == -1)
 				break;
@@ -1368,6 +1369,12 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 				break;
 			case 'x':
 				exit_if_no_mounted = TRUE;
+				break;
+			case 'C':
+				do_csv = true;
+				break;
+			case 'D':
+				do_dirsfirst = true;
 				break;
 			default:
 				throw(-1);
@@ -1428,9 +1435,35 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 					if (!list_files(list_arg, findDatas, err_mes)) {
 						errMes = err_mes.c_str();
 					} else {
-						findDatas.sort(compair_find_datas);
-						for (auto &it : findDatas) {
-							if (printMessages) output_handler.print(CMD_PIPE_SUCCESS, L"%s => %s\n", it.fdata.cFileName, it.fdata_orig.cFileName);
+						auto less_fdata_pairs = [do_dirsfirst](const FindDataPair& p1, const FindDataPair& p2) -> bool {
+
+							if (!do_dirsfirst)
+								return lstrcmpi(p1.fdata.cFileName, p2.fdata.cFileName) < 0;
+
+							bool p1_is_dir = (p1.fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+							bool p2_is_dir = (p2.fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+
+							if (p1_is_dir == p2_is_dir) 
+								return lstrcmpi(p1.fdata.cFileName, p2.fdata.cFileName) < 0;
+							else 
+								return p1_is_dir;	
+						};
+						findDatas.sort(less_fdata_pairs);
+						wstring enc_name;
+						wstring pt_name;
+						const WCHAR* fmt = do_csv ? L"%s,%s\n" : L"%s => %s\n";
+						for (const auto &it : findDatas) {
+							enc_name = it.fdata_orig.cFileName;
+							pt_name = it.fdata.cFileName;							
+							if (do_dirsfirst && (it.fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))  {								
+								enc_name += L"\\";
+								pt_name += L"\\";								
+							}
+							if (do_csv && pt_name.find(L',') != wstring::npos) {
+								pt_name = L"\"" + pt_name + L"\"";
+							}
+			
+							if (printMessages) output_handler.print(CMD_PIPE_SUCCESS, fmt, pt_name.c_str(), enc_name.c_str());
 						}
 					}
 				}  

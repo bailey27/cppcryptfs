@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.1.3, Jan 25 2020
+* Add --csv and -D (list dirs first) options for listing encrypted
+  and plaintext file names from the command line.
+
 v1.4.1.2, Jan 18 2020
 * Make sure path is directory before opening with ShellExecute.
 

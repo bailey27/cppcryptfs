@@ -357,11 +357,11 @@ cppcryptfsctl sets ERRORLEVEL to 0 on success, to 1 if an error occurs, and to 2
 Passwords passed through the command line are not really secure.  cppcryptfs locks and zeros its internal copies of the command line, but, for example, it does not zero the command line stored in the Windows PEB (Process Environment Block). Also, if cppcyrptfs is already running, then an invocation of cppcryptfs (or cppcryptfsctl) from the command line will cause it to pass the command line to the already running instance. It tries to do this in a fairly secure way.  It communicates with the running instance using a local Windows named pipe. If the program running on either side of the pipe is signed, then it verifies that the program on the other end of the pipe is also running from a signed executable and that the common name on both signatures are the same.  However, it is unknown how many times the command line might be copied by Windows out of cppcryptfs' control.  So there is some chance that a password passed via the command line might end up in the paging file if a paging file is being used.
 
 ```
-usage: cppcryptfs [OPTIONS]
+Usage: cppcryptfs [OPTIONS]
 
 Mounting:
   -m, --mount=PATH      mount filesystem located at PATH
-  -d, --drive=D         mount to drive letter D
+  -d, --drive=D         mount to drive letter D or empty dir DIR
   -p, --password=PASS   use password PASS
   -P, --saved-password  use saved password
   -r, --readonly        mount read-only
@@ -376,11 +376,12 @@ Misc:
   -t, --tray            hide in system tray
   -x, --exit            exit if no drives mounted
   -l, --list            list available and mounted drive letters (with paths)
-  -ld:\p, --list=d:\p   list encrypted and plaintext filenames
+  -ld:\p, --list=d:\p   list plaintext and encrypted filenames
+  -C, --csv             file list is comma-delimited
+  -D, --dir             file list dirs first and w/ trailing "\"
   -i, --info=D          show information about mounted filesystem
   -v, --version         print version
   -h, --help            display this help message
-
 
 cppcrytfsctl has a special option -V that if it is the only option given it will print its version instead of
 trying to send the command line to a running instance of cppcryptfs.
