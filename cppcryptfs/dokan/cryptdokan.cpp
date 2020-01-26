@@ -1926,7 +1926,8 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
       throw(-1);
     }
 
-    tdata->con.GetConfig()->m_keybuf_manager.Activate();
+    if (opts.encryptkeysinmemory)
+        tdata->con.GetConfig()->m_keybuf_manager.Activate();
 
     PDOKAN_OPERATIONS dokanOperations = &tdata->operations;
 
