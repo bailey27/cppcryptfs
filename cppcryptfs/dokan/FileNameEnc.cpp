@@ -83,9 +83,13 @@ FileNameEnc::FileNameEnc(PDOKAN_FILE_INFO DokanFileInfo, const WCHAR *fname,
 	m_force_case_cache_notfound = forceCaseCacheNotFound;
 }
 
-FileNameEnc::~FileNameEnc() {}
+FileNameEnc::~FileNameEnc() 
+{
 
-const WCHAR *FileNameEnc::Convert() {
+}
+
+const WCHAR *FileNameEnc::Convert() 
+{
 
 	if (!m_tried) {
 

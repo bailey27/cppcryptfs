@@ -185,6 +185,7 @@
     <ClInclude Include="file\cryptfile.h" />
     <ClInclude Include="file\cryptio.h" />
     <ClInclude Include="file\iobufferpool.h" />
+    <ClInclude Include="util\KeybufManager.h" />
     <ClInclude Include="util\fileutil.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -214,6 +215,7 @@
     <ClCompile Include="file\cryptfile.cpp" />
     <ClCompile Include="file\cryptio.cpp" />
     <ClCompile Include="file\iobufferpool.cpp" />
+    <ClCompile Include="util\KeybufManager.cpp" />
     <ClCompile Include="util\fileutil.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

@@ -35,7 +35,7 @@ THE SOFTWARE.
 RandomBytes::RandomBytes()
 {
 
-	m_pRandBuf = new LockZeroBuffer<BYTE>(RANDOM_POOL_SIZE);
+	m_pRandBuf = new LockZeroBuffer<BYTE>(RANDOM_POOL_SIZE, false, nullptr);
 
 	if (!m_pRandBuf->IsLocked()) {
 		delete m_pRandBuf;

@@ -41,6 +41,8 @@ typedef struct struct_FileHeader {
 	unsigned char fileid[FILE_ID_LEN];
 } FileHeader;
 
+class KeyDecryptor;
+
 class CryptFile {
 public:
 
@@ -53,6 +55,8 @@ public:
 	wstring m_path;
 
 	CryptContext *m_con;
+
+	KeyDecryptor *m_pkdc;
 
 	static CryptFile *NewInstance(CryptContext *con);
 

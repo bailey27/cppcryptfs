@@ -49,6 +49,7 @@ CryptFile::CryptFile()
 	m_handle = INVALID_HANDLE_VALUE;
 	m_is_empty = false;
 	m_con = NULL;
+	m_pkdc = nullptr;
 	m_real_file_size = (long long)-1;
 	memset(&m_header, 0, sizeof(m_header));
 }
@@ -57,6 +58,9 @@ CryptFile::CryptFile()
 CryptFile::~CryptFile()
 {
 	// don't close m_handle
+
+	if (m_pkdc)
+		delete m_pkdc;
 }
 
 CryptFileForward::CryptFileForward()
@@ -78,6 +82,8 @@ CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
 	m_handle = hfile;
 
 	m_con = con;
+
+	m_pkdc = new KeyDecryptor(&m_con->GetConfig()->m_keybuf_manager);
 
 	LARGE_INTEGER l;
 
@@ -730,6 +736,8 @@ BOOL CryptFileReverse::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputP
 	m_handle = hfile;
 
 	m_con = con;
+
+	m_pkdc = new KeyDecryptor(&m_con->GetConfig()->m_keybuf_manager);
 
 	LARGE_INTEGER l;
 

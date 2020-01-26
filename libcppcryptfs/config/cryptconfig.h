@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include <vector>
 
 #include "util/LockZeroBuffer.h"
+#include "util/KeybufManager.h"
 
 #define MAX_CONFIG_FILE_SIZE (16*1024*1024) // 16MB
 
@@ -47,6 +48,7 @@ public:
 	int m_P;
 
 	bool m_PlaintextNames;
+	KeybufManager m_keybuf_manager;
 private:
 	LockZeroBuffer<unsigned char> *m_pKeyBuf;
 	LockZeroBuffer<BYTE> *m_pGcmContentKey;

@@ -57,7 +57,7 @@ public:
 			SecureZeroMemory(m_buf, sizeof(T)*m_len);
 	}
 
-	LockZeroBuffer(unsigned int len, bool throw_if_not_locked = false)
+	LockZeroBuffer(unsigned int len, bool throw_if_not_locked, void *dummy)
 	{
 		m_len = len;
 		m_buf = new T[m_len];

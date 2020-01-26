@@ -36,11 +36,13 @@ THE SOFTWARE.
 #define SIV_KEY_ENCRYPT_HIGH_INDEX 2
 #define SIV_KEY_DECRYPT_HIGH_INDEX 3
 
+class CryptConfig;
+
 class SivContext {
 
 public:
 
-	bool SetKey(const unsigned char *key, int keylen, bool hkdf); // keylen must be 32
+	bool SetKey(const unsigned char *key, int keylen, bool hkdf, CryptConfig *pConfig); // keylen must be 32
 																  // disallow copying
 	SivContext(SivContext const&) = delete;
 	void operator=(SivContext const&) = delete;

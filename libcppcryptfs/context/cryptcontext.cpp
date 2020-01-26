@@ -38,7 +38,7 @@ static RandomBytes random_bytes;
 bool CryptContext::InitEme(const BYTE *key, bool hkdf)
 {
 
-	return m_eme.init(key, hkdf);
+	return m_eme.init(key, hkdf, m_config);
 
 }
 
@@ -93,7 +93,8 @@ static void get_deletable_files(CryptContext *con, vector<wstring>& files)
 bool CryptContext::FinalInitBeforeMounting()
 {
 	get_deletable_files(this, m_deletable_files);
-	return true;
+
+	return m_config->m_keybuf_manager.Finalize();
 }
 
 

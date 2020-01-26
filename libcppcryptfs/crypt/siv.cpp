@@ -44,15 +44,20 @@ SivContext::~SivContext()
 		delete m_pKeys;
 }
 
-bool SivContext::SetKey(const unsigned char *key, int keylen, bool hkdf)
+bool SivContext::SetKey(const unsigned char *key, int keylen, bool hkdf, CryptConfig *pConfig)
 {
 	if (keylen != 32)
 		return false;
 
-	if (!m_pKeys)
-		m_pKeys = new LockZeroBuffer<AES_KEY>(4, true);
+	if (!pConfig)
+		throw std::exception("SivContext::SetKey where is my config?");
 
-	LockZeroBuffer<BYTE> key64(64, true);
+	if (!m_pKeys)
+		m_pKeys = new LockZeroBuffer<AES_KEY>(4, true, nullptr);
+
+	pConfig->m_keybuf_manager.RegisterBuf(m_pKeys);
+
+	LockZeroBuffer<BYTE> key64(64, true, nullptr);
 
 	if (hkdf) {
 		if (!hkdfDerive(key, keylen, key64.m_buf, key64.m_len, hkdfInfoSIVContent))

@@ -112,7 +112,7 @@ BOOL SavedPasswords::SavePassword(LPCWSTR path, LPCWSTR password)
 		return FALSE;
 
 	if (len < MIN_SAVED_PASSWORD_LEN) {
-		pBuf = new LockZeroBuffer<WCHAR>(MIN_SAVED_PASSWORD_LEN, true);
+		pBuf = new LockZeroBuffer<WCHAR>(MIN_SAVED_PASSWORD_LEN, true, nullptr);
 		wcscpy_s(pBuf->m_buf, MIN_SAVED_PASSWORD_LEN, password);
 		password = pBuf->m_buf;
 		len = MIN_SAVED_PASSWORD_LEN;

@@ -43,6 +43,7 @@ THE SOFTWARE.
 
 #include "eme.h"
 #include "crypt.h"
+#include "config/cryptconfig.h"
 #include "openssl/aes.h"
 
 #include "aes.h"
@@ -144,13 +145,13 @@ EmeCryptContext::~EmeCryptContext()
 }
 
 // tabulateL - calculate L_i for messages up to a length of m cipher blocks
-void EmeCryptContext::tabulateL(int m){
+void EmeCryptContext::tabulateL(int m, CryptConfig *pConfig){
 
 	/* set L0 = 2*AESenc(K; 0) */
 	BYTE eZero[16];
 	memset(eZero, 0, sizeof(eZero));
 
-	LockZeroBuffer<BYTE> Li(16, true);
+	LockZeroBuffer<BYTE> Li(16, true, nullptr);
 
 	AesEncrypt(Li.m_buf, eZero, 16, this);
 
@@ -158,7 +159,9 @@ void EmeCryptContext::tabulateL(int m){
 
 	// Allocate pool once and slice into m pieces in the loop
 
-	m_pLTableBuf = new LockZeroBuffer<BYTE>(m * 16, true);
+	m_pLTableBuf = new LockZeroBuffer<BYTE>(m * 16, true, nullptr);
+
+	pConfig->m_keybuf_manager.RegisterBuf(m_pLTableBuf);
 
 	BYTE *pool = m_pLTableBuf->m_buf;
 
@@ -174,11 +177,14 @@ void EmeCryptContext::tabulateL(int m){
 
 
 
-bool EmeCryptContext::init(const BYTE *key, bool hkdf)
+bool EmeCryptContext::init(const BYTE *key, bool hkdf, CryptConfig *pConfig)
 {
 	const BYTE *emeKey = key;
 
-	LockZeroBuffer<BYTE> hkdfKey(MASTER_KEY_LEN);
+	if (!pConfig)
+		throw std::exception("EMeCryptContext init: where is my config?");
+
+	LockZeroBuffer<BYTE> hkdfKey(MASTER_KEY_LEN, false, nullptr);
 
 	if (hkdf) {
 		if (!hkdfKey.IsLocked())
@@ -189,13 +195,15 @@ bool EmeCryptContext::init(const BYTE *key, bool hkdf)
 		emeKey = hkdfKey.m_buf;
 	}
 
-	m_pKeyBuf = new LockZeroBuffer<AES_KEY>(2, true);
+	m_pKeyBuf = new LockZeroBuffer<AES_KEY>(2, true, nullptr);
+
+	pConfig->m_keybuf_manager.RegisterBuf(m_pKeyBuf);
 
 	AES::initialize_keys(emeKey, 256, &m_pKeyBuf->m_buf[0], &m_pKeyBuf->m_buf[1]);
 
 	m_aes_ctx.set_keys(&m_pKeyBuf->m_buf[0], &m_pKeyBuf->m_buf[1]);
 
-	tabulateL(16 * 8);
+	tabulateL(16 * 8, pConfig);
 
 	return true;
 

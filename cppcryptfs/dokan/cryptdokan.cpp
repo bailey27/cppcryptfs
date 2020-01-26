@@ -1926,6 +1926,8 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
       throw(-1);
     }
 
+    tdata->con.GetConfig()->m_keybuf_manager.Activate();
+
     PDOKAN_OPERATIONS dokanOperations = &tdata->operations;
 
     init_security_name_privilege(); // make sure AddSecurityNamePrivilege() has been called, whether or not we can get it
@@ -2060,7 +2062,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
     if (config->m_AESSIV) {
       try {
-        con->m_siv.SetKey(config->GetMasterKey(), 32, config->m_HKDF);
+        con->m_siv.SetKey(config->GetMasterKey(), 32, config->m_HKDF, config);
       } catch (...) {
         mes = L"unable to intialize AESSIV context";
         throw(-1);
@@ -2236,6 +2238,8 @@ BOOL write_volume_name_if_changed(WCHAR dl, wstring& mes) {
 	  mes += L"mount point has null context";
 	  return FALSE;
   }
+
+  KeyDecryptor kdc(&con->GetConfig()->m_keybuf_manager);
 
   WCHAR volbuf[256];
 

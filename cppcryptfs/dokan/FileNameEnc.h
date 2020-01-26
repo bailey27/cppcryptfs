@@ -89,6 +89,7 @@ private:
 	void AssignPlainPath(LPCWSTR plain_path);
 
 public:
+	FileNameEnc() = delete;
 	FileNameEnc(PDOKAN_FILE_INFO DokanFileInfo, const WCHAR *fname,
 		string *actual_encrypted = NULL,
 		bool ignorecasecache = false);

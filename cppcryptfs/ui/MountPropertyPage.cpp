@@ -163,7 +163,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 	CSecureEdit *pPass = &m_password;
 
-	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1);
+	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, false, nullptr);
 
 	if (!password.IsLocked()) {
 		return CString(L"unable to lock password buffer");
@@ -467,6 +467,8 @@ BOOL CMountPropertyPage::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
+	::MessageBox(NULL, L"WARNING!!! EXPERIMENTAL SOFTWARE!", L"cppcryptfs", MB_ICONHAND | MB_OK);
+
 	// TODO:  Add extra initialization here
 
 	//Create the ToolTip control
@@ -713,7 +715,7 @@ void CMountPropertyPage::OnClickedMount()
 			if (pEd->m_strRealText == NULL || wcslen(pEd->m_strRealText) < 1) {
 				CWnd *pPath = GetDlgItem(IDC_PATH);
 				if (pPath) {
-					LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true);
+					LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true, nullptr);
 					CString cpath;
 					pPath->GetWindowTextW(cpath);
 					if (cpath.GetLength() > 0 && SavedPasswords::RetrievePassword(cpath, password.m_buf, password.m_len)) {
@@ -739,7 +741,6 @@ void CMountPropertyPage::OnClickedDismount()
 
 CString CMountPropertyPage::Dismount(LPCWSTR argMountPoint)
 {
-	
 
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
@@ -977,7 +978,7 @@ BOOL CMountPropertyPage::OnSetActive()
 						CheckDlgButton(IDC_READONLY, (flags & READONLY_FLAG) != 0);
 						CheckDlgButton(IDC_REVERSE, (flags & REVERSE_FLAG) != 0);
 
-						LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true);
+						LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true, nullptr);
 
 						if ((flags & SAVE_PASSWORD_FLAG) && save_passwords_enabled && SavedPasswords::RetrievePassword(cpath, password.m_buf, password.m_len)) {
 
@@ -1067,7 +1068,7 @@ void CMountPropertyPage::OnCbnSelchangePath()
 
 	CheckDlgButton(IDC_SAVE_PASSWORD, (flags & SAVE_PASSWORD_FLAG) && save_passwords_enabled);
 
-	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN+1, true);
+	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN+1, true, nullptr);
 
 	if ((flags & SAVE_PASSWORD_FLAG) && save_passwords_enabled && SavedPasswords::RetrievePassword(cpath, password.m_buf, password.m_len)) {
 
@@ -1261,7 +1262,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 
 	CString path;
 	CString mountPoint;
-	LockZeroBuffer<WCHAR> password((DWORD)(wcslen(szCmd) + 1));
+	LockZeroBuffer<WCHAR> password((DWORD)(wcslen(szCmd) + 1), false, nullptr);
 	BOOL mount = FALSE;
 	BOOL dismount = FALSE;
 	BOOL dismount_all = FALSE;

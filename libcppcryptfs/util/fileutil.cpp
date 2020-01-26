@@ -299,6 +299,8 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 
 	bool plaintext_names = con->GetConfig()->m_PlaintextNames;
 
+	KeyDecryptor kdc(plaintext_names ? nullptr : &con->GetConfig()->m_keybuf_manager);
+
 	list<wstring> files; // used only if case-insensitive
 
 	try {

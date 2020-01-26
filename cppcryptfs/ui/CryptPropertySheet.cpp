@@ -255,7 +255,7 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 
 		if (page) {
 			
-			LockZeroBuffer<WCHAR> cmdLine(CMD_PIPE_MAX_ARGS_LEN);
+			LockZeroBuffer<WCHAR> cmdLine(CMD_PIPE_MAX_ARGS_LEN, false, nullptr);
 			if (!cmdLine.IsLocked()) {
 				MessageBox(L"unable to lock command line buffer", L"cppcryptfs", MB_ICONERROR | MB_OK);
 				return FALSE;

@@ -434,6 +434,8 @@ decrypt_path(CryptContext *con, const WCHAR *path, wstring& storage)
 
 		} else {
 
+			KeyDecryptor kdc(&config->m_keybuf_manager);
+
 			// we can short-circuit the process in the case where the final file or dir is a long file name
 			// and it is found in the long file name (lfn) cache
 
@@ -538,7 +540,6 @@ encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *act
 
 	CryptConfig *config = con->GetConfig();
 
-
 	try {
 		
 		storage = config->GetBaseDir();
@@ -548,6 +549,8 @@ encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *act
 			storage += path;
 
 		} else {
+
+			KeyDecryptor kdc(&config->m_keybuf_manager);
 
 			if (*path && path[0] == '\\') {
 				storage.push_back('\\');

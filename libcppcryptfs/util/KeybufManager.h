@@ -25,49 +25,74 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
 #pragma once
+#include "LockZeroBuffer.h"
+#include <mutex>
+#include <vector>
 
-#include <windows.h>
+using namespace std;
 
-#include "cryptdefs.h"
-
-#include "openssl/aes.h"
-
-#include "aes.h"
-
-#include "util/LockZeroBuffer.h"
-
-
-class CryptConfig;
-
-class EmeCryptContext {
-public:
-	
-private:
-
-	LockZeroBuffer<AES_KEY> *m_pKeyBuf;
-	LockZeroBuffer<BYTE> *m_pLTableBuf;
-public:
-	AES m_aes_ctx;
-	LPBYTE *m_LTable;
-
-	EmeCryptContext();
-
-	// disallow copying
-	EmeCryptContext(EmeCryptContext const&) = delete;
-	void operator=(EmeCryptContext const&) = delete;
-
-	virtual ~EmeCryptContext();
-
-	void tabulateL(int m, CryptConfig *pConfig);
-
-
-	bool init(const BYTE *key, bool hkdf, CryptConfig *pConfig);
-	
+struct KeybufManagerBuf {
+	void* ptr;
+	size_t len;
 };
 
+class KeybufManager
+{
+public:
+	mutex m_mutex;
+	bool m_bActive;
+	bool m_bFinalized;
+	int m_refcount;
+	size_t m_total_len;
 
-BYTE* EmeTransform(const EmeCryptContext *eme_context, 
-	const BYTE *T, const BYTE *P, int len, bool direction);
+	vector<KeybufManagerBuf> m_bufs;
+	vector<BYTE> m_encryptedBuf;
+	BYTE m_optional_entropy[32];
 
+	KeybufManager();
+	
+	virtual ~KeybufManager() = default;
+private:
+	void RegisterBuf(void* p, size_t len);
+public:
+	template <typename T>
+	void RegisterBuf(LockZeroBuffer<T> *pBuf) 
+	{
+		RegisterBuf(pBuf->m_buf, pBuf->m_len * sizeof(T));
+	};
+
+	void Activate() { m_bActive = true; };
+	bool Finalize();
+
+	bool Enter();
+	void Leave();
+
+	// disallow copying
+	KeybufManager(KeybufManager const&) = delete;
+	void operator=(KeybufManager const&) = delete;
+};
+
+class KeyDecryptor {
+	KeybufManager* m_mgr;
+public:
+	KeyDecryptor() = delete;
+	KeyDecryptor(KeybufManager* mgr)
+	{
+		m_mgr = mgr;
+
+		if (!m_mgr)
+			return;
+
+		if (!m_mgr->Enter())
+			throw std::exception("KeyDecryptor enter failed");
+	}
+	virtual ~KeyDecryptor()
+	{
+		if (m_mgr)
+			m_mgr->Leave();
+	}
+	// disallow copying
+	KeyDecryptor(KeyDecryptor const&) = delete;
+	void operator=(KeyDecryptor const&) = delete;
+};
