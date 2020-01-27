@@ -65,6 +65,7 @@ private:
 	bool m_failed;
 	bool m_file_existed; // valid only if case cache is used
 	bool m_force_case_cache_notfound;
+	KeyDecryptor *m_pKeyDecryptor;
 
 public:
 	LPCWSTR CorrectCasePath() {
