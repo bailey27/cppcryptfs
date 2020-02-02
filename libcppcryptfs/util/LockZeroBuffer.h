@@ -83,8 +83,8 @@ public:
 		}
 		if (!m_IsLocked && throw_if_not_locked) {
 			delete[] m_buf;
-			bad_alloc exception;
-			throw exception;
+			string mes = "LockZeroBuffer: unable to lock buffer of " + to_string(sizeof(T) * m_len) + " bytes";
+			throw std::exception(mes.c_str());
 		}
 		memset(m_buf, 0, sizeof(T)*m_len);
 	}

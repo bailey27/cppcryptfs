@@ -37,6 +37,8 @@ KeybufManager::KeybufManager()
 	m_bFinalized = false;
 	m_refcount = 0;
 	m_total_len = 0;
+	m_enter_time.QuadPart = 0;
+	m_clear_text_time.QuadPart = 0;
 }
 
 void KeybufManager::RegisterBuf(void* p, size_t len)
@@ -103,10 +105,8 @@ bool KeybufManager::Finalize()
 	return bResult;
 }
 
-bool KeybufManager::Enter()
+bool KeybufManager::EnterInternal()
 {
-	if (!m_bActive)
-		return true;
 
 	lock_guard<mutex> lock(m_mutex);
 
@@ -117,6 +117,8 @@ bool KeybufManager::Enter()
 	if (m_refcount > 1) {
 		return true;
 	}
+
+	QueryPerformanceCounter(&m_enter_time);
 
 	DATA_BLOB key_blob;
 	DATA_BLOB enc_key_blob;
@@ -133,8 +135,11 @@ bool KeybufManager::Enter()
 	if (!bResult)
 		throw std::exception("KeybufManager unable to decrypt keys");
 
-	if (key_blob.cbData != m_total_len)
+	if (key_blob.cbData != m_total_len) {
+		SecureZeroMemory(key_blob.pbData, key_blob.cbData);
+		LocalFree(key_blob.pbData);
 		throw std::exception("KeybufManager decrypted wrong number of bytes");
+	}
 
 	size_t offset = 0;
 	for (size_t i = 0; i < m_bufs.size(); i++) {
@@ -148,11 +153,8 @@ bool KeybufManager::Enter()
 	return bResult;
 }
 
-void KeybufManager::Leave()
+void KeybufManager::LeaveInternal()
 {
-	if (!m_bActive)
-		return;
-
 	lock_guard<mutex> lock(m_mutex);
 
 	assert(m_refcount > 0);
@@ -165,4 +167,10 @@ void KeybufManager::Leave()
 	for (size_t i = 0; i < m_bufs.size(); i++) {
 		SecureZeroMemory(m_bufs[i].ptr, m_bufs[i].len);
 	}
+
+	LARGE_INTEGER leave_time;
+
+	QueryPerformanceCounter(&leave_time);
+
+	m_clear_text_time.QuadPart += leave_time.QuadPart - m_enter_time.QuadPart;
 }

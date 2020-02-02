@@ -48,6 +48,8 @@ public:
 	bool mountManager;
 	bool caseInsensitive;
 	bool longFileNames;
+	wstring keysClearTextTime;
+	double mountedTime;
 
 	FsInfo();
 	virtual ~FsInfo();

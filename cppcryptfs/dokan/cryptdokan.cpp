@@ -2173,6 +2173,9 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
   if (retval != 0) {
 	MountPointManager::getInstance().destroy(mountpoint);
+  } else {
+      if (tdata)
+          tdata->con.m_mount_time.QuadPart = GetTickCount64();
   }
 
   return retval;

@@ -63,6 +63,7 @@ public:
 	bool m_read_only;
 	bool m_delete_spurrious_files;
 	vector<wstring> m_deletable_files;
+	LARGE_INTEGER m_mount_time;
 private:
 	bool m_caseinsensitive;
 public:

@@ -72,7 +72,10 @@ void FileNameEnc::AssignPlainPath(LPCWSTR plain_path) {
 
 FileNameEnc::FileNameEnc(PDOKAN_FILE_INFO DokanFileInfo, const WCHAR *fname,
 	string *actual_encrypted,
-	bool forceCaseCacheNotFound) {
+	bool forceCaseCacheNotFound) : m_KeyDecryptor(
+		GetContext()->GetConfig()->m_PlaintextNames ? nullptr :
+		&GetContext()->GetConfig()->m_keybuf_manager, 
+		true) {
 	m_dokan_file_info = DokanFileInfo;
 	m_con = GetContext();
 	AssignPlainPath(fname);
@@ -81,21 +84,19 @@ FileNameEnc::FileNameEnc(PDOKAN_FILE_INFO DokanFileInfo, const WCHAR *fname,
 	m_failed = false;
 	m_file_existed = false;
 	m_force_case_cache_notfound = forceCaseCacheNotFound;
-	m_pKeyDecryptor = nullptr;
 }
 
 FileNameEnc::~FileNameEnc() 
 {
-	if (m_pKeyDecryptor)
-		delete m_pKeyDecryptor;
+	
 }
 
 const WCHAR *FileNameEnc::Convert() 
 {
 
-	m_pKeyDecryptor = new KeyDecryptor(m_con->GetConfig()->m_PlaintextNames ? nullptr : &m_con->GetConfig()->m_keybuf_manager);
-
 	if (!m_tried) {
+
+		m_KeyDecryptor.Enter();
 
 		m_tried = true;
 

@@ -61,11 +61,11 @@ private:
 	string *m_actual_encrypted;
 	wstring m_plain_path;
 	CryptContext *m_con;
+	KeyDecryptor m_KeyDecryptor;
 	bool m_tried;
 	bool m_failed;
 	bool m_file_existed; // valid only if case cache is used
 	bool m_force_case_cache_notfound;
-	KeyDecryptor *m_pKeyDecryptor;
 
 public:
 	LPCWSTR CorrectCasePath() {

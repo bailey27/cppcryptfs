@@ -46,6 +46,9 @@ public:
 	int m_refcount;
 	size_t m_total_len;
 
+	LARGE_INTEGER m_enter_time;
+	LARGE_INTEGER m_clear_text_time;
+
 	vector<KeybufManagerBuf> m_bufs;
 	vector<BYTE> m_encryptedBuf;
 	BYTE m_optional_entropy[32];
@@ -55,6 +58,8 @@ public:
 	virtual ~KeybufManager() = default;
 private:
 	void RegisterBuf(void* p, size_t len);
+	bool EnterInternal();
+	void LeaveInternal();
 public:
 	template <typename T>
 	void RegisterBuf(LockZeroBuffer<T> *pBuf) 
@@ -65,8 +70,20 @@ public:
 	void Activate() { m_bActive = true; };
 	bool Finalize();
 
-	bool Enter();
-	void Leave();
+	bool Enter() 
+	{
+		if (!m_bActive)
+			return true;
+
+		return EnterInternal();
+	}
+	void Leave()
+	{
+		if (!m_bActive)
+			return;
+
+		LeaveInternal();
+	}
 
 	// disallow copying
 	KeybufManager(KeybufManager const&) = delete;
@@ -75,21 +92,34 @@ public:
 
 class KeyDecryptor {
 	KeybufManager* m_mgr;
+	bool m_bEntered;
 public:
 	KeyDecryptor() = delete;
-	KeyDecryptor(KeybufManager* mgr)
+	KeyDecryptor(KeybufManager* mgr, bool manual_enter = false)
 	{
+		m_bEntered = false;
+
 		m_mgr = mgr;
 
 		if (!m_mgr)
 			return;
 
+		if (!manual_enter)
+			Enter();
+	}
+	void Enter()
+	{
+		if (m_bEntered || !m_mgr)
+			return;
+
 		if (!m_mgr->Enter())
 			throw std::exception("KeyDecryptor enter failed");
+
+		m_bEntered = true;
 	}
 	virtual ~KeyDecryptor()
 	{
-		if (m_mgr)
+		if (m_bEntered)
 			m_mgr->Leave();
 	}
 	// disallow copying
