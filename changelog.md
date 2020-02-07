@@ -2,6 +2,9 @@
 
 Changelog
 ------------
+v1.4.1.4, Feb 6 2020
+* Fix empty dialog boxes
+
 v1.4.1.3, Jan 25 2020
 * Add --csv and -D (list dirs first) options for listing encrypted
   and plaintext file names from the command line.
