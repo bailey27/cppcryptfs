@@ -336,6 +336,8 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 	opts.encryptkeysinmemory = theApp.GetProfileInt(L"Settings", L"EncryptKeysInMemory", ENCRYPT_KEYS_IN_MEMORY_DEFAULT) != 0;
 
+	opts.cachekeysinmemory = theApp.GetProfileInt(L"Settings", L"CacheKeysInMemory", CACHE_KEYS_IN_MEMORY_DEFAULT) != 0;
+
 	bool bSavePassword = argMountPoint == NULL && (IsDlgButtonChecked(IDC_SAVE_PASSWORD) != 0);	
 	
 	theApp.DoWaitCursor(1);
@@ -1875,10 +1877,6 @@ void CMountPropertyPage::PrintInfo(OutputHandler& output_handler, LPCWSTR mountp
 	output_handler.print(CMD_PIPE_SUCCESS, L"Case Cache Hit Ratio:  %s\n", info.caseCacheHitRatio < 0 ? L"n/a" : buf);
 	swprintf_s(buf, L"%0.2f%%", info.lfnCacheHitRatio*100);
 	output_handler.print(CMD_PIPE_SUCCESS, L"LFN Cache Hit Ratio:   %s\n", info.lfnCacheHitRatio < 0 ? L"n/a" : buf);
-	swprintf_s(buf, L"%0.3f sec", info.mountedTime);
-	output_handler.print(CMD_PIPE_SUCCESS, L"Mounted Time: %s\n", buf);
-	output_handler.print(CMD_PIPE_SUCCESS, L"Keys Unencrypted Time: %s\n", info.keysClearTextTime.c_str());
-
 }
 
 

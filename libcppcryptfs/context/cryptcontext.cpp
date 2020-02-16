@@ -67,9 +67,6 @@ CryptContext::CryptContext()
 	m_prand_bytes = &random_bytes;
 
 	m_case_cache.m_con = this;
-
-	m_mount_time.QuadPart = 0;
-
 }
 
 static void get_deletable_files(CryptContext *con, vector<wstring>& files)
@@ -92,11 +89,11 @@ static void get_deletable_files(CryptContext *con, vector<wstring>& files)
 	}
 }
 
-bool CryptContext::FinalInitBeforeMounting()
+bool CryptContext::FinalInitBeforeMounting(bool use_key_cache)
 {
 	get_deletable_files(this, m_deletable_files);
 
-	return m_config->m_keybuf_manager.Finalize();
+	return m_config->m_keybuf_manager.Finalize(use_key_cache);
 }
 
 
@@ -155,17 +152,4 @@ void CryptContext::GetFsInfo(FsInfo & info)
 	hits = m_dir_iv_cache.hits();
 	lookups = m_dir_iv_cache.lookups();
 	info.dirIvCacheHitRatio = lookups ? (float)hits / (float)lookups : 0.0f;
-
-	info.mountedTime = (double)(GetTickCount64() - m_mount_time.QuadPart) / 1000.0;
-
-	if (GetConfig()->m_keybuf_manager.m_bActive) {
-		LARGE_INTEGER freq;
-		QueryPerformanceFrequency(&freq);
-		double clear_time = GetConfig()->m_keybuf_manager.m_clear_text_time.QuadPart / (double)freq.QuadPart;
-		WCHAR buf[32];
-		swprintf_s(buf, L"%0.3f sec", clear_time);
-		info.keysClearTextTime = buf;
-	} else {
-		info.keysClearTextTime = L"n/a";
-	}
 }

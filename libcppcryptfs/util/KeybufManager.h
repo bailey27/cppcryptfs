@@ -27,6 +27,7 @@ THE SOFTWARE.
 */
 #pragma once
 #include "LockZeroBuffer.h"
+#include "KeyCache.h"
 #include <mutex>
 #include <vector>
 
@@ -41,25 +42,25 @@ class KeybufManager
 {
 public:
 	mutex m_mutex;
+	KeyCache::id_t m_key_cache_id;
 	bool m_bActive;
 	bool m_bFinalized;
 	int m_refcount;
-	size_t m_total_len;
-
-	LARGE_INTEGER m_enter_time;
-	LARGE_INTEGER m_clear_text_time;
+	DWORD m_total_len;
 
 	vector<KeybufManagerBuf> m_bufs;
 	vector<BYTE> m_encryptedBuf;
 	BYTE m_optional_entropy[32];
+	vector<BYTE> m_cache_buf;
 
 	KeybufManager();
 	
-	virtual ~KeybufManager() = default;
+	virtual ~KeybufManager();
 private:
-	void RegisterBuf(void* p, size_t len);
+	void RegisterBuf(void* p, DWORD len);
 	bool EnterInternal();
 	void LeaveInternal();
+	void CopyBuffers(BYTE *ptr, size_t len);
 public:
 	template <typename T>
 	void RegisterBuf(LockZeroBuffer<T> *pBuf) 
@@ -68,7 +69,7 @@ public:
 	};
 
 	void Activate() { m_bActive = true; };
-	bool Finalize();
+	bool Finalize(bool use_key_cache);
 
 	bool Enter() 
 	{

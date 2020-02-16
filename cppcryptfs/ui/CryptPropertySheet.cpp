@@ -41,6 +41,7 @@ THE SOFTWARE.
 #include "util/util.h"
 #include "dokan/MountPointManager.h"
 #include "ui/uiutil.h"
+#include "../libcppcryptfs/util/KeyCache.h"
 #include "crypt/crypt.h"
 
 // CryptPropertySheet
@@ -52,6 +53,7 @@ CCryptPropertySheet::CCryptPropertySheet(UINT nIDCaption, CWnd* pParentWnd, UINT
 {
 	m_nMountPageIndex = 0;
 	m_bHideAfterInit = FALSE;
+	m_timer_id = 0;
 	m_psh.dwFlags |= PSH_NOAPPLYNOW;
 	m_psh.dwFlags &= ~PSH_HASHELP;
 }
@@ -63,10 +65,12 @@ CCryptPropertySheet::CCryptPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd, U
 	m_bHideAfterInit = FALSE;
 	m_psh.dwFlags |= PSH_NOAPPLYNOW;
 	m_psh.dwFlags &= ~PSH_HASHELP;
+	m_timer_id = 0;
 }
 
 CCryptPropertySheet::~CCryptPropertySheet()
 {
+	
 }
 
 BOOL CCryptPropertySheet::CanClose()
@@ -109,8 +113,18 @@ BEGIN_MESSAGE_MAP(CCryptPropertySheet, CPropertySheet)
 	ON_WM_DEVICECHANGE()
 //	ON_WM_QUERYENDSESSION()
 ON_WM_ENDSESSION()
+ON_WM_POWERBROADCAST()
 END_MESSAGE_MAP()
 
+static void WINAPI CacheTimerproc(
+	HWND Arg1,
+	UINT Arg2,
+	UINT_PTR Arg3,
+	DWORD Arg4
+)
+{
+	KeyCache::GetInstance()->Clear();
+}
 
 // CryptPropertySheet message handlers
 
@@ -121,6 +135,8 @@ BOOL CCryptPropertySheet::OnInitDialog()
 	BOOL bResult = CPropertySheet::OnInitDialog();
 
 	// TODO:  Add your specialized code here
+
+	m_timer_id = SetTimer(0, 1000, CacheTimerproc);
 
 	CWnd *pWnd;
 
@@ -314,7 +330,28 @@ void CCryptPropertySheet::OnEndSession(BOOL bEnding)
 	CPropertySheet::OnEndSession(bEnding);
 
 	if (bEnding) {
+		if (m_timer_id)
+			KillTimer(m_timer_id);
+		KeyCache::GetInstance()->Disable();
 		unmount_all(false);
 		wait_for_all_unmounted();
 	}
+}
+
+
+UINT CCryptPropertySheet::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
+{
+	if (nPowerEvent == PBT_APMSUSPEND) {
+#ifdef _DEBUG
+		OutputDebugStringA("disabling key cache on suspend\n");
+#endif
+		KeyCache::GetInstance()->Disable();
+	} else if (nPowerEvent == PBT_APMRESUMEAUTOMATIC || 
+			   nPowerEvent == PBT_APMRESUMESUSPEND) {
+#ifdef _DEBUG
+		OutputDebugStringA("enabling key cache on resume\n");
+#endif
+		KeyCache::GetInstance()->Enable();
+	}
+	return CPropertySheet::OnPowerBroadcast(nPowerEvent, nEventData);
 }

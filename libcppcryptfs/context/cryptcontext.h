@@ -63,7 +63,6 @@ public:
 	bool m_read_only;
 	bool m_delete_spurrious_files;
 	vector<wstring> m_deletable_files;
-	LARGE_INTEGER m_mount_time;
 private:
 	bool m_caseinsensitive;
 public:
@@ -84,7 +83,7 @@ public:
 
 	CryptConfig *GetConfig() const { return m_config; };
 
-	bool FinalInitBeforeMounting();
+	bool FinalInitBeforeMounting(bool use_key_cache);
 
 	const vector<wstring>& GetDeletableFiles() { return m_deletable_files; }
 

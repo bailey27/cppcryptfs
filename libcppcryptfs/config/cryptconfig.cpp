@@ -889,7 +889,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 		fprintf(fl, "\t\t\"N\": %d,\n", m_N);
 		fprintf(fl, "\t\t\"R\": %d,\n", m_R);
 		fprintf(fl, "\t\t\"P\": %d,\n", m_P);
-		fprintf(fl, "\t\t\"KeyLen\": %d\n", GetMasterKeyLength());
+		fprintf(fl, "\t\t\"KeyLen\": %u\n", GetMasterKeyLength());
 		fprintf(fl, "\t},\n");
 		fprintf(fl, "\t\"Version\": %d,\n", m_Version);
 		fprintf(fl, "\t\"VolumeName\": \"%s\",\n", volume_name_utf8.c_str());

@@ -127,7 +127,7 @@ BOOL MountPointManager::wait_and_destroy(const WCHAR* mountpoint)
 
 bool MountPointManager::unmount_all(bool wait)
 {
-	for (auto it = m_tdatas.begin(); it != m_tdatas.end(); it++) {
+	for (auto it = m_tdatas.begin(); it != m_tdatas.end(); ++it) {
 		wstring wmes;
 		if (!unmount_crypt_fs(it->first.c_str(), false, wmes)) {
 			return false;
@@ -191,7 +191,7 @@ bool MountPointManager::unmount_all(bool wait)
 			return true;
 		}
 	
-		for (auto it = m_tdatas.begin(); it != m_tdatas.end(); it++) {
+		for (auto it = m_tdatas.begin(); it != m_tdatas.end(); ++it) {
 			if (!lstrcmpi(it->first.c_str(), mountpoint)) {
 				mpstr = it->first;
 				return true;
@@ -222,7 +222,7 @@ bool MountPointManager::unmount_all(bool wait)
 
 	void MountPointManager::get_mount_points(vector<wstring>& mps, function<bool(const wchar_t *)> filter) const
 	{
-		for (auto it = m_tdatas.begin(); it != m_tdatas.end(); it++) {
+		for (auto it = m_tdatas.begin(); it != m_tdatas.end(); ++it) {
 			if (filter) {
 				if (filter(it->first.c_str())) {
 					mps.push_back(it->first);
@@ -235,7 +235,7 @@ bool MountPointManager::unmount_all(bool wait)
 
 	void MountPointManager::apply(function<bool(const wchar_t*mountpoint, CryptThreadData*tdata)> f)
 	{
-		for (auto it = m_tdatas.begin(); it != m_tdatas.end(); it++) {
+		for (auto it = m_tdatas.begin(); it != m_tdatas.end(); ++it) {
 			if (!f(it->first.c_str(), it->second)) {
 				return;
 			}

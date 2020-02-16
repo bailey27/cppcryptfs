@@ -45,6 +45,7 @@ public:
 	bool m_bDeleteSpurriousFiles;
 	bool m_bOpenOnMounting;
 	bool m_bEncryptKeysInMemory;
+	bool m_bCacheKeysInMemory;
 
 	// disallow copying
 	CSettingsPropertyPage(CSettingsPropertyPage const&) = delete;
@@ -59,7 +60,8 @@ public:
 #endif
 protected:
 	BOOL SetControls(int nThreads, int nBufferBlocks, int nCacheTTL, bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords,
-						bool bNeverSaveHistory, bool bDeleteSpurriousFiles, bool bOpenOnMounting, bool bEncryptKeysInMemory);
+						bool bNeverSaveHistory, bool bDeleteSpurriousFiles, bool bOpenOnMounting, bool bEncryptKeysInMemory,
+						bool bCacheKeysInMemory);
 	void SaveSettings();
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -80,4 +82,5 @@ public:
 	afx_msg void OnClickedDeleteSpurriousFiles();
 	afx_msg void OnClickedOpenOnMounting();
 	afx_msg void OnClickedEncryptKeysInMemory();
+	afx_msg void OnClickedCacheKeysInMemory();
 };

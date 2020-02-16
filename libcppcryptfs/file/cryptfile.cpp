@@ -57,10 +57,20 @@ CryptFile::CryptFile()
 
 CryptFile::~CryptFile()
 {
-	// don't close m_handle
+	// don't close 
 
 	if (m_pkdc)
 		delete m_pkdc;
+}
+
+void CryptFile::GetKeys()
+{
+	if (!m_pkdc) {
+		assert(m_con);
+		if (!m_con)
+			throw(std::exception("CryptFile::GetKeys() called with null context"));
+		m_pkdc = new KeyDecryptor(&m_con->GetConfig()->m_keybuf_manager);
+	}
 }
 
 CryptFileForward::CryptFileForward()
@@ -82,8 +92,6 @@ CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
 	m_handle = hfile;
 
 	m_con = con;
-
-	m_pkdc = new KeyDecryptor(&m_con->GetConfig()->m_keybuf_manager);
 
 	LARGE_INTEGER l;
 
@@ -161,7 +169,7 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 	unsigned char *p = buf;
 
 	void *context;
-
+	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 
@@ -410,7 +418,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 	const unsigned char *p = buf;
 
 	void *context;
-	
+	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 
@@ -660,7 +668,7 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 	memset(buf, 0, sizeof(buf));
 
 	void *context;
-
+	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 
@@ -737,8 +745,6 @@ BOOL CryptFileReverse::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputP
 
 	m_con = con;
 
-	m_pkdc = new KeyDecryptor(&m_con->GetConfig()->m_keybuf_manager);
-
 	LARGE_INTEGER l;
 
 	if (inputPath == NULL) {
@@ -797,7 +803,7 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 	unsigned char *p = buf;
 
 	void *context;
-
+	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 

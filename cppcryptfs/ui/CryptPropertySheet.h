@@ -52,6 +52,8 @@ public:
 
 	int m_nMountPageIndex;
 
+	UINT_PTR m_timer_id;
+
 protected:
 	DECLARE_MESSAGE_MAP()
 public:
@@ -66,6 +68,7 @@ public:
 	afx_msg void OnWindowPosChanging(WINDOWPOS* lpwndpos);
 	afx_msg BOOL OnDeviceChange(UINT nEventType, DWORD_PTR dwData);
 	afx_msg void OnEndSession(BOOL bEnding);
+	afx_msg UINT OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData);
 };
 
 

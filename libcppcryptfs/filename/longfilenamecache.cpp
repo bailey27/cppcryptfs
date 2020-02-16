@@ -71,12 +71,12 @@ LongFilenameCache::LongFilenameCache()
 LongFilenameCache::~LongFilenameCache()
 {
 
-	for (auto it = m_lru_list.begin(); it != m_lru_list.end(); it++) {
+	for (auto it = m_lru_list.begin(); it != m_lru_list.end(); ++it) {
 		LongFilenameCacheNode *node = *it;
 		delete node;
 	}
 
-	for (auto it = m_spare_node_list.begin(); it != m_spare_node_list.end(); it++) {
+	for (auto it = m_spare_node_list.begin(); it != m_spare_node_list.end(); ++it) {
 		LongFilenameCacheNode *node = *it;
 		delete node;
 	}

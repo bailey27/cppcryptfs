@@ -104,7 +104,6 @@ BOOL CFsInfoDialog::OnInitDialog()
 	SetDlgItemText(IDC_MOUNT_MANAGER, m_info.mountManager ? yes : no);
 	SetDlgItemText(IDC_CASE_INSENSITIVE, m_info.caseInsensitive ? yes : no);
 	SetDlgItemText(IDC_LONG_FILE_NAMES, m_info.longFileNames ? yes : no);
-	SetDlgItemText(IDC_KEYS_UNECRYPTED_TIME, m_info.keysClearTextTime.c_str());
 
 	wstring txt;
 	txt = to_wstring(m_info.ioBufferSize);
@@ -149,9 +148,6 @@ BOOL CFsInfoDialog::OnInitDialog()
 		txt += L"%";
 	}
 	SetDlgItemText(IDC_DIRIV_CACHE_HR, txt.c_str());
-
-	swprintf_s(buf, L"%0.3f sec", m_info.mountedTime);
-	SetDlgItemText(IDC_MOUNTED_TIME, buf);
 
 	// TODO:  Add extra initialization here
 

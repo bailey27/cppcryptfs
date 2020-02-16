@@ -81,12 +81,12 @@ CaseCache::CaseCache()
 
 CaseCache::~CaseCache()
 {
-	for (auto it = m_lru_list.begin(); it != m_lru_list.end(); it++) {
+	for (auto it = m_lru_list.begin(); it != m_lru_list.end(); ++it) {
 		CaseCacheNode *node = *it;
 		delete node;
 	}
 
-	for (auto it = m_spare_node_list.begin(); it != m_spare_node_list.end(); it++) {
+	for (auto it = m_spare_node_list.begin(); it != m_spare_node_list.end(); ++it) {
 		CaseCacheNode *node = *it;
 		delete node;
 	}
@@ -198,7 +198,7 @@ bool CaseCache::store(LPCWSTR dirpath, const list<wstring>& files)
 			node->m_key = mp.first->first;
 			node->m_path = dirpath;
 			wstring ucfile;
-			for (auto it = files.begin(); it != files.end(); it++) {
+			for (auto it = files.begin(); it != files.end(); ++it) {
 				if (!touppercase(it->c_str(), ucfile)) {
 					throw(-1);
 				}
@@ -213,7 +213,7 @@ bool CaseCache::store(LPCWSTR dirpath, const list<wstring>& files)
 			
 			mp.first->second->m_files.clear();
 			wstring ucfile;
-			for (auto it = files.begin(); it != files.end(); it++) {
+			for (auto it = files.begin(); it != files.end(); ++it) {
 				if (!touppercase(it->c_str(), ucfile)) {
 					throw(-1);
 				}

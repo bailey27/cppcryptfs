@@ -2006,7 +2006,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
 #ifdef _DEBUG
     dokanOptions->Timeout = 900000;
-    g_DebugMode = 1;
+    //g_DebugMode = 1;
 #endif
 
     config->m_basedir = prepare_basedir(path);
@@ -2122,7 +2122,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 	  }
     }
 
-	if (!con->FinalInitBeforeMounting()) {
+	if (!con->FinalInitBeforeMounting(opts.cachekeysinmemory)) {
       mes = L"context final init failed";
       throw(-1);
 	}
@@ -2173,10 +2173,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
   if (retval != 0) {
 	MountPointManager::getInstance().destroy(mountpoint);
-  } else {
-      if (tdata)
-          tdata->con.m_mount_time.QuadPart = GetTickCount64();
-  }
+  } 
 
   return retval;
 }

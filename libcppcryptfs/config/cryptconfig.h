@@ -33,6 +33,7 @@ THE SOFTWARE.
 
 #include "util/LockZeroBuffer.h"
 #include "util/KeybufManager.h"
+#include "util/KeyCache.h"
 
 #define MAX_CONFIG_FILE_SIZE (16*1024*1024) // 16MB
 
@@ -79,7 +80,7 @@ public:
 	wstring m_mountpoint;
 
 	const unsigned char *GetMasterKey() { return m_pKeyBuf ? m_pKeyBuf->m_buf : NULL; }
-	int GetMasterKeyLength() { return m_pKeyBuf ? m_pKeyBuf->m_len : 0; }
+	DWORD GetMasterKeyLength() { return m_pKeyBuf ? m_pKeyBuf->m_len : 0; }
 	const WCHAR *GetMountPoint() { return m_mountpoint.c_str(); }
 	const WCHAR *GetBaseDir() { return m_basedir.c_str(); }
 	bool InitGCMContentKey(const BYTE *key, bool hkdf);

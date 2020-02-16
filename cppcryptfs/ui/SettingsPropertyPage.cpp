@@ -76,6 +76,7 @@ BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_DELETE_SPURRIOUS_FILES, &CSettingsPropertyPage::OnClickedDeleteSpurriousFiles)
 	ON_BN_CLICKED(IDC_OPEN_ON_MOUNTING, &CSettingsPropertyPage::OnClickedOpenOnMounting)
 	ON_BN_CLICKED(IDC_ENCRYPT_KEYS_IN_MEMORY, &CSettingsPropertyPage::OnClickedEncryptKeysInMemory)
+	ON_BN_CLICKED(IDC_CACHE_KEYS_IN_MEMORY, &CSettingsPropertyPage::OnClickedCacheKeysInMemory)
 END_MESSAGE_MAP()
 
 
@@ -120,14 +121,18 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 	bool bEncryptKeysInMemory = theApp.GetProfileIntW(L"Settings", L"EncryptKeysInMemory",
 											ENCRYPT_KEYS_IN_MEMORY_DEFAULT) != 0;
 
+	bool bCacheKeysInMemory = theApp.GetProfileIntW(L"Settings", L"CacheKeysInMemory",
+											CACHE_KEYS_IN_MEMORY_DEFAULT) != 0;
+
 	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, 
 								bEnableSavingPasswords, bNeverSaveHistory, bDeleteSpurriousFiles, bOpenOnMounting,
-								bEncryptKeysInMemory);
+								bEncryptKeysInMemory, bCacheKeysInMemory);
 }
 
 BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, 
 						bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords, bool bNeverSaveHistory,
-						bool bDeleteSpurriousFiles, bool bOpenOnMounting, bool bEncryptKeysInMemory)
+						bool bDeleteSpurriousFiles, bool bOpenOnMounting, bool bEncryptKeysInMemory,
+						bool bCacheKeysInMemory)
 {
 
 	m_bCaseInsensitive =  bCaseInsensitive;
@@ -137,6 +142,7 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	m_bDeleteSpurriousFiles = bDeleteSpurriousFiles;
 	m_bOpenOnMounting = bOpenOnMounting;
 	m_bEncryptKeysInMemory = bEncryptKeysInMemory;
+	m_bCacheKeysInMemory = bCacheKeysInMemory;
 
 	int i;
 
@@ -223,6 +229,8 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	CheckDlgButton(IDC_ENCRYPT_KEYS_IN_MEMORY, m_bEncryptKeysInMemory ? 1 : 0);
 
+	CheckDlgButton(IDC_CACHE_KEYS_IN_MEMORY, m_bCacheKeysInMemory ? 1 : 0);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -301,6 +309,7 @@ void CSettingsPropertyPage::SaveSettings()
 	m_bDeleteSpurriousFiles = !m_bDeleteSpurriousFiles; // ditto
 	m_bOpenOnMounting = !m_bOpenOnMounting; // ditto
 	m_bEncryptKeysInMemory = !m_bEncryptKeysInMemory; // ditto
+	m_bCacheKeysInMemory = !m_bCacheKeysInMemory; // ditto
 
 	OnBnClickedCaseinsensitive();
 	OnClickedMountmanager();
@@ -309,6 +318,7 @@ void CSettingsPropertyPage::SaveSettings()
 	OnClickedDeleteSpurriousFiles();
 	OnClickedOpenOnMounting();
 	OnClickedEncryptKeysInMemory();
+	OnClickedCacheKeysInMemory();
 }
 
 void CSettingsPropertyPage::OnBnClickedDefaults()
@@ -318,7 +328,7 @@ void CSettingsPropertyPage::OnBnClickedDefaults()
 	SetControls(PER_FILESYSTEM_THREADS_DEFAULT, BUFFERBLOCKS_DEFAULT, CACHETTL_DEFAULT, 
 		CASEINSENSITIVE_DEFAULT, MOUNTMANAGER_DEFAULT, ENABLE_SAVING_PASSWORDS_DEFAULT,
 		NEVER_SAVE_HISTORY_DEFAULT, DELETE_SPURRIOUS_FILES_DEFAULT, OPEN_ON_MOUNTING_DEFAULT,
-		ENCRYPT_KEYS_IN_MEMORY_DEFAULT);
+		ENCRYPT_KEYS_IN_MEMORY_DEFAULT, CACHE_KEYS_IN_MEMORY_DEFAULT);
 
 	SaveSettings();
 }
@@ -331,7 +341,7 @@ void CSettingsPropertyPage::OnBnClickedRecommended()
 	SetControls(PER_FILESYSTEM_THREADS_RECOMMENDED, BUFFERBLOCKS_RECOMMENDED, CACHETTL_RECOMMENDED, 
 		CASEINSENSITIVE_RECOMMENDED, MOUNTMANAGER_RECOMMENDED, ENABLE_SAVING_PASSWORDS_RECOMMENDED,
 		NEVER_SAVE_HISTORY_RECOMMENDED, DELETE_SUPRRIOUS_FILES_RECOMMENDED, OPEN_ON_MOUNTING_RECOMMENDED,
-		ENCRYPT_KEYS_IN_MEMORY_RECOMMENDED);
+		ENCRYPT_KEYS_IN_MEMORY_RECOMMENDED, CACHE_KEYS_IN_MEMORY_RECOMMENDED);
 
 	SaveSettings();
 }
@@ -466,4 +476,16 @@ void CSettingsPropertyPage::OnClickedEncryptKeysInMemory()
 	CheckDlgButton(IDC_ENCRYPT_KEYS_IN_MEMORY, m_bEncryptKeysInMemory ? 1 : 0);
 
 	theApp.WriteProfileInt(L"Settings", L"EncryptKeysInMemory", m_bEncryptKeysInMemory ? 1 : 0);
+}
+
+
+void CSettingsPropertyPage::OnClickedCacheKeysInMemory()
+{
+	// TODO: Add your control notification handler code here
+
+	m_bCacheKeysInMemory = !m_bCacheKeysInMemory;
+
+	CheckDlgButton(IDC_CACHE_KEYS_IN_MEMORY, m_bCacheKeysInMemory ? 1 : 0);
+
+	theApp.WriteProfileInt(L"Settings", L"CacheKeysInMemory", m_bCacheKeysInMemory ? 1 : 0);
 }

@@ -49,7 +49,7 @@ public:
 
 	BOOL IsLocked() { return m_IsLocked; };
 	T *m_buf;
-	unsigned int m_len;
+	DWORD m_len;
 
 	void Clear() 
 	{
@@ -57,7 +57,7 @@ public:
 			SecureZeroMemory(m_buf, sizeof(T)*m_len);
 	}
 
-	LockZeroBuffer(unsigned int len, bool throw_if_not_locked, void *dummy)
+	LockZeroBuffer(DWORD len, bool throw_if_not_locked, void *dummy)
 	{
 		m_len = len;
 		m_buf = new T[m_len];

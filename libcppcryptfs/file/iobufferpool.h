@@ -67,24 +67,7 @@ private:
 
 public:
 
-	static IoBufferPool* getInstance(size_t buffer_size = 0)
-	{
-		static IoBufferPool  instance; 
-
-		// We don't need to care about thread safety with this singleton
-		// because getInstance() is called with an argument only during a mount operation which 
-		// is always initiated from the main thread. If instance.m_buffer_size is not
-		// 0 then init() won't be called again.
-		// The methods that involve IoBuffers are all thread-safe.
-		if (buffer_size == 0 && instance.m_buffer_size == 0) {
-			throw std::runtime_error("error: attempting to use uninitialized IoBufferPool");
-		}
-
-		if (buffer_size != 0 && instance.m_buffer_size == 0) {
-			instance.init(buffer_size);
-		}
-		return &instance;
-	}
+	static IoBufferPool* getInstance(size_t buffer_size = 0);
 
 	// disallow copying
 	IoBufferPool(IoBufferPool const&) = delete;

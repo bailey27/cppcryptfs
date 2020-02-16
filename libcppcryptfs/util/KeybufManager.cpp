@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include "KeybufManager.h"
 #include <Wincrypt.h>
 #include "util/util.h"
+#include "util/KeyCache.h"
 
 KeybufManager::KeybufManager()
 {
@@ -37,11 +38,17 @@ KeybufManager::KeybufManager()
 	m_bFinalized = false;
 	m_refcount = 0;
 	m_total_len = 0;
-	m_enter_time.QuadPart = 0;
-	m_clear_text_time.QuadPart = 0;
+	m_key_cache_id = 0;
 }
 
-void KeybufManager::RegisterBuf(void* p, size_t len)
+KeybufManager::~KeybufManager()
+{
+	if (m_key_cache_id) {
+		KeyCache::GetInstance()->Unregister(m_key_cache_id);
+	}
+}
+
+void KeybufManager::RegisterBuf(void* p, DWORD len)
 {
 	if (!m_bActive)
 		return;
@@ -59,7 +66,7 @@ void KeybufManager::RegisterBuf(void* p, size_t len)
 	m_bufs.push_back(buf);
 }
 
-bool KeybufManager::Finalize()
+bool KeybufManager::Finalize(bool use_key_cache)
 {
 	if (!m_bActive)
 		return true;
@@ -88,7 +95,7 @@ bool KeybufManager::Finalize()
 	optional_entropy.cbData = static_cast<DWORD>(sizeof(m_optional_entropy));
 	optional_entropy.pbData = m_optional_entropy;
 
-	key_blob.cbData = DecryptBuf.m_len;
+	key_blob.cbData = static_cast<DWORD>(DecryptBuf.m_len);
 	key_blob.pbData = DecryptBuf.m_buf;
 
 	bool bResult = CryptProtectData(&key_blob, NULL, &optional_entropy, NULL, NULL, 0, &enc_key_blob);
@@ -102,7 +109,29 @@ bool KeybufManager::Finalize()
 
 	LocalFree(enc_key_blob.pbData);
 
+	if (use_key_cache) {
+		m_key_cache_id = KeyCache::GetInstance()->Register(m_total_len);
+		if (m_key_cache_id)
+			m_cache_buf.resize(m_total_len);
+	}
+
 	return bResult;
+}
+
+void KeybufManager::CopyBuffers(BYTE* ptr, size_t len)
+{
+	// internal use only.  Must be locked when called
+
+	assert(len == m_total_len);
+
+	if (len != m_total_len)
+		throw std::exception("KeyBufManager::CopyBuffers called with wrong length");
+
+	size_t offset = 0;
+	for (size_t i = 0; i < m_bufs.size(); i++) {
+		memcpy(m_bufs[i].ptr, ptr + offset, m_bufs[i].len);
+		offset += m_bufs[i].len;
+	}
 }
 
 bool KeybufManager::EnterInternal()
@@ -118,7 +147,14 @@ bool KeybufManager::EnterInternal()
 		return true;
 	}
 
-	QueryPerformanceCounter(&m_enter_time);
+	if (m_key_cache_id) {
+		bool result = KeyCache::GetInstance()->Retrieve(m_key_cache_id, &m_cache_buf[0], m_cache_buf.size());
+		if (result) {
+			CopyBuffers(&m_cache_buf[0], m_cache_buf.size());
+			SecureZeroMemory(&m_cache_buf[0], m_cache_buf.size());
+			return true;
+		}
+	}
 
 	DATA_BLOB key_blob;
 	DATA_BLOB enc_key_blob;
@@ -141,10 +177,10 @@ bool KeybufManager::EnterInternal()
 		throw std::exception("KeybufManager decrypted wrong number of bytes");
 	}
 
-	size_t offset = 0;
-	for (size_t i = 0; i < m_bufs.size(); i++) {
-		memcpy(m_bufs[i].ptr, key_blob.pbData + offset, m_bufs[i].len);
-		offset += m_bufs[i].len;
+	CopyBuffers(key_blob.pbData, key_blob.cbData);
+
+	if (m_key_cache_id) {
+		KeyCache::GetInstance()->Store(m_key_cache_id, key_blob.pbData, key_blob.cbData);
 	}
 
 	SecureZeroMemory(key_blob.pbData, key_blob.cbData);
@@ -167,10 +203,4 @@ void KeybufManager::LeaveInternal()
 	for (size_t i = 0; i < m_bufs.size(); i++) {
 		SecureZeroMemory(m_bufs[i].ptr, m_bufs[i].len);
 	}
-
-	LARGE_INTEGER leave_time;
-
-	QueryPerformanceCounter(&leave_time);
-
-	m_clear_text_time.QuadPart += leave_time.QuadPart - m_enter_time.QuadPart;
 }

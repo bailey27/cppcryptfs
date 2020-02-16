@@ -60,6 +60,8 @@ public:
 
 	static CryptFile *NewInstance(CryptContext *con);
 
+	void GetKeys(); 
+
 	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath = NULL) = 0;
 
 	virtual BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset) = 0;
