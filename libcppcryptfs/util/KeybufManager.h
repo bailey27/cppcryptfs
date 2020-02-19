@@ -33,11 +33,6 @@ THE SOFTWARE.
 
 using namespace std;
 
-struct KeybufManagerBuf {
-	void* ptr;
-	size_t len;
-};
-
 class KeybufManager
 {
 public:
@@ -48,10 +43,9 @@ public:
 	int m_refcount;
 	DWORD m_total_len;
 
-	vector<KeybufManagerBuf> m_bufs;
+	vector<KeyBuf> m_bufs;
 	vector<BYTE> m_encryptedBuf;
 	BYTE m_optional_entropy[32];
-	vector<BYTE> m_cache_buf;
 
 	KeybufManager();
 	
@@ -60,7 +54,6 @@ private:
 	void RegisterBuf(void* p, DWORD len);
 	bool EnterInternal();
 	void LeaveInternal();
-	void CopyBuffers(BYTE *ptr, size_t len);
 public:
 	template <typename T>
 	void RegisterBuf(LockZeroBuffer<T> *pBuf) 

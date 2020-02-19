@@ -56,7 +56,7 @@ void KeybufManager::RegisterBuf(void* p, DWORD len)
 	if (m_bFinalized)
 		throw std::exception("KeyBufManager::RegisterBuf called while finalized");
 
-	KeybufManagerBuf buf;
+	KeyBuf buf;
 
 	buf.ptr = p;
 	buf.len = len;
@@ -111,28 +111,11 @@ bool KeybufManager::Finalize(bool use_key_cache)
 
 	if (use_key_cache) {
 		m_key_cache_id = KeyCache::GetInstance()->Register(m_total_len);
-		if (m_key_cache_id)
-			m_cache_buf.resize(m_total_len);
 	}
 
 	return bResult;
 }
 
-void KeybufManager::CopyBuffers(BYTE* ptr, size_t len)
-{
-	// internal use only.  Must be locked when called
-
-	assert(len == m_total_len);
-
-	if (len != m_total_len)
-		throw std::exception("KeyBufManager::CopyBuffers called with wrong length");
-
-	size_t offset = 0;
-	for (size_t i = 0; i < m_bufs.size(); i++) {
-		memcpy(m_bufs[i].ptr, ptr + offset, m_bufs[i].len);
-		offset += m_bufs[i].len;
-	}
-}
 
 bool KeybufManager::EnterInternal()
 {
@@ -148,10 +131,8 @@ bool KeybufManager::EnterInternal()
 	}
 
 	if (m_key_cache_id) {
-		bool result = KeyCache::GetInstance()->Retrieve(m_key_cache_id, &m_cache_buf[0], m_cache_buf.size());
+		bool result = KeyCache::GetInstance()->Retrieve(m_key_cache_id, m_bufs);
 		if (result) {
-			CopyBuffers(&m_cache_buf[0], m_cache_buf.size());
-			SecureZeroMemory(&m_cache_buf[0], m_cache_buf.size());
 			return true;
 		}
 	}
@@ -177,7 +158,7 @@ bool KeybufManager::EnterInternal()
 		throw std::exception("KeybufManager decrypted wrong number of bytes");
 	}
 
-	CopyBuffers(key_blob.pbData, key_blob.cbData);
+	KeyCache::CopyBuffers(m_bufs, key_blob.pbData, key_blob.cbData);
 
 	if (m_key_cache_id) {
 		KeyCache::GetInstance()->Store(m_key_cache_id, key_blob.pbData, key_blob.cbData);

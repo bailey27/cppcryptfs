@@ -29,9 +29,15 @@ THE SOFTWARE.
 
 #include <mutex>
 #include <unordered_map>
+#include <vector>
 #include "util/LockZeroBuffer.h"
 
 using namespace std;
+
+struct KeyBuf {
+	void* ptr;
+	size_t len;
+};
 
 struct KeyCacheEntry {
 	LockZeroBuffer<BYTE>* pbuf;
@@ -92,6 +98,7 @@ struct KeyCacheEntry {
 	}
 };
 
+
 class KeyCache
 {
 public:
@@ -110,7 +117,13 @@ public:
 	void Enable();
 	void Clear() { ClearInternal(false); }
 	void Disable() { ClearInternal(true); }
-	bool Store(id_t id, void* ptr, size_t len);
-	bool Retrieve(id_t id, void* ptr, size_t len);
+	bool Store(id_t id, const BYTE* ptr, size_t len);
+	bool Retrieve(id_t id, const vector<KeyBuf>& kbmb);
+
+	static void CopyBuffers(const vector<KeyBuf>& kbmb, const BYTE* ptr, size_t len);
+
+	// disallow copying
+	KeyCache(KeyCache const&) = delete;
+	void operator=(KeyCache const&) = delete;
 };
 

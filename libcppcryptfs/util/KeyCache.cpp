@@ -43,6 +43,17 @@ KeyCache* KeyCache::GetInstance()
 	return &instance;
 }
 
+void KeyCache::CopyBuffers(const vector<KeyBuf>& kbmb, const BYTE* ptr, size_t len)
+{
+	// Must be locked when called
+
+	size_t offset = 0;
+	for (size_t i = 0; i < kbmb.size(); i++) {
+		memcpy(kbmb[i].ptr, ptr + offset, kbmb[i].len);
+		offset += kbmb[i].len;
+	}
+}
+
 KeyCache::id_t KeyCache::Register(DWORD buf_size)
 {
 	lock_guard<mutex> lock(m_mutex);
@@ -108,7 +119,7 @@ void KeyCache::ClearInternal(bool disable)
 		m_enabled = false;
 }
 
-bool KeyCache::Store(id_t id, void* ptr, size_t len)
+bool KeyCache::Store(id_t id, const BYTE* ptr, size_t len)
 {
 	lock_guard<mutex> lock(m_mutex);
 
@@ -133,7 +144,7 @@ bool KeyCache::Store(id_t id, void* ptr, size_t len)
 	return true;
 }
 
-bool KeyCache::Retrieve(id_t id, void* ptr, size_t len)
+bool KeyCache::Retrieve(id_t id, const vector<KeyBuf>& kbmb)
 {
 	lock_guard<mutex> lock(m_mutex);
 
@@ -142,18 +153,15 @@ bool KeyCache::Retrieve(id_t id, void* ptr, size_t len)
 
 	auto it = m_entries.find(id);
 
+	assert(it != m_entries.end());
+
 	if (it == m_entries.end())
 		return false;
-
-	assert(it->second.pbuf->m_len == len);
 
 	if (!it->second.valid)
 		return false;
 
-	if (it->second.pbuf->m_len < len)
-		return false;
-
-	memcpy(ptr, it->second.pbuf->m_buf, len);
+	KeyCache::CopyBuffers(kbmb, it->second.pbuf->m_buf, it->second.pbuf->m_len);
 
 	it->second.accessed = true;
 
