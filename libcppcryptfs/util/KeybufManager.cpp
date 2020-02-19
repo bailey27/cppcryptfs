@@ -48,7 +48,7 @@ KeybufManager::~KeybufManager()
 	}
 }
 
-void KeybufManager::RegisterBuf(void* p, DWORD len)
+void KeybufManager::RegisterBuf(BYTE* p, DWORD len)
 {
 	if (!m_bActive)
 		return;

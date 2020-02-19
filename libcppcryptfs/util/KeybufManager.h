@@ -51,14 +51,14 @@ public:
 	
 	virtual ~KeybufManager();
 private:
-	void RegisterBuf(void* p, DWORD len);
+	void RegisterBuf(BYTE* p, DWORD len);
 	bool EnterInternal();
 	void LeaveInternal();
 public:
 	template <typename T>
 	void RegisterBuf(LockZeroBuffer<T> *pBuf) 
 	{
-		RegisterBuf(pBuf->m_buf, pBuf->m_len * sizeof(T));
+		RegisterBuf(reinterpret_cast<BYTE*>(pBuf->m_buf), pBuf->m_len * sizeof(T));
 	};
 
 	void Activate() { m_bActive = true; };

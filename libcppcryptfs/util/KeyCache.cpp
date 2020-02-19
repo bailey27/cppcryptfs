@@ -43,17 +43,6 @@ KeyCache* KeyCache::GetInstance()
 	return &instance;
 }
 
-void KeyCache::CopyBuffers(const vector<KeyBuf>& kbmb, const BYTE* ptr, size_t len)
-{
-	// Must be locked when called
-
-	size_t offset = 0;
-	for (size_t i = 0; i < kbmb.size(); i++) {
-		memcpy(kbmb[i].ptr, ptr + offset, kbmb[i].len);
-		offset += kbmb[i].len;
-	}
-}
-
 KeyCache::id_t KeyCache::Register(DWORD buf_size)
 {
 	lock_guard<mutex> lock(m_mutex);
@@ -144,7 +133,7 @@ bool KeyCache::Store(id_t id, const BYTE* ptr, size_t len)
 	return true;
 }
 
-bool KeyCache::Retrieve(id_t id, const vector<KeyBuf>& kbmb)
+bool KeyCache::Retrieve(id_t id, const vector<KeyBuf>& kbv)
 {
 	lock_guard<mutex> lock(m_mutex);
 
@@ -161,7 +150,7 @@ bool KeyCache::Retrieve(id_t id, const vector<KeyBuf>& kbmb)
 	if (!it->second.valid)
 		return false;
 
-	KeyCache::CopyBuffers(kbmb, it->second.pbuf->m_buf, it->second.pbuf->m_len);
+	KeyCache::CopyBuffers(kbv, it->second.pbuf->m_buf, it->second.pbuf->m_len);
 
 	it->second.accessed = true;
 

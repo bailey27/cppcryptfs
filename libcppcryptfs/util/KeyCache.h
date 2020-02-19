@@ -35,7 +35,7 @@ THE SOFTWARE.
 using namespace std;
 
 struct KeyBuf {
-	void* ptr;
+	BYTE* ptr;
 	size_t len;
 };
 
@@ -120,7 +120,16 @@ public:
 	bool Store(id_t id, const BYTE* ptr, size_t len);
 	bool Retrieve(id_t id, const vector<KeyBuf>& kbmb);
 
-	static void CopyBuffers(const vector<KeyBuf>& kbmb, const BYTE* ptr, size_t len);
+	static void CopyBuffers(const vector<KeyBuf>& kbv, const BYTE* ptr, size_t len)
+	{
+		// Must be locked when called
+
+		size_t offset = 0;
+		for (size_t i = 0; i < kbv.size(); i++) {
+			memcpy(kbv[i].ptr, ptr + offset, kbv[i].len);
+			offset += kbv[i].len;
+		}
+	}
 
 	// disallow copying
 	KeyCache(KeyCache const&) = delete;
