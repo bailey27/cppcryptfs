@@ -122,7 +122,7 @@ public:
 
 	static void CopyBuffers(const vector<KeyBuf>& kbv, const BYTE* ptr, size_t len)
 	{
-		// Must be locked when called
+		// Must be locked when called if ptr is from cache
 
 		size_t offset = 0;
 		for (size_t i = 0; i < kbv.size(); i++) {
