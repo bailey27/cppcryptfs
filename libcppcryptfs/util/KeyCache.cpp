@@ -33,7 +33,14 @@ THE SOFTWARE.
 KeyCache::KeyCache()
 {
 	m_cur_id = 0;
+	m_valid_count = 0;
 	m_enabled = true;
+}
+
+KeyCache::~KeyCache()
+{
+	assert(m_entries.empty());
+	assert(m_valid_count == 0);
 }
 
 KeyCache* KeyCache::GetInstance()
@@ -69,8 +76,13 @@ bool KeyCache::Unregister(id_t id)
 
 	auto it = m_entries.find(id);
 
+	assert(it != m_entries.end());
+
 	if (it == m_entries.end())
 		return false;
+
+	if (it->second.valid)
+		m_valid_count--;
 
 	m_entries.erase(it);
 
@@ -88,8 +100,10 @@ void KeyCache::ClearInternal(bool disable)
 {
 	lock_guard<mutex> lock(m_mutex);
 
-	if (!m_enabled)
+	if (m_valid_count == 0)
 		return;
+
+	assert(m_valid_count > 0);
 
 	for (auto& it : m_entries) {
 		if (it.second.valid && (disable || !it.second.accessed)) {
@@ -99,13 +113,16 @@ void KeyCache::ClearInternal(bool disable)
 			OutputDebugStringA(buf);
 #endif
 			it.second.Clear();
+			m_valid_count--;
 		} else {
 			it.second.accessed = false;
 		}
 	}
 
-	if (disable)
+	if (disable) {
 		m_enabled = false;
+		assert(m_valid_count == 0);
+	}
 }
 
 bool KeyCache::Store(id_t id, const BYTE* ptr, size_t len)
@@ -129,6 +146,7 @@ bool KeyCache::Store(id_t id, const BYTE* ptr, size_t len)
 
 	it->second.valid = true;
 	it->second.accessed = true;
+	m_valid_count++;
 
 	return true;
 }
@@ -150,7 +168,7 @@ bool KeyCache::Retrieve(id_t id, const vector<KeyBuf>& kbv)
 	if (!it->second.valid)
 		return false;
 
-	KeyCache::CopyBuffers(kbv, it->second.pbuf->m_buf, it->second.pbuf->m_len);
+	KeyBuf::CopyBuffers(kbv, it->second.pbuf->m_buf, it->second.pbuf->m_len);
 
 	it->second.accessed = true;
 

@@ -37,6 +37,16 @@ using namespace std;
 struct KeyBuf {
 	BYTE* ptr;
 	size_t len;
+	static void CopyBuffers(const vector<KeyBuf>& kbv, const BYTE* ptr, size_t len)
+	{
+		// Must be locked when called if ptr is from cache
+
+		size_t offset = 0;
+		for (size_t i = 0; i < kbv.size(); i++) {
+			memcpy(kbv[i].ptr, ptr + offset, kbv[i].len);
+			offset += kbv[i].len;
+		}
+	}
 };
 
 struct KeyCacheEntry {
@@ -105,10 +115,11 @@ public:
 	typedef unsigned long long id_t;
 private:
 	mutex m_mutex;
-	id_t m_cur_id;  // we increment it and assign as unique id for registered clients
 	unordered_map<id_t, KeyCacheEntry> m_entries;
-	KeyCache();
+	id_t m_cur_id;  // we increment it and assign as unique id for registered clients
+	int m_valid_count;
 	bool m_enabled;
+	KeyCache();
 	void ClearInternal(bool disable);
 public:	
 	static KeyCache* GetInstance();
@@ -120,16 +131,7 @@ public:
 	bool Store(id_t id, const BYTE* ptr, size_t len);
 	bool Retrieve(id_t id, const vector<KeyBuf>& kbmb);
 
-	static void CopyBuffers(const vector<KeyBuf>& kbv, const BYTE* ptr, size_t len)
-	{
-		// Must be locked when called if ptr is from cache
-
-		size_t offset = 0;
-		for (size_t i = 0; i < kbv.size(); i++) {
-			memcpy(kbv[i].ptr, ptr + offset, kbv[i].len);
-			offset += kbv[i].len;
-		}
-	}
+	virtual ~KeyCache();
 
 	// disallow copying
 	KeyCache(KeyCache const&) = delete;

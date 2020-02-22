@@ -158,7 +158,7 @@ bool KeybufManager::EnterInternal()
 		throw std::exception("KeybufManager decrypted wrong number of bytes");
 	}
 
-	KeyCache::CopyBuffers(m_bufs, key_blob.pbData, key_blob.cbData);
+	KeyBuf::CopyBuffers(m_bufs, key_blob.pbData, key_blob.cbData);
 
 	if (m_key_cache_id) {
 		KeyCache::GetInstance()->Store(m_key_cache_id, key_blob.pbData, key_blob.cbData);
