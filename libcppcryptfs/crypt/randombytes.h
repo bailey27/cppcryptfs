@@ -37,19 +37,19 @@ THE SOFTWARE.
 
 class RandomBytes {
 private:
-	BYTE  m_randbuf[RANDOM_POOL_SIZE];
 	mutex m_mutex;
+	BYTE* m_randbuf;
 	DWORD m_bufpos;
 
 	void lock() { m_mutex.lock(); }
 	void unlock() { m_mutex.unlock(); }
 public:
 	bool GetRandomBytes(unsigned char *buf, DWORD len);
-	RandomBytes() : m_bufpos(RANDOM_POOL_SIZE) {};
+	RandomBytes();
 	// disallow copying
 	RandomBytes(RandomBytes const&) = delete;
 	void operator=(RandomBytes const&) = delete;
 
-	virtual ~RandomBytes() = default;
+	virtual ~RandomBytes();
 };
 
