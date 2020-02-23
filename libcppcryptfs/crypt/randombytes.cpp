@@ -32,18 +32,6 @@ THE SOFTWARE.
 #include "util/util.h"
 #include "randombytes.h"
 
-RandomBytes::RandomBytes()
-{
-	m_randbuf = new BYTE[RANDOM_POOL_SIZE];
-
-	m_bufpos = RANDOM_POOL_SIZE;
-}
-
-RandomBytes::~RandomBytes()
-{
-	delete[] m_randbuf;
-}
-
 bool RandomBytes::GetRandomBytes(unsigned char *buf, DWORD len)
 {
 	if (len > RANDOM_POOL_SIZE) {
