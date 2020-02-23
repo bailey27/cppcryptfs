@@ -437,19 +437,17 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 	int blocks_spanned = (int)(((offset + buflen - 1) / PLAIN_BS) - (offset / PLAIN_BS)) + 1;
 
 	BYTE* ivbufptr;
-
-	BYTE* ivbuf_base;
-	
-	// if we're going to use less than 8KB worth of iv's (engough to write 2MB), 
+	BYTE* ivbufbase;
+	// If we're going to use less than 8KB worth of iv's (engough to write 2MB), 
 	// then use the stack buffer.  Otherwise, use the vector.
 	// We could use alloca() for this but don't want to.
-	BYTE ivbuf_stack[8*1024];
 	vector<BYTE> ivbuf_vec;
+	BYTE ivbuf_stack[8 * 1024];
 	if (blocks_spanned * BLOCK_IV_LEN <= sizeof(ivbuf_stack)) {
-		ivbufptr = ivbuf_base = ivbuf_stack;
+		ivbufptr = ivbufbase = ivbuf_stack;
 	} else {
 		ivbuf_vec.resize(blocks_spanned * BLOCK_IV_LEN);
-		ivbufptr = ivbuf_base = &ivbuf_vec[0];
+		ivbufptr = ivbufbase = &ivbuf_vec[0];
 	}
 
 	if (!get_random_bytes(m_con, ivbufptr, BLOCK_IV_LEN * blocks_spanned)) {
@@ -573,8 +571,10 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 	assert(ivbufptr == ivbuf_base + blocks_spanned*BLOCK_IV_LEN);
 
 	// we went past the end of our ivs which is bad
-	if (ivbufptr > ivbuf_base + blocks_spanned*BLOCK_IV_LEN)
+	if (ivbufptr > ivbufbase + blocks_spanned * BLOCK_IV_LEN) {
+		::SetLastError(ERROR_BAD_LENGTH);
 		return FALSE;
+	}
 
 	return bRet;
 	
