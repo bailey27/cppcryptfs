@@ -436,6 +436,27 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 	int blocks_spanned = (int)(((offset + buflen - 1) / PLAIN_BS) - (offset / PLAIN_BS)) + 1;
 
+	BYTE* ivbufptr;
+
+	BYTE* ivbuf_base;
+	
+	// if we're going to use less than 8KB worth of iv's (engough to write 2MB), 
+	// then use the stack buffer.  Otherwise, use the vector.
+	// We could use alloca() for this but don't want to.
+	BYTE ivbuf_stack[8*1024];
+	vector<BYTE> ivbuf_vec;
+	if (blocks_spanned * BLOCK_IV_LEN <= sizeof(ivbuf_stack)) {
+		ivbufptr = ivbuf_base = ivbuf_stack;
+	} else {
+		ivbuf_vec.resize(blocks_spanned * BLOCK_IV_LEN);
+		ivbufptr = ivbuf_base = &ivbuf_vec[0];
+	}
+
+	if (!get_random_bytes(m_con, ivbufptr, BLOCK_IV_LEN * blocks_spanned)) {
+		free_crypt_context(context);  // checks if context is null
+		return FALSE;
+	}
+
 	try {
 
 		if (blocks_spanned > 1 && m_con->m_bufferblocks > 1) {
@@ -468,7 +489,8 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 					if (outputbytes == 0)
 						beginblock = blockno;
 
-					advance = write_block(m_con, outputbuf + outputbytes, INVALID_HANDLE_VALUE, m_header.fileid, blockno, p, PLAIN_BS, context);
+					advance = write_block(m_con, outputbuf + outputbytes, INVALID_HANDLE_VALUE, m_header.fileid, blockno, p, PLAIN_BS, context, ivbufptr);
+					ivbufptr += BLOCK_IV_LEN;
 					
 					if (advance == CIPHER_BS) {
 						advance = PLAIN_BS;
@@ -477,7 +499,8 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 					}
 					outputbytes += CIPHER_BS;
 				} else {
-					advance = write_block(m_con, cipher_buf, m_handle, m_header.fileid, blockno, p, PLAIN_BS, context);
+					advance = write_block(m_con, cipher_buf, m_handle, m_header.fileid, blockno, p, PLAIN_BS, context, ivbufptr);
+					ivbufptr += BLOCK_IV_LEN;
 
 					if (advance != PLAIN_BS)
 						throw(-1);
@@ -512,7 +535,8 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 				int blockwrite = max(blockoff + blockcpy, blockbytes);
 
-				int nWritten = write_block(m_con, cipher_buf, m_handle, m_header.fileid, blockno, blockbuf, blockwrite, context);
+				int nWritten = write_block(m_con, cipher_buf, m_handle, m_header.fileid, blockno, blockbuf, blockwrite, context, ivbufptr);
+				ivbufptr += BLOCK_IV_LEN;
 
 				advance = blockcpy;
 
@@ -544,6 +568,13 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 	if (context)
 		free_crypt_context(context);
+
+	// we should use exactly blocks_spanned ivs
+	assert(ivbufptr == ivbuf_base + blocks_spanned*BLOCK_IV_LEN);
+
+	// we went past the end of our ivs which is bad
+	if (ivbufptr > ivbuf_base + blocks_spanned*BLOCK_IV_LEN)
+		return FALSE;
 
 	return bRet;
 	
@@ -701,7 +732,14 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 
 	BYTE cipher_buf[CIPHER_BS];
 
-	int nwritten = write_block(m_con, cipher_buf, m_handle, m_header.fileid, last_block, buf, to_write, context);
+	BYTE iv[BLOCK_IV_LEN];
+
+	if (!get_random_bytes(m_con, iv, BLOCK_IV_LEN)) {
+		free_crypt_context(context);  // checks if context is null
+		return FALSE;
+	}
+
+	int nwritten = write_block(m_con, cipher_buf, m_handle, m_header.fileid, last_block, buf, to_write, context, iv);
 
 	free_crypt_context(context);
 

@@ -115,11 +115,14 @@ read_block(CryptContext *con, HANDLE hfile, BYTE *inputbuf, int bytesinbuf, int 
 }
 
 int
-write_block(CryptContext *con, unsigned char *cipher_buf, HANDLE hfile, const unsigned char *fileid, unsigned long long block, const unsigned char *ptbuf, int ptlen, void *openssl_crypt_context, const unsigned char *block0iv)
+write_block(CryptContext *con, unsigned char *cipher_buf, HANDLE hfile, const unsigned char *fileid, unsigned long long block, const unsigned char *ptbuf, int ptlen, void *openssl_crypt_context, const unsigned char *iv)
 {
 
 
 	long long offset = FILE_HEADER_LEN + block*CIPHER_BS;
+
+	if (!iv)
+		return -1;
 
 	OVERLAPPED ov;
 
@@ -138,11 +141,9 @@ write_block(CryptContext *con, unsigned char *cipher_buf, HANDLE hfile, const un
 	unsigned char tag[BLOCK_TAG_LEN];
 
 	if (!con->GetConfig()->m_reverse) {
-		if (!get_random_bytes(con, cipher_buf, BLOCK_IV_LEN))
-			return -1;
+		memcpy(cipher_buf, iv, BLOCK_IV_LEN);
 	} else {
-		if (!block0iv)
-			return -1;
+		const unsigned char* block0iv = iv;
 
 		// On a 128-bit big-endian machine, this would be the low-order 64 bits
 		// hence the name block0IVlow
