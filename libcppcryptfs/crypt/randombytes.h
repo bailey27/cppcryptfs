@@ -37,7 +37,7 @@ THE SOFTWARE.
 
 class RandomBytes {
 private:
-	BYTE m_randbuf[RANDOM_POOL_SIZE];
+	BYTE  m_randbuf[RANDOM_POOL_SIZE];
 	mutex m_mutex;
 	DWORD m_bufpos;
 
