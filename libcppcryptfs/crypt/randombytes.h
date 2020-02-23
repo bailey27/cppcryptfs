@@ -37,8 +37,8 @@ THE SOFTWARE.
 
 class RandomBytes {
 private:
-	mutex m_mutex;
 	BYTE m_randbuf[RANDOM_POOL_SIZE];
+	mutex m_mutex;
 	DWORD m_bufpos;
 
 	void lock() { m_mutex.lock(); }
