@@ -34,41 +34,14 @@ THE SOFTWARE.
 
 RandomBytes::RandomBytes()
 {
-
-	m_pRandBuf = new LockZeroBuffer<BYTE>(RANDOM_POOL_SIZE, false, nullptr);
-
-	if (!m_pRandBuf->IsLocked()) {
-		delete m_pRandBuf;
-		m_pRandBuf = NULL;
-		::MessageBox(NULL, L"cannot lock random pool", L"cppcryptfs", MB_OK | MB_ICONERROR);
-		bad_alloc exception;
-		throw exception;
-	}
-
-	m_randbuf = m_pRandBuf->m_buf;
+	m_randbuf = new BYTE[RANDOM_POOL_SIZE];
 
 	m_bufpos = RANDOM_POOL_SIZE;
-
-	InitializeCriticalSection(&m_crit);
 }
 
 RandomBytes::~RandomBytes()
 {
-	// do not free m_randbuf.  It points to m_pRandBuf->m_buf
-	if (m_pRandBuf)
-		delete m_pRandBuf;
-
-	DeleteCriticalSection(&m_crit);
-}
-
-void RandomBytes::lock()
-{
-	EnterCriticalSection(&m_crit);
-}
-
-void RandomBytes::unlock()
-{
-	LeaveCriticalSection(&m_crit);
+	delete[] m_randbuf;
 }
 
 bool RandomBytes::GetRandomBytes(unsigned char *buf, DWORD len)
