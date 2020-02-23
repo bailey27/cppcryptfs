@@ -102,8 +102,8 @@ void CCreatePropertyPage::CreateCryptfs()
 	if (!pWnd)
 		return;
 
-	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, false, nullptr);
-	LockZeroBuffer<WCHAR> password2(MAX_PASSWORD_LEN + 1, false, nullptr);
+	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, false);
+	LockZeroBuffer<WCHAR> password2(MAX_PASSWORD_LEN + 1, false);
 
 	if (!password.IsLocked() || !password2.IsLocked()) {
 		MessageBox(L"could not lock password buffers", L"cppcryptefs", MB_OK | MB_ICONERROR);

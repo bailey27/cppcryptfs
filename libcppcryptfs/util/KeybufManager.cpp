@@ -77,7 +77,7 @@ bool KeybufManager::Finalize(bool use_key_cache)
 	if (!m_total_len || m_bufs.size() < 1) 
 		throw std::exception("KeybufManger::Finalize called with no buffers");
 
-	LockZeroBuffer<BYTE> DecryptBuf(static_cast<DWORD>(m_total_len), true, nullptr);
+	LockZeroBuffer<BYTE> DecryptBuf(static_cast<DWORD>(m_total_len), true);
 
 	size_t offset = 0;
 	for (size_t i = 0; i < m_bufs.size(); i++) {

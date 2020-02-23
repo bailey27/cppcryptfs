@@ -64,7 +64,7 @@ int SendArgsToRunningInstance(LPCWSTR args, std::wstring& result, std::wstring& 
 		return SEND_ARGS_STATUS_ERROR;
 	}
 
-	LockZeroBuffer<WCHAR> buf(static_cast<DWORD>(args_len + CMD_PIPE_VERSION_LEN + 1), false, nullptr);
+	LockZeroBuffer<WCHAR> buf(static_cast<DWORD>(args_len + CMD_PIPE_VERSION_LEN + 1), false);
 
 	if (!buf.IsLocked()) {
 		err = L"cannot lock command buffer.";

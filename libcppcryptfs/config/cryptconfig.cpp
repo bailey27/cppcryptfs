@@ -255,7 +255,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 			throw(-1);
 		}
 
-		m_pKeyBuf = new LockZeroBuffer<unsigned char>(keyLen, false, nullptr);
+		m_pKeyBuf = new LockZeroBuffer<unsigned char>(keyLen, false);
 
 		if (!m_pKeyBuf->IsLocked()) {
 			mes = L"failed to lock key buffer while reading config file";
@@ -569,7 +569,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 		if (m_encrypted_key.size() == 0 || m_encrypted_key_salt.size() == 0 || GetMasterKeyLength() == 0)
 			return false;
 
-		LockZeroBuffer<char> pass_buf(4*MAX_PASSWORD_LEN+1, false, nullptr);
+		LockZeroBuffer<char> pass_buf(4*MAX_PASSWORD_LEN+1, false);
 
 		if (!pass_buf.IsLocked())
 			throw (-1);
@@ -580,9 +580,9 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 			throw (-1);
 		}
 
-		LockZeroBuffer<unsigned char> pwkey(GetMasterKeyLength(), false, nullptr);
+		LockZeroBuffer<unsigned char> pwkey(GetMasterKeyLength(), false);
 
-		LockZeroBuffer<unsigned char> pwkeyHKDF(GetMasterKeyLength(), false, nullptr);
+		LockZeroBuffer<unsigned char> pwkeyHKDF(GetMasterKeyLength(), false);
 
 		if (!pwkey.IsLocked())
 			throw(-1);
@@ -663,7 +663,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, bool disablestreams, wstring& error_mes)
 {
 
-	LockZeroBuffer<char> utf8pass(256, false, nullptr);
+	LockZeroBuffer<char> utf8pass(256, false);
 	if (!utf8pass.IsLocked()) {
 		error_mes = L"utf8 pass is not locked";
 		return false;
@@ -676,8 +676,8 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 
 	bool bret = true;
 
-	LockZeroBuffer<unsigned char> pwkey(MASTER_KEY_LEN, false, nullptr);
-	LockZeroBuffer<unsigned char> pwkeyHKDF(MASTER_KEY_LEN, false, nullptr);
+	LockZeroBuffer<unsigned char> pwkey(MASTER_KEY_LEN, false);
+	LockZeroBuffer<unsigned char> pwkeyHKDF(MASTER_KEY_LEN, false);
 
 	if (!pwkey.IsLocked() || !pwkeyHKDF.IsLocked()) {
 		error_mes = L"pw key not locked";
@@ -757,7 +757,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 		m_R = 8;
 		m_P = 1;
 
-		m_pKeyBuf = new LockZeroBuffer<unsigned char>(DEFAULT_KEY_LEN, false, nullptr);
+		m_pKeyBuf = new LockZeroBuffer<unsigned char>(DEFAULT_KEY_LEN, false);
 
 		if (!m_pKeyBuf->IsLocked()) {
 			error_mes = L"cannot lock key buffer\n";
@@ -949,7 +949,7 @@ bool CryptConfig::InitGCMContentKey(const BYTE *key, bool hkdf)
 	if (!hkdf)
 		return true;
 
-	m_pGcmContentKey = new LockZeroBuffer<BYTE>(MASTER_KEY_LEN, false, nullptr);
+	m_pGcmContentKey = new LockZeroBuffer<BYTE>(MASTER_KEY_LEN, false);
 
 	if (!m_pGcmContentKey->IsLocked())
 		return false;

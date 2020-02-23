@@ -56,7 +56,7 @@ KeyCache::id_t KeyCache::Register(DWORD buf_size)
 
 	KeyCacheEntry ent;
 
-	ent.pbuf = new LockZeroBuffer<BYTE>(buf_size, false, nullptr);
+	ent.pbuf = new LockZeroBuffer<BYTE>(buf_size, false);
 
 	if (!ent.pbuf->IsLocked()) {
 		return 0;

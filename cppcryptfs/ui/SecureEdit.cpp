@@ -20,10 +20,10 @@ static char THIS_FILE[] = __FILE__;
 
 CSecureEdit::CSecureEdit()
 {
-	m_pBuf = new LockZeroBuffer<WCHAR>(MAX_PASSWORD_LEN + 1, true, nullptr);
+	m_pBuf = new LockZeroBuffer<WCHAR>(MAX_PASSWORD_LEN + 1, true);
 	m_strRealText = m_pBuf->m_buf;
 
-	m_pBufOld = new LockZeroBuffer<WCHAR>(MAX_PASSWORD_LEN + 1, true, nullptr);
+	m_pBufOld = new LockZeroBuffer<WCHAR>(MAX_PASSWORD_LEN + 1, true);
 	m_strOldText = m_pBufOld->m_buf;
 }
 
@@ -45,7 +45,7 @@ END_MESSAGE_MAP()
 
 void CSecureEdit::OnUpdate() 
 {
-	LockZeroBuffer<WCHAR> wndBuf(MAX_PASSWORD_LEN + 1, true, nullptr);
+	LockZeroBuffer<WCHAR> wndBuf(MAX_PASSWORD_LEN + 1, true);
 	WCHAR *strWnd = wndBuf.m_buf;
 	LPWSTR lpWnd = NULL;
 	int iWndLen = 0, iDiff = 0;
@@ -53,10 +53,10 @@ void CSecureEdit::OnUpdate()
 	int inxLeft = -1, inxRight = -1;
 	int nLeft = -1, nRight = -1;
 	DWORD dwPos = 0;
-	LockZeroBuffer<WCHAR> newBuf(MAX_PASSWORD_LEN + 1, true, nullptr);
+	LockZeroBuffer<WCHAR> newBuf(MAX_PASSWORD_LEN + 1, true);
 	WCHAR* strNew = newBuf.m_buf;
 	BOOL bHasChanged = FALSE;
-	LockZeroBuffer<WCHAR> dotsBuf(MAX_PASSWORD_LEN + 1, true, nullptr);
+	LockZeroBuffer<WCHAR> dotsBuf(MAX_PASSWORD_LEN + 1, true);
 	WCHAR * strDots = dotsBuf.m_buf;
 
 	// Get information about the new contents of the edit control
@@ -130,7 +130,7 @@ void CSecureEdit::OnUpdate()
 
 void CSecureEdit::SetRealText(const WCHAR *pszNewString)
 {
-	LockZeroBuffer<WCHAR> dotsBuf(MAX_PASSWORD_LEN+1, true, nullptr);
+	LockZeroBuffer<WCHAR> dotsBuf(MAX_PASSWORD_LEN+1, true);
 	WCHAR * strDots = dotsBuf.m_buf;
 	int i = 0;
 

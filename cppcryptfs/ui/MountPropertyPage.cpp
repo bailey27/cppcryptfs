@@ -163,7 +163,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 	CSecureEdit *pPass = &m_password;
 
-	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, false, nullptr);
+	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, false);
 
 	if (!password.IsLocked()) {
 		return CString(L"unable to lock password buffer");
@@ -719,7 +719,7 @@ void CMountPropertyPage::OnClickedMount()
 			if (pEd->m_strRealText == NULL || wcslen(pEd->m_strRealText) < 1) {
 				CWnd *pPath = GetDlgItem(IDC_PATH);
 				if (pPath) {
-					LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true, nullptr);
+					LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true);
 					CString cpath;
 					pPath->GetWindowTextW(cpath);
 					if (cpath.GetLength() > 0 && SavedPasswords::RetrievePassword(cpath, password.m_buf, password.m_len)) {
@@ -982,7 +982,7 @@ BOOL CMountPropertyPage::OnSetActive()
 						CheckDlgButton(IDC_READONLY, (flags & READONLY_FLAG) != 0);
 						CheckDlgButton(IDC_REVERSE, (flags & REVERSE_FLAG) != 0);
 
-						LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true, nullptr);
+						LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true);
 
 						if ((flags & SAVE_PASSWORD_FLAG) && save_passwords_enabled && SavedPasswords::RetrievePassword(cpath, password.m_buf, password.m_len)) {
 
@@ -1072,7 +1072,7 @@ void CMountPropertyPage::OnCbnSelchangePath()
 
 	CheckDlgButton(IDC_SAVE_PASSWORD, (flags & SAVE_PASSWORD_FLAG) && save_passwords_enabled);
 
-	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN+1, true, nullptr);
+	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN+1, true);
 
 	if ((flags & SAVE_PASSWORD_FLAG) && save_passwords_enabled && SavedPasswords::RetrievePassword(cpath, password.m_buf, password.m_len)) {
 
@@ -1266,7 +1266,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 
 	CString path;
 	CString mountPoint;
-	LockZeroBuffer<WCHAR> password((DWORD)(wcslen(szCmd) + 1), false, nullptr);
+	LockZeroBuffer<WCHAR> password((DWORD)(wcslen(szCmd) + 1), false);
 	BOOL mount = FALSE;
 	BOOL dismount = FALSE;
 	BOOL dismount_all = FALSE;

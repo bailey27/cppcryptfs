@@ -151,7 +151,7 @@ void EmeCryptContext::tabulateL(int m, CryptConfig *pConfig){
 	BYTE eZero[16];
 	memset(eZero, 0, sizeof(eZero));
 
-	LockZeroBuffer<BYTE> Li(16, true, nullptr);
+	LockZeroBuffer<BYTE> Li(16, true);
 
 	AesEncrypt(Li.m_buf, eZero, 16, this);
 
@@ -159,7 +159,7 @@ void EmeCryptContext::tabulateL(int m, CryptConfig *pConfig){
 
 	// Allocate pool once and slice into m pieces in the loop
 
-	m_pLTableBuf = new LockZeroBuffer<BYTE>(m * 16, true, nullptr);
+	m_pLTableBuf = new LockZeroBuffer<BYTE>(m * 16, true);
 
 	pConfig->m_keybuf_manager.RegisterBuf(m_pLTableBuf);
 
@@ -184,7 +184,7 @@ bool EmeCryptContext::init(const BYTE *key, bool hkdf, CryptConfig *pConfig)
 	if (!pConfig)
 		throw std::exception("EMeCryptContext init: where is my config?");
 
-	LockZeroBuffer<BYTE> hkdfKey(MASTER_KEY_LEN, false, nullptr);
+	LockZeroBuffer<BYTE> hkdfKey(MASTER_KEY_LEN, false);
 
 	if (hkdf) {
 		if (!hkdfKey.IsLocked())
@@ -195,7 +195,7 @@ bool EmeCryptContext::init(const BYTE *key, bool hkdf, CryptConfig *pConfig)
 		emeKey = hkdfKey.m_buf;
 	}
 
-	m_pKeyBuf = new LockZeroBuffer<AES_KEY>(2, true, nullptr);
+	m_pKeyBuf = new LockZeroBuffer<AES_KEY>(2, true);
 
 	pConfig->m_keybuf_manager.RegisterBuf(m_pKeyBuf);
 
