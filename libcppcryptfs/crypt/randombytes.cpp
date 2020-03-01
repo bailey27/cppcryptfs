@@ -64,7 +64,7 @@ bool RandomBytes::GetRandomBytes(unsigned char *buf, DWORD len)
 		}
 		if (get_sys_random_bytes(m_randbuf, RANDOM_POOL_SIZE)) {
 			m_bufpos = 0;
-			memcpy(buf + bytes_copied, m_randbuf + m_bufpos, len - bytes_copied);
+			memcpy(buf + bytes_copied, m_randbuf, len - bytes_copied);
 			m_bufpos += len - bytes_copied;
 		} else {
 			bret = false;

@@ -567,11 +567,9 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 	if (context)
 		free_crypt_context(context);
 
-	// we should use exactly blocks_spanned ivs
-	assert(ivbufptr == ivbuf_base + blocks_spanned*BLOCK_IV_LEN);
-
 	// we didn't use all ivs or went past the end of our ivs which is bad
 	if (ivbufptr != ivbufbase + blocks_spanned * BLOCK_IV_LEN) {
+		assert(false);
 		::SetLastError(ERROR_BAD_LENGTH);
 		bRet = FALSE;
 	}
