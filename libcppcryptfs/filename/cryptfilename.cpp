@@ -232,7 +232,7 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 			if (decrypt_reverse_longname(con, file_without_stream.c_str(), path, dir_iv, storage))
 				return &storage[0];
 			else
-				return false;
+				return nullptr;
 		} else {
 			wstring fullpath = path;
 			if (fullpath[fullpath.size() - 1] != '\\')
