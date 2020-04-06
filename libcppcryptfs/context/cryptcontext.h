@@ -39,6 +39,7 @@ THE SOFTWARE.
 #include "crypt/siv.h"
 #include "filename/casecache.h"
 #include "context/FsInfo.h"
+#include "file/openfiles.h"
 
 // number of threads Dokany uses if threads is 0. Found from code inspection, not in header file
 #define CRYPT_DOKANY_DEFAULT_NUM_THREADS 5 
@@ -55,7 +56,6 @@ public:
 	CaseCache m_case_cache;
 	EmeCryptContext m_eme;
 	SivContext m_siv;
-	mutex m_file_pointer_mutex;
 	int m_bufferblocks;
 	int m_cache_ttl;
 	int m_threads;
@@ -63,6 +63,7 @@ public:
 	bool m_read_only;
 	bool m_delete_spurrious_files;
 	vector<wstring> m_deletable_files;
+	CryptOpenFiles m_openfiles;
 private:
 	bool m_caseinsensitive;
 public:

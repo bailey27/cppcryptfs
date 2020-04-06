@@ -99,6 +99,9 @@
     <ClInclude Include="util\wintypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="file\openfiles.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -171,6 +174,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="context\FsInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file\openfiles.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
