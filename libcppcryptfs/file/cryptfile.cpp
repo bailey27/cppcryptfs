@@ -61,7 +61,7 @@ CryptFile::~CryptFile()
 
 CryptFileForward::CryptFileForward()
 {
-	m_bOpenForWrite = false;
+	m_bExclusiveLock = false;
 	m_openfile = nullptr;
 }
 
@@ -75,14 +75,10 @@ CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath, 
 {
 	m_openfile = con->m_openfiles.GetOpenFile(inputPath);
 
-	m_bOpenForWrite = bForWrite;
+	m_bExclusiveLock = bForWrite;
 
 	// the destructor does the unlocking
-	if (m_bOpenForWrite) {
-		m_openfile->LockExclusive();
-	} else {
-		m_openfile->LockShared();
-	}
+	Lock();
 
 	static_assert(sizeof(m_header) == FILE_HEADER_LEN, "sizeof(m_header) != FILE_HEADER_LEN");
 
@@ -409,6 +405,11 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 		}
 	}
 
+	// we're done with possible extending the file, so now 
+	// as long as we are writing algned whole-blocks, we'll be able
+	// to lock in shared mode
+	ReLock();
+
 	LONGLONG bytesleft = buflen;
 
 	const unsigned char *p = buf;
@@ -488,6 +489,9 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 						throw(-1);
 				}
 
+				// we need exclusive access
+				ReLock();
+
 				unsigned char blockbuf[PLAIN_BS];
 
 				memset(blockbuf, 0, sizeof(blockbuf));
@@ -514,7 +518,9 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 				if (nWritten != blockwrite)
 					throw(-1);
-
+				
+				// we can go back to shared access
+				ReLock();				
 			}
 
 			p += advance;

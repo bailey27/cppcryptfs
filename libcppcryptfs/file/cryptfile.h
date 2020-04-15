@@ -85,18 +85,35 @@ class CryptFileForward:  public CryptFile
 private:
 	shared_ptr<CryptOpenFile> m_openfile;
 
-	bool m_bOpenForWrite;
+	bool m_bExclusiveLock;
 
 	void Unlock()
 	{
 		if (m_openfile) {
-			if (m_bOpenForWrite)
+			if (m_bExclusiveLock)
 				m_openfile->UnlockExclusive();
 			else
-				m_openfile->UnlockShared();
-			m_openfile = nullptr;
+				m_openfile->UnlockShared();			
 		}
 	}
+
+	void Lock()
+	{
+		if (m_openfile) {
+			if (m_bExclusiveLock)
+				m_openfile->LockExclusive();
+			else
+				m_openfile->LockShared();
+		}
+	}
+
+	// toggles mode from shared<=>exclusive
+	void ReLock()
+	{
+		Unlock();
+		m_bExclusiveLock = !m_bExclusiveLock;
+		Lock();
+	}	
 
 public:
 
