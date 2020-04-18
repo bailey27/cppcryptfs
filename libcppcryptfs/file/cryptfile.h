@@ -113,7 +113,14 @@ private:
 		Unlock();
 		m_bExclusiveLock = !m_bExclusiveLock;
 		Lock();
-	}	
+	}
+
+	// unlocks and then nulls openfile so we won't unlock from the destructor
+	void AbandonLock()
+	{
+		Unlock();
+		m_openfile = nullptr;
+	}
 
 public:
 

@@ -519,8 +519,13 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 				if (nWritten != blockwrite)
 					throw(-1);
 				
-				// we can go back to shared access
-				ReLock();				
+				// if we're not done, then go back to shared access
+				// otherwise abandon the lock entirely now
+				if (bytesleft - advance > 0) {
+					ReLock();
+				} else {
+					AbandonLock();
+				}
 			}
 
 			p += advance;
