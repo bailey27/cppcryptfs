@@ -293,11 +293,12 @@ BOOL CryptFileForward::FlushOutput(LONGLONG& beginblock, BYTE *outputbuf, int& o
 {
 	long long outputoffset = FILE_HEADER_LEN + beginblock*CIPHER_BS;
 
+	GoShared();
 
 	OVERLAPPED ov;
 	SetOverlapped(&ov, outputoffset);
 
-	DWORD outputwritten;
+	DWORD outputwritten;	
 
 	if (!WriteFile(m_handle, outputbuf, outputbytes, &outputwritten, &ov)) {
 		return FALSE;
@@ -405,11 +406,6 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 		}
 	}
 
-	// we're done with possible extending the file, so now 
-	// as long as we are writing algned whole-blocks, we'll be able
-	// to lock in shared mode
-	ReLock();
-
 	LONGLONG bytesleft = buflen;
 
 	const unsigned char *p = buf;
@@ -454,12 +450,14 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 			int advance;
 
-			if (outputbuf && outputbytes == outputbuflen) {
+			if (outputbuf && outputbytes == outputbuflen) {			
 				if (!FlushOutput(beginblock, outputbuf, outputbytes))
 					throw(-1);
 			}
 
 			if (blockoff == 0 && bytesleft >= PLAIN_BS) { // overwriting whole blocks
+
+				GoShared();
 
 				if (outputbuf) {
 					if (outputbytes == 0)
@@ -479,22 +477,20 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 					if (advance != PLAIN_BS)
 						throw(-1);
 				} 
-	
-
 
 			} else { // else read-modify-write 
 
-				if (outputbuf && outputbytes > 0) {
+				if (outputbuf && outputbytes > 0) {					
 					if (!FlushOutput(beginblock, outputbuf, outputbytes))
 						throw(-1);
 				}
 
-				// we need exclusive access
-				ReLock();
-
 				unsigned char blockbuf[PLAIN_BS];
 
 				memset(blockbuf, 0, sizeof(blockbuf));
+
+				// we need exclusive access
+				GoExclusive();
 
 				int blockbytes = read_block(m_con, m_handle, NULL, 0, NULL, m_header.fileid, blockno, blockbuf, context);
 
@@ -517,15 +513,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 				advance = blockcpy;
 
 				if (nWritten != blockwrite)
-					throw(-1);
-				
-				// if we're not done, then go back to shared access
-				// otherwise abandon the lock entirely now
-				if (bytesleft - advance > 0) {
-					ReLock();
-				} else {
-					AbandonLock();
-				}
+					throw(-1);								
 			}
 
 			p += advance;
@@ -533,7 +521,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 			bytesleft -= advance;
 			*pNwritten += advance;
 
-		}
+		}		
 
 		if (outputbuf && outputbytes > 0) {
 			if (!FlushOutput(beginblock, outputbuf, outputbytes))

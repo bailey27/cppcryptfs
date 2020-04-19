@@ -115,11 +115,18 @@ private:
 		Lock();
 	}
 
-	// unlocks and then nulls openfile so we won't unlock from the destructor
-	void AbandonLock()
+	bool HaveExclusiveLock() { return m_bExclusiveLock; };
+
+	void GoExclusive()
 	{
-		Unlock();
-		m_openfile = nullptr;
+		if (!HaveExclusiveLock())
+			ReLock();
+	}
+
+	void GoShared()
+	{
+		if (HaveExclusiveLock())
+			ReLock();
 	}
 
 public:
