@@ -2,6 +2,9 @@
 
 Changelog
 ------------
+v1.4.2.0, Apr 26 2020
+* Fix race condition revealed by qBittorent
+
 v1.4.1.4, Feb 6 2020
 * Fix empty dialog boxes
 
