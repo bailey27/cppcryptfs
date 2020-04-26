@@ -75,6 +75,11 @@ CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath, 
 {
 	m_openfile = con->m_openfiles.GetOpenFile(inputPath);
 
+	if (!m_openfile) {
+		assert(false);
+		return FALSE;
+	}
+
 	m_bExclusiveLock = bForWrite;
 
 	// the destructor does the unlocking

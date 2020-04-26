@@ -32,23 +32,14 @@ THE SOFTWARE.
 #include "../util/util.h"
 
 
-void CryptOpenFiles::OpenFile(LPCWSTR path, HANDLE h)
+bool CryptOpenFiles::OpenFile(LPCWSTR path, HANDLE h)
 {
-#if 0 // we shouldn't get called for directories in the first place
-	BY_HANDLE_FILE_INFORMATION fi;
+    wstring ucpath;
 
-	if (!GetFileInformationByHandle(h, &fi)) {
-		throw exception("unable to get file information by handle");
+	if (!touppercase(path, ucpath)) {
+		assert(false);
+		return false;
 	}
-
-	if (fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		return;
-#endif	
-
-	wstring ucpath;
-
-	if (!touppercase(path, ucpath))
-		throw exception("cannot convert case of path");
 
 	lock_guard<mutex> lock(m_mutex);
 
@@ -59,42 +50,50 @@ void CryptOpenFiles::OpenFile(LPCWSTR path, HANDLE h)
 	} else {
 		m_openfiles[ucpath] = make_shared<::CryptOpenFile>(h);
 	}
+
+	return true;
 }
 
-void CryptOpenFiles::CloseFile(LPCWSTR path, HANDLE h)
+bool CryptOpenFiles::CloseFile(LPCWSTR path, HANDLE h)
 {
 	wstring ucpath;
 
-	if (!touppercase(path, ucpath))
-		throw exception("cannot convert case of path");
+	if (!touppercase(path, ucpath)) {
+		assert(false);
+		return false;
+	}
 
 	lock_guard<mutex> lock(m_mutex);
 
 	auto it = m_openfiles.find(ucpath);
 
 	if (it == m_openfiles.end()) {
-		return;
+		return true;
 	}
 
-	it->second->Close(h);
+	auto result = it->second->Close(h);
+	assert(result);
 
 	if (it->second->Empty())
 		m_openfiles.erase(it);
+
+	return true;
 }
 
 shared_ptr<CryptOpenFile> CryptOpenFiles::GetOpenFile(LPCWSTR path)
 {
 	wstring ucpath;
 
-	if (!touppercase(path, ucpath))
-		throw exception("cannot convert case of path");
+	if (!touppercase(path, ucpath)) {
+		return nullptr;
+	}
 
 	lock_guard<mutex> lock(m_mutex);
 
 	auto it = m_openfiles.find(ucpath);
 
 	if (it == m_openfiles.end()) {
-		throw exception("unable to find open file");
+		return nullptr;
 	}
 
 	return it->second;

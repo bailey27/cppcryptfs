@@ -60,16 +60,18 @@ public:
 		}
 	}
 
-	void Close(HANDLE h)
+	bool Close(HANDLE h)
 	{
 		auto it = m_handles.find(h);
 		if (it == m_handles.end())
-			throw(exception("cannot find handle"));
+			return false;
 
 		it->second--;
 
 		if (it->second == 0)
 			m_handles.erase(h);
+
+		return true;
 	}
 
 	bool Empty()
@@ -110,9 +112,9 @@ public:
 	CryptOpenFiles() = default;
 	virtual ~CryptOpenFiles() = default;
 
-	void OpenFile(LPCWSTR path, HANDLE h);
+	bool OpenFile(LPCWSTR path, HANDLE h);
 
-	void CloseFile(LPCWSTR path, HANDLE h);
+	bool CloseFile(LPCWSTR path, HANDLE h);
 
 	shared_ptr<CryptOpenFile> GetOpenFile(LPCWSTR path);
 
