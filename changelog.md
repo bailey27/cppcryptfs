@@ -2,6 +2,13 @@
 
 Changelog
 ------------
+v1.4.2.1, May 27 2020
+* Fail decryption of file names that contain invalid characters in the plain 
+  text.
+* Use the /guard:cf compilation flag for release builds.  
+* Use the /HIGHENTROPYVA linker option for 64-bit builds
+
+
 v1.4.2.0, Apr 26 2020
 * Fix race condition revealed by qBittorent
 
