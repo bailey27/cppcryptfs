@@ -98,7 +98,8 @@ NOTE: Getting OpenSSL from github will get you the latest development version of
 current released version of OpenSSL (currently openssl-1.1.1g).  These are available from https://www.openssl.org/source/.  To use those, you will need to download
 the .tar.gz and extract it into a directory.  You can build it with the same instructions that follow regardless of how you get OpenSSL.
 
-Microsoft has announced a compiler-based mitigation for one variant of the Spectre vulnerability.  To use it, you need to have version 15.5 or higher of Visual Studio.  To use the mitigation with OpenSSL, you need to add the /Qspectre flag to the compiler optimization flags.  OpenSSL currently does not use this flag.  So to use it, you need to edit c:\\git\openssl\\Configurations\\10-main.conf and change "/O2" to "/O2 /Qspectre".  
+Microsoft has announced a compiler-based mitigation for one variant of the Spectre vulnerability.  To use it, you need to have version 15.5 or higher of Visual Studio.  To use the mitigation with OpenSSL, you need to add the /Qspectre flag to the compiler optimization flags.  OpenSSL currently does not use this flag.  Also, to be extra safe, add the /guard:cf (Control Flow Guard) flag.  To use these, you need to edit c:\\git\openssl\\Configurations\\10-main.conf and change "/O2" to "/O2 /Qspectre /guard:cf".  
+
 
 Run this command to put nasm in your path (assuming you used the nasm installer).
 

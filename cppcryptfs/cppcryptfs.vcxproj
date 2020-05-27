@@ -101,6 +101,7 @@
       <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-1.3.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ControlFlowGuard>false</ControlFlowGuard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -130,12 +131,13 @@
       <EnablePREfast>false</EnablePREfast>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ControlFlowGuard>false</ControlFlowGuard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;$(OutputPath)libcppcryptfs.lib;C:\Program Files\Dokan\Dokan Library-1.3.1\lib\dokan1.lib;version.lib;C:\Program Files\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
-      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/ignore:4099 /HIGHENTROPYVA %(AdditionalOptions)</AdditionalOptions>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
     <Midl>
@@ -161,6 +163,7 @@
       <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-1.3.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -193,6 +196,7 @@
       <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-1.3.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -200,7 +204,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;$(OutputPath)libcppcryptfs.lib;C:\Program Files\Dokan\Dokan Library-1.3.1\lib\dokan1.lib;version.lib;C:\Program Files\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
-      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/ignore:4099 /HIGHENTROPYVA %(AdditionalOptions)</AdditionalOptions>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
     <Midl>
