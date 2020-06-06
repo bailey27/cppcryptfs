@@ -368,9 +368,16 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   // The two blocks below are there because we generally can't write to file
   // unless we can also read from it.
   if (!(bHasDirAttr || (CreateOptions & FILE_DIRECTORY_FILE)) &&
-      ((DesiredAccess & GENERIC_WRITE) || (DesiredAccess & FILE_WRITE_DATA))) {
+      ((DesiredAccess & GENERIC_WRITE) || (DesiredAccess & FILE_WRITE_DATA) || (DesiredAccess & FILE_APPEND_DATA))) {
     DbgPrint(L"\tadded GENERIC_READ to genericDesiredAccess\n");
     genericDesiredAccess |= GENERIC_READ;
+    if (DesiredAccess & FILE_APPEND_DATA) {
+        // We need to be able to overwrite whole blocks. 
+        // We can't just append data to the end of the file.
+        // So we need write accesses too.
+        DbgPrint(L"\tadded FILE_WRITE_DATA to genericDesiredAccess\n");
+        genericDesiredAccess |= FILE_WRITE_DATA;
+    }
   }
 
   if (!(bHasDirAttr || (CreateOptions & FILE_DIRECTORY_FILE)) &&
@@ -2137,7 +2144,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
         }
       }
 
-	  if (have_security_name_privilege()) {
+      if (have_security_name_privilege()) {
 		  dokanOptions->Options |= DOKAN_OPTION_MOUNT_MANAGER;
 		  con->m_recycle_bin = true;
 	  }
@@ -2502,8 +2509,8 @@ bool get_dokany_version(wstring& ver, vector<int>& v)
 bool check_dokany_version(wstring& mes)
 {
 	const int required_major = 1;
-	const int required_middle = 3;
-	const wstring required_ver = L"1.3.x.x";
+	const int required_middle = 4;
+	const wstring required_ver = L"1.4.x.x";
 	
 	mes = L"";
 

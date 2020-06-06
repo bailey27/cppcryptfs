@@ -2,6 +2,11 @@
 
 Changelog
 ------------
+v1.4.2.2, June 6 2020
+* Fix for writing to files that are opened with only append access
+  but not also (random) write access.
+* Build with Dokany 1.4.0.1000.
+
 v1.4.2.1, May 27 2020
 * Fail decryption of file names that contain invalid characters in the plain 
   text.
