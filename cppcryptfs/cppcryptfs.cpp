@@ -158,10 +158,13 @@ BOOL CcppcryptfsApp::InitInstance()
 				} else {
 					if (result.length() >= CMD_PIPE_RESPONSE_LENGTH) {
 						if (wcsncmp(result.c_str(), CMD_PIPE_SUCCESS_STR, CMD_PIPE_RESPONSE_LENGTH) == 0) {
-							if (have_console)
-								wcout << wstring(result.c_str() + CMD_PIPE_RESPONSE_LENGTH);
-							else
-								::MessageBox(NULL, result.c_str() + CMD_PIPE_RESPONSE_LENGTH, L"cppcryptfs", MB_OK);
+							wstring mes = result.c_str() + CMD_PIPE_RESPONSE_LENGTH;
+							if (mes.length() > 0) {
+								if (have_console)
+									wcout << mes << endl;
+								else
+									::MessageBox(NULL, mes.c_str(), L"cppcryptfs", MB_OK);
+							}
 						} else {
 							err_mes = wstring(result.c_str() + CMD_PIPE_RESPONSE_LENGTH);
 						}

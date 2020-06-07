@@ -100,6 +100,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir);c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -119,6 +120,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir);c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ControlFlowGuard>false</ControlFlowGuard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -136,6 +138,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir);c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ControlFlowGuard>false</ControlFlowGuard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -156,6 +159,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir);c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -185,12 +189,13 @@
     <ClInclude Include="file\cryptfile.h" />
     <ClInclude Include="file\cryptio.h" />
     <ClInclude Include="file\iobufferpool.h" />
-    <ClInclude Include="util\KeyCache.h" />
-    <ClInclude Include="util\KeybufManager.h" />
+    <ClInclude Include="file\openfiles.h" />
     <ClInclude Include="util\fileutil.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="util\getopt.h" />
+    <ClInclude Include="util\KeybufManager.h" />
+    <ClInclude Include="util\KeyCache.h" />
     <ClInclude Include="util\LockZeroBuffer.h" />
     <ClInclude Include="util\pad16.h" />
     <ClInclude Include="util\util.h" />
@@ -216,8 +221,7 @@
     <ClCompile Include="file\cryptfile.cpp" />
     <ClCompile Include="file\cryptio.cpp" />
     <ClCompile Include="file\iobufferpool.cpp" />
-    <ClCompile Include="util\KeyCache.cpp" />
-    <ClCompile Include="util\KeybufManager.cpp" />
+    <ClCompile Include="file\openfiles.cpp" />
     <ClCompile Include="util\fileutil.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -231,6 +235,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="util\KeybufManager.cpp" />
+    <ClCompile Include="util\KeyCache.cpp" />
     <ClCompile Include="util\pad16.cpp" />
     <ClCompile Include="util\util.cpp" />
   </ItemGroup>

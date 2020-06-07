@@ -51,7 +51,7 @@ CryptFile::CryptFile()
 	m_con = NULL;
 	m_pkdc = nullptr;
 	m_real_file_size = (long long)-1;
-	memset(&m_header, 0, sizeof(m_header));
+	memset(&m_header, 0, sizeof(m_header));	
 }
 
 
@@ -75,17 +75,29 @@ void CryptFile::GetKeys()
 
 CryptFileForward::CryptFileForward()
 {
-	
+	m_bExclusiveLock = false;
+	m_openfile = nullptr;
 }
 
 CryptFileForward::~CryptFileForward()
 {
-
+	Unlock();
 }
 
 BOOL
-CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
+CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath, bool bForWrite)
 {
+	m_openfile = con->m_openfiles.GetOpenFile(inputPath);
+
+	if (!m_openfile) {
+		assert(false);
+		return FALSE;
+	}
+
+	m_bExclusiveLock = bForWrite;
+
+	// the destructor does the unlocking
+	Lock();
 
 	static_assert(sizeof(m_header) == FILE_HEADER_LEN, "sizeof(m_header) != FILE_HEADER_LEN");
 
@@ -96,7 +108,7 @@ CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
 	LARGE_INTEGER l;
 
 	if (!GetFileSizeEx(hfile, &l)) {
-		DbgPrint(L"ASSOCIATE: failed to get size of file\n");
+		DbgPrint(L"ASSOCIATE: failed to get size of file\n");	
 		return FALSE;
 	}
 
@@ -142,7 +154,6 @@ CryptFileForward::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
 		DbgPrint(L"ASSOCIATE: fileid is all zeroes\n");
 		return FALSE;
 	}
-
 
 	return TRUE;
 }
@@ -301,11 +312,12 @@ BOOL CryptFileForward::FlushOutput(LONGLONG& beginblock, BYTE *outputbuf, int& o
 {
 	long long outputoffset = FILE_HEADER_LEN + beginblock*CIPHER_BS;
 
+	GoShared();
 
 	OVERLAPPED ov;
 	SetOverlapped(&ov, outputoffset);
 
-	DWORD outputwritten;
+	DWORD outputwritten;	
 
 	if (!WriteFile(m_handle, outputbuf, outputbytes, &outputwritten, &ov)) {
 		return FALSE;
@@ -476,12 +488,14 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 			int advance;
 
-			if (outputbuf && outputbytes == outputbuflen) {
+			if (outputbuf && outputbytes == outputbuflen) {			
 				if (!FlushOutput(beginblock, outputbuf, outputbytes))
 					throw(-1);
 			}
 
 			if (blockoff == 0 && bytesleft >= PLAIN_BS) { // overwriting whole blocks
+
+				GoShared();
 
 				if (outputbuf) {
 					if (outputbytes == 0)
@@ -503,12 +517,10 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 					if (advance != PLAIN_BS)
 						throw(-1);
 				} 
-	
-
 
 			} else { // else read-modify-write 
 
-				if (outputbuf && outputbytes > 0) {
+				if (outputbuf && outputbytes > 0) {					
 					if (!FlushOutput(beginblock, outputbuf, outputbytes))
 						throw(-1);
 				}
@@ -516,6 +528,9 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 				unsigned char blockbuf[PLAIN_BS];
 
 				memset(blockbuf, 0, sizeof(blockbuf));
+
+				// we need exclusive access
+				GoExclusive();
 
 				int blockbytes = read_block(m_con, m_handle, NULL, 0, NULL, m_header.fileid, blockno, blockbuf, context);
 
@@ -539,8 +554,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 				advance = blockcpy;
 
 				if (nWritten != blockwrite)
-					throw(-1);
-
+					throw(-1);								
 			}
 
 			p += advance;
@@ -548,7 +562,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 			bytesleft -= advance;
 			*pNwritten += advance;
 
-		}
+		}		
 
 		if (outputbuf && outputbytes > 0) {
 			if (!FlushOutput(beginblock, outputbuf, outputbytes))
@@ -754,9 +768,14 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 
 BOOL CryptFileForward::SetEndOfFileInternal(LARGE_INTEGER& off)
 {
+#if 0 
+	// now handled by per-file (not per-handle) shared mutex
+	// below is the old comment
+
 	// the calls to set the file pointer and then the end of file
 	// need to be made atomic (serialized)
 	lock_guard<mutex> lock(m_con->m_file_pointer_mutex);
+#endif
 
 	if (!SetFilePointerEx(m_handle, off, NULL, FILE_BEGIN))
 		return FALSE;
@@ -775,7 +794,7 @@ CryptFileReverse::~CryptFileReverse()
 }
 
 
-BOOL CryptFileReverse::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath)
+BOOL CryptFileReverse::Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath, bool /* unused*/)
 {
 	m_handle = hfile;
 

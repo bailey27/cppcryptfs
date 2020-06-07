@@ -2,6 +2,24 @@
 
 Changelog
 ------------
+v1.4.2.2, June 6 2020
+* Fix for writing to files that are opened with only append access
+  but not also (random) write access.
+* Build with Dokany 1.4.0.1000.
+
+v1.4.2.1, May 27 2020
+* Fail decryption of file names that contain invalid characters in the plain 
+  text.
+* Use the /guard:cf compilation flag for release builds.  
+* Use the /HIGHENTROPYVA linker option for 64-bit builds
+
+
+v1.4.2.0, Apr 26 2020
+* Fix race condition revealed by qBittorent
+
+v1.4.1.4, Feb 6 2020
+* Fix empty dialog boxes
+
 v1.4.1.3, Jan 25 2020
 * Add --csv and -D (list dirs first) options for listing encrypted
   and plaintext file names from the command line.

@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include <windows.h>
 
 #include <string>
+#include "openfiles.h"
 
 using namespace std;
 
@@ -60,9 +61,11 @@ public:
 
 	static CryptFile *NewInstance(CryptContext *con);
 
+
 	void GetKeys(); 
 
-	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath = NULL) = 0;
+	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath, bool bForWrite) = 0;
+
 
 	virtual BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset) = 0;
 
@@ -87,11 +90,57 @@ public:
 
 class CryptFileForward:  public CryptFile
 {
+private:
+	shared_ptr<CryptOpenFile> m_openfile;
+
+	bool m_bExclusiveLock;
+
+	void Unlock()
+	{
+		if (m_openfile) {
+			if (m_bExclusiveLock)
+				m_openfile->UnlockExclusive();
+			else
+				m_openfile->UnlockShared();			
+		}
+	}
+
+	void Lock()
+	{
+		if (m_openfile) {
+			if (m_bExclusiveLock)
+				m_openfile->LockExclusive();
+			else
+				m_openfile->LockShared();
+		}
+	}
+
+	// toggles mode from shared<=>exclusive
+	void ReLock()
+	{
+		Unlock();
+		m_bExclusiveLock = !m_bExclusiveLock;
+		Lock();
+	}
+
+	bool HaveExclusiveLock() { return m_bExclusiveLock; };
+
+	void GoExclusive()
+	{
+		if (!HaveExclusiveLock())
+			ReLock();
+	}
+
+	void GoShared()
+	{
+		if (HaveExclusiveLock())
+			ReLock();
+	}
 
 public:
 
 
-	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath = NULL);
+	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath, bool /* unused */);
 
 	virtual BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset);
 
@@ -109,7 +158,7 @@ public:
 
 	CryptFileForward();
 
-	~CryptFileForward();
+	virtual ~CryptFileForward();
 
 protected:
 	BOOL FlushOutput(LONGLONG& beginblock, BYTE *outputbuf, int& outputbytes); 
@@ -126,7 +175,7 @@ private:
 public:
 
 
-	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath = NULL);
+	virtual BOOL Associate(CryptContext *con, HANDLE hfile, LPCWSTR inputPath, bool bForWrite);
 
 	virtual BOOL Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LONGLONG offset);
 
@@ -147,7 +196,7 @@ public:
 
 	CryptFileReverse();
 
-	~CryptFileReverse();
+	virtual ~CryptFileReverse();
 
 };
 

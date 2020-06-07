@@ -68,7 +68,7 @@ Build Requirements
 
 There are detailed build instructions in [INSTALL.md](INSTALL.md).
 
-cppcryptfs is currently up-to-date with Dokany 1.3.1.1000
+cppcryptfs is currently up-to-date with Dokany 1.4.0.1000
 
 
 Use
@@ -128,6 +128,8 @@ just created the filesystem in.  Then enter the password and click on the "Mount
 ![Alt text](/screenshots/screenshot_mount.png?raw=true "Mount tab")
 
 You can also right-click in the list of drive letters and select "Add Mount Point".  This will let you add an empty directory to the list of drive letters.  This empty directory, which must be on an NTFS volume, can serve as a mount point in place of a drive letter.  The added mount point will be added to the list below the drive letters.  You can also right click on an added mount point and delete it from the list.  The mount point directories you add are saved in the Windows registry.
+
+NOTE: Though A: and B: are useable as mount points, it is not recommended to use them because mounting an encrypted filesystem to them has been known to cause problems with Windows Update.
 
 You can also right-click on a mounted filesystem and dismount it or [view its properties.](/screenshots/screenshot_properties.png?raw=true) 
 

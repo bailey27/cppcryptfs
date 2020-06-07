@@ -206,11 +206,62 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 	return rs;
 }
 
+class ValidFileNameCharChecker
+{
+private:
+	bool invalid_lut[128];
+public:
+	ValidFileNameCharChecker()
+	{
+		memset(invalid_lut, 0, sizeof(invalid_lut));
+
+		invalid_lut['<'] = true; // (less than)
+		invalid_lut['>'] = true; // (greater than)
+		invalid_lut[':'] = true; // (colon)
+		invalid_lut['"'] = true; // (double quote)
+		invalid_lut['/'] = true; // (forward slash)
+		invalid_lut['\\'] = true; // (backslash)
+		invalid_lut['|'] = true; // (vertical bar or pipe)
+		invalid_lut['?'] = true; // (question mark)
+		invalid_lut['*'] = true; // (asterisk)		
+	}
+
+	virtual ~ValidFileNameCharChecker() = default;
+
+	// disallow copying
+	ValidFileNameCharChecker(ValidFileNameCharChecker const&) = delete;
+	void operator=(ValidFileNameCharChecker const&) = delete;
+
+	bool is_valid(const WCHAR* s, bool bStream) const
+	{
+		if (!s)
+			return false;
+
+		// from https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
+
+		for (; *s; s++) {
+			static_assert(sizeof(WCHAR) <= sizeof(size_t), "cannot fit a WCHAR in a size_t");
+			size_t c = static_cast<size_t>(*s);
+			// control chars are allowed only in stream names
+			if (!bStream && c >= 1 && c <= 31)
+				return false;
+			// chars outside 7-bit ascii are all allowed
+			if (c > 127)
+				continue;
+			if (invalid_lut[c])
+				return false;
+		}
+		return true;
+	}
+	
+};
 
 
 const WCHAR * // returns UNICODE plaintext filename
 decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const WCHAR *filename, wstring& storage)
 {
+	static ValidFileNameCharChecker char_checker;
+
 	if (con->GetConfig()->m_PlaintextNames) {
 		storage = filename;
 		return &storage[0];
@@ -232,7 +283,7 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 			if (decrypt_reverse_longname(con, file_without_stream.c_str(), path, dir_iv, storage))
 				return &storage[0];
 			else
-				return false;
+				return nullptr;
 		} else {
 			wstring fullpath = path;
 			if (fullpath[fullpath.size() - 1] != '\\')
@@ -291,10 +342,17 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 
 		delete[] pt;
 
+		if (!char_checker.is_valid(ws, false))
+			return NULL;
+
 		if (have_stream && ws) {
 			wstring dec_stream;
 			if (decrypt_stream_name(con, dir_iv, stream.c_str(), dec_stream)) {
-				storage += dec_stream;
+				if (!char_checker.is_valid(dec_stream.c_str(), true)) {
+					storage += L":"; // if failure use invalid empty stream name
+				} else {
+					storage += dec_stream;
+				}
 				ws = storage.c_str();
 			} else {
 				storage += L":"; // if failure use invalid empty stream name
