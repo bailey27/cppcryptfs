@@ -63,8 +63,9 @@ public:
 	bool Close(HANDLE h)
 	{
 		auto it = m_handles.find(h);
-		if (it == m_handles.end())
+		if (it == m_handles.end()) {
 			return false;
+		}
 
 		it->second--;
 

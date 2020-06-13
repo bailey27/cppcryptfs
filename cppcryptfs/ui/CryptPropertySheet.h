@@ -50,9 +50,7 @@ public:
 
 	BOOL m_bHideAfterInit;
 
-	int m_nMountPageIndex;
-
-	UINT_PTR m_timer_id;
+	int m_nMountPageIndex;	
 
 protected:
 	DECLARE_MESSAGE_MAP()

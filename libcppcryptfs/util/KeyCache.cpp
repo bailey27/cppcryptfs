@@ -35,12 +35,16 @@ KeyCache::KeyCache()
 	m_cur_id = 0;
 	m_valid_count = 0;
 	m_enabled = true;
+	m_clearEvent = NULL;
+	m_clearThread = NULL;
 }
 
 KeyCache::~KeyCache()
 {
 	assert(m_entries.empty());
 	assert(m_valid_count == 0);
+	assert(!m_clearEvent);
+	assert(!m_clearThread);	
 }
 
 KeyCache* KeyCache::GetInstance()
@@ -50,9 +54,64 @@ KeyCache* KeyCache::GetInstance()
 	return &instance;
 }
 
+static DWORD WINAPI ClearThreadProc(_In_ LPVOID lpParameter)
+{
+	HANDLE hEvent = lpParameter;
+
+	while (true) {
+		auto wait_result = WaitForSingleObject(hEvent, 1000);
+		if (wait_result == WAIT_TIMEOUT) {
+			KeyCache::GetInstance()->Clear();
+		} else if (wait_result == WAIT_OBJECT_0) {
+			break;
+		} else {
+			assert(false);
+		}
+	}	
+
+	return 0;
+}
+
+
+bool KeyCache::InitClearThread()
+{	
+	
+	static once_flag init_thread_once_flag;
+
+	std::call_once(init_thread_once_flag, [this]() {
+		m_clearEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+			if (m_clearEvent) {
+				m_clearThread = CreateThread(NULL, 0, ClearThreadProc, m_clearEvent, 0, NULL);				
+			}
+		});
+
+	return m_clearThread != NULL;
+}
+
+void KeyCache::StopClearThread()
+{
+	if (!m_clearThread)
+		return;
+
+	assert(m_clearEvent);
+
+	SetEvent(m_clearEvent);
+
+	auto wait_result = WaitForSingleObject(m_clearThread, INFINITE);
+
+	assert(wait_result == WAIT_OBJECT_0);
+
+	m_clearEvent = NULL;
+	m_clearThread = NULL;
+}
+
 KeyCache::id_t KeyCache::Register(DWORD buf_size)
 {
+
 	lock_guard<mutex> lock(m_mutex);
+
+	if (!InitClearThread())
+		return 0;
 
 	KeyCacheEntry ent;
 

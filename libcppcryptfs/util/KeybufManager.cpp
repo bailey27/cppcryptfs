@@ -101,7 +101,7 @@ bool KeybufManager::Finalize(bool use_key_cache)
 	bool bResult = CryptProtectData(&key_blob, NULL, &optional_entropy, NULL, NULL, 0, &enc_key_blob);
 
 	if (!bResult) {
-		throw std::exception("KeybufManager unable to encrypt password buf");
+		return false;
 	}
 
 	m_encryptedBuf.resize(enc_key_blob.cbData);
@@ -111,6 +111,8 @@ bool KeybufManager::Finalize(bool use_key_cache)
 
 	if (use_key_cache) {
 		m_key_cache_id = KeyCache::GetInstance()->Register(m_total_len);
+		if (!m_key_cache_id)
+			bResult = false;
 	}
 
 	return bResult;

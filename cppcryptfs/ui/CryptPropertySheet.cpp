@@ -53,7 +53,6 @@ CCryptPropertySheet::CCryptPropertySheet(UINT nIDCaption, CWnd* pParentWnd, UINT
 {
 	m_nMountPageIndex = 0;
 	m_bHideAfterInit = FALSE;
-	m_timer_id = 0;
 	m_psh.dwFlags |= PSH_NOAPPLYNOW;
 	m_psh.dwFlags &= ~PSH_HASHELP;
 }
@@ -64,8 +63,7 @@ CCryptPropertySheet::CCryptPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd, U
 	m_nMountPageIndex = 0;
 	m_bHideAfterInit = FALSE;
 	m_psh.dwFlags |= PSH_NOAPPLYNOW;
-	m_psh.dwFlags &= ~PSH_HASHELP;
-	m_timer_id = 0;
+	m_psh.dwFlags &= ~PSH_HASHELP;	
 }
 
 CCryptPropertySheet::~CCryptPropertySheet()
@@ -116,15 +114,6 @@ ON_WM_ENDSESSION()
 ON_WM_POWERBROADCAST()
 END_MESSAGE_MAP()
 
-static void WINAPI CacheTimerproc(
-	HWND Arg1,
-	UINT Arg2,
-	UINT_PTR Arg3,
-	DWORD Arg4
-)
-{
-	KeyCache::GetInstance()->Clear();
-}
 
 // CryptPropertySheet message handlers
 
@@ -135,8 +124,6 @@ BOOL CCryptPropertySheet::OnInitDialog()
 	BOOL bResult = CPropertySheet::OnInitDialog();
 
 	// TODO:  Add your specialized code here
-
-	m_timer_id = SetTimer(0, 1000, CacheTimerproc);
 
 	CWnd *pWnd;
 
@@ -329,9 +316,7 @@ void CCryptPropertySheet::OnEndSession(BOOL bEnding)
 {
 	CPropertySheet::OnEndSession(bEnding);
 
-	if (bEnding) {
-		if (m_timer_id)
-			KillTimer(m_timer_id);
+	if (bEnding) {		
 		KeyCache::GetInstance()->Disable();
 		unmount_all(false);
 		wait_for_all_unmounted();

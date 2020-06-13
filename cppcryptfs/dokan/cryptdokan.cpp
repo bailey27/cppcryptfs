@@ -2569,3 +2569,8 @@ bool get_fs_info(const wchar_t *mountpoint, FsInfo& info)
 
 	return true;
 }
+
+void crypt_at_exit()
+{
+    KeyCache::GetInstance()->StopClearThread();
+}

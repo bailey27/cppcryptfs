@@ -72,7 +72,9 @@ bool CryptOpenFiles::CloseFile(LPCWSTR path, HANDLE h)
 	}
 
 	auto result = it->second->Close(h);
-	assert(result);
+	if (!result) {
+		DbgPrint(L"openfiles cannot close handle %llx\n", h);
+	}
 
 	if (it->second->Empty())
 		m_openfiles.erase(it);

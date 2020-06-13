@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "stdafx.h"
 #include <iostream>
 #include "cppcryptfs.h"
+#include "dokan/cryptdokan.h"
 #include "crypt/cryptdefs.h"
 #include "ui/CryptPropertySheet.h"
 #include "ui/MountPropertyPage.h"
@@ -301,12 +302,15 @@ BOOL CcppcryptfsApp::InitInstance()
 	if (pShellManager != NULL)
 	{
 		delete pShellManager;
-	}
+	}	
 
 	// Upon app closing:
 	if (hAppMutex) {
 		ReleaseMutex(hAppMutex); // Explicitly release mutex
 		CloseHandle(hAppMutex); // close handle before terminating
+
+		// any at app exit cleanup of the encryted filesystems occurs here
+		crypt_at_exit();
 	}
 
 	// Since the dialog has been closed, return FALSE so that we exit the

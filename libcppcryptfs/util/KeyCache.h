@@ -121,6 +121,9 @@ private:
 	bool m_enabled;
 	KeyCache();
 	void ClearInternal(bool disable);
+	bool InitClearThread();
+	HANDLE m_clearEvent;
+	HANDLE m_clearThread;
 public:	
 	static KeyCache* GetInstance();
 	id_t Register(DWORD buf_size);
@@ -130,6 +133,7 @@ public:
 	void Disable() { ClearInternal(true); }
 	bool Store(id_t id, const BYTE* ptr, size_t len);
 	bool Retrieve(id_t id, const vector<KeyBuf>& kbmb);
+	void StopClearThread();
 
 	virtual ~KeyCache();
 
