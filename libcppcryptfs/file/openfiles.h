@@ -116,6 +116,8 @@ public:
 
 	bool CloseFile(LPCWSTR path, HANDLE h);
 
+	bool Rename(LPCWSTR from, LPCWSTR to);
+
 	shared_ptr<CryptOpenFile> GetOpenFile(LPCWSTR path);
 
 	// disallow copying
