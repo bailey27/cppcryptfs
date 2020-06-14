@@ -114,16 +114,16 @@ bool CryptOpenFiles::Rename(LPCWSTR from, LPCWSTR to)
 
 	lock_guard<mutex> lock(m_mutex);
 
-	auto it = m_openfiles.find(ucfrom);
+	auto it_from = m_openfiles.find(ucfrom);
 
-	if (it == m_openfiles.end()) {
+	if (it_from == m_openfiles.end()) {
 		assert(false);
 		return false;
 	}
 
-	auto entry = it->second;
+	auto entry = it_from->second;
 
-	m_openfiles.erase(it);
+	m_openfiles.erase(it_from);
 
 	auto it_to = m_openfiles.find(ucto);
 
