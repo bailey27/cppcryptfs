@@ -117,6 +117,7 @@ bool CryptOpenFiles::Rename(LPCWSTR from, LPCWSTR to)
 	auto it = m_openfiles.find(ucfrom);
 
 	if (it == m_openfiles.end()) {
+		assert(false);
 		return false;
 	}
 
