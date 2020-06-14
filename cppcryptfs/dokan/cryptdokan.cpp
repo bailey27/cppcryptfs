@@ -1142,14 +1142,24 @@ static NTSTATUS CryptMoveFileInternal(LPCWSTR FileName, // existing file name
       if (!GetContext()->m_case_cache.store(newFilePath.CorrectCasePath())) {
         DbgPrint(L"move unable to store new filename %s in case cache\n",
                  newFilePath.CorrectCasePath());
+        assert(false);
       }
       if (DokanFileInfo->IsDirectory) {
         if (!GetContext()->m_case_cache.rename(filePath.CorrectCasePath(),
                                                newFilePath.CorrectCasePath())) {
           DbgPrint(L"move unable to rename directory %s -> %s in case cache\n",
                    filePath.CorrectCasePath(), newFilePath.CorrectCasePath());
+          assert(false);
         }
       }
+    }
+
+    // rename in openfiles if it's a file
+    // openfiles is case insensitive so we don't want to do it
+    // again if we're just repairing the name (the case)
+    if (!DokanFileInfo->IsDirectory && !repairName) {
+        bool rename_result = GetContext()->m_openfiles.Rename(FileName, NewFileName);
+        assert(rename_result);       
     }
 
     return STATUS_SUCCESS;

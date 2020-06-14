@@ -100,3 +100,41 @@ shared_ptr<CryptOpenFile> CryptOpenFiles::GetOpenFile(LPCWSTR path)
 
 	return it->second;
 }
+
+bool CryptOpenFiles::Rename(LPCWSTR from, LPCWSTR to)
+{
+	wstring ucfrom;
+	wstring ucto;
+
+	if (!touppercase(from, ucfrom)) {
+		return false;
+	}
+	
+	if (!touppercase(to, ucto)) {
+		return false;
+	}
+
+	lock_guard<mutex> lock(m_mutex);
+
+	auto it_from = m_openfiles.find(ucfrom);
+
+	if (it_from == m_openfiles.end()) {
+		assert(false);
+		return false;
+	}
+
+	auto entry = it_from->second;
+
+	m_openfiles.erase(it_from);
+
+	auto it_to = m_openfiles.find(ucto);
+
+	if (it_to != m_openfiles.end()) {
+		assert(false);
+		return false;
+	}
+
+	m_openfiles[ucto] = entry;
+
+	return true;
+}

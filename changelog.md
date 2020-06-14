@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.2.3, June 14 2020
+* Fix small memory leak when files are renamed.  Renamed files also 
+  weren't being protected from the race condition mentioned in 1.4.2.0.
+
 v1.4.2.2, June 6 2020
 * Fix for writing to files that are opened with only append access
   but not also (random) write access.
