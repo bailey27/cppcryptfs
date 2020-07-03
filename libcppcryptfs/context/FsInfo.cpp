@@ -42,6 +42,8 @@ FsInfo::FsInfo()
 	this->mountManager = false;
 	this->readOnly = false;
 	this->reverse = false;
+	this->encryptKeysInMemory = false;
+	this->cacheKeysInMemory = false;
 }
 
 FsInfo::~FsInfo()

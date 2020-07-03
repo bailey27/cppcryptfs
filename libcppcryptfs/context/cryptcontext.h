@@ -62,6 +62,8 @@ public:
 	bool m_recycle_bin;
 	bool m_read_only;
 	bool m_delete_spurrious_files;
+	bool m_encryptKeysInMemory;
+	bool m_cacheKeysInMemory;
 	vector<wstring> m_deletable_files;
 	CryptOpenFiles m_openfiles;
 private:

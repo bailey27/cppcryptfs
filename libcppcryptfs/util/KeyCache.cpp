@@ -30,6 +30,17 @@ THE SOFTWARE.
 #include "KeyCache.h"
 
 
+static string get_local_time_string()
+{
+	SYSTEMTIME st;
+	GetLocalTime(&st);
+	char buf[16];
+	sprintf_s(buf, "%02d:%02d:%02d\n", st.wHour, st.wMinute, st.wSecond);
+
+	return string(buf);
+}
+
+
 KeyCache::KeyCache()
 {
 	m_cur_id = 0;
@@ -152,6 +163,11 @@ void KeyCache::Enable()
 {
 	lock_guard<mutex> lock(m_mutex);
 
+#ifdef _DEBUG
+	string mes = "enabling key cache at " + get_local_time_string() + "\n";
+	OutputDebugStringA(mes.c_str());
+#endif
+
 	m_enabled = true;
 }
 
@@ -159,26 +175,28 @@ void KeyCache::ClearInternal(bool disable)
 {
 	lock_guard<mutex> lock(m_mutex);
 
-	if (m_valid_count == 0)
-		return;
+	if (m_valid_count > 0) {
 
-	assert(m_valid_count > 0);
-
-	for (auto& it : m_entries) {
-		if (it.second.valid && (disable || !it.second.accessed)) {
+		for (auto& it : m_entries) {
+			if (it.second.valid && (disable || !it.second.accessed)) {
 #ifdef _DEBUG
-			char buf[64];
-			sprintf_s(buf, "clearing keys for cache id %llu\n", it.first);
-			OutputDebugStringA(buf);
+				char buf[64];
+				sprintf_s(buf, "clearing keys for cache id %llu\n", it.first);
+				OutputDebugStringA(buf);
 #endif
-			it.second.Clear();
-			m_valid_count--;
-		} else {
-			it.second.accessed = false;
+				it.second.Clear();
+				m_valid_count--;
+			} else {
+				it.second.accessed = false;
+			}
 		}
 	}
 
 	if (disable) {
+#ifdef _DEBUG
+		string mes = "disabling key cache at " + get_local_time_string() + "\n";		
+		OutputDebugStringA(mes.c_str());		
+#endif
 		m_enabled = false;
 		assert(m_valid_count == 0);
 	}

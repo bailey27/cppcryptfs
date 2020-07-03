@@ -273,13 +273,35 @@ If this setting is enabled, then when an encrypted volume is mounted, it will au
 
 This setting is not enabled in either the Default or Recommended settings.
 
+**Encrypt Keys in Memory**
+
+When this setting is enabled, cppcryptfs keeps the encryption keys (the primary key and any derived keys) encrypted using the Windows Data Protection API (DPAPI) when they are not needed.  The keys are encrypted using DPAPI, and they are unencrypted when needed and then the unencrypted copies are zeroed out when not needed.  See the section on "Saved Passwords" below for more information about DPAPI.
+
+This setting reduces the chance of malicious software being able to read the unecrypted keys from cppcyrptfs's process memory.  
+
+Also, this setting prevents the unencrypted keys from ending up on disk in the hibernation file if the system goes into hibernation.
+
+This setting is brand new, and **any bugs in its implementation could cause data loss**.  It is recommened to use this setting only if you make frequent backups of your encrypted filesystems.
+
+It is recommended to use "Cache Keys in Memory" (see below) with this setting. Otherwise there will be a signficant impact on performance if you do not enable "Cache Keys in Memory".
+
+This setting is not enabled in either the Default or Recommended settings.
+
+**Cache Keys in Memory**
+
+This setting has no effect unless "Encrypt Keys in Memory" is enabled.
+
+When this setting is enabled and encrypt keys in memory is also enabled, then cppcryptfs will cache the unencrypted keys between uses for up to one second.
+
+This setting reduces the performance impact of "Encrypt Keys in Memory" to essentially zero.  Without this setting enabled, encrypt keys in memory significantly reduces performance.
+
+When the system is about to enter standby or hibernation modes, cppcryptfs automatically disables the cache so when the system enters the low power mode, the unencrypted keys won't be in memory.  The cache is automatically re-enabled when the system wakes up.
+
+This setting is not enabled in either the Default or Recommended settings.
+
 **Defaults and Recommended**
 
 Currently, the default and recommended settings are the same.
-
-You can view the previous default settings here
-
-[Previous default settings screenshot](/screenshots/screenshot_previous_defaults.png?raw=true) 
 
 **Reset Warnings**
 

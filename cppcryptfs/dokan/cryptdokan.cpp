@@ -1967,8 +1967,11 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
       throw(-1);
     }
 
-    if (opts.encryptkeysinmemory)
+    if (opts.encryptkeysinmemory) {
+        tdata->con.m_encryptKeysInMemory = true;
+        tdata->con.m_cacheKeysInMemory = opts.cachekeysinmemory;
         tdata->con.GetConfig()->m_keybuf_manager.Activate();
+    }
 
     PDOKAN_OPERATIONS dokanOperations = &tdata->operations;
 
@@ -2047,7 +2050,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
 #ifdef _DEBUG
     dokanOptions->Timeout = 900000;
-    //g_DebugMode = 1;
+    g_DebugMode = 1;
 #endif
 
     config->m_basedir = prepare_basedir(path);

@@ -89,25 +89,27 @@ BOOL CFsInfoDialog::OnInitDialog()
 
 	LPCWSTR yes = L"Yes";
 	LPCWSTR no = L"No";
+	LPCWSTR na = L"n/a";
 	LPCWSTR path = m_info.path.c_str();
 	if (!wcsncmp(path, L"\\\\?\\", wcslen(L"\\\\?\\"))) {
 		path += wcslen(L"\\\\?\\");
 	}
 	SetDlgItemText(IDC_PATH, m_info.path.c_str());
 	SetDlgItemText(IDC_MOUNT_POINT, m_mountPoint);
-	
 	SetDlgItemText(IDC_CONFIG_PATH, m_info.configPath.c_str());
 	SetDlgItemText(IDC_FILE_NAME_ENCRYPTION, m_info.fileNameEncryption.c_str());
 	SetDlgItemText(IDC_DATA_ENCRYPTION, m_info.dataEncryption.c_str());
 	SetDlgItemText(IDC_READ_ONLY, m_info.readOnly ? yes : no);
-	SetDlgItemText(IDC_MODE, m_info.reverse ? L"reverse" : L"forward");
+	SetDlgItemText(IDC_MODE, m_info.reverse ? L"Reverse" : L"Forward");
 	SetDlgItemText(IDC_MOUNT_MANAGER, m_info.mountManager ? yes : no);
 	SetDlgItemText(IDC_CASE_INSENSITIVE, m_info.caseInsensitive ? yes : no);
-	SetDlgItemText(IDC_LONG_FILE_NAMES, m_info.longFileNames ? yes : no);
+	SetDlgItemText(IDC_LONG_FILE_NAMES, m_info.longFileNames ? yes : no);	
+	SetDlgItemText(IDC_ENCRYPT_KEYS_IN_MEM, m_info.encryptKeysInMemory ? yes : no);
+	SetDlgItemText(IDC_CACHE_KEYS_IN_MEM, m_info.encryptKeysInMemory ? (m_info.cacheKeysInMemory ? yes : no) : na);
 
 	wstring txt;
 	txt = to_wstring(m_info.ioBufferSize);
-	txt += L"KB";
+	txt += L" KB";
 	SetDlgItemText(IDC_IO_BUF_SIZE, txt.c_str());
 	txt = to_wstring(m_info.fsThreads);
 	SetDlgItemText(IDC_THREADS, txt.c_str());
@@ -123,7 +125,7 @@ BOOL CFsInfoDialog::OnInitDialog()
 	float r;
 	r = m_info.caseCacheHitRatio;
 	if (r < 0.0f) {
-		txt = L"n/a";
+		txt = na;
 	} else {
 		_snwprintf_s(buf, _TRUNCATE, L"%.2f", r*100.0f);
 		txt = buf;

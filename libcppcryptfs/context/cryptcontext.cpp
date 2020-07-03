@@ -67,6 +67,9 @@ CryptContext::CryptContext()
 	m_prand_bytes = &random_bytes;
 
 	m_case_cache.m_con = this;
+
+	m_encryptKeysInMemory = false;
+	m_cacheKeysInMemory = false;
 }
 
 static void get_deletable_files(CryptContext *con, vector<wstring>& files)
@@ -110,6 +113,8 @@ CryptContext::~CryptContext()
 void CryptContext::GetFsInfo(FsInfo & info)
 {
 	
+	info.encryptKeysInMemory = this->m_encryptKeysInMemory;
+	info.cacheKeysInMemory = this->m_cacheKeysInMemory;
 	info.cacheTTL = m_cache_ttl;
 	info.caseInsensitive = IsCaseInsensitive();
 	info.configPath = GetConfig()->m_configPath;

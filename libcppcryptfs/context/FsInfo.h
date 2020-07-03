@@ -48,6 +48,8 @@ public:
 	bool mountManager;
 	bool caseInsensitive;
 	bool longFileNames;
+	bool encryptKeysInMemory;
+	bool cacheKeysInMemory;
 
 	FsInfo();
 	virtual ~FsInfo();
