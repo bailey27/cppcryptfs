@@ -471,8 +471,6 @@ BOOL CMountPropertyPage::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
-	::MessageBox(NULL, L"WARNING!!! EXPERIMENTAL SOFTWARE!", L"cppcryptfs", MB_ICONHAND | MB_OK);
-
 	// TODO:  Add extra initialization here
 
 	//Create the ToolTip control
