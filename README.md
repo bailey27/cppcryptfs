@@ -277,7 +277,7 @@ This setting is not enabled in either the Default or Recommended settings.
 
 When this setting is enabled, cppcryptfs keeps the encryption keys (the primary key and any derived keys) encrypted using the Windows Data Protection API (DPAPI) when they are not needed.  The keys are encrypted using DPAPI, and they are unencrypted when needed and then the unencrypted copies are zeroed out when not needed.  See the section on "Saved Passwords" below for more information about DPAPI.
 
-This setting reduces the chance of malicious software being able to read the unecrypted keys from cppcyrptfs's process memory.  
+This setting reduces the chance of malicious software being able to read the unencrypted keys from cppcyrptfs's process memory.  
 
 Also, this setting prevents the unencrypted keys from ending up on disk in the hibernation file if the system goes into hibernation.
 
