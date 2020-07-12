@@ -90,7 +90,7 @@ bool KeyCache::InitClearThread()
 	static once_flag init_thread_once_flag;
 
 	std::call_once(init_thread_once_flag, [this]() {
-		m_clearEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+			m_clearEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 			if (m_clearEvent) {
 				m_clearThread = CreateThread(NULL, 0, ClearThreadProc, m_clearEvent, 0, NULL);				
 			}
@@ -111,6 +111,9 @@ void KeyCache::StopClearThread()
 	auto wait_result = WaitForSingleObject(m_clearThread, INFINITE);
 
 	assert(wait_result == WAIT_OBJECT_0);
+
+	CloseHandle(m_clearThread);
+	CloseHandle(m_clearEvent);
 
 	m_clearEvent = NULL;
 	m_clearThread = NULL;
