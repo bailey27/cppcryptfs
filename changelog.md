@@ -2,6 +2,9 @@
 
 Changelog
 ------------
+v1.4.3.0, July 12 2020
+* Add encrypt keys in memory and cache keys in memory settings.
+
 v1.4.2.3, June 14 2020
 * Fix small memory leak when files are renamed.  Renamed files also 
   weren't being protected from the race condition mentioned in 1.4.2.0.
