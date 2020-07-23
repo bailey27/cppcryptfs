@@ -144,5 +144,5 @@ v1.4.0.4 Oct 13, 2017
 v1.4.0.3 Oct 2, 2017
 * saved passwords
 
-This changelong was unfortunately was started belatedly...
+This changelog was unfortunately started belatedly...
 
