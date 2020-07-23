@@ -172,13 +172,9 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 		return false;
 	}
 
-	char *buf = NULL;
+	auto buf_rsc = cppcryptfs::unique_rsc([](size_t n) { return static_cast<char*>(malloc(n)); }, free, filesize + 1);
 
-	try {
-		buf = new char[filesize + 1];
-	} catch (...) {
-		buf = NULL;
-	}
+	char* buf = buf_rsc.get();	
 
 	if (!buf) {
 		mes = L"cannot allocate buffer for reading config file";
@@ -197,8 +193,6 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 	rapidjson::Document d;
 
 	d.Parse(buf);
-
-	delete[] buf;
 
 	if (!d.IsObject()) {
 		mes = L"config file is not valid JSON";
