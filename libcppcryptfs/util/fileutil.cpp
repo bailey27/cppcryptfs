@@ -1031,7 +1031,7 @@ bool is_suitable_mountpoint(LPCWSTR path)
 		0, NULL, NULL,
 		NULL, fsnamebuf, sizeof(fsnamebuf) / sizeof(fsnamebuf[0]) - 1)) {
 		DWORD error = GetLastError();
-		DbgPrint(L"get fs name error = %u\n", error);
+		//DbgPrint(L"get fs name error = %u\n", error);
 		return false;
 	}
 

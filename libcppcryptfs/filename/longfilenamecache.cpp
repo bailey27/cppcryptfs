@@ -165,7 +165,7 @@ bool LongFilenameCache::lookup(LPCWSTR base64_hash, wstring *path, string *actua
 
 	if (m_lookups && (m_lookups % 1024 == 0)) {
 		double ratio = (double)m_hits / (double)m_lookups;
-		DbgPrint(L"LongFilenameCache: %I64d lookups, %I64d hits, %I64d misses, hit ratio %0.2f%%\n", m_lookups, m_hits, m_lookups - m_hits, ratio*100);
+		//DbgPrint(L"LongFilenameCache: %I64d lookups, %I64d hits, %I64d misses, hit ratio %0.2f%%\n", m_lookups, m_hits, m_lookups - m_hits, ratio*100);
 	}
 
 	unlock();

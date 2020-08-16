@@ -72,7 +72,7 @@ bool
 derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const char *type)
 {
 
-	DbgPrint(L"derive_path_iv path = %s, type = %S\n", path, type);
+	//DbgPrint(L"derive_path_iv path = %s, type = %S\n", path, type);
 
 	wstring wpath;
 

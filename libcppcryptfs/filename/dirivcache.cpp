@@ -197,7 +197,7 @@ bool DirIvCache::lookup(LPCWSTR path, unsigned char *dir_iv)
 
 	if (m_lookups && (m_lookups % 1024 == 0)) {
 		double ratio = (double)m_hits / (double)m_lookups;
-		DbgPrint(L"DirIvCache: %I64d lookups, %I64d hits, %I64d misses, hit ratio %0.2f%%\n", m_lookups, m_hits, m_lookups - m_hits, ratio*100);
+		//DbgPrint(L"DirIvCache: %I64d lookups, %I64d hits, %I64d misses, hit ratio %0.2f%%\n", m_lookups, m_hits, m_lookups - m_hits, ratio*100);
 	}
 
 	unlock();
