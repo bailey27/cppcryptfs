@@ -104,3 +104,4 @@ void SetOverlapped(LPOVERLAPPED pOv, LONGLONG offset);
 
 void IncOverlapped(LPOVERLAPPED pOv, DWORD increment);
 
+const wchar_t* get_command_line_usage();

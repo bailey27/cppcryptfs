@@ -397,7 +397,7 @@ bool read_password(WCHAR *pwbuf, int pwbuflen, const WCHAR *prompt)
 	if (!hStdin)
 		return false;
 
-	wcout << (prompt ? prompt : L"Password: ");
+	wcerr << (prompt ? prompt : L"Password: ");
 
 	DWORD old_mode = 0;
 	if (!GetConsoleMode(hStdin, &old_mode))
@@ -415,7 +415,7 @@ bool read_password(WCHAR *pwbuf, int pwbuflen, const WCHAR *prompt)
 
 	SetConsoleMode(hStdin, old_mode);
 
-	wcout << L"\n";
+	wcerr << L"\n";
 
 	return true;
 }
@@ -709,3 +709,42 @@ void IncOverlapped(LPOVERLAPPED pOv, DWORD increment)
 	pOv->OffsetHigh = l.HighPart;
 }
 
+const wchar_t* get_command_line_usage()
+{
+	return
+
+LR"(Usage: cppcryptfs/cppcryptfsctl [OPTIONS]
+
+Mounting:
+  -m, --mount=PATH         mount filesystem located at PATH
+  -d, --drive=D            mount to drive letter D or empty dir DIR
+  -p, --password=PASS      use password PASS
+  -P, --saved-password     use saved password
+  -r, --readonly           mount read-only
+  -c, --config=PATH        path to config file for init/mount
+  -s, --reverse            init/mount reverse filesystem (implies siv for init)
+
+Unmounting:
+  -u, --unmount=D          unmount drive letter D or dir DIR
+  -u, --unmount=all        unmount all drives
+
+Misc:
+  -t, --tray               hide in system tray
+  -x, --exit               exit if no drives mounted
+  -l, --list               list available and mounted drive letters (with paths)
+  -ld:\\p, --list=d:\\p      list plaintext and encrypted filenames
+  -C, --csv                file list is comma-delimited
+  -D, --dir                file list dirs first and w/ trailing \"\\\"
+  -i, --info=D             show information about mounted filesystem
+  -v, --version            print version (use --init -v for cppcryptfsctl ver)
+  -h, --help               display this help message
+
+Initializing (cppcryptfsctl only):
+  -I, --init=PATH          Initialize encrypted filesystem located at PATH	
+  -V, --volumename=NAME    specify volume name for filesystem
+  -T, --plaintext          use plaintext filenames (default is AES256-EME)
+  -S, --siv                use AES256-SIV for data encryption (default is GCM)	
+  -L, --longnames [0|1]    enable/disable LFNs. defaults to enabled (1)
+  -b, --streams   [0|1]    enable/disable streams. defaults to enabled (1)
+)";
+}

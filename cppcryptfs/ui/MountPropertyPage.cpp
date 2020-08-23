@@ -1211,30 +1211,7 @@ int OutputHandler::print(int type, const wchar_t* fmt, ...)
 
 static void usage(OutputHandler& output_handler)
 {
-
-	output_handler.print(CMD_PIPE_ERROR, L"Usage: cppcryptfs [OPTIONS]\n");
-	output_handler.print(CMD_PIPE_ERROR, L"\nMounting:\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -m, --mount=PATH\tmount filesystem located at PATH\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -d, --drive=D\t\tmount to drive letter D or empty dir DIR\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -p, --password=PASS\tuse password PASS\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -P, --saved-password\tuse saved password\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -r, --readonly\tmount read-only\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -c, --config=PATH\tpath to config file\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -s, --reverse\t\tmount reverse filesystem\n");
-	output_handler.print(CMD_PIPE_ERROR, L"\nUnmounting:\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -u, --unmount=D\tunmount drive letter D or dir DIR\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -u, --unmount=all\tunmount all drives\n");
-	output_handler.print(CMD_PIPE_ERROR, L"\nMisc:\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -t, --tray\t\thide in system tray\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -x, --exit\t\texit if no drives mounted\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -l, --list\t\tlist available and mounted drive letters (with paths)\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -ld:\\p, --list=d:\\p\tlist plaintext and encrypted filenames\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -C, --csv\t\tfile list is comma-delimited\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -D, --dir\t\tfile list dirs first and w/ trailing \"\\\"\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -i, --info=D\t\tshow information about mounted filesystem\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -v, --version\t\tprint version\n");
-	output_handler.print(CMD_PIPE_ERROR, L"  -h, --help\t\tdisplay this help message\n");
-	
+	output_handler.print(CMD_PIPE_ERROR, get_command_line_usage());
 }
 
 
@@ -1408,7 +1385,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 	if (errMes.GetLength() > 0) {
 		if (printMessages) output_handler.print(CMD_PIPE_ERROR, L"cppcryptfs: %s\n", (LPCWSTR)errMes);
 	} else if (invalid_opt) {
-		if (printMessages) output_handler.print(CMD_PIPE_ERROR, L"Try 'cppcryptfs --help' for more information.\n");
+		if (printMessages) output_handler.print(CMD_PIPE_ERROR, L"Invalid option. Try 'cppcryptfs --help' for more information.\n");
 	} else if (do_version || do_help) {
 		if (do_version) {
 			wstring prod, ver, copyright;

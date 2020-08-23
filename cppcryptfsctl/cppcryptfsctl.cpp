@@ -27,7 +27,9 @@ THE SOFTWARE.
 */
 
 #include <windows.h>
+#include <Shlwapi.h>
 #include <iostream>
+#include <io.h>
 #include <string>
 #include "../libipc/client.h"
 #include "../libipc/certutil.h"
@@ -35,31 +37,19 @@ THE SOFTWARE.
 #include "../libcppcryptfs/config/cryptconfig.h"
 #include "../libcppcryptfs/util/getopt.h"
 #include "../libcppcryptfs/util/util.h"
+#include "../libcppcryptfs/util/fileutil.h"
+#include "../libcppcryptfs/crypt/cryptdefs.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 
 using namespace std;
 
-const wchar_t* init_switch = L"--init";
 
-#define MAX_PASSWORD_LEN 1000
+#define PASSWORD_BUFLEN (MAX_PASSWORD_LEN+5)
 
 static void show_help()
 {
-    wcerr << L"Usage: cppcryptfs [OPTIONS]\n";
-    wcerr << L"Initializing:\n";
-    wcerr << L"  --init=PATH\tInitialize encrypted filesystem located at PATH\n";
-    wcerr << L"  --config=FILEPATH\t\tsepcify path to config file\n";
-    wcerr << L"  --volumename=NAME\t\tsepcify volume name for filesystem\n";
-    wcerr << L"  --plaintext\t\tuse plaintext filenames (otherwise AES256-EME will be used)\n";    
-    wcerr << L"  --siv\t\tuse AES256-SIV for data encryption (otherwise GCM will be used)\n";
-    wcerr << L"  --reverse\t\t create reverse-mode filesystem (implies siv)\n";
-    wcerr << L"  --longnames [0|1]\t\t enble or disable long file names. defaults to enabled (1)\n";
-    wcerr << L"  --streams [0|1]\t\t enble or disable alternate data streams. defaults to enabled (1)\n";
-    wcerr << L"  -c, --config=PATH\tpath to config file\n";
-    wcerr << L"  -s, --reverse\t\tmount reverse filesystem\n";  
-    wcerr << L"  -v, --version\t\tprint version\n";
-    wcerr << L"  -h, --help\t\tdisplay this help message\n";   
+    wcerr << get_command_line_usage();
 }
 
 
@@ -85,7 +75,7 @@ static int do_init(int argc, wchar_t* const argv[])
     int c;
     int option_index = 0;
 
-    bool invalid_opt;
+    bool invalid_opt = false;
 
     bool reverse = false;
 
@@ -109,14 +99,14 @@ static int do_init(int argc, wchar_t* const argv[])
 
     static struct option long_options[] =
     {
-        {L"init",   required_argument,  0, 'i'},        
+        {L"init",   required_argument,  0, 'I'},        
         {L"config", required_argument, 0, 'c' },      
         {L"reverse",  no_argument, 0, 's' },
-        {L"plaintextnames",  no_argument, 0, 'p' },
-        {L"longnames",  required_argument, 0, 'l' },
-        {L"streams",  required_argument, 0, 'S'},
+        {L"plaintextnames",  no_argument, 0, 'T' },
+        {L"longnames",  required_argument, 0, 'L' },
+        {L"streams",  required_argument, 0, 'b'},
         {L"volumename",  required_argument, 0, 'V'},
-        {L"siv",  no_argument, 0, 's'},        
+        {L"siv",  no_argument, 0, 'S'},        
         {L"version",  no_argument, 0, 'v' },
         {L"help",  no_argument, 0, 'h'},
         {0, 0, 0, 0}
@@ -125,7 +115,7 @@ static int do_init(int argc, wchar_t* const argv[])
 
 
     while (true) {
-        c = getopt_long(argc, argv, L"i:c:spl:S:V:svh", long_options, &option_index);
+        c = getopt_long(argc, argv, L"I:c:sTL:b:V:Svh", long_options, &option_index);
 
         if (c == -1)
             break;
@@ -134,7 +124,7 @@ static int do_init(int argc, wchar_t* const argv[])
         case '?':
             invalid_opt = true;
             break;
-        case 'i':
+        case 'I':
             if (wcscmp(optarg, L"-v") == 0) {
                 do_version = true;
             } else if (wcscmp(optarg, L"-h") == 0) {
@@ -147,24 +137,24 @@ static int do_init(int argc, wchar_t* const argv[])
         case 'c':
             config_path = optarg;
             break;
-        case 'r':
+        case 's':
             reverse = true;
             break;
-        case 'p':
+        case 'T':
             plaintext_names = true;
             break;
-        case 'l':
+        case 'L':
             if (get_binary_flag("longnames", optarg, longnames) != 0)
                 return 1;
             break;           
-        case 'S':
+        case 'b':
             if (get_binary_flag("streams", optarg, streams) != 0)
                 return 1;
             break;
         case 'V':
             volume_name = optarg;
             break;
-        case 's':
+        case 'S':
             siv = true;
             break;
         case 'v':
@@ -174,6 +164,11 @@ static int do_init(int argc, wchar_t* const argv[])
             do_help = true;
             break;      
         }
+    }
+
+    if (invalid_opt && !do_help) {
+        wcerr << L"Invalid option. Try 'cppcryptfsctl --help' for more information." << endl;
+        return 1;
     }
 
     if (do_version) {
@@ -186,79 +181,100 @@ static int do_init(int argc, wchar_t* const argv[])
         show_help();
         return 1;
     }
-
-    wchar_t password[1024];
-    wchar_t password2[1024];
-
-    
+ 
     wstring mes;
 
     if (do_init) {
 
-        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+        LockZeroBuffer<wchar_t> password(PASSWORD_BUFLEN, false);
+        LockZeroBuffer<wchar_t> password2(PASSWORD_BUFLEN, false);
 
-        if (!hStdin) {
-            wcerr << L"cannot get handle to std input\n";
+        if (!password.IsLocked()) {
+            wcerr << L"unable to lock password buffer\n";
             return 1;
         }
 
-        DWORD mode;
-        if (!GetConsoleMode(hStdin, &mode)) {
-            // we have stdin redirected, so just read password from stdin
-            wstring pwd;
-            getline(wcin, pwd);
-            if (pwd.length() > MAX_PASSWORD_LEN) {
-                wcerr << L"max password length is 1000" << endl;
+        if (!::PathFileExists(fs_path.c_str())) {
+            wcerr << L"the path to the file system does not exist." << endl;
+            return 1;
+        }
+
+        if (!reverse && !can_delete_directory(fs_path.c_str())) {
+            wcerr << L"the file system directory is not empty." << endl;
+            return 1;
+        }               
+
+        wcout << L"Choose a password for protecting your files." << endl;
+
+        if (_isatty(_fileno(stdin))) {
+
+            LockZeroBuffer<wchar_t> password2(PASSWORD_BUFLEN, false);
+
+            if (!password2.IsLocked()) {
+                wcerr << L"unable to lock repeat password buffer\n";
                 return 1;
-            }
-            wcscpy_s(password, pwd.c_str());
-        } else {
-            if (!read_password(password, _countof(password), L"password:")) {
+            }            
+
+            // prompt for password
+            if (!read_password(password.m_buf, password.m_len, L"Password:")) {
                 wcerr << L"error reading password" << endl;
                     return 1;
             }
-
-            if (wcslen(password) > MAX_PASSWORD_LEN) {
-                wcerr << L"max password length is 1000" << endl;
-                return 1;
-            }
-
-            if (!read_password(password2, _countof(password), L"repeat:")) {
-                wcerr << L"error reading repeate password" << endl;
+            // prompt for repeat password
+            if (!read_password(password2.m_buf, password2.m_len, L"Repeat:")) {
+                wcerr << L"error reading repeat password" << endl;
                     return 1;
             }
-
-            if (wcscmp(password, password2)) {
+            if (wcscmp(password.m_buf, password2.m_buf) != 0) {
                 wcerr << L"passwords do not match" << endl;
                 return 1;
             }
-
+        } else {
+            // we have stdin redirected, so read password from stdin         
+            wcout << L"Reading password from stdin" << endl;
+            if (!fgetws(password.m_buf, password.m_len, stdin)) {
+                wcerr << "unable to read password from stdin\n";
+                return 1;
+            }
+            if (wcslen(password.m_buf) > 0 && password.m_buf[wcslen(password.m_buf) - 1] == L'\n') {
+                password.m_buf[wcslen(password.m_buf) - 1] = L'\0';
+            }
         }
+
+        if (wcslen(password.m_buf) < 1) {
+            wcerr << L"password cannot be empty" << endl;
+        }
+
+        if (wcslen(password.m_buf) > MAX_PASSWORD_LEN) {
+            wcerr << L"password too long.  max length is " << MAX_PASSWORD_LEN << endl;
+        }        
     
-        bool result = config.create(fs_path.c_str(), config_path.c_str(), password, !plaintext_names, plaintext_names, longnames, siv, reverse, volume_name.c_str(), !streams, mes);
+        bool result = config.create(fs_path.c_str(), config_path.c_str(), password.m_buf, !plaintext_names, plaintext_names, longnames, reverse || siv, reverse, volume_name.c_str(), !streams, mes);
+
         if (!result) {
             wcerr << mes << endl;
             return 1;
+        } else {
+            wcout << L"The gocryptfs" << (reverse ? L"-reverse" : L"") <<  L" filesystem has been created successfully." << endl;
         }
     }
 
     return 0;
 }
 
-int letmego = 1;
-
 int wmain(int argc, wchar_t * const argv[])
 {
     if (argc < 2)
         return 0;
 
-    while (!letmego)
-        Sleep(1);
+    const wchar_t* init_switch_long = L"--init";
+    const wchar_t* init_switch_short = L"-I";
 
     // if we are initializing a filesystem then we handle it in cppcryptfsctl instead
     // of passing command line to cppcryptfs
     for (int i = 1; i < argc; ++i) {
-        if (wcsncmp(argv[i], init_switch, wcslen(init_switch)) == 0) {
+        if (wcsncmp(argv[i], init_switch_long, wcslen(init_switch_long)) == 0 || 
+            wcsncmp(argv[i], init_switch_short, wcslen(init_switch_short)) == 0) {
             return do_init(argc, argv);
         }
     }
