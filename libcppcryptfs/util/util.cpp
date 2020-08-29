@@ -732,7 +732,7 @@ Misc:
   -t, --tray               hide in system tray
   -x, --exit               exit if no drives mounted
   -l, --list               list available and mounted drive letters (with paths)
-  -ld:\\p, --list=d:\\p      list plaintext and encrypted filenames
+  -ld:\p, --list=d:\p      list plaintext and encrypted filenames
   -C, --csv                file list is comma-delimited
   -D, --dir                file list dirs first and w/ trailing \"\\\"
   -i, --info=D             show information about mounted filesystem
@@ -740,10 +740,10 @@ Misc:
   -h, --help               display this help message
 
 Initializing (cppcryptfsctl only):
-  -I, --init=PATH          Initialize encrypted filesystem located at PATH	
+  -I, --init=PATH          Initialize encrypted filesystem located at PATH
   -V, --volumename=NAME    specify volume name for filesystem
   -T, --plaintext          use plaintext filenames (default is AES256-EME)
-  -S, --siv                use AES256-SIV for data encryption (default is GCM)	
+  -S, --siv                use AES256-SIV for data encryption (default is GCM)
   -L, --longnames [0|1]    enable/disable LFNs. defaults to enabled (1)
   -b, --streams   [0|1]    enable/disable streams. defaults to enabled (1)
 )";

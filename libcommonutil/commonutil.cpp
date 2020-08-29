@@ -114,7 +114,7 @@ GetProductVersionInfo(wstring& strProductName, wstring& strProductVersion,
 	}
 
 	strProductName = (LPCTSTR)pvProductName;
-	strProductVersion = (LPCTSTR)pvProductVersion + wstring(L"INIT-TEST");
+	strProductVersion = (LPCTSTR)pvProductVersion;
 	strLegalCopyright = (LPCTSTR)pvLegalCopyright;
 
 	return true;
