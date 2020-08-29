@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.3.1, Aug 29 2020
+* Add capability for creating (initializing) filesystems using cppcryptfsctl.
+  (please review command line options because some have changed)
+  
 v1.4.3.0, July 12 2020
 * Add encrypt keys in memory and cache keys in memory settings.
 
@@ -19,7 +23,6 @@ v1.4.2.1, May 27 2020
   text.
 * Use the /guard:cf compilation flag for release builds.  
 * Use the /HIGHENTROPYVA linker option for 64-bit builds
-
 
 v1.4.2.0, Apr 26 2020
 * Fix race condition revealed by qBittorent

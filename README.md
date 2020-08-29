@@ -51,6 +51,8 @@ used by the Dokany project.  The Dokany team added additional tests.
 
 The tests that cppcryptfs fails when run without administrator privileges have to do with operations on DACLs (Discretionary Access Control Lists).  cppcryptfs must be run as administrator for these operations to work.  Running without administrator privileges doesn't seem to affect the normal usage of cppcryptfs.
 
+Note: It appears that Windows 10 Version 1909 (OS Build 18363.1016) allows cppcryptfs to pass all 506 tests without having to be run as administrator.
+
 
 Build Requirements
 -----
@@ -381,35 +383,48 @@ cppcryptfsctl sets ERRORLEVEL to 0 on success, to 1 if an error occurs, and to 2
 Passwords passed through the command line are not really secure.  cppcryptfs locks and zeros its internal copies of the command line, but, for example, it does not zero the command line stored in the Windows PEB (Process Environment Block). Also, if cppcyrptfs is already running, then an invocation of cppcryptfs (or cppcryptfsctl) from the command line will cause it to pass the command line to the already running instance. It tries to do this in a fairly secure way.  It communicates with the running instance using a local Windows named pipe. If the program running on either side of the pipe is signed, then it verifies that the program on the other end of the pipe is also running from a signed executable and that the common name on both signatures are the same.  However, it is unknown how many times the command line might be copied by Windows out of cppcryptfs' control.  So there is some chance that a password passed via the command line might end up in the paging file if a paging file is being used.
 
 ```
-Usage: cppcryptfs [OPTIONS]
+Usage: cppcryptfs/cppcryptfsctl [OPTIONS]
 
 Mounting:
-  -m, --mount=PATH      mount filesystem located at PATH
-  -d, --drive=D         mount to drive letter D or empty dir DIR
-  -p, --password=PASS   use password PASS
-  -P, --saved-password  use saved password
-  -r, --readonly        mount read-only
-  -c, --config=PATH     path to config file
-  -s, --reverse         mount reverse filesystem
+  -m, --mount=PATH         mount filesystem located at PATH
+  -d, --drive=D            mount to drive letter D or empty dir DIR
+  -p, --password=PASS      use password PASS
+  -P, --saved-password     use saved password
+  -r, --readonly           mount read-only
+  -c, --config=PATH        path to config file for init/mount
+  -s, --reverse            init/mount reverse filesystem (implies siv for init)
 
 Unmounting:
-  -u, --unmount=D       unmount drive letter D or dir DIR
-  -u, --unmount=all     unmount all drives
+  -u, --unmount=D          unmount drive letter D or dir DIR
+  -u, --unmount=all        unmount all drives
 
 Misc:
-  -t, --tray            hide in system tray
-  -x, --exit            exit if no drives mounted
-  -l, --list            list available and mounted drive letters (with paths)
-  -ld:\p, --list=d:\p   list plaintext and encrypted filenames
-  -C, --csv             file list is comma-delimited
-  -D, --dir             file list dirs first and w/ trailing "\"
-  -i, --info=D          show information about mounted filesystem
-  -v, --version         print version
-  -h, --help            display this help message
+  -t, --tray               hide in system tray
+  -x, --exit               exit if no drives mounted
+  -l, --list               list available and mounted drive letters (with paths)
+  -ld:\p, --list=d:\p      list plaintext and encrypted filenames
+  -C, --csv                file list is comma-delimited
+  -D, --dir                file list dirs first and w/ trailing \"\\\"
+  -i, --info=D             show information about mounted filesystem
+  -v, --version            print version (use --init -v for cppcryptfsctl ver)
+  -h, --help               display this help message
 
-cppcrytfsctl has a special option -V that if it is the only option given it will print its version instead of
-trying to send the command line to a running instance of cppcryptfs.
+Initializing (cppcryptfsctl only):
+  -I, --init=PATH          Initialize encrypted filesystem located at PATH
+  -V, --volumename=NAME    specify volume name for filesystem
+  -T, --plaintext          use plaintext filenames (default is AES256-EME)
+  -S, --siv                use AES256-SIV for data encryption (default is GCM)
+  -L, --longnames [0|1]    enable/disable LFNs. defaults to enabled (1)
+  -b, --streams   [0|1]    enable/disable streams. defaults to enabled (1)
 ```
+
+Only cppcryptfsctl can create a filesystem from the command line(--init).  To create a filesystem with cppcryptfs you have to use the GUI.  
+
+When creating/initializing a filesystem, cppcryptfsctl will prompt for the password and repeat password without echo if run interactively. If its standard input is redirected, then it will read the password from standard input without prompting.
+
+To get the version of cppcryptfsctl, you must specify initialize and -v.  e.g. cppcryptfsctl -I -v, otherwise it will attempt to get and print the version of a running instance of cppcryptfs.
+
+Some options are common to both initializing and mounting (--config and --reverse).
 
 Note: when using the short version of the option, you should not use the equal sign between the option and its argument.  When using the long version of the option, the equal sign is optional. e.g. these will work
 
