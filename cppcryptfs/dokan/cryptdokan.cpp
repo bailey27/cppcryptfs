@@ -105,9 +105,13 @@ THE SOFTWARE.
 
 
 
-BOOL g_UseStdErr;
-BOOL g_DebugMode;
 BOOL g_HasSeSecurityPrivilege;
+
+BOOL g_UseStdErr;
+BOOL g_DebugMode = 1;
+BOOL g_UseLogFile = 1;
+
+extern FILE* flogcppcryptfs;
 
 void DbgPrint(LPCWSTR format, ...) {
   if (g_DebugMode) {
@@ -125,10 +129,14 @@ void DbgPrint(LPCWSTR format, ...) {
     } else {
       outputString = format;
     }
-    if (g_UseStdErr)
-      fputws(outputString, stderr);
-    else
+    if (g_UseStdErr) {
+        fputws(outputString, stderr);
+    } else if (g_UseLogFile && flogcppcryptfs) {
+        fputws(outputString, flogcppcryptfs);
+        fflush(flogcppcryptfs);
+    } else {
       OutputDebugStringW(outputString);
+    }
     if (buffer)
       _freea(buffer);
     va_end(argp);
@@ -155,7 +163,7 @@ CryptCaseStreamsCallback(PWIN32_FIND_STREAM_DATA pfdata, LPCWSTR encrypted_name,
 
 static void PrintUserName(PDOKAN_FILE_INFO DokanFileInfo) {
 
-  if (!g_DebugMode)
+  if (1 || !g_DebugMode)
     return;
 
   HANDLE handle;
@@ -855,6 +863,7 @@ static NTSTATUS DOKAN_CALLBACK CryptWriteFile(LPCWSTR FileName, LPCVOID Buffer,
   }
 
   CryptFile *file = CryptFile::NewInstance(GetContext());
+
   if (file->Associate(GetContext(), handle, FileName, true)) {
     if (!file->Write((const unsigned char *)Buffer, NumberOfBytesToWrite,
                      NumberOfBytesWritten, Offset,

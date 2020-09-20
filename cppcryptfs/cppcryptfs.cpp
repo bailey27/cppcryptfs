@@ -119,7 +119,55 @@ static bool StartNamedPipeServer()
 // CcppcryptfsApp initialization
 
 
+FILE* flogcppcryptfs = nullptr;
 
+static void InitLogging()
+{
+	const WCHAR* logdir = L"C:\\cppcryptfslogs";
+
+	if (!PathFileExists(logdir)) {
+		::MessageBox(NULL, CString(L"Unable to init logging.  Please create ") + logdir, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		return;
+	}
+
+	auto pad2 = [](int n) {
+		
+		wchar_t buf[8];
+
+		*buf = L'\0';
+
+		swprintf_s(buf, L"%02d", n);
+
+		return wstring(buf);
+	};
+
+	SYSTEMTIME st;
+
+	memset(&st, 0, sizeof(st));
+
+	GetLocalTime(&st);
+
+	wstring year, month, day, hour, minute, second;
+
+	year = to_wstring(st.wYear);
+	month = pad2(st.wMonth);
+	day = pad2(st.wDay);
+
+	hour = pad2(st.wHour);
+	minute = pad2(st.wMinute);
+	second = pad2(st.wSecond);
+
+	wstring logname = wstring(logdir) + L"\\cppcryptfs-" + year + L"-" + month + L"-" + day + L"_" + hour + L"." + minute + L"." + second + L".log";
+
+	int result = _wfopen_s(&flogcppcryptfs, logname.c_str(), L"at+");
+
+	if (result == 0) {
+		::MessageBox(NULL, CString(L"Logging to ") + CString(logname.c_str()), L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
+	} else {
+		::MessageBox(NULL, CString(L"Unable to open ") + CString(logname.c_str()), L"cppcryptfs", MB_OK | MB_ICONERROR);
+	}
+
+}
 
 BOOL CcppcryptfsApp::InitInstance()
 {	 
@@ -206,6 +254,8 @@ BOOL CcppcryptfsApp::InitInstance()
 			return FALSE;
 		}
 	}
+
+	InitLogging();
 
 	StartNamedPipeServer();
 
