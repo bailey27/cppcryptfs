@@ -135,7 +135,7 @@ void DbgPrint(LPCWSTR format, ...) {
         fputws(outputString, flogcppcryptfs);
         fflush(flogcppcryptfs);
     } else {
-      OutputDebugStringW(outputString);
+        OutputDebugStringW(outputString);
     }
     if (buffer)
       _freea(buffer);
