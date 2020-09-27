@@ -473,6 +473,16 @@ BOOL CMountPropertyPage::OnInitDialog()
 
 	// TODO:  Add extra initialization here
 
+#ifdef _DEBUG
+	const WCHAR* build_type = L"debug";
+#else
+	const WCHAR* build_type = L"release";
+#endif
+
+	CString debug_mes = L"WARNING! LOGGING IS ENABLED! built on " + CString(__DATE__) + L" " + CString(__TIME__) + CString(L" ") + build_type;
+
+	SetDlgItemText(IDC_DEBUGINFO, debug_mes);
+
 	//Create the ToolTip control
 	if (!m_ToolTip.Create(this))
 	{

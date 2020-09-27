@@ -113,7 +113,7 @@ BOOL g_UseLogFile = 1;
 
 extern FILE* flogcppcryptfs;
 
-void DbgPrint(LPCWSTR format, ...) {
+void DbgPrint(LPCWSTR format, ...) {  
   if (g_DebugMode) {
     const WCHAR *outputString;
     WCHAR *buffer = NULL;
