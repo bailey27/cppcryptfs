@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.3.2, Oct 10 2020
+* Fix crash in MoveFile when destination directory has corrupt or missing
+  diriv file.
+
 v1.4.3.1, Aug 29 2020
 * Add capability for creating (initializing) filesystems using cppcryptfsctl.
   (please review command line options because some have changed)
