@@ -37,7 +37,7 @@ using namespace std;
 
 class CryptContext;
 
-// DbgPrint() function is really in cryptdokan.cpp
+void SetDbgVars(BOOL DebugMode, BOOL UseStdErr, BOOL UseLogFile, FILE* logfile);
 void DbgPrint(LPCWSTR format, ...);
 
 const char *

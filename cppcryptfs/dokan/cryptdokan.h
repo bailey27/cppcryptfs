@@ -82,3 +82,5 @@ bool get_fs_info(const wchar_t *mountpoint, FsInfo &info);
 bool unmount_all(bool wait);
 
 void crypt_at_exit();
+
+void crypt_at_start();

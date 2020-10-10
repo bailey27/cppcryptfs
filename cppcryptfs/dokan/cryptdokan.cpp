@@ -105,44 +105,13 @@ THE SOFTWARE.
 
 
 
-BOOL g_HasSeSecurityPrivilege;
+static BOOL g_HasSeSecurityPrivilege;
 
-BOOL g_UseStdErr;
-BOOL g_DebugMode = 1;
-BOOL g_UseLogFile = 1;
+static BOOL g_DebugMode = FALSE;
+static BOOL g_UseStdErr = FALSE;
+static BOOL g_UseLogFile = FALSE;
 
-extern FILE* flogcppcryptfs;
-
-void DbgPrint(LPCWSTR format, ...) {  
-  if (g_DebugMode) {
-    const WCHAR *outputString;
-    WCHAR *buffer = NULL;
-    size_t length;
-    va_list argp;
-
-    va_start(argp, format);
-    length = _vscwprintf(format, argp) + 1;
-    buffer = (WCHAR *)_malloca(length * sizeof(WCHAR));
-    if (buffer) {
-      vswprintf_s(buffer, length, format, argp);
-      outputString = buffer;
-    } else {
-      outputString = format;
-    }
-    if (g_UseStdErr) {
-        fputws(outputString, stderr);
-    } else if (g_UseLogFile && flogcppcryptfs) {
-        fputws(outputString, flogcppcryptfs);
-        fflush(flogcppcryptfs);
-    } else {
-        OutputDebugStringW(outputString);
-    }
-    if (buffer)
-      _freea(buffer);
-    va_end(argp);
-  }
-}
-
+static FILE* g_DebugLogFile = nullptr;
 
 int WINAPI
 CryptCaseStreamsCallback(PWIN32_FIND_STREAM_DATA pfdata, LPCWSTR encrypted_name,
@@ -163,7 +132,10 @@ CryptCaseStreamsCallback(PWIN32_FIND_STREAM_DATA pfdata, LPCWSTR encrypted_name,
 
 static void PrintUserName(PDOKAN_FILE_INFO DokanFileInfo) {
 
-  if (1 || !g_DebugMode)
+// this function is expensive and doesn't seem to provide
+// any useful information in the log
+#if 0
+  if (!g_DebugMode)
     return;
 
   HANDLE handle;
@@ -199,6 +171,7 @@ static void PrintUserName(PDOKAN_FILE_INFO DokanFileInfo) {
   }
 
   DbgPrint(L"  AccountName: %s, DomainName: %s\n", accountName, domainName);
+#endif // #if 0
 }
 
 NTSTATUS ToNtStatus(DWORD dwError) {
@@ -976,6 +949,8 @@ CryptFindFiles(LPCWSTR FileName,
 
   DWORD error;
   long long count = 0;
+  
+  DWORD result = 0;
 
   DbgPrint(L"FindFiles :%s\n", FileName);
 
@@ -983,11 +958,14 @@ CryptFindFiles(LPCWSTR FileName,
                  crypt_fill_find_data, (void *)FillFindData,
                  (void *)DokanFileInfo) != 0) {
     error = GetLastError();
-    DbgPrint(L"\tFindNextFile error. Error is %u\n\n", error);
-    return ToNtStatus(error);
+    DbgPrint(L"\tFindNextFile error. Error is %u\n", error);
+    
+    result = error ? error : ERROR_ACCESS_DENIED;
   }
 
-  return STATUS_SUCCESS;
+  DbgPrint(L"\tCryptFindFiles returning %lu\n\n", result);
+
+  return result == 0 ?  STATUS_SUCCESS : ToNtStatus(result);
 }
 
 static NTSTATUS DOKAN_CALLBACK CryptDeleteFile(LPCWSTR FileName,
@@ -1074,6 +1052,17 @@ static NTSTATUS CryptMoveFileInternal(LPCWSTR FileName, // existing file name
   if (!handle || handle == INVALID_HANDLE_VALUE) {
     DbgPrint(L"\tinvalid handle\n\n");
     return STATUS_INVALID_HANDLE;
+  }
+
+  auto new_path = static_cast<const WCHAR*>(newFilePath);
+
+  if (new_path == nullptr) {
+      // this can happen e.g. if we can't read a diriv in the "to" path
+      auto lasterr = GetLastError();
+      DbgPrint(L"\tnewFilePath is null, last error was %u\n", lasterr);
+      // we return accessed denied because whatever error really happened might 
+      // not make any sense to the caller.
+      return STATUS_ACCESS_DENIED;
   }
 
   newFilePathLen = wcslen(newFilePath);
@@ -2595,4 +2584,67 @@ bool get_fs_info(const wchar_t *mountpoint, FsInfo& info)
 void crypt_at_exit()
 {
     KeyCache::GetInstance()->StopClearThread();
+
+    if (g_DebugLogFile) {      
+        FILE* fl = g_DebugLogFile;
+        g_DebugLogFile = nullptr;
+        fclose(fl);       
+    }
+}
+
+
+static void InitLogging()
+{
+    const WCHAR* logdir = L"C:\\cppcryptfslogs";
+
+    if (!PathFileExists(logdir)) {
+        ::MessageBox(NULL, (wstring(L"Unable to init logging.  Please create ") + logdir).c_str(), L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+        return;
+    }
+
+    auto pad2 = [](int n) {
+
+        wchar_t buf[8];
+
+        *buf = L'\0';
+
+        swprintf_s(buf, L"%02d", n);
+
+        return wstring(buf);
+    };
+
+    SYSTEMTIME st;
+
+    memset(&st, 0, sizeof(st));
+
+    GetLocalTime(&st);
+
+    wstring year, month, day, hour, minute, second;
+
+    year = to_wstring(st.wYear);
+    month = pad2(st.wMonth);
+    day = pad2(st.wDay);
+
+    hour = pad2(st.wHour);
+    minute = pad2(st.wMinute);
+    second = pad2(st.wSecond);
+
+    wstring logname = wstring(logdir) + L"\\cppcryptfs-" + year + L"-" + month + L"-" + day + L"_" + hour + L"." + minute + L"." + second + L".log";
+
+    int result = _wfopen_s(&g_DebugLogFile, logname.c_str(), L"at+");
+
+    if (result == 0) {
+        ::MessageBox(NULL, (wstring(L"Logging to ") + logname).c_str(), L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
+    } else {
+        ::MessageBox(NULL, (wstring(L"Unable to open ") + logname.c_str()).c_str(), L"cppcryptfs", MB_OK | MB_ICONERROR);
+    }
+
+}
+
+void crypt_at_start()
+{
+    if (g_UseLogFile) {
+        InitLogging();
+    }
+    SetDbgVars(g_DebugMode, g_UseStdErr, g_UseLogFile, g_DebugLogFile);
 }

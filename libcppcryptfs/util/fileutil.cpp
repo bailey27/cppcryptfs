@@ -143,6 +143,8 @@ read_dir_iv(const TCHAR *path, unsigned char *diriv, FILETIME& LastWriteTime)
 	HANDLE hfile = INVALID_HANDLE_VALUE;
 	DWORD nRead = 0;
 
+	bool caught_wstring = false;
+
 	try {
 		wstring path_str;
 
@@ -154,26 +156,36 @@ read_dir_iv(const TCHAR *path, unsigned char *diriv, FILETIME& LastWriteTime)
 
 		path_str.append(DIR_IV_NAME);
 
-		hfile = CreateFile(&path_str[0], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+		hfile = ::CreateFile(&path_str[0], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 
 		if (hfile == INVALID_HANDLE_VALUE) {
-			throw(-1);
+			auto lasterr =::GetLastError();
+			throw(L"\terror opening diriv file " + path_str + L" lasterr = " + to_wstring(lasterr));
 		}
 
-		if (!ReadFile(hfile, diriv, DIR_IV_LEN, &nRead, NULL)) {
-			throw(-1);
+		if (!::ReadFile(hfile, diriv, DIR_IV_LEN, &nRead, NULL)) {
+			auto lasterr = ::GetLastError();
+			throw(L"\terror reading diriv file " + path_str + L" lasterr = " + to_wstring(lasterr));
 		}
 
-		if (!GetFileTime(hfile, NULL, NULL, &LastWriteTime)) {
-			throw(-1);
+		if (!::GetFileTime(hfile, NULL, NULL, &LastWriteTime)) {
+			auto lasterr = ::GetLastError();
+			throw(L"\terror getting filetime of diriv file " + path_str + L" lasterr = " + to_wstring(lasterr));			
 		}
-	}
-	catch (...) {
+	} catch (const wstring& mes) {
+		DbgPrint(L"\tget_diriv: %s\n", mes.c_str());
 		nRead = 0;
+		caught_wstring = true;
+	} catch (...) {
+		nRead = 0;		
 	}
 
 	if (hfile != INVALID_HANDLE_VALUE)
-		CloseHandle(hfile);
+		::CloseHandle(hfile);
+
+	if (!caught_wstring && nRead != DIR_IV_LEN) {
+		DbgPrint(L"\tget_diriv read incorrect number of bytes from %s, read %u bytes instead of %u\n", path, nRead, DIR_IV_LEN);
+	}
 
 	return nRead == DIR_IV_LEN;
 }
@@ -194,17 +206,20 @@ get_dir_iv(CryptContext *con, const WCHAR *path, unsigned char *diriv)
 	try {
 
 		if (con && con->GetConfig()->m_reverse) {
-			throw(-1);
+			throw(wstring(L"\tcalled for reverse fs"));
 		}
 
 		if (!con->m_dir_iv_cache.lookup(path, diriv)) {
 			FILETIME LastWritten;
 			if (!read_dir_iv(path, diriv, LastWritten))
-				throw(-1);
+				throw(wstring(L"read_dir_iv failed for") + path);
 			if (!con->m_dir_iv_cache.store(path, diriv, LastWritten)) {
-				throw(-1);
+				throw(wstring(L"store_diriv failed for ") + path);
 			}
 		}
+	} catch (const wstring& mes) {
+		DbgPrint(L"\tget_diriv %s\n", mes.c_str());
+		bret = false;
 	} catch (...) {
 		bret = false;
 	}

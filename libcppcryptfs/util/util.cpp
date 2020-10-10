@@ -748,3 +748,48 @@ Initializing (cppcryptfsctl only):
   -b, --streams   [0|1]    enable/disable streams. defaults to enabled (1)
 )";
 }
+
+
+static BOOL s_DebugMode = FALSE;
+static BOOL s_UseStdErr = FALSE;
+static BOOL s_UseLogFile = FALSE;
+
+static FILE* s_DebugLogFile = NULL;
+
+void SetDbgVars(BOOL DebugMode, BOOL UseStdErr, BOOL UseLogFile, FILE* logfile)
+{
+	s_DebugMode = DebugMode;
+	s_UseStdErr = UseStdErr;
+	s_UseLogFile = UseLogFile;
+	s_DebugLogFile = logfile;
+}
+
+void DbgPrint(LPCWSTR format, ...) {
+	if (s_DebugMode) {
+		const WCHAR* outputString;
+		WCHAR* buffer = NULL;
+		size_t length;
+		va_list argp;
+
+		va_start(argp, format);
+		length = _vscwprintf(format, argp) + 1;
+		buffer = (WCHAR*)_malloca(length * sizeof(WCHAR));
+		if (buffer) {
+			vswprintf_s(buffer, length, format, argp);
+			outputString = buffer;
+		} else {
+			outputString = format;
+		}
+		if (s_UseStdErr) {
+			fputws(outputString, stderr);
+		} else if (s_UseLogFile && s_DebugLogFile) {
+			fputws(outputString, s_DebugLogFile);
+			fflush(s_DebugLogFile);
+		} else {
+			OutputDebugStringW(outputString);
+		}
+		if (buffer)
+			_freea(buffer);
+		va_end(argp);
+	}
+}

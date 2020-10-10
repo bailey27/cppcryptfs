@@ -144,22 +144,27 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 
 	bool have_stream = get_file_stream(filename, &file_without_stream, &stream);
 
-	if (!unicode_to_utf8(file_without_stream.c_str(), utf8_str))
+	if (!unicode_to_utf8(file_without_stream.c_str(), utf8_str)) {
+		DbgPrint(L"\tencrypt_filename: unicode_to_utf8 failed : %s\n", file_without_stream.c_str());
 		return NULL;
+	}
 	
 	if (con->GetConfig()->m_EMENames) {
 
 		int paddedLen = 0;
 		BYTE *padded = pad16((BYTE*)utf8_str.c_str(), (int)utf8_str.size(), paddedLen);
 
-		if (!padded)
+		if (!padded) {
+			DbgPrint(L"\tencrypt_filename: pad16 failed : %S\n", utf8_str.c_str());
 			return NULL;
+		}
 
 		BYTE *ct = EmeTransform(&con->m_eme, (BYTE*)dir_iv, padded, paddedLen, true);
 
 		free(padded);
 
 		if (!ct) {
+			DbgPrint(L"\tencrypt_filename: EmeTransform failed : %s\n", file_without_stream.c_str());
 			return NULL;
 		}
 
@@ -167,24 +172,36 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 
 		delete[] ct;
 
+		if (!rs) {
+			DbgPrint(L"\tencrypt_filename: base64_encode failed : %s\n", file_without_stream.c_str());
+			return NULL;
+		}		
+
 	} else {
 		// CBC names no longer supported
+		DbgPrint(L"\tencrypt_filename: CPC names no longer supported\n");
 		return NULL;	
 	}
 
 	if (con->GetConfig()->m_LongNames && storage.length() > MAX_FILENAME_LEN) {
 		string utf8;
-		if (!unicode_to_utf8(storage.c_str(), utf8))
+		if (!unicode_to_utf8(storage.c_str(), utf8)) {
+			DbgPrint(L"\tencrypt_filename: unicode_to_utf8 failed for longname : %s\n", storage.c_str());
 			return NULL;
+		}
 		if (actual_encrypted) {
 			*actual_encrypted = utf8;
 		}
 		BYTE sum[32];
-		if (!sha256(utf8, sum))
+		if (!sha256(utf8, sum)) {
+			DbgPrint(L"ecnrypt_filename: long name sha256 failed: %S\n", utf8.c_str());
 			return NULL;
+		}
 		wstring base64_sum;
-		if (!base64_encode(sum, sizeof(sum), base64_sum, true, !con->GetConfig()->m_Raw64))
+		if (!base64_encode(sum, sizeof(sum), base64_sum, true, !con->GetConfig()->m_Raw64)) {
+			DbgPrint(L"\tencrypt_filename: base64_encode failed for longname sum: %s\n", storage.c_str());
 			return NULL;
+		}
 		storage = longname_prefix;
 		storage += base64_sum;
 
@@ -198,6 +215,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 			rs = storage.c_str();
 		} else {
 			storage = L"";
+			DbgPrint(L"\tencrypt_filename: failed to encrypt sctream name: ", stream.c_str());
 			rs = NULL;
 		}
 		
@@ -599,7 +617,7 @@ encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *act
 	CryptConfig *config = con->GetConfig();
 
 	try {
-		
+
 		storage = config->GetBaseDir();
 
 		if (config->m_PlaintextNames || (path[0] == '\\' && path[1] == '\0')) {
@@ -615,18 +633,18 @@ encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *act
 				path++;
 			}
 
-			const TCHAR *p = path;
+			const TCHAR* p = path;
 
 
 			unsigned char dir_iv[DIR_IV_LEN];
 
 			if (!get_dir_iv(con, &storage[0], dir_iv))
-				throw(-1);
+				throw(L"get_dir_iv failed for " + storage);
 
 
 			if (!con->GetConfig()->m_EMENames) {
 				// CBC names no longer supported
-				throw(-1);
+				throw(wstring(L"CBC names no longer supported"));
 			}
 
 			wstring s;
@@ -642,12 +660,12 @@ encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *act
 				while (*p && *p != '\\') {
 					s.push_back(*p++);
 				}
-	
+
 				if (actual_encrypted)
 					actual_encrypted->clear();
 
 				if (!encrypt_filename(con, dir_iv, &s[0], uni_crypt_elem, actual_encrypted))
-					throw(-1);
+					throw(L"encrypt_filename failed: " + s);
 
 				storage.append(uni_crypt_elem);
 
@@ -655,7 +673,7 @@ encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *act
 					storage.push_back(*p++); // append slash
 
 					if (!get_dir_iv(con, &storage[0], dir_iv))
-						throw(-1);
+						throw(L"get_dir_iv failed for " + storage);
 
 				}
 
@@ -664,8 +682,10 @@ encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *act
 
 		rval = &storage[0];
 
+	} catch (const wstring& mes) {
+		DbgPrint(L"\t%s\n", mes.c_str());
+		rval = NULL;
 	} catch (...) {
-
 		rval = NULL;
 	}
 	
