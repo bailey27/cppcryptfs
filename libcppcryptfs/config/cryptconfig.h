@@ -89,20 +89,26 @@ public:
 
 	CryptConfig();
 	bool read(wstring& mes, const WCHAR *config_file_path = NULL, bool reverse = false);
+	bool encrypt_keys(const wchar_t* password, const BYTE *masterkey, string& base64encryptedmastekey, string& scryptSalt, wstring& error_mes);
 	bool decrypt_key(LPCTSTR password);
 
-	bool create(const WCHAR *path, const WCHAR *specified_config_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, 
-					bool siv, bool reverse, const WCHAR *volume_name, bool disablestreams, wstring& error_mes);
+	bool create(const WCHAR* path, const WCHAR* specified_config_path, const WCHAR* password, bool eme, bool plaintext, bool longfilenames,
+		bool siv, bool reverse, const WCHAR* volume_name, bool disablestreams, wstring& error_mes		
+	);
 
 	bool check_config(wstring& mes);
 
-	bool write_volume_name();
+	bool write_updated_config_file(const char *base64key = nullptr, const char *scryptSalt = nullptr);
 
 	bool init_serial(CryptContext *con);
 
 	DWORD m_fs_feature_disable_mask;
 
 	WCHAR get_base_drive_letter();
+
+	void CopyKeyParams(const CryptConfig& other) {
+		m_N = other.m_N; m_R = other.m_R; m_P = other.m_P; m_HKDF = other.m_HKDF;
+	}
 
 	// disallow copying
 	CryptConfig(CryptConfig const&) = delete;

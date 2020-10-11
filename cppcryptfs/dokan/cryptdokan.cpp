@@ -2297,7 +2297,7 @@ BOOL write_volume_name_if_changed(WCHAR dl, wstring& mes) {
 
   if (con->GetConfig()->m_VolumeName != volbuf) {
     con->GetConfig()->m_VolumeName = volbuf;
-    bool res = con->GetConfig()->write_volume_name();
+    bool res = con->GetConfig()->write_updated_config_file();
 	if (!res) {
 		mes += L"unable to write new volume name to config file";
 		return FALSE;

@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include <iostream>
 #include <io.h>
 #include <string>
+#include <vector>
 #include "../libipc/client.h"
 #include "../libipc/certutil.h"
 #include "../libcommonutil/commonutil.h"
@@ -65,7 +66,66 @@ static int get_binary_flag(const char *option, const wchar_t* s, bool& f)
     }
         
 }
-static int do_init(int argc, wchar_t* const argv[])
+
+static int get_password(LockZeroBuffer<wchar_t>& password, bool repeat, bool newpassword = false) 
+{
+    if (_isatty(_fileno(stdin))) {
+
+        LockZeroBuffer<wchar_t> password2(PASSWORD_BUFLEN, false);
+
+        if (!password2.IsLocked()) {
+            wcerr << L"unable to lock repeat password buffer\n";
+            return 1;
+        }
+
+        wstring New = newpassword ? L"New " : L"";
+
+        // prompt for password
+        if (!read_password(password.m_buf, password.m_len, (New+L"Password:").c_str())) {
+            wcerr << L"error reading password" << endl;
+            return 1;
+        }
+        if (repeat) {
+            // prompt for repeat password
+            if (!read_password(password2.m_buf, password2.m_len, L"Repeat:")) {
+                wcerr << L"error reading repeat password" << endl;
+                return 1;
+            }
+            if (wcscmp(password.m_buf, password2.m_buf) != 0) {
+                wcerr << L"passwords do not match" << endl;
+                return 1;
+            }
+        }
+    } else {
+        // we have stdin redirected, so read password from stdin         
+        wcout << L"Reading password from stdin" << endl;
+        if (!fgetws(password.m_buf, password.m_len, stdin)) {
+            wcerr << "unable to read password from stdin\n";
+            return 1;
+        }
+        if (wcslen(password.m_buf) > 0 && password.m_buf[wcslen(password.m_buf) - 1] == L'\n') {
+            password.m_buf[wcslen(password.m_buf) - 1] = L'\0';
+        }
+    }
+
+    return 0;
+}
+
+static void GetConfigPath(wstring& path)
+{
+    if (::PathIsDirectory(path.c_str())) {
+        if (path[path.length() - 1] != L'\\') {
+            path += L"\\";
+        }
+        if (::PathFileExists((path + L"gocryptfs.conf").c_str())) {
+            path += L"gocryptfs.conf";
+        } else if (::PathFileExists((path + L".gocryptfs.reverse.conf").c_str())) {
+            path += L".gocryptfs.reverse.conf";
+        }
+    }
+}
+
+static int do_self_args(int argc, wchar_t* const argv[])
 {    
     CryptConfig config;
 
@@ -93,7 +153,13 @@ static int do_init(int argc, wchar_t* const argv[])
 
     bool do_help = false;
 
+    bool do_changepassword = false;
+
+    bool do_printmasterkey = false;
+
     wstring fs_path;
+    wstring change_password_path;
+    wstring print_masterkey_path;
     wstring config_path;
     wstring volume_name;
 
@@ -109,13 +175,15 @@ static int do_init(int argc, wchar_t* const argv[])
         {L"siv",  no_argument, 0, 'S'},        
         {L"version",  no_argument, 0, 'v' },
         {L"help",  no_argument, 0, 'h'},
+        {L"changepassword",   required_argument,  0, '0'},
+        {L"printmasterkey",   required_argument,  0, '1'},
         {0, 0, 0, 0}
     };
 
 
 
     while (true) {
-        c = getopt_long(argc, argv, L"I:c:sTL:b:V:Svh", long_options, &option_index);
+        c = getopt_long(argc, argv, L"I:c:sTL:b:V:Svh0:1:", long_options, &option_index);
 
         if (c == -1)
             break;
@@ -123,6 +191,14 @@ static int do_init(int argc, wchar_t* const argv[])
         switch (c) {
         case '?':
             invalid_opt = true;
+            break;
+        case '0':
+            do_changepassword = true;
+            change_password_path = optarg;
+            break;
+        case '1':
+            do_printmasterkey = true;
+            print_masterkey_path = optarg;
             break;
         case 'I':
             if (wcscmp(optarg, L"-v") == 0) {
@@ -177,7 +253,7 @@ static int do_init(int argc, wchar_t* const argv[])
         wcerr << prod << " " << ver << " " << copyright << endl;
     }     
 
-    if (do_help || (!do_init && !do_version)) {       
+    if (do_help || (!do_printmasterkey && !do_changepassword && !do_init && !do_version)) {       
         show_help();
         return 1;
     }
@@ -206,39 +282,10 @@ static int do_init(int argc, wchar_t* const argv[])
 
         wcout << L"Choose a password for protecting your files." << endl;
 
-        if (_isatty(_fileno(stdin))) {
+        auto pw_res = get_password(password, true);
 
-            LockZeroBuffer<wchar_t> password2(PASSWORD_BUFLEN, false);
-
-            if (!password2.IsLocked()) {
-                wcerr << L"unable to lock repeat password buffer\n";
-                return 1;
-            }            
-
-            // prompt for password
-            if (!read_password(password.m_buf, password.m_len, L"Password:")) {
-                wcerr << L"error reading password" << endl;
-                    return 1;
-            }
-            // prompt for repeat password
-            if (!read_password(password2.m_buf, password2.m_len, L"Repeat:")) {
-                wcerr << L"error reading repeat password" << endl;
-                    return 1;
-            }
-            if (wcscmp(password.m_buf, password2.m_buf) != 0) {
-                wcerr << L"passwords do not match" << endl;
-                return 1;
-            }
-        } else {
-            // we have stdin redirected, so read password from stdin         
-            wcout << L"Reading password from stdin" << endl;
-            if (!fgetws(password.m_buf, password.m_len, stdin)) {
-                wcerr << "unable to read password from stdin\n";
-                return 1;
-            }
-            if (wcslen(password.m_buf) > 0 && password.m_buf[wcslen(password.m_buf) - 1] == L'\n') {
-                password.m_buf[wcslen(password.m_buf) - 1] = L'\0';
-            }
+        if (pw_res) {
+            return pw_res;
         }
 
         if (wcslen(password.m_buf) < 1) {
@@ -259,6 +306,127 @@ static int do_init(int argc, wchar_t* const argv[])
         }
     }
 
+    if (do_printmasterkey) {
+
+        if (print_masterkey_path.length() < 1) {
+            wcerr << L"path cannot be empty\n";
+            return 1;
+        }
+
+        GetConfigPath(print_masterkey_path);
+
+        CryptConfig config;
+
+        wstring mes;
+
+        if (!config.read(mes, print_masterkey_path.c_str())) {
+            wcerr << mes << endl;
+            return 1;
+        }
+
+        LockZeroBuffer<wchar_t> password(PASSWORD_BUFLEN, false);
+        if (!password.IsLocked()) {
+            wcerr << L"unable to lock password buffer\n";
+            return 1;
+        }
+
+        auto get_pw_res = get_password(password, false);
+
+        if (get_pw_res) {
+            return get_pw_res;
+        }
+
+        if (!config.decrypt_key(password.m_buf)) {
+            wcerr << L"password incorrect" << endl;
+            return 1;
+        }
+
+        const unsigned char* key = config.GetMasterKey();
+
+        cout << endl << "Your master key is as follows.  Keep it in a safe place." << endl << endl << "    ";
+
+        for (size_t i = 0; i < config.GetMasterKeyLength(); ++i) {
+            if (i && (i % 4) == 0) {
+                cout << "-";
+            }
+            if (i && (i % 16) == 0) {
+                cout << endl << "    ";
+            }
+            char buf[3];
+            sprintf_s(buf, "%02x", key[i]);    
+            cout << buf;
+        }
+        cout << endl;
+
+    }
+
+    if (do_changepassword) {
+
+        if (change_password_path.length() < 1) {
+            wcerr << L"path cannot be empty\n";
+            return 1;
+        }
+        
+        GetConfigPath(change_password_path);
+
+        wcout << L"changing password in " << change_password_path << endl;
+
+        CryptConfig config;
+
+        wstring mes;
+
+        if (!config.read(mes, change_password_path.c_str())) {
+            wcerr << mes << endl;
+            return 1;
+        }
+
+        LockZeroBuffer<wchar_t> password(PASSWORD_BUFLEN, false);
+        if (!password.IsLocked()) {
+            wcerr << L"unable to lock password buffer\n";
+            return 1;
+        }
+
+        LockZeroBuffer<wchar_t> newpassword(PASSWORD_BUFLEN, false);
+        if (!password.IsLocked()) {
+            wcerr << L"unable to lock new password buffer\n";
+            return 1;
+        }
+
+        auto get_pw_res = get_password(password, false);
+
+        if (get_pw_res) {
+            return get_pw_res;
+        }
+
+        if (!config.decrypt_key(password.m_buf)) {
+            wcerr << L"password incorrect" << endl;
+            return 1;
+        }
+
+        get_pw_res = get_password(newpassword, true, true);
+        if (get_pw_res) {
+            return get_pw_res;
+        }
+
+        CryptConfig dummyConfig;
+
+        dummyConfig.CopyKeyParams(config);
+
+        string base64key;
+        string scryptSalt;
+        if (!dummyConfig.encrypt_keys(newpassword.m_buf, config.GetMasterKey(), base64key, scryptSalt, mes)) {
+            wcerr << mes << endl;
+            return 1;
+        }
+
+        if (!config.write_updated_config_file(base64key.c_str(), scryptSalt.c_str())) {
+            wcerr << "failed to update encrypted key" << endl;
+            return 1;
+        }
+
+        wcout << L"password changed" << endl;
+    }
+
     return 0;
 }
 
@@ -267,15 +435,22 @@ int wmain(int argc, wchar_t * const argv[])
     if (argc < 2)
         return 0;
 
-    const wchar_t* init_switch_long = L"--init";
-    const wchar_t* init_switch_short = L"-I";
+    vector<wstring> self_args;
+    
+    self_args.push_back(L"-I");
+    self_args.push_back(L"--init");
+    self_args.push_back(L"-0");
+    self_args.push_back(L"--changepassword");
+    self_args.push_back(L"-1");
+    self_args.push_back(L"--printmasterkey");
 
-    // if we are initializing a filesystem then we handle it in cppcryptfsctl instead
-    // of passing command line to cppcryptfs
+    // if we are doing certain things like initializing a filesystem then we handle
+    // it in cppcryptfsctl instead of passing the command line to cppcryptfs
     for (int i = 1; i < argc; ++i) {
-        if (wcsncmp(argv[i], init_switch_long, wcslen(init_switch_long)) == 0 || 
-            wcsncmp(argv[i], init_switch_short, wcslen(init_switch_short)) == 0) {
-            return do_init(argc, argv);
+        for (const auto& self_arg : self_args) {
+            if (wcsncmp(argv[i], self_arg.c_str(), self_arg.length()) == 0) {
+                return do_self_args(argc, argv);
+            }
         }
     }
 

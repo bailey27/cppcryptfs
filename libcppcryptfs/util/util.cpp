@@ -746,7 +746,12 @@ Initializing (cppcryptfsctl only):
   -S, --siv                use AES256-SIV for data encryption (default is GCM)
   -L, --longnames [0|1]    enable/disable LFNs. defaults to enabled (1)
   -b, --streams   [0|1]    enable/disable streams. defaults to enabled (1)
+
+Recovery/Maintenance (cppcryptfsctl only):
+  --changepassword=PATH	   Change password used to protect master key
+  --printmasterkey=PATH    Print master key in human-readable format
 )";
+	// --changepassword short form is 1
 }
 
 
