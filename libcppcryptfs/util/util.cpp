@@ -750,6 +750,7 @@ Initializing (cppcryptfsctl only):
 Recovery/Maintenance (cppcryptfsctl only):
   --changepassword=PATH	   Change password used to protect master key
   --printmasterkey=PATH    Print master key in human-readable format
+  --recover=PATH           Prompt for master key and new password to recover
 )";
 	// --changepassword short form is 1
 }

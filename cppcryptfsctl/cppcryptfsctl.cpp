@@ -67,7 +67,7 @@ static int get_binary_flag(const char *option, const wchar_t* s, bool& f)
         
 }
 
-static int get_password(LockZeroBuffer<wchar_t>& password, bool repeat, bool newpassword = false) 
+static int get_password(LockZeroBuffer<wchar_t>& password, const wchar_t *password_prompt, const wchar_t *repeat_prompt = nullptr) 
 {
     if (_isatty(_fileno(stdin))) {
 
@@ -78,16 +78,14 @@ static int get_password(LockZeroBuffer<wchar_t>& password, bool repeat, bool new
             return 1;
         }
 
-        wstring New = newpassword ? L"New " : L"";
-
         // prompt for password
-        if (!read_password(password.m_buf, password.m_len, (New+L"Password:").c_str())) {
+        if (!read_password(password.m_buf, password.m_len, password_prompt)) {
             wcerr << L"error reading password" << endl;
             return 1;
         }
-        if (repeat) {
+        if (repeat_prompt) {
             // prompt for repeat password
-            if (!read_password(password2.m_buf, password2.m_len, L"Repeat:")) {
+            if (!read_password(password2.m_buf, password2.m_len, repeat_prompt)) {
                 wcerr << L"error reading repeat password" << endl;
                 return 1;
             }
@@ -125,6 +123,11 @@ static void GetConfigPath(wstring& path)
     }
 }
 
+static bool is_hex(wint_t c) 
+{
+    return iswdigit(c) || (c >= L'a' && c <= L'f') || (c >= L'A' && c <= L'F');
+}
+
 static int do_self_args(int argc, wchar_t* const argv[])
 {    
     CryptConfig config;
@@ -157,9 +160,12 @@ static int do_self_args(int argc, wchar_t* const argv[])
 
     bool do_printmasterkey = false;
 
+    bool do_recover = false;
+
     wstring fs_path;
     wstring change_password_path;
     wstring print_masterkey_path;
+    wstring recover_path;
     wstring config_path;
     wstring volume_name;
 
@@ -177,13 +183,14 @@ static int do_self_args(int argc, wchar_t* const argv[])
         {L"help",  no_argument, 0, 'h'},
         {L"changepassword",   required_argument,  0, '0'},
         {L"printmasterkey",   required_argument,  0, '1'},
+        {L"recover",   required_argument,  0, '2'},
         {0, 0, 0, 0}
     };
 
 
 
     while (true) {
-        c = getopt_long(argc, argv, L"I:c:sTL:b:V:Svh0:1:", long_options, &option_index);
+        c = getopt_long(argc, argv, L"I:c:sTL:b:V:Svh0:1:2:", long_options, &option_index);
 
         if (c == -1)
             break;
@@ -199,6 +206,10 @@ static int do_self_args(int argc, wchar_t* const argv[])
         case '1':
             do_printmasterkey = true;
             print_masterkey_path = optarg;
+            break;
+        case '2':
+            do_recover = true;
+            recover_path = optarg;
             break;
         case 'I':
             if (wcscmp(optarg, L"-v") == 0) {
@@ -245,7 +256,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
     if (invalid_opt && !do_help) {
         wcerr << L"Invalid option. Try 'cppcryptfsctl --help' for more information." << endl;
         return 1;
-    }
+    }    
 
     if (do_version) {
         wstring prod, ver, copyright;
@@ -253,7 +264,14 @@ static int do_self_args(int argc, wchar_t* const argv[])
         wcerr << prod << " " << ver << " " << copyright << endl;
     }     
 
-    if (do_help || (!do_printmasterkey && !do_changepassword && !do_init && !do_version)) {       
+    int opcount = do_recover + do_printmasterkey + do_changepassword + do_init;
+
+    if (opcount > 1) {
+        wcerr << L"only one of recover, printmasterkey, changepassword or init can be specified at the same time" << endl;
+        return 1;
+    }
+
+    if (do_help || (!do_recover && !do_printmasterkey && !do_changepassword && !do_init && !do_version)) {       
         show_help();
         return 1;
     }
@@ -282,7 +300,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
 
         wcout << L"Choose a password for protecting your files." << endl;
 
-        auto pw_res = get_password(password, true);
+        auto pw_res = get_password(password, L"Password:", L"Repeat:");
 
         if (pw_res) {
             return pw_res;
@@ -304,6 +322,117 @@ static int do_self_args(int argc, wchar_t* const argv[])
         } else {
             wcout << L"The gocryptfs" << (reverse ? L"-reverse" : L"") <<  L" filesystem has been created successfully." << endl;
         }
+    }
+
+    if (do_recover) {
+        if (recover_path.length() < 1) {
+            wcerr << L"path cannot be empty\n";
+            return 1;
+        }
+
+        GetConfigPath(recover_path);
+
+
+        CryptConfig config;
+
+        wstring mes;
+
+        if (!config.read(mes, recover_path.c_str())) {
+            wcerr << mes << endl;
+            return 1;
+        }
+
+        if (!config.m_HKDF) {
+            wcerr << L"This filesystem is not using HKDF. Unable to proceeed." << endl;
+            return 1;
+        }
+
+        wstring bak = recover_path + L".bak";
+        if (::PathFileExists(bak.c_str())) {
+            wcerr << bak << L" exists.  Please delete or move out of the way." << endl;
+            return 1;
+        }       
+
+        LockZeroBuffer<wchar_t> masterkey(PASSWORD_BUFLEN, false);
+        if (!masterkey.IsLocked()) {
+            wcerr << L"unable to lock masterkey buffer\n";
+            return 1;
+        }
+
+        wcout << L"Enter/paste master key all on one line, with or without dashes." << endl;
+
+        auto get_res = get_password(masterkey, L"Master Key:");
+        if (get_res) {
+            return get_res;
+        }
+
+        LockZeroBuffer<BYTE> masterkey_bin(DEFAULT_KEY_LEN, false);
+
+        if (!masterkey_bin.IsLocked()) {
+            wcerr << L"unable to lock masterkey binary buffer\n";
+            return 1;
+        }
+
+        size_t i = 0;
+        size_t j = 0;        
+        size_t mklen = wcslen(masterkey.m_buf);
+        while (i < DEFAULT_KEY_LEN && j < (mklen - 1)) {
+            if (!is_hex(masterkey.m_buf[j])) {
+                ++j;
+                continue;
+            }
+            if (is_hex(masterkey.m_buf[j]) && is_hex(masterkey.m_buf[j + 1])) {
+                char buf[3];
+                buf[0] = static_cast<char>(masterkey.m_buf[j]);
+                buf[1] = static_cast<char>(masterkey.m_buf[j+1]);
+                buf[2] = '\0';
+                unsigned int b;
+                sscanf_s(buf, "%x", &b);
+                masterkey_bin.m_buf[i++] = static_cast<unsigned char>(b);
+                j += 2;
+            }
+        }
+
+        if (i != DEFAULT_KEY_LEN) {
+            cerr << L"invalid master key\n";
+            return 1;
+        }
+
+        LockZeroBuffer<wchar_t> newpassword(PASSWORD_BUFLEN, false);
+        if (!newpassword.IsLocked()) {
+            wcerr << L"unable to lock new password buffer\n";
+            return 1;
+        }
+
+        auto get_pw_res = get_password(newpassword, L"New Password:", L"Repeat:");
+        if (get_pw_res) {
+            return get_pw_res;
+        }
+
+        CryptConfig dummyConfig;
+
+        dummyConfig.CopyKeyParams(config);
+
+        string base64key;
+        string scryptSalt;
+        if (!dummyConfig.encrypt_keys(newpassword.m_buf, masterkey_bin.m_buf, base64key, scryptSalt, mes)) {
+            wcerr << mes << endl;
+            return 1;
+        }
+
+        if (!::CopyFile(recover_path.c_str(), bak.c_str(), TRUE)) {
+            wcerr << L"unable to backup " << recover_path << endl;
+            return 1;
+        }
+
+        if (!config.write_updated_config_file(base64key.c_str(), scryptSalt.c_str())) {
+            wcerr << "failed to update encrypted key" << endl;
+            return 1;
+        }
+
+        wcout << L"key encrypted with new password written to " << recover_path << endl;
+        wcout << L"after mounting and testing, please delete or move the backup file " << bak << L" out of filesystem directory." << endl;
+
     }
 
     if (do_printmasterkey) {
@@ -330,7 +459,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
             return 1;
         }
 
-        auto get_pw_res = get_password(password, false);
+        auto get_pw_res = get_password(password, L"Password:");
 
         if (get_pw_res) {
             return get_pw_res;
@@ -380,6 +509,11 @@ static int do_self_args(int argc, wchar_t* const argv[])
             return 1;
         }
 
+        if (!config.m_HKDF) {
+            wcerr << L"This filesystem is not using HKDF. Unable to proceeed." << endl;
+            return 1;
+        }
+
         LockZeroBuffer<wchar_t> password(PASSWORD_BUFLEN, false);
         if (!password.IsLocked()) {
             wcerr << L"unable to lock password buffer\n";
@@ -387,12 +521,12 @@ static int do_self_args(int argc, wchar_t* const argv[])
         }
 
         LockZeroBuffer<wchar_t> newpassword(PASSWORD_BUFLEN, false);
-        if (!password.IsLocked()) {
+        if (!newpassword.IsLocked()) {
             wcerr << L"unable to lock new password buffer\n";
             return 1;
         }
 
-        auto get_pw_res = get_password(password, false);
+        auto get_pw_res = get_password(password, L"Password:");
 
         if (get_pw_res) {
             return get_pw_res;
@@ -403,7 +537,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
             return 1;
         }
 
-        get_pw_res = get_password(newpassword, true, true);
+        get_pw_res = get_password(newpassword, L"New Password:", L"Repeat:");
         if (get_pw_res) {
             return get_pw_res;
         }
@@ -443,6 +577,8 @@ int wmain(int argc, wchar_t * const argv[])
     self_args.push_back(L"--changepassword");
     self_args.push_back(L"-1");
     self_args.push_back(L"--printmasterkey");
+    self_args.push_back(L"-2");
+    self_args.push_back(L"--recover");
 
     // if we are doing certain things like initializing a filesystem then we handle
     // it in cppcryptfsctl instead of passing the command line to cppcryptfs
