@@ -672,7 +672,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 	return bret;
 }
 
-
+#if 0
 bool CryptConfig::encrypt_keys(const wchar_t* password, const BYTE* masterkey, string& base64encryptedmasterkey, string& scryptSalt, wstring& error_mes)
 {
 	bool bRet = true;
@@ -814,6 +814,274 @@ bool CryptConfig::encrypt_keys(const wchar_t* password, const BYTE* masterkey, s
 	return bRet;
 }
 
+// this method is used only when changing password or recovering filesystem created without HKDF
+bool CryptConfig::encrypt_keys_no_HKDF(const wchar_t* password, const BYTE* masterkey, string& base64encryptedmasterkey, string& scryptSalt, wstring& error_mes)
+{
+	bool bRet = true;
+
+	void* context = NULL;
+
+	unsigned char* encrypted_key = NULL;
+
+	LockZeroBuffer<unsigned char> pwkey(MASTER_KEY_LEN, false);
+	
+	if (!pwkey.IsLocked()) {
+		error_mes = L"pw key not locked";
+		return false;
+	}
+
+	try {
+
+		if (masterkey) {
+			if (m_pKeyBuf) {
+				error_mes = L"master key is already set";
+				return false;
+			}
+
+			m_pKeyBuf = new LockZeroBuffer<unsigned char>(DEFAULT_KEY_LEN, false);
+
+			if (!m_pKeyBuf->IsLocked()) {
+				error_mes = L"cannot lock key buffer\n";
+				throw(-1);
+			}
+
+			m_keybuf_manager.RegisterBuf(m_pKeyBuf);
+
+			memcpy(m_pKeyBuf->m_buf, masterkey, DEFAULT_KEY_LEN);
+		}
+
+		m_encrypted_key_salt.resize(SALT_LEN);
+
+		if (!get_sys_random_bytes(&m_encrypted_key_salt[0], SALT_LEN)) {
+			error_mes = L"get random bytes for salt failed\n";
+			throw(-1);
+		}
+
+		LockZeroBuffer<char> utf8pass(256, false);
+		if (!utf8pass.IsLocked()) {
+			error_mes = L"utf8 pass is not locked";
+			return false;
+		}
+
+		if (!unicode_to_utf8(password, utf8pass.m_buf, utf8pass.m_len - 1)) {
+			error_mes = L"cannot convert password to utf-8\n";
+			throw(-1);
+		}
+
+
+		int result = EVP_PBE_scrypt(utf8pass.m_buf, strlen(utf8pass.m_buf), &m_encrypted_key_salt[0],
+			m_encrypted_key_salt.size(), m_N, m_R, m_P, SCRYPT_MB * 1024 * 1024, pwkey.m_buf,
+			GetMasterKeyLength());
+
+		if (result != 1) {
+			error_mes = L"key derivation failed\n";
+			throw(-1);
+		}
+				
+		unsigned char iv[ORIG_MASTER_IV_LEN];
+
+		if (!get_sys_random_bytes(iv, sizeof(iv))) {
+			error_mes = L"unable to generate iv\n";
+			throw(-1);
+		}
+
+		unsigned char adata[8];
+
+		const int adata_len = sizeof(adata);
+
+		memset(adata, 0, adata_len);
+
+		if (!InitGCMContentKey(GetMasterKey(), m_HKDF)) {
+			error_mes = L"unable to init gcm content key for volume name";
+			throw(-1);
+		}
+
+		_ASSERT(!m_HKDF);
+		context = get_crypt_context(ORIG_MASTER_IV_LEN, AES_MODE_GCM);
+
+		if (!context) {
+			error_mes = L"unable to get gcm context\n";
+			throw(-1);
+		}
+
+		_ASSERT(!m_HKDF);
+		encrypted_key = new unsigned char[GetMasterKeyLength() + HKDF_MASTER_IV_LEN + BLOCK_TAG_LEN];
+
+		memcpy(encrypted_key, iv, sizeof(iv));
+
+		_ASSERT(!m_HKDF);
+		int ctlen = encrypt(m_pKeyBuf->m_buf, GetMasterKeyLength(), adata, sizeof(adata), pwkey.m_buf, iv, (encrypted_key + sizeof(iv)), encrypted_key + sizeof(iv) + GetMasterKeyLength(), context);
+
+		if (ctlen < 1) {
+			error_mes = L"unable to encrypt master key\n";
+			throw(-1);
+		}
+
+		_ASSERT(!m_HKDF);
+		const char* base64_key = base64_encode(encrypted_key, GetMasterKeyLength() + ORIG_MASTER_IV_LEN + BLOCK_TAG_LEN, base64encryptedmasterkey, false, true);
+
+		if (!base64_key) {
+			error_mes = L"unable to base64 encode key\n";
+			throw(-1);
+		}
+
+		if (!base64_encode(&m_encrypted_key_salt[0], (DWORD)m_encrypted_key_salt.size(), scryptSalt, false, true)) {
+			error_mes = L"unable to base64 encode salt\n";
+			throw(-1);
+		}
+	}
+	catch (...) {
+		bRet = false;
+	}
+
+	if (encrypted_key) {
+		delete[] encrypted_key;
+	}
+
+	if (context)
+		free_crypt_context(context);
+
+	return bRet;
+}
+
+#else 
+
+bool CryptConfig::encrypt_keys(const wchar_t* password, const BYTE* masterkey, string& base64encryptedmasterkey, string& scryptSalt, wstring& error_mes)
+{
+	bool bRet = true;
+
+	void* context = NULL;
+
+	unsigned char* encrypted_key = NULL;
+
+	LockZeroBuffer<unsigned char> pwkey(MASTER_KEY_LEN, false);
+	LockZeroBuffer<unsigned char> pwkeyHKDF(MASTER_KEY_LEN, false);
+
+	if (!pwkey.IsLocked() || !pwkeyHKDF.IsLocked()) {
+		error_mes = L"pw key not locked";
+		return false;
+	}
+
+	try {
+
+		if (masterkey) {
+			if (m_pKeyBuf) {
+				error_mes = L"master key is already set";
+				return false;
+			}
+
+			m_pKeyBuf = new LockZeroBuffer<unsigned char>(DEFAULT_KEY_LEN, false);
+
+			if (!m_pKeyBuf->IsLocked()) {
+				error_mes = L"cannot lock key buffer\n";
+				throw(-1);
+			}
+
+			m_keybuf_manager.RegisterBuf(m_pKeyBuf);
+
+			memcpy(m_pKeyBuf->m_buf, masterkey, DEFAULT_KEY_LEN);
+		}
+
+		m_encrypted_key_salt.resize(SALT_LEN);
+
+		if (!get_sys_random_bytes(&m_encrypted_key_salt[0], SALT_LEN)) {
+			error_mes = L"get random bytes for salt failed\n";
+			throw(-1);
+		}
+
+		LockZeroBuffer<char> utf8pass(256, false);
+		if (!utf8pass.IsLocked()) {
+			error_mes = L"utf8 pass is not locked";
+			return false;
+		}
+
+		if (!unicode_to_utf8(password, utf8pass.m_buf, utf8pass.m_len - 1)) {
+			error_mes = L"cannot convert password to utf-8\n";
+			throw(-1);
+		}
+
+
+		int result = EVP_PBE_scrypt(utf8pass.m_buf, strlen(utf8pass.m_buf), &m_encrypted_key_salt[0],
+			m_encrypted_key_salt.size(), m_N, m_R, m_P, SCRYPT_MB * 1024 * 1024, pwkey.m_buf,
+			GetMasterKeyLength());
+
+		if (result != 1) {
+			error_mes = L"key derivation failed\n";
+			throw(-1);
+		}
+
+		if (m_HKDF) {
+			if (!hkdfDerive(pwkey.m_buf, pwkey.m_len, pwkeyHKDF.m_buf, pwkeyHKDF.m_len, hkdfInfoGCMContent)) {
+				error_mes = L"unable to perform hkdf on pw key";
+				throw(-1);
+			}
+		}
+
+		unsigned char iv[max(HKDF_MASTER_IV_LEN, ORIG_MASTER_IV_LEN)];
+
+		int iv_len = m_HKDF ? HKDF_MASTER_IV_LEN : ORIG_MASTER_IV_LEN;
+
+		if (!get_sys_random_bytes(iv, iv_len)) {
+			error_mes = L"unable to generate iv\n";
+			throw(-1);
+		}
+
+		unsigned char adata[8];
+
+		const int adata_len = sizeof(adata);
+
+		memset(adata, 0, adata_len);
+
+		if (!InitGCMContentKey(GetMasterKey(), m_HKDF)) {
+			error_mes = L"unable to init gcm content key for volume name";
+			throw(-1);
+		}
+		
+		context = get_crypt_context(iv_len, AES_MODE_GCM);
+
+		if (!context) {
+			error_mes = L"unable to get gcm context\n";
+			throw(-1);
+		}
+		
+		encrypted_key = new unsigned char[GetMasterKeyLength() + iv_len + BLOCK_TAG_LEN];
+
+		memcpy(encrypted_key, iv, iv_len);
+		
+		int ctlen = encrypt(m_pKeyBuf->m_buf, GetMasterKeyLength(), adata, sizeof(adata), m_HKDF ? pwkeyHKDF.m_buf : pwkey.m_buf, 
+							iv, (encrypted_key + iv_len), encrypted_key + iv_len + GetMasterKeyLength(), context);
+
+		if (ctlen < 1) {
+			error_mes = L"unable to encrypt master key\n";
+			throw(-1);
+		}
+		
+		const char* base64_key = base64_encode(encrypted_key, GetMasterKeyLength() + iv_len + BLOCK_TAG_LEN, base64encryptedmasterkey, false, true);
+
+		if (!base64_key) {
+			error_mes = L"unable to base64 encode key\n";
+			throw(-1);
+		}
+
+		if (!base64_encode(&m_encrypted_key_salt[0], (DWORD)m_encrypted_key_salt.size(), scryptSalt, false, true)) {
+			error_mes = L"unable to base64 encode salt\n";
+			throw(-1);
+		}
+	}
+	catch (...) {
+		bRet = false;
+	}
+
+	if (encrypted_key) {
+		delete[] encrypted_key;
+	}
+
+	if (context)
+		free_crypt_context(context);
+
+	return bRet;
+}
+#endif // if 0
 
 bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, bool disablestreams, wstring& error_mes)
 {

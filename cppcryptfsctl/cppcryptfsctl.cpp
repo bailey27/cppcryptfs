@@ -509,7 +509,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
             return 1;
         }
 
-        if (!config.m_HKDF) {
+        if (0 && !config.m_HKDF) {
             wcerr << L"This filesystem is not using HKDF. Unable to proceeed." << endl;
             return 1;
         }
@@ -548,10 +548,11 @@ static int do_self_args(int argc, wchar_t* const argv[])
 
         string base64key;
         string scryptSalt;
+        
         if (!dummyConfig.encrypt_keys(newpassword.m_buf, config.GetMasterKey(), base64key, scryptSalt, mes)) {
             wcerr << mes << endl;
             return 1;
-        }
+        }   
 
         if (!config.write_updated_config_file(base64key.c_str(), scryptSalt.c_str())) {
             wcerr << "failed to update encrypted key" << endl;

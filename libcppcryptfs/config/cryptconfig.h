@@ -90,6 +90,8 @@ public:
 	CryptConfig();
 	bool read(wstring& mes, const WCHAR *config_file_path = NULL, bool reverse = false);
 	bool encrypt_keys(const wchar_t* password, const BYTE *masterkey, string& base64encryptedmastekey, string& scryptSalt, wstring& error_mes);
+	// this method is used only when changing password or recovering filesystem created without HKDF
+	bool encrypt_keys_no_HKDF(const wchar_t* password, const BYTE* masterkey, string& base64encryptedmasterkey, string& scryptSalt, wstring& error_mes);
 	bool decrypt_key(LPCTSTR password);
 
 	bool create(const WCHAR* path, const WCHAR* specified_config_path, const WCHAR* password, bool eme, bool plaintext, bool longfilenames,
