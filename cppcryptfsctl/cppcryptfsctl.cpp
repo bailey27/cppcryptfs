@@ -415,7 +415,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
 
         string base64key;
         string scryptSalt;
-        if (!dummyConfig.encrypt_keys(newpassword.m_buf, masterkey_bin.m_buf, base64key, scryptSalt, mes)) {
+        if (!dummyConfig.encrypt_key(newpassword.m_buf, masterkey_bin.m_buf, base64key, scryptSalt, mes)) {
             wcerr << mes << endl;
             return 1;
         }
@@ -549,7 +549,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
         string base64key;
         string scryptSalt;
         
-        if (!dummyConfig.encrypt_keys(newpassword.m_buf, config.GetMasterKey(), base64key, scryptSalt, mes)) {
+        if (!dummyConfig.encrypt_key(newpassword.m_buf, config.GetMasterKey(), base64key, scryptSalt, mes)) {
             wcerr << mes << endl;
             return 1;
         }   
