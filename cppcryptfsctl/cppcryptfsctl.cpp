@@ -340,12 +340,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
         if (!config.read(mes, recover_path.c_str())) {
             wcerr << mes << endl;
             return 1;
-        }
-
-        if (!config.m_HKDF) {
-            wcerr << L"This filesystem is not using HKDF. Unable to proceeed." << endl;
-            return 1;
-        }
+        }        
 
         wstring bak = recover_path + L".bak";
         if (::PathFileExists(bak.c_str())) {
@@ -394,7 +389,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
         }
 
         if (i != DEFAULT_KEY_LEN) {
-            cerr << L"invalid master key\n";
+            wcerr << L"invalid master key\n";
             return 1;
         }
 
@@ -426,12 +421,12 @@ static int do_self_args(int argc, wchar_t* const argv[])
         }
 
         if (!config.write_updated_config_file(base64key.c_str(), scryptSalt.c_str())) {
-            wcerr << "failed to update encrypted key" << endl;
+            wcerr << L"failed to update encrypted key" << endl;
             return 1;
         }
 
         wcout << L"key encrypted with new password written to " << recover_path << endl;
-        wcout << L"after mounting and testing, please delete or move the backup file " << bak << L" out of filesystem directory." << endl;
+        wcout << L"after mounting and testing, please delete or move the backup file " << bak << L" out of the way." << endl;
 
     }
 
@@ -472,20 +467,20 @@ static int do_self_args(int argc, wchar_t* const argv[])
 
         const unsigned char* key = config.GetMasterKey();
 
-        cout << endl << "Your master key is as follows.  Keep it in a safe place." << endl << endl << "    ";
+        wcout << endl << L"Your master key is as follows.  Keep it in a safe place." << endl << endl << "    ";
 
         for (size_t i = 0; i < config.GetMasterKeyLength(); ++i) {
             if (i && (i % 4) == 0) {
-                cout << "-";
+                wcout << L"-";
             }
             if (i && (i % 16) == 0) {
-                cout << endl << "    ";
+                wcout << endl << L"    ";
             }
-            char buf[3];
-            sprintf_s(buf, "%02x", key[i]);    
-            cout << buf;
+            wchar_t buf[3];
+            swprintf_s(buf, L"%02x", key[i]);    
+            wcout << buf;
         }
-        cout << endl;
+        wcout << endl;
 
     }
 

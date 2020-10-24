@@ -416,6 +416,11 @@ Initializing (cppcryptfsctl only):
   -S, --siv                use AES256-SIV for data encryption (default is GCM)
   -L, --longnames [0|1]    enable/disable LFNs. defaults to enabled (1)
   -b, --streams   [0|1]    enable/disable streams. defaults to enabled (1)
+
+Recovery/Maintenance (cppcryptfsctl only):
+  --changepassword=PATH    Change password used to protect master key
+  --printmasterkey=PATH    Print master key in human-readable format
+  --recover=PATH           Prompt for master key and new password to recover
 ```
 
 Only cppcryptfsctl can create a filesystem from the command line(--init).  To create a filesystem with cppcryptfs you have to use the GUI.  
@@ -510,6 +515,77 @@ rsync .....
 /cygdrive/c/bin/cppcryptfs -u all -x
 
 ```
+
+Change Password
+------
+cppcryptfsctl has the ability to change the password that protects the master key in the config file (normally gocryptfs.conf or .gocryptfs.reverse.conf).
+
+This feature is mainly for people who just want to use a different password.  It is not a good solution for a compromised password.
+
+All changing the password does it change the password you use to mount the filesystem.  It does not change the encryption key used to encrypt the data.
+
+Therefore, if somebody has your password and a copy of your old config file, then they would still be able to decrypt the data and any data you add or change
+after changing the password. 
+
+If you think your password has been compromised, and if you think somebody might already have your config file, then the best thing to do is to create a new
+filesystem with a new password, mount it, mount the old filesystem, and copy your data from the unencrypted view of the old filesytem to the unencrypted 
+view of the new filesystem.
+
+Recovery of Lost Password
+-----------
+Recovering from a lost password is possible only if you have printed and saved the
+unencrypted master key.
+
+If you run:
+
+cppcryptfsctl --printmasterkey PATH (path to encrypted filesystem dir or config file)
+
+It will print the unencrypted master key in human-readable form.  For example, you could print it and save it in a locked drawer.
+
+If you forget your password, you can run
+
+cppcryptfsctl --recover PATH 
+
+It will prompt you to enter the master key, and then it will prompt for the new password.
+
+
+Recovery of Lost or Corrupted Config File
+-----------
+Recovery of a lost or corrupted config file is possible if you have the unencrypted master key.
+
+cppcryptfsctl --printmasterkey PATH (path to encrypted filesystem dir or config file)
+
+This will print the unencrypted master key in human-readable form.  If you did this and saved the key, then you can use it to recover
+from a lost or corrupted config file.
+
+The procedure is to do this (assuming you have printed the master key and saved it before recovery was necessary):
+
+1. You will need to create a new filesystem, using the same parameters other than paths (e.g. data encryption method, filename encryption method, long
+filenames, etc.) that you used when you created the filesystem that you are trying to recover.  
+
+It doesn't matter what password you use.
+
+2. use cppcryptfsctl --recover PATH to put the master key from the old filesystem in that config file.
+
+This will replace the master key in that config file with the one you entered.  It will be encrypted with the new password you choose.
+
+3. Try mounting the old filesystem specifying the path to the new config file and see if works (make sure you can read data from it).
+
+4. If it works, then you can place the config file you recovering to in the root of your encrypted filesystem if you wish.
+
+The only catch here is that if you have a filesystem created with gocryptfs or cppcryptfs versions prior to 1.3 
+(released in April/May 2017), then you will have problems with HKDF and Raw64.  These are now defaults, and 
+there is no way to create a config file without them.
+
+So if you have an old filesystem you are recovering, and it's not working,  then try editing
+the config file you created to recover to and remove the lines that have 
+
+```
+        "HKDF",
+        "Raw64",
+```
+
+And see if that works.        
 
 
 File name and path length limits
