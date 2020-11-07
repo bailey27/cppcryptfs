@@ -573,7 +573,7 @@ This will replace the master key in that config file with the one you entered.  
 
 3. Try mounting the old filesystem specifying the path to the new config file and see if works (make sure you can read data from it).
 
-4. If it works, then you can place the config file you recovering to in the root of your encrypted filesystem if you wish.
+4. If it works, then you can place the config file you recovered to in the root of your encrypted filesystem if you wish.
 
 The only catch here is that if you have a filesystem created with gocryptfs or cppcryptfs versions prior to 1.3 
 (released in April/May 2017), then you will have problems with HKDF and Raw64.  These are now defaults, and 
