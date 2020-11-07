@@ -522,7 +522,7 @@ cppcryptfsctl has the ability to change the password that protects the master ke
 
 This feature is mainly for people who just want to use a different password.  It is not a good solution for a compromised password.
 
-All changing the password does it change the password you use to mount the filesystem.  It does not change the encryption key used to encrypt the data.  This is because the key that is used to encrypt the data is encrypted using a key derived from the password and stored in the config file.  So all the password is used for is to unencrypt the actual encryption key.
+All changing the password does is change the password used to mount the filesystem.  It does not change the encryption key used to encrypt the data.  This is because the key that is used to encrypt the data is encrypted using a key derived from the password and stored in the config file.  So all the password is used for is to unencrypt the actual encryption key.
 
 Therefore, if somebody has your password and a copy of your old config file, then they would still be able to decrypt the data and any data you add or change
 after changing the password. 
@@ -546,7 +546,9 @@ If you forget your password, you can run
 
 cppcryptfsctl --recover PATH 
 
-It will prompt you to enter the master key, and then it will prompt for the new password.
+It will prompt for you to enter the master key, and then it will prompt for you to enter the new password and confirm the new password.
+
+This operation overrwrites the master key in the target config file.  It makes a backup of the config file before doing this. The backup is named by appending .bak to the name of the config file. If the .bak file already exists, it asks for you to delete the existing .bak file or move it out of the way.
 
 
 Recovery of Lost or Corrupted Config File
