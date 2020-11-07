@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.3.3, Nov 7 2020
+* Add change password, print master key, and recover capabilities 
+  to cppcryptfsctl.
+
 v1.4.3.2, Oct 10 2020
 * Fix crash in MoveFile when destination directory has corrupt or missing
   diriv file.
