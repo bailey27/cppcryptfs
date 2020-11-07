@@ -522,7 +522,7 @@ cppcryptfsctl has the ability to change the password that protects the master ke
 
 This feature is mainly for people who just want to use a different password.  It is not a good solution for a compromised password.
 
-All changing the password does it change the password you use to mount the filesystem.  It does not change the encryption key used to encrypt the data.
+All changing the password does it change the password you use to mount the filesystem.  It does not change the encryption key used to encrypt the data.  This is because the key that is used to encrypt the data is encrypted using a key derived from the password and stored in the config file.  So all the password is used for is to unencrypt the actual encryption key.
 
 Therefore, if somebody has your password and a copy of your old config file, then they would still be able to decrypt the data and any data you add or change
 after changing the password. 
