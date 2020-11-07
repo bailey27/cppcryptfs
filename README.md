@@ -553,7 +553,7 @@ This operation overrwrites the master key in the target config file.  It makes a
 
 Recovery of Lost or Corrupted Config File
 -----------
-Recovery of a lost or corrupted config file is possible if you have the unencrypted master key.
+Recovery of a lost or corrupted config file is possible only if you have the unencrypted master key.
 
 cppcryptfsctl --printmasterkey PATH (path to encrypted filesystem dir or config file)
 
