@@ -566,7 +566,9 @@ int wmain(int argc, wchar_t * const argv[])
         return 0;
 
     vector<wstring> self_args;
-    
+   
+    self_args.push_back(L"-h");
+    self_args.push_back(L"--help");
     self_args.push_back(L"-I");
     self_args.push_back(L"--init");
     self_args.push_back(L"-0");
