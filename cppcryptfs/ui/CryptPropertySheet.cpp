@@ -298,7 +298,7 @@ BOOL CCryptPropertySheet::OnDeviceChange( UINT nEventType, DWORD_PTR dwData )
 
 		PDEV_BROADCAST_HDR pHdr = (PDEV_BROADCAST_HDR)dwData;
 
-		if (pHdr->dbch_devicetype == DBT_DEVTYP_VOLUME) {
+		if (pHdr->dbch_devicetype == DBT_DEVTYP_VOLUME) {			
 			PDEV_BROADCAST_VOLUME pVolHdr = (PDEV_BROADCAST_VOLUME)dwData;
 			if ((pVolHdr->dbcv_unitmask & theApp.m_mountedLetters) != pVolHdr->dbcv_unitmask) {
 				CCryptPropertyPage *page = (CCryptPropertyPage*)GetPage(m_nMountPageIndex);

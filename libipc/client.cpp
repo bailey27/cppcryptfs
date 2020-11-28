@@ -105,9 +105,9 @@ int SendArgsToRunningInstance(LPCWSTR args, std::wstring& result, std::wstring& 
 			}
 		}
 
-		// All pipe instances are busy, so wait for 2 seconds. 
-		if (!WaitNamedPipe(CMD_NAMED_PIPE, 2000)) {
-			err = L"Named pipe connection timed out.";
+		// All pipe instances are busy, so wait. 
+		if (!WaitNamedPipe(CMD_NAMED_PIPE, NMPWAIT_WAIT_FOREVER)) {
+			err = L"Named pipe connection wait failed.";
 			return SEND_ARGS_STATUS_ERROR;
 		}
 	}

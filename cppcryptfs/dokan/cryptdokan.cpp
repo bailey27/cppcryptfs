@@ -107,7 +107,11 @@ THE SOFTWARE.
 
 static BOOL g_HasSeSecurityPrivilege;
 
+#ifdef _DEBUG
+static BOOL g_DebugMode = TRUE;
+#else
 static BOOL g_DebugMode = FALSE;
+#endif
 static BOOL g_UseStdErr = FALSE;
 static BOOL g_UseLogFile = FALSE;
 
@@ -2192,8 +2196,28 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     handles[0] = con->m_mountEvent;
     handles[1] = hThread;
 
-    DWORD wait_result = WaitForMultipleObjects(
-        sizeof(handles) / sizeof(handles[0]), handles, FALSE, MOUNT_TIMEOUT);
+
+    
+    auto tick0 = ::GetTickCount64();
+
+    decltype(tick0) elapsed = 0;
+
+    DWORD wait_result = WAIT_TIMEOUT;
+
+    while (wait_result == WAIT_TIMEOUT && elapsed <= MOUNT_TIMEOUT) {
+       
+        wait_result = WaitForMultipleObjects(
+                sizeof(handles) / sizeof(handles[0]), handles, FALSE, 20);        
+
+        // it currently takes about 5 seconds for Dokany to call back that the fs mounted
+        // but the fs actually mounts almost instantly.
+        // so we also poll on it existing and assume everything succeded if it does exist
+        if (wait_result == WAIT_TIMEOUT && ::PathFileExists(con->GetConfig()->m_mountpoint.c_str())) {
+            wait_result = WAIT_OBJECT_0;
+        }        
+
+        elapsed = ::GetTickCount64() - tick0;
+    }    
 
     if (wait_result != WAIT_OBJECT_0) {
       if (wait_result == (WAIT_OBJECT_0 + 1)) {
