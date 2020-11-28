@@ -2204,19 +2204,22 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
     DWORD wait_result = WAIT_TIMEOUT;
 
-    while (wait_result == WAIT_TIMEOUT && elapsed <= MOUNT_TIMEOUT) {
+    while (wait_result == WAIT_TIMEOUT && elapsed < MOUNT_TIMEOUT) {
        
         wait_result = WaitForMultipleObjects(
-                sizeof(handles) / sizeof(handles[0]), handles, FALSE, 20);        
+                sizeof(handles) / sizeof(handles[0]), handles, FALSE, opts.fastmounting ? FAST_MOUNTING_WAIT : MOUNT_TIMEOUT);        
 
-        // it currently takes about 5 seconds for Dokany to call back that the fs mounted
-        // but the fs actually mounts almost instantly.
-        // so we also poll on it existing and assume everything succeded if it does exist
-        if (wait_result == WAIT_TIMEOUT && ::PathFileExists(con->GetConfig()->m_mountpoint.c_str())) {
-            wait_result = WAIT_OBJECT_0;
-        }        
-
-        elapsed = ::GetTickCount64() - tick0;
+        if (opts.fastmounting) {
+            // it currently takes about 5 seconds for Dokany to call back that the fs mounted
+            // but the fs actually mounts almost instantly.
+            // so we also poll on it existing and assume everything succeded if it does exist
+            if (wait_result == WAIT_TIMEOUT && ::PathFileExists(con->GetConfig()->m_mountpoint.c_str())) {
+                wait_result = WAIT_OBJECT_0;
+            }
+            elapsed = ::GetTickCount64() - tick0;
+        } else {
+            elapsed = MOUNT_TIMEOUT;          
+        }       
     }    
 
     if (wait_result != WAIT_OBJECT_0) {

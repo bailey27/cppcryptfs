@@ -46,6 +46,7 @@ public:
 	bool m_bOpenOnMounting;
 	bool m_bEncryptKeysInMemory;
 	bool m_bCacheKeysInMemory;
+	bool m_bFastMounting;
 
 	// disallow copying
 	CSettingsPropertyPage(CSettingsPropertyPage const&) = delete;
@@ -61,7 +62,7 @@ public:
 protected:
 	BOOL SetControls(int nThreads, int nBufferBlocks, int nCacheTTL, bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords,
 						bool bNeverSaveHistory, bool bDeleteSpurriousFiles, bool bOpenOnMounting, bool bEncryptKeysInMemory,
-						bool bCacheKeysInMemory);
+						bool bCacheKeysInMemory, bool bFastMounting);
 	void SaveSettings();
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -83,4 +84,5 @@ public:
 	afx_msg void OnClickedOpenOnMounting();
 	afx_msg void OnClickedEncryptKeysInMemory();
 	afx_msg void OnClickedCacheKeysInMemory();
+	afx_msg void OnBnClickedFastMounting();
 };

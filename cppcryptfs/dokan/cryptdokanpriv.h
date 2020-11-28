@@ -47,6 +47,7 @@ CryptCaseStreamsCallback(PWIN32_FIND_STREAM_DATA pfdata, LPCWSTR encrypted_name,
 
 #define UNMOUNT_TIMEOUT 30000
 #define MOUNT_TIMEOUT 30000
+#define FAST_MOUNTING_WAIT 20
 
 #define ENABLE_FILE_NAMED_STREAMS_FLAG 1
 

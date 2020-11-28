@@ -52,6 +52,7 @@ typedef struct _struct_CryptMountOptions {
   bool deletespurriousfiles;
   bool encryptkeysinmemory;
   bool cachekeysinmemory;
+  bool fastmounting;
 } CryptMountOptions;
 
 class FsInfo;
