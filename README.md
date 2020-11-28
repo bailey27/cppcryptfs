@@ -305,6 +305,19 @@ This setting is not enabled in either the Default or Recommended settings.
 
 Currently, the default and recommended settings are the same.
 
+**Enable fast mounting**
+
+Previously, cppcryptfs would always wait for Dokany to call back to indicate whether or not a mount operation succeeded or failed.
+
+Dokany was taking typically 5 seconds to call back.  However, the filesystem appeared to be mounted and available almost instantly.
+
+When Enable fast mounting is turned on, cppcryptfs will both wait for Dokany's callback and periodically check to see
+if the filesystem is mounted.  If cppcryptfs discovers that the filesystem appears to be mounted, then cppcryptfs will stop waiting on Dokany and assume the mount operation succeeded.  If this setting is disabled, then cppcryptfs will only wait for the callback from Dokany.
+
+With this setting enabled, a successful mount operation is indicated as such on the developer's machine in about 31 milliseconds instead of 5 seconds as before.
+
+This setting is enabled by default.
+
 **Reset Warnings**
 
 Pressing the Reset Warnings button will turn back on any warning dialogs which were previously disabled by selecting "don't show this message again".

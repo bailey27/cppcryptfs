@@ -2,6 +2,12 @@
 
 Changelog
 ------------
+v1.4.3.4, Nov 28 2020
+* Add "enable fast mounting" setting (enabled by default).
+* Make cppcryptfs and cppcryptfsctl wait forever if the named pipe
+  is busy when trying to connect to a running instance of cppcryptfs
+  instead of timing out after 2 seconds.
+
 v1.4.3.3, Nov 7 2020
 * Add change password, print master key, and recover capabilities 
   to cppcryptfsctl.
