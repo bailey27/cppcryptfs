@@ -450,17 +450,14 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 	BYTE* ivbufptr;
 	BYTE* ivbufbase;
-	// If we're going to use less than 8KB worth of iv's (engough to write 2MB), 
-	// then use the stack buffer.  Otherwise, use the vector.
-	// We could use alloca() for this but don't want to.
-	vector<BYTE> ivbuf_vec;
-	BYTE ivbuf_stack[8 * 1024];
-	if (blocks_spanned * BLOCK_IV_LEN <= sizeof(ivbuf_stack)) {
-		ivbufptr = ivbufbase = ivbuf_stack;
-	} else {
-		ivbuf_vec.resize(blocks_spanned * BLOCK_IV_LEN);
-		ivbufptr = ivbufbase = &ivbuf_vec[0];
-	}
+	// If we're going to use less than 512 (8KB) of iv's (engough to write 2MB), 
+	// then use the stack buffer.  Otherwise, use the vector.	
+	TempBuffer<BYTE, 512 * BLOCK_IV_LEN> ivbuf(blocks_spanned * BLOCK_IV_LEN);	
+
+	ivbufptr = ivbufbase = ivbuf.get();
+
+	if (ivbufptr == nullptr)
+		return FALSE;	
 
 	if (!get_random_bytes(m_con, ivbufptr, BLOCK_IV_LEN * blocks_spanned)) {
 		free_crypt_context(context);  // checks if context is null

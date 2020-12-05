@@ -105,3 +105,38 @@ void SetOverlapped(LPOVERLAPPED pOv, LONGLONG offset);
 void IncOverlapped(LPOVERLAPPED pOv, DWORD increment);
 
 const wchar_t* get_command_line_usage();
+
+// this class is for cases where we need a temp buffer that
+// can usually be allocated on the stack, but we might
+// have cases where the buffer is too big for stack allocation
+// in which case we want to use a dynamically allocated buffer
+// from a vector.  So we do seomthing like
+//
+// size_t len = get_needed_len();
+// TempBuffer<char, 1024> tmp(len);
+// char *p = tmp.get(len);
+
+template <typename T, size_t L>
+class TempBuffer {
+private:
+	T m_buf[L];
+	vector<T> m_vec;	
+	size_t m_len;
+public:
+	TempBuffer(size_t len) : m_len(len) {}
+	T* get()
+	{
+		if (m_len <= L) {
+			return m_buf;
+		} else {
+			if (m_vec.size() < m_len) {
+				try {
+					m_vec.resize(m_len);
+				} catch (const std::bad_alloc&) {
+					return nullptr;
+				}
+			} 
+			return &m_vec[0];
+		}
+	}
+};

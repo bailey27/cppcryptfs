@@ -120,20 +120,19 @@ unicode_to_utf8(const WCHAR *unicode_str, string& storage)
 	if (len == 0)
 		return NULL;
 
+	TempBuffer<char, 4096> utf8(len);
+
 	// len includes space for null char
-	char *p_utf8 = new char[len];
+	char *p_utf8 = utf8.get();
 
 	if (!p_utf8)
 		return NULL;
 
-	if (WideCharToMultiByte(CP_UTF8, 0, unicode_str, -1, p_utf8, len, NULL, NULL) == 0) {
-		delete[] p_utf8;
+	if (WideCharToMultiByte(CP_UTF8, 0, unicode_str, -1, p_utf8, len, NULL, NULL) == 0) {		
 		return NULL;
 	}
 
 	storage = p_utf8;
-
-	delete[] p_utf8;
 
 	return &storage[0];
 }
@@ -148,19 +147,17 @@ utf8_to_unicode(const char *utf8_str, wstring& storage)
 		return NULL;
 
 	// len includes space for null char
-	WCHAR *p_unicode = new WCHAR[len];
+	TempBuffer<WCHAR, 2048> unicode(len);
+	WCHAR* p_unicode = unicode.get();
 
 	if (!p_unicode)
 		return NULL;
 
-	if (MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, p_unicode, len) == 0) {
-		delete[] p_unicode;
+	if (MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, p_unicode, len) == 0) {		
 		return NULL;
 	}
 
-	storage = p_unicode;
-
-	delete[] p_unicode;
+	storage = p_unicode;	
 
 	return &storage[0];
 }
@@ -312,9 +309,9 @@ base64_encode(const BYTE *data, DWORD datalen, string& storage, bool urlTransfor
 
 	BOOL bResult = FALSE;
 
-	try {
+	TempBuffer<char, 4096> base64(base64len + 1);
 
-		base64str = new char[base64len + 1];
+	if (base64str = base64.get()) {		
 
 		// ATL Base64Encode() is supposedly way faster than CryptBinaryToString()
 	
@@ -324,7 +321,7 @@ base64_encode(const BYTE *data, DWORD datalen, string& storage, bool urlTransfor
 		if (bResult)
 			base64str[base64len] = '\0';
 
-	} catch (...) {
+	} else {
 		bResult = FALSE;
 	}
 	if (bResult) {
@@ -340,13 +337,11 @@ base64_encode(const BYTE *data, DWORD datalen, string& storage, bool urlTransfor
 			}
 		}
 		storage = base64str;
-		delete[] base64str;
+		
 		if (!padding)
 			remove_base64_padding(storage);
 		return storage.c_str();
-	} else {
-		if (base64str)
-			delete[] base64str;
+	} else {		
 		return NULL;
 	}
 }
@@ -559,24 +554,16 @@ ConsoleErrMesPipe(LPCWSTR err, HANDLE hPipe)
 
 bool touppercase(LPCWSTR in, wstring& out)
 {
-	WCHAR sbuf[MAX_PATH]; // if longer then use heap
-	WCHAR *hbuf = NULL;
+
 	WCHAR *buf;
+
+	TempBuffer<WCHAR, MAX_PATH> tmp(wcslen(in) + 1);
 
 	bool bRet = true;
 
-	try {
+	if (buf = tmp.get()) {
 
-		size_t len = wcslen(in);
-
-		if (len < sizeof(sbuf) / sizeof(sbuf[0])) {
-			buf = sbuf;
-		} else {
-
-			hbuf = new WCHAR[len + 1];
-
-			buf = hbuf;
-		}
+		size_t len = wcslen(in);		
 
 		wcscpy_s(buf, len+1, in);
 
@@ -584,12 +571,9 @@ bool touppercase(LPCWSTR in, wstring& out)
 
 		out = buf;
 
-	} catch (...) {
+	} else {
 		bRet = false;
-	}
-
-	if (hbuf)
-		delete[] hbuf;
+	}	
 
 	return bRet;
 }
