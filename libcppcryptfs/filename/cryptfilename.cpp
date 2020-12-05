@@ -152,7 +152,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 	
 	if (con->GetConfig()->m_EMENames) {
 	
-		TempBuffer<BYTE, 512> padded;
+		TempBuffer<BYTE, MAX_FILENAME_LEN+1> padded;
 
 		int paddedLen = 0;
 		
@@ -161,7 +161,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 			return NULL;
 		}
 
-		TempBuffer<BYTE, 512> buffer;			
+		EmeBuffer_t buffer;
 
 		if (!EmeTransform(&con->m_eme, (BYTE*)dir_iv, padded.get(), paddedLen, true, buffer)) {
 			DbgPrint(L"\tencrypt_filename: EmeTransform failed : %s\n", file_without_stream.c_str());
@@ -341,7 +341,7 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 
 	if (con->GetConfig()->m_EMENames) {
 
-		TempBuffer<BYTE, 512> buffer;		
+		EmeBuffer_t buffer;
 
 		if (!EmeTransform(&con->m_eme, (BYTE*)dir_iv, &ctstorage[0], (int)ctstorage.size(), false, buffer))
 			return NULL;

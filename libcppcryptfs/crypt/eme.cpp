@@ -216,8 +216,7 @@ bool EmeCryptContext::init(const BYTE *key, bool hkdf, CryptConfig *pConfig)
 // (defined in the constants directionEncrypt and directionDecrypt).
 // The data in "P" is en- or decrypted with the block ciper "bc" under tweak "T".
 // The result is returned in a freshly allocated slice.
-bool EmeTransform(const EmeCryptContext *eme_context, const BYTE *T, const BYTE *P, int len, bool direction, 
-				  TempBuffer<BYTE, 512>& buffer)  {
+bool EmeTransform(const EmeCryptContext *eme_context, const BYTE *T, const BYTE *P, int len, bool direction, EmeBuffer_t& buffer)  {
 
 	BYTE *C = NULL;
 
