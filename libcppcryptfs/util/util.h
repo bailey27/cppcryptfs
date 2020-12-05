@@ -114,7 +114,13 @@ const wchar_t* get_command_line_usage();
 //
 // size_t len = get_needed_len();
 // TempBuffer<char, 1024> tmp(len);
-// char *p = tmp.get(len);
+// char *p = tmp.get();
+// or it can be constructed before size is known and then
+// get with a lenghthwill resize it.
+// e.g.
+// TempBuffer<char, 1024> tmp;
+// size_t len = get_needed_len();
+// char *p = get(len);
 
 template <typename T, size_t L>
 class TempBuffer {
