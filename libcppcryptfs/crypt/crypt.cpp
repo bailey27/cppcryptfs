@@ -45,9 +45,16 @@ handleErrors()
 	throw (-1);
 }
 
+static void free_crypt_context(void* context)
+{
+	EVP_CIPHER_CTX* ctx = (EVP_CIPHER_CTX*)context;
 
+	/* Clean up */
+	if (ctx)
+		EVP_CIPHER_CTX_free(ctx);
+}
 
-void *get_crypt_context(int ivlen, int mode)
+openssl_crypt_context_t get_crypt_context(int ivlen, int mode)
 {
 	EVP_CIPHER_CTX *ctx = NULL;
 
@@ -83,24 +90,14 @@ void *get_crypt_context(int ivlen, int mode)
 		ctx = NULL;
 	}
 
-	return (void*)ctx;
+	return openssl_crypt_context_t(ctx, free_crypt_context);
 }
-
-void free_crypt_context(void *context)
-{
-	EVP_CIPHER_CTX *ctx = (EVP_CIPHER_CTX*)context;
-
-	/* Clean up */
-	if (ctx)
-		EVP_CIPHER_CTX_free(ctx);
-}
-
 
 int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
 	int aad_len, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *ciphertext, unsigned char *tag, void *context)
+	unsigned char *ciphertext, unsigned char *tag, openssl_crypt_context_t context)
 {
-	EVP_CIPHER_CTX *ctx = (EVP_CIPHER_CTX*)context;
+	EVP_CIPHER_CTX *ctx = static_cast<EVP_CIPHER_CTX*>(context.get());
 
 	if (!ctx)
 		return -1;
@@ -148,9 +145,9 @@ int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aa
 
 int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
 	int aad_len, unsigned char *tag, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *plaintext, void *context)
+	unsigned char *plaintext, openssl_crypt_context_t context)
 {
-	EVP_CIPHER_CTX *ctx = (EVP_CIPHER_CTX*)context;
+	EVP_CIPHER_CTX *ctx = static_cast<EVP_CIPHER_CTX*>(context.get());
 
 	if (!ctx)
 		return -1;
@@ -259,42 +256,6 @@ int decrypt_siv(const unsigned char *ciphertext, int ciphertext_len, unsigned ch
 	return ciphertext_len;
 }
 
-bool sha256(const string& str, BYTE *sum)
-{
-	EVP_MD_CTX *mdctx = NULL;
-	bool ret = true;
-
-	try {
-
-		if (EVP_MD_size(EVP_sha256()) != 32)
-			handleErrors();
-
-		if ((mdctx = EVP_MD_CTX_create()) == NULL)
-			handleErrors();
-
-		if (1 != EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL))
-			handleErrors();
-
-		if (1 != EVP_DigestUpdate(mdctx, &str[0], str.size()))
-			handleErrors();
-
-		unsigned int len;
-		if (1 != EVP_DigestFinal_ex(mdctx, sum, &len))
-			handleErrors();
-
-		if (len != 32)
-			handleErrors();
-
-	} catch (...) {
-		ret = false;
-	}
-
-	if (mdctx)
-		EVP_MD_CTX_destroy(mdctx);
-
-	return ret;
-
-}
 
 bool sha256(const BYTE *data, int datalen, BYTE *sum)
 {
@@ -331,6 +292,11 @@ bool sha256(const BYTE *data, int datalen, BYTE *sum)
 
 	return ret;
 
+}
+
+bool sha256(const string& str, BYTE* sum)
+{
+	return sha256(reinterpret_cast<const BYTE*>(str.c_str()), static_cast<int>(str.length()), sum);
 }
 
 bool sha512(const BYTE *data, int datalen, BYTE *sum)
@@ -381,7 +347,7 @@ bool encrypt_string_gcm(const wstring& str, const BYTE *key, string& base64_out)
 	if (!get_sys_random_bytes(iv, sizeof(iv)))
 		return false;
 
-	void *context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+	openssl_crypt_context_t context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 
 	if (!context)
 		return false;
@@ -410,9 +376,6 @@ bool encrypt_string_gcm(const wstring& str, const BYTE *key, string& base64_out)
 		rval = false;
 	}
 
-	if (context)
-		free_crypt_context(context);
-
 	if (encrypted)
 		delete[] encrypted;
 
@@ -423,7 +386,7 @@ bool decrypt_string_gcm(const string& base64_in, const BYTE *key, wstring& str)
 {
 	bool rval = true;
 
-	void *context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+	openssl_crypt_context_t context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 
 	if (!context)
 		return false;
@@ -450,10 +413,7 @@ bool decrypt_string_gcm(const string& base64_in, const BYTE *key, wstring& str)
 
 	} catch (...) {
 			rval = false;
-	}
-
-	if (context)
-		free_crypt_context(context);
+	}	
 
 	return rval;
 }

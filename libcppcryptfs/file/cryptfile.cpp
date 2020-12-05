@@ -28,12 +28,12 @@ THE SOFTWARE.
 
 #include "stdafx.h"
 #include "crypt/cryptdefs.h"
-#include "cryptio.h"
-#include "cryptfile.h"
 #include "filename/cryptfilename.h"
 #include "util/fileutil.h"
 #include "util/util.h"
 #include "crypt/crypt.h"
+#include "cryptio.h"
+#include "cryptfile.h"
 #include "iobufferpool.h"
 
 CryptFile *CryptFile::NewInstance(CryptContext *con)
@@ -179,16 +179,14 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 	unsigned char *p = buf;
 
-	void *context;
+	openssl_crypt_context_t context;
 	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 
 		if (!context)
 			return FALSE;
-	} else {
-		context = NULL;
-	}
+	} 
 
 	BOOL bRet = TRUE;
 
@@ -297,10 +295,7 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 		}
 	} catch (...) {
 		bRet = FALSE;
-	}
-
-	if (context)
-		free_crypt_context(context);
+	}	
 
 	if (iobuf)
 		IoBufferPool::getInstance()->ReleaseIoBuffer(iobuf);
@@ -429,7 +424,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 	const unsigned char *p = buf;
 
-	void *context;
+	openssl_crypt_context_t context;
 	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
@@ -459,8 +454,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 	if (ivbufptr == nullptr)
 		return FALSE;	
 
-	if (!get_random_bytes(m_con, ivbufptr, BLOCK_IV_LEN * blocks_spanned)) {
-		free_crypt_context(context);  // checks if context is null
+	if (!get_random_bytes(m_con, ivbufptr, BLOCK_IV_LEN * blocks_spanned)) {		
 		return FALSE;
 	}
 
@@ -573,10 +567,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 	*pNwritten = min(*pNwritten, buflen);
 
 	if (iobuf)
-		IoBufferPool::getInstance()->ReleaseIoBuffer(iobuf);
-
-	if (context)
-		free_crypt_context(context);
+		IoBufferPool::getInstance()->ReleaseIoBuffer(iobuf);	
 
 	// we didn't use all ivs or went past the end of our ivs which is bad
 	if (ivbufptr != ivbufbase + blocks_spanned * BLOCK_IV_LEN) {
@@ -707,7 +698,7 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 
 	memset(buf, 0, sizeof(buf));
 
-	void *context;
+	openssl_crypt_context_t context;
 	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
@@ -720,14 +711,11 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 
 	int nread = read_block(m_con, m_handle, NULL, 0, NULL, m_header.fileid, last_block, buf, context);
 
-	if (nread < 0) {
-		free_crypt_context(context);
+	if (nread < 0) {	
 		return FALSE;
 	}
 
-	if (nread < 1) { // shouldn't happen
-		free_crypt_context(context);
-
+	if (nread < 1) { // shouldn't happen		
 		if (bSet) {
 			return SetEndOfFileInternal(up_off);
 		} else {
@@ -743,14 +731,11 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 
 	BYTE iv[BLOCK_IV_LEN];
 
-	if (!get_random_bytes(m_con, iv, BLOCK_IV_LEN)) {
-		free_crypt_context(context);  // checks if context is null
+	if (!get_random_bytes(m_con, iv, BLOCK_IV_LEN)) {		
 		return FALSE;
 	}
 
-	int nwritten = write_block(m_con, cipher_buf, m_handle, m_header.fileid, last_block, buf, to_write, context, iv);
-
-	free_crypt_context(context);
+	int nwritten = write_block(m_con, cipher_buf, m_handle, m_header.fileid, last_block, buf, to_write, context, iv);	
 
 	if (nwritten != to_write)
 		return FALSE;
@@ -854,7 +839,7 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 	unsigned char *p = buf;
 
-	void *context;
+	openssl_crypt_context_t context;
 	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
@@ -962,10 +947,7 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 		}
 	} catch (...) {
 		bRet = FALSE;
-	}
-
-	if (context)
-		free_crypt_context(context);
+	}	
 
 	return bRet;
 }
