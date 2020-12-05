@@ -557,7 +557,7 @@ bool touppercase(LPCWSTR in, wstring& out)
 
 	WCHAR *buf;
 
-	TempBuffer<WCHAR, MAX_PATH> tmp(wcslen(in) + 1);
+	TempBuffer<WCHAR, 2048> tmp(wcslen(in) + 1);
 
 	bool bRet = true;
 

@@ -445,9 +445,9 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 	BYTE* ivbufptr;
 	BYTE* ivbufbase;
-	// If we're going to use less than 512 (8KB) of iv's (engough to write 2MB), 
+	// If we're going to use less than 256 (4KB) of iv's (engough to write 1MB), 
 	// then use the stack buffer.  Otherwise, use the vector.	
-	TempBuffer<BYTE, 512 * BLOCK_IV_LEN> ivbuf(blocks_spanned * BLOCK_IV_LEN);	
+	TempBuffer<BYTE, 256 * BLOCK_IV_LEN> ivbuf(blocks_spanned * BLOCK_IV_LEN);	
 
 	ivbufptr = ivbufbase = ivbuf.get();
 

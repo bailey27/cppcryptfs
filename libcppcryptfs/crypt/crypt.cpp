@@ -340,9 +340,7 @@ bool encrypt_string_gcm(const wstring& str, const BYTE *key, string& base64_out)
 {
 	BYTE iv[BLOCK_IV_LEN];
 
-	bool rval = true;
-
-	BYTE *encrypted = NULL;
+	bool rval = true;	
 
 	if (!get_sys_random_bytes(iv, sizeof(iv)))
 		return false;
@@ -360,24 +358,21 @@ bool encrypt_string_gcm(const wstring& str, const BYTE *key, string& base64_out)
 		BYTE aad[8];
 		memset(aad, 0, sizeof(aad));
 
-		encrypted = new BYTE[utf8.size() + BLOCK_IV_LEN + BLOCK_TAG_LEN];
+		vector<BYTE> encrypted(utf8.size() + BLOCK_IV_LEN + BLOCK_TAG_LEN);
 
-		memcpy(encrypted, iv, sizeof(iv));
+		memcpy(&encrypted[0], iv, sizeof(iv));
 
-		int ctlen = encrypt((const BYTE*)&utf8[0], (int)utf8.size(), aad, (int)sizeof(aad), key, iv, encrypted + (int)sizeof(iv), encrypted + (int)sizeof(iv) + (int)utf8.size(), context);
+		int ctlen = encrypt((const BYTE*)&utf8[0], (int)utf8.size(), aad, (int)sizeof(aad), key, iv, &encrypted[0] + (int)sizeof(iv), &encrypted[0] + sizeof(iv) + utf8.size(), context);
 
 		if (ctlen != utf8.size())
 			throw(-1);
 
-		if (!base64_encode(encrypted, ctlen + sizeof(iv) + BLOCK_TAG_LEN, base64_out, false, true))
+		if (!base64_encode(&encrypted[0], ctlen + sizeof(iv) + BLOCK_TAG_LEN, base64_out, false, true))
 			throw(-1);
 
 	} catch (...) {
 		rval = false;
-	}
-
-	if (encrypted)
-		delete[] encrypted;
+	}	
 
 	return rval;
 }
@@ -400,15 +395,15 @@ bool decrypt_string_gcm(const string& base64_in, const BYTE *key, wstring& str)
 		if (!base64_decode(&base64_in[0], v, false, true))
 			throw(-1);
 
-		char *plaintext = new char[v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN + 1];
-		int ptlen = decrypt((const BYTE*)(&v[0] + BLOCK_IV_LEN), (int)v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN, adata, sizeof(adata), &v[0] + v.size() - BLOCK_TAG_LEN, key, &v[0], (BYTE*)plaintext, context);
+		vector<char> plaintext(v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN + 1);
+		int ptlen = decrypt((const BYTE*)(&v[0] + BLOCK_IV_LEN), (int)v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN, adata, sizeof(adata), &v[0] + v.size() - BLOCK_TAG_LEN, key, &v[0], (BYTE*)&plaintext[0], context);
 
 		if (ptlen != v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN)
 			throw(-1);
 
 		plaintext[ptlen] = '\0';
 
-		if (!utf8_to_unicode(plaintext, str))
+		if (!utf8_to_unicode(&plaintext[0], str))
 			throw(-1);
 
 	} catch (...) {
