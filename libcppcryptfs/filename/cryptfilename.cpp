@@ -102,12 +102,16 @@ derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const ch
 
 	bool bRet = true;
 
+	TempBuffer<BYTE, 4096> buffer;
+
 	BYTE *pbuf = NULL;
 
 	try {
 		int typelen = (int)strlen(type);
 		int bufsize = (int)(utf8path.length() + 1 + typelen);
-		pbuf = new BYTE[bufsize];
+		pbuf = buffer.get(bufsize);
+		if (!pbuf)
+			throw(-1);
 		memcpy(pbuf, &utf8path[0], utf8path.length() + 1);
 		memcpy(pbuf + utf8path.length() + 1, type, typelen);
 		BYTE hash[SHA256_LEN];
@@ -119,9 +123,6 @@ derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const ch
 	} catch (...) {
 		bRet = false;
 	}
-
-	if (pbuf)
-		delete[] pbuf;
 
 	return bRet;
 }
@@ -150,27 +151,26 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 	}
 	
 	if (con->GetConfig()->m_EMENames) {
+	
+		TempBuffer<BYTE, 512> padded;
 
 		int paddedLen = 0;
-		BYTE *padded = pad16((BYTE*)utf8_str.c_str(), (int)utf8_str.size(), paddedLen);
-
-		if (!padded) {
+		
+		if (!pad16((BYTE*)utf8_str.c_str(), (int)utf8_str.size(), paddedLen, padded)) {
 			DbgPrint(L"\tencrypt_filename: pad16 failed : %S\n", utf8_str.c_str());
 			return NULL;
 		}
 
-		BYTE *ct = EmeTransform(&con->m_eme, (BYTE*)dir_iv, padded, paddedLen, true);
+		TempBuffer<BYTE, 512> buffer;			
 
-		free(padded);
-
-		if (!ct) {
+		if (!EmeTransform(&con->m_eme, (BYTE*)dir_iv, padded.get(), paddedLen, true, buffer)) {
 			DbgPrint(L"\tencrypt_filename: EmeTransform failed : %s\n", file_without_stream.c_str());
 			return NULL;
 		}
 
-		rs = base64_encode(ct, paddedLen, storage, true, !con->GetConfig()->m_Raw64);
+		BYTE* ct = buffer.get();
 
-		delete[] ct;
+		rs = base64_encode(ct, paddedLen, storage, true, !con->GetConfig()->m_Raw64);		
 
 		if (!rs) {
 			DbgPrint(L"\tencrypt_filename: base64_encode failed : %s\n", file_without_stream.c_str());
@@ -341,24 +341,23 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 
 	if (con->GetConfig()->m_EMENames) {
 
-		BYTE *pt = EmeTransform(&con->m_eme, (BYTE*)dir_iv, &ctstorage[0], (int)ctstorage.size(), false);
+		TempBuffer<BYTE, 512> buffer;		
 
-		if (!pt)
+		if (!EmeTransform(&con->m_eme, (BYTE*)dir_iv, &ctstorage[0], (int)ctstorage.size(), false, buffer))
 			return NULL;
+
+		BYTE* pt = buffer.get();
 
 		int origLen = unPad16(pt, (int)ctstorage.size());
 
-		if (origLen < 0) {
-			delete[] pt;
+		if (origLen < 0) {			
 			return NULL;
 		}
 
 
 		pt[origLen] = '\0';
 
-		const WCHAR *ws = utf8_to_unicode((const char *)pt, storage);
-
-		delete[] pt;
+		const WCHAR *ws = utf8_to_unicode((const char *)pt, storage);		
 
 		if (!char_checker.is_valid(ws, false))
 			return NULL;

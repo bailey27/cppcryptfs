@@ -41,6 +41,7 @@ THE SOFTWARE.
 #include "stdafx.h"
 #include <windows.h>
 
+#include "util/util.h"
 #include "eme.h"
 #include "crypt.h"
 #include "config/cryptconfig.h"
@@ -215,7 +216,8 @@ bool EmeCryptContext::init(const BYTE *key, bool hkdf, CryptConfig *pConfig)
 // (defined in the constants directionEncrypt and directionDecrypt).
 // The data in "P" is en- or decrypted with the block ciper "bc" under tweak "T".
 // The result is returned in a freshly allocated slice.
-BYTE* EmeTransform(const EmeCryptContext *eme_context, const BYTE *T, const BYTE *P, int len, bool direction)  {
+bool EmeTransform(const EmeCryptContext *eme_context, const BYTE *T, const BYTE *P, int len, bool direction, 
+				  TempBuffer<BYTE, 512>& buffer)  {
 
 	BYTE *C = NULL;
 
@@ -230,7 +232,7 @@ BYTE* EmeTransform(const EmeCryptContext *eme_context, const BYTE *T, const BYTE
 			panic(L"EME operates on 1-128 block-cipher blocks");
 		}
 
-		C = new BYTE[len+1]; // +1 so caller can add a null terminator if necessary without any trouble
+		C = buffer.get(len+1); // +1 so caller can add a null terminator if necessary without any trouble
 
 		BYTE **LTable = eme_context->m_LTable;
 
@@ -291,10 +293,8 @@ BYTE* EmeTransform(const EmeCryptContext *eme_context, const BYTE *T, const BYTE
 	}
 
 	if (!error) {
-		return C;
-	} else {
-		if (C)
-			delete[] C;
-		return NULL;
+		return true;
+	} else {		
+		return false;
 	}
 }

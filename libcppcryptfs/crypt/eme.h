@@ -30,6 +30,8 @@ THE SOFTWARE.
 
 #include <windows.h>
 
+#include <util/util.h>
+
 #include "cryptdefs.h"
 
 #include "openssl/aes.h"
@@ -68,6 +70,6 @@ public:
 };
 
 
-BYTE* EmeTransform(const EmeCryptContext *eme_context, 
-	const BYTE *T, const BYTE *P, int len, bool direction);
+bool EmeTransform(const EmeCryptContext *eme_context, 
+	const BYTE *T, const BYTE *P, int len, bool direction, TempBuffer<BYTE, 512>& buffer);
 

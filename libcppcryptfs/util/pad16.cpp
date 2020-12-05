@@ -38,29 +38,9 @@ Bellow is the comment header from pad16.go
 
 #include "stdafx.h"
 #include <stdlib.h>
-
+#include "util.h"
 #include "pad16.h"
 
-BYTE* pad16(const BYTE* orig, int len, int& newLen)  {
-	int oldLen = len;
-	if (oldLen == 0) {
-		return NULL;
-	}
-	int padLen = 16 - oldLen % 16;
-	if (padLen == 0) {
-		padLen = 16;
-	}
-	newLen = oldLen + padLen;
-	BYTE *padded = (BYTE*)malloc(newLen);
-	if (!padded)
-		return NULL;
-	memcpy(padded, orig, len);
-	BYTE padByte = (BYTE)(padLen);
-	for (int i = oldLen; i < newLen; i++) {
-		padded[i] = padByte;
-	}
-	return padded;
-}
 
 // unPad16 - remove padding
 int unPad16(BYTE *padded, int len) {

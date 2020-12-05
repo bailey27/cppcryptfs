@@ -119,13 +119,16 @@ const wchar_t* get_command_line_usage();
 template <typename T, size_t L>
 class TempBuffer {
 private:
-	T m_buf[L];
-	vector<T> m_vec;	
+	vector<T> m_vec;
 	size_t m_len;
+	T m_buf[L];	
 public:
-	TempBuffer(size_t len) : m_len(len) {}
-	T* get()
+	TempBuffer(size_t len = 0) : m_len(len) {}
+	T* get(size_t len = 0)
 	{
+		if (len)
+			m_len = len;
+
 		if (m_len <= L) {
 			return m_buf;
 		} else {
