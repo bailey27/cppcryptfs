@@ -431,9 +431,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 		if (!context)
 			return FALSE;
-	} else {
-		context = NULL;
-	}
+	} 
 
 	IoBuffer *iobuf = NULL;
 	BYTE *outputbuf = NULL;
@@ -705,9 +703,7 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 
 		if (!context)
 			return FALSE;
-	} else {
-		context = NULL;
-	}
+	} 
 
 	int nread = read_block(m_con, m_handle, NULL, 0, NULL, m_header.fileid, last_block, buf, context);
 
@@ -846,9 +842,7 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 		if (!context)
 			return FALSE;
-	} else {
-		context = NULL;
-	}
+	} 
 
 	BOOL bRet = TRUE;
 

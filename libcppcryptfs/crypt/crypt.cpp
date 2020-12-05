@@ -87,7 +87,7 @@ openssl_crypt_context_t get_crypt_context(int ivlen, int mode)
 	} catch (int) {
 		if (ctx)
 			EVP_CIPHER_CTX_free(ctx);
-		ctx = NULL;
+		ctx = nullptr;
 	}
 
 	return openssl_crypt_context_t(ctx, free_crypt_context);
