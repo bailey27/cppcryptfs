@@ -44,9 +44,9 @@ THE SOFTWARE.
 class CryptConfig;
 
 // we do EME only on individual path components (file/directory names)
-// and they are limited to 255 chars + null.  With base64 growth this could be
-// as much a ceil(255/3) + 1 = 341.   Rund up to next multiple of 8 which is 344
-typedef TempBuffer<BYTE, 344> EmeBuffer_t;
+// a stack buffer of 384 bytes should handle all cases without
+// dynamic allocation being necessary
+typedef TempBuffer<BYTE, 384> EmeBuffer_t;
 
 class EmeCryptContext {
 public:
