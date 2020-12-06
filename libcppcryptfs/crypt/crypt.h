@@ -35,17 +35,17 @@ THE SOFTWARE.
 
 class SivContext;
 
-typedef std::shared_ptr<void> openssl_crypt_context_t;
+typedef std::shared_ptr<void> openssl_crypt_context_shared_ptr_t;
 
-openssl_crypt_context_t get_crypt_context(int ivlen, int mode);
+openssl_crypt_context_shared_ptr_t get_crypt_context(int ivlen, int mode);
 
 int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
 	int aad_len, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *ciphertext, unsigned char *tag, const openssl_crypt_context_t& context);
+	unsigned char *ciphertext, unsigned char *tag, const openssl_crypt_context_shared_ptr_t& context);
 
 int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
 	int aad_len, unsigned char *tag, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *plaintext, const openssl_crypt_context_t& context);
+	unsigned char *plaintext, const openssl_crypt_context_shared_ptr_t& context);
 
 int encrypt_siv(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
 	int aad_len, const unsigned char *iv,

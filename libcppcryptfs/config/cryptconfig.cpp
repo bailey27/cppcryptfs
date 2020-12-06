@@ -577,7 +577,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 
 	bool bret = true;
 
-	openssl_crypt_context_t context = NULL;
+	openssl_crypt_context_shared_ptr_t context = NULL;
 
 	try {
 		if (m_encrypted_key.size() == 0 || m_encrypted_key_salt.size() == 0 || GetMasterKeyLength() == 0)
@@ -675,7 +675,7 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 {
 	bool bRet = true;
 
-	openssl_crypt_context_t context = NULL;
+	openssl_crypt_context_shared_ptr_t context = NULL;
 
 	unsigned char* encrypted_key = NULL;
 

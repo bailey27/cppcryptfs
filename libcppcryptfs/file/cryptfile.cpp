@@ -179,7 +179,7 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 	unsigned char *p = buf;
 
-	openssl_crypt_context_t context;
+	openssl_crypt_context_shared_ptr_t context;
 	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
@@ -424,7 +424,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 	const unsigned char *p = buf;
 
-	openssl_crypt_context_t context;
+	openssl_crypt_context_shared_ptr_t context;
 	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
@@ -696,7 +696,7 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 
 	memset(buf, 0, sizeof(buf));
 
-	openssl_crypt_context_t context;
+	openssl_crypt_context_shared_ptr_t context;
 	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
@@ -835,7 +835,7 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 	unsigned char *p = buf;
 
-	openssl_crypt_context_t context;
+	openssl_crypt_context_shared_ptr_t context;
 	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);

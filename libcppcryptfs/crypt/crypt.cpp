@@ -54,7 +54,7 @@ static void free_crypt_context(void* context)
 		EVP_CIPHER_CTX_free(ctx);
 }
 
-openssl_crypt_context_t get_crypt_context(int ivlen, int mode)
+openssl_crypt_context_shared_ptr_t get_crypt_context(int ivlen, int mode)
 {
 	EVP_CIPHER_CTX *ctx = NULL;
 
@@ -90,12 +90,12 @@ openssl_crypt_context_t get_crypt_context(int ivlen, int mode)
 		ctx = nullptr;
 	}
 
-	return openssl_crypt_context_t(ctx, free_crypt_context);
+	return openssl_crypt_context_shared_ptr_t(ctx, free_crypt_context);
 }
 
 int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
 	int aad_len, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *ciphertext, unsigned char *tag, const openssl_crypt_context_t& context)
+	unsigned char *ciphertext, unsigned char *tag, const openssl_crypt_context_shared_ptr_t& context)
 {
 	EVP_CIPHER_CTX *ctx = static_cast<EVP_CIPHER_CTX*>(context.get());
 
@@ -145,7 +145,7 @@ int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aa
 
 int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
 	int aad_len, unsigned char *tag, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *plaintext, const openssl_crypt_context_t& context)
+	unsigned char *plaintext, const openssl_crypt_context_shared_ptr_t& context)
 {
 	EVP_CIPHER_CTX *ctx = static_cast<EVP_CIPHER_CTX*>(context.get());
 
@@ -345,7 +345,7 @@ bool encrypt_string_gcm(const wstring& str, const BYTE *key, string& base64_out)
 	if (!get_sys_random_bytes(iv, sizeof(iv)))
 		return false;
 
-	openssl_crypt_context_t context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+	openssl_crypt_context_shared_ptr_t context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 
 	if (!context)
 		return false;
@@ -381,7 +381,7 @@ bool decrypt_string_gcm(const string& base64_in, const BYTE *key, wstring& str)
 {
 	bool rval = true;
 
-	openssl_crypt_context_t context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+	openssl_crypt_context_shared_ptr_t context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 
 	if (!context)
 		return false;

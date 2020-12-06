@@ -80,7 +80,7 @@ CcppcryptfsApp::CcppcryptfsApp()
 	// get an OpenSSL EVP context to force detection of AES-NI instructions
 	// so we can use AES-NI even if EVP is never used
 
-	openssl_crypt_context_t context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+	openssl_crypt_context_shared_ptr_t context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 	
 }
 
