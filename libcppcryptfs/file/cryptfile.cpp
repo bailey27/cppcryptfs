@@ -179,7 +179,7 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 	unsigned char *p = buf;
 
-	openssl_crypt_context_shared_ptr_t context;
+	shared_ptr<EVP_CIPHER_CTX> context;
 	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
@@ -244,11 +244,11 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 				if (inputbuf) {
 					int consumed = 0;
-					advance = read_block(m_con, INVALID_HANDLE_VALUE, inputbuf + inputbufpos, bytesinbuf, &consumed, m_header.fileid, blockno, p, context);
+					advance = read_block(m_con, INVALID_HANDLE_VALUE, inputbuf + inputbufpos, bytesinbuf, &consumed, m_header.fileid, blockno, p, context.get());
 					inputbufpos += consumed;
 					bytesinbuf -= consumed;
 				} else {
-					advance = read_block(m_con, m_handle, NULL, 0, NULL, m_header.fileid, blockno, p, context);
+					advance = read_block(m_con, m_handle, NULL, 0, NULL, m_header.fileid, blockno, p, context.get());
 				}
 
 				if (advance < 0)
@@ -265,11 +265,11 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 				if (inputbuf) {
 					int consumed = 0;
-					blockbytes = read_block(m_con, INVALID_HANDLE_VALUE, inputbuf + inputbufpos, bytesinbuf, &consumed, m_header.fileid, blockno, blockbuf, context);
+					blockbytes = read_block(m_con, INVALID_HANDLE_VALUE, inputbuf + inputbufpos, bytesinbuf, &consumed, m_header.fileid, blockno, blockbuf, context.get());
 					inputbufpos += consumed;
 					bytesinbuf -= consumed;
 				} else {
-					blockbytes = read_block(m_con, m_handle, NULL, 0, NULL, m_header.fileid, blockno, blockbuf, context);
+					blockbytes = read_block(m_con, m_handle, NULL, 0, NULL, m_header.fileid, blockno, blockbuf, context.get());
 				}
 
 				if (blockbytes < 0)
@@ -424,7 +424,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 	const unsigned char *p = buf;
 
-	openssl_crypt_context_shared_ptr_t context;
+	shared_ptr<EVP_CIPHER_CTX> context;
 	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
@@ -490,7 +490,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 					if (outputbytes == 0)
 						beginblock = blockno;
 
-					advance = write_block(m_con, outputbuf + outputbytes, INVALID_HANDLE_VALUE, m_header.fileid, blockno, p, PLAIN_BS, context, ivbufptr);
+					advance = write_block(m_con, outputbuf + outputbytes, INVALID_HANDLE_VALUE, m_header.fileid, blockno, p, PLAIN_BS, context.get(), ivbufptr);
 					ivbufptr += BLOCK_IV_LEN;
 					
 					if (advance == CIPHER_BS) {
@@ -500,7 +500,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 					}
 					outputbytes += CIPHER_BS;
 				} else {
-					advance = write_block(m_con, cipher_buf, m_handle, m_header.fileid, blockno, p, PLAIN_BS, context, ivbufptr);
+					advance = write_block(m_con, cipher_buf, m_handle, m_header.fileid, blockno, p, PLAIN_BS, context.get(), ivbufptr);
 					ivbufptr += BLOCK_IV_LEN;
 
 					if (advance != PLAIN_BS)
@@ -521,7 +521,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 				// we need exclusive access
 				GoExclusive();
 
-				int blockbytes = read_block(m_con, m_handle, NULL, 0, NULL, m_header.fileid, blockno, blockbuf, context);
+				int blockbytes = read_block(m_con, m_handle, NULL, 0, NULL, m_header.fileid, blockno, blockbuf, context.get());
 
 				if (blockbytes < 0) {
 					bRet = FALSE;
@@ -537,7 +537,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 				int blockwrite = max(blockoff + blockcpy, blockbytes);
 
-				int nWritten = write_block(m_con, cipher_buf, m_handle, m_header.fileid, blockno, blockbuf, blockwrite, context, ivbufptr);
+				int nWritten = write_block(m_con, cipher_buf, m_handle, m_header.fileid, blockno, blockbuf, blockwrite, context.get(), ivbufptr);
 				ivbufptr += BLOCK_IV_LEN;
 
 				advance = blockcpy;
@@ -696,7 +696,7 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 
 	memset(buf, 0, sizeof(buf));
 
-	openssl_crypt_context_shared_ptr_t context;
+	shared_ptr<EVP_CIPHER_CTX> context;
 	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
@@ -705,7 +705,7 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 			return FALSE;
 	} 
 
-	int nread = read_block(m_con, m_handle, NULL, 0, NULL, m_header.fileid, last_block, buf, context);
+	int nread = read_block(m_con, m_handle, NULL, 0, NULL, m_header.fileid, last_block, buf, context.get());
 
 	if (nread < 0) {	
 		return FALSE;
@@ -731,7 +731,7 @@ CryptFileForward::SetEndOfFile(LONGLONG offset, BOOL bSet)
 		return FALSE;
 	}
 
-	int nwritten = write_block(m_con, cipher_buf, m_handle, m_header.fileid, last_block, buf, to_write, context, iv);	
+	int nwritten = write_block(m_con, cipher_buf, m_handle, m_header.fileid, last_block, buf, to_write, context.get(), iv);	
 
 	if (nwritten != to_write)
 		return FALSE;
@@ -835,7 +835,7 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 	unsigned char *p = buf;
 
-	openssl_crypt_context_shared_ptr_t context;
+	shared_ptr<EVP_CIPHER_CTX> context;
 	GetKeys();
 	if (!m_con->GetConfig()->m_AESSIV) {
 		context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
@@ -888,7 +888,7 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 				}
 			
 				// advance = read_block(m_con, m_handle, m_header.fileid, blockno, p, context);
-				advance = write_block(m_con, p, INVALID_HANDLE_VALUE, m_header.fileid, blockno, plain_buf, (int)nRead, context, m_block0iv);
+				advance = write_block(m_con, p, INVALID_HANDLE_VALUE, m_header.fileid, blockno, plain_buf, (int)nRead, context.get(), m_block0iv);
 
 				if (advance < 0)
 					throw(-1);
@@ -916,7 +916,7 @@ BOOL CryptFileReverse::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 				}
 
 				//int blockbytes = read_block(m_con, m_handle, m_header.fileid, blockno, blockbuf, context);
-				int blockbytes = write_block(m_con, blockbuf, INVALID_HANDLE_VALUE, m_header.fileid, blockno, plain_buf, (int)nRead, context, m_block0iv);
+				int blockbytes = write_block(m_con, blockbuf, INVALID_HANDLE_VALUE, m_header.fileid, blockno, plain_buf, (int)nRead, context.get(), m_block0iv);
 
 				if (blockbytes < 0)
 					throw(-1);

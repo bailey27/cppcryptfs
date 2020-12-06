@@ -577,7 +577,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 
 	bool bret = true;
 
-	openssl_crypt_context_shared_ptr_t context = NULL;
+	shared_ptr<EVP_CIPHER_CTX> context = nullptr;
 
 	try {
 		if (m_encrypted_key.size() == 0 || m_encrypted_key_salt.size() == 0 || GetMasterKeyLength() == 0)
@@ -640,7 +640,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 				throw(-1);
 		}
 
-		int ptlen = decrypt(ciphertext, ciphertext_len, adata, adata_len, tag, m_HKDF ? pwkeyHKDF.m_buf : pwkey.m_buf, iv, m_pKeyBuf->m_buf, context);
+		int ptlen = decrypt(ciphertext, ciphertext_len, adata, adata_len, tag, m_HKDF ? pwkeyHKDF.m_buf : pwkey.m_buf, iv, m_pKeyBuf->m_buf, context.get());
 
 		if (ptlen != MASTER_KEY_LEN)
 			throw (-1);
@@ -675,9 +675,9 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 {
 	bool bRet = true;
 
-	openssl_crypt_context_shared_ptr_t context = NULL;
+	shared_ptr<EVP_CIPHER_CTX> context = nullptr;
 
-	unsigned char* encrypted_key = NULL;
+	unsigned char* encrypted_key = nullptr;
 
 	LockZeroBuffer<unsigned char> pwkey(MASTER_KEY_LEN, false);
 	LockZeroBuffer<unsigned char> pwkeyHKDF(MASTER_KEY_LEN, false);
@@ -774,7 +774,7 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 		memcpy(encrypted_key, iv, iv_len);
 		
 		int ctlen = encrypt(m_pKeyBuf->m_buf, GetMasterKeyLength(), adata, sizeof(adata), m_HKDF ? pwkeyHKDF.m_buf : pwkey.m_buf, 
-							iv, (encrypted_key + iv_len), encrypted_key + iv_len + GetMasterKeyLength(), context);
+							iv, (encrypted_key + iv_len), encrypted_key + iv_len + GetMasterKeyLength(), context.get());
 
 		if (ctlen < 1) {
 			error_mes = L"unable to encrypt master key\n";

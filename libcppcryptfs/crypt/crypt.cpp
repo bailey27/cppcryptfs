@@ -54,9 +54,9 @@ static void free_crypt_context(void* context)
 		EVP_CIPHER_CTX_free(ctx);
 }
 
-openssl_crypt_context_shared_ptr_t get_crypt_context(int ivlen, int mode)
+shared_ptr<EVP_CIPHER_CTX> get_crypt_context(int ivlen, int mode)
 {
-	EVP_CIPHER_CTX *ctx = NULL;
+	EVP_CIPHER_CTX*ctx = NULL;
 
 	try {
 		/* Create and initialise the context */
@@ -90,14 +90,13 @@ openssl_crypt_context_shared_ptr_t get_crypt_context(int ivlen, int mode)
 		ctx = nullptr;
 	}
 
-	return openssl_crypt_context_shared_ptr_t(ctx, free_crypt_context);
+	return shared_ptr<EVP_CIPHER_CTX>(ctx, free_crypt_context);
 }
 
 int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
 	int aad_len, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *ciphertext, unsigned char *tag, const openssl_crypt_context_shared_ptr_t& context)
-{
-	EVP_CIPHER_CTX *ctx = static_cast<EVP_CIPHER_CTX*>(context.get());
+	unsigned char *ciphertext, unsigned char *tag, EVP_CIPHER_CTX* ctx)
+{	
 
 	if (!ctx)
 		return -1;
@@ -145,9 +144,8 @@ int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aa
 
 int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
 	int aad_len, unsigned char *tag, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *plaintext, const openssl_crypt_context_shared_ptr_t& context)
-{
-	EVP_CIPHER_CTX *ctx = static_cast<EVP_CIPHER_CTX*>(context.get());
+	unsigned char *plaintext, EVP_CIPHER_CTX* ctx)
+{	
 
 	if (!ctx)
 		return -1;
@@ -345,7 +343,7 @@ bool encrypt_string_gcm(const wstring& str, const BYTE *key, string& base64_out)
 	if (!get_sys_random_bytes(iv, sizeof(iv)))
 		return false;
 
-	openssl_crypt_context_shared_ptr_t context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+	auto context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 
 	if (!context)
 		return false;
@@ -362,7 +360,7 @@ bool encrypt_string_gcm(const wstring& str, const BYTE *key, string& base64_out)
 
 		memcpy(&encrypted[0], iv, sizeof(iv));
 
-		int ctlen = encrypt((const BYTE*)&utf8[0], (int)utf8.size(), aad, (int)sizeof(aad), key, iv, &encrypted[0] + (int)sizeof(iv), &encrypted[0] + sizeof(iv) + utf8.size(), context);
+		int ctlen = encrypt((const BYTE*)&utf8[0], (int)utf8.size(), aad, (int)sizeof(aad), key, iv, &encrypted[0] + (int)sizeof(iv), &encrypted[0] + sizeof(iv) + utf8.size(), context.get());
 
 		if (ctlen != utf8.size())
 			throw(-1);
@@ -381,7 +379,7 @@ bool decrypt_string_gcm(const string& base64_in, const BYTE *key, wstring& str)
 {
 	bool rval = true;
 
-	openssl_crypt_context_shared_ptr_t context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
+	auto context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
 
 	if (!context)
 		return false;
@@ -396,7 +394,7 @@ bool decrypt_string_gcm(const string& base64_in, const BYTE *key, wstring& str)
 			throw(-1);
 
 		vector<char> plaintext(v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN + 1);
-		int ptlen = decrypt((const BYTE*)(&v[0] + BLOCK_IV_LEN), (int)v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN, adata, sizeof(adata), &v[0] + v.size() - BLOCK_TAG_LEN, key, &v[0], (BYTE*)&plaintext[0], context);
+		int ptlen = decrypt((const BYTE*)(&v[0] + BLOCK_IV_LEN), (int)v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN, adata, sizeof(adata), &v[0] + v.size() - BLOCK_TAG_LEN, key, &v[0], (BYTE*)&plaintext[0], context.get());
 
 		if (ptlen != v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN)
 			throw(-1);

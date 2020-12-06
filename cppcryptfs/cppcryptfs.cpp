@@ -77,11 +77,10 @@ CcppcryptfsApp::CcppcryptfsApp()
 
 	m_mountedLetters = 0;
 
-	// get an OpenSSL EVP context to force detection of AES-NI instructions
+	// get a shared ptr to an OpenSSL EVP context to force detection of AES-NI instructions
 	// so we can use AES-NI even if EVP is never used
 
-	openssl_crypt_context_shared_ptr_t context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);
-	
+	auto context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);	
 }
 
 
