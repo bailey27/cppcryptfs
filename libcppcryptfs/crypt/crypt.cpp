@@ -95,7 +95,7 @@ openssl_crypt_context_t get_crypt_context(int ivlen, int mode)
 
 int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
 	int aad_len, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *ciphertext, unsigned char *tag, openssl_crypt_context_t context)
+	unsigned char *ciphertext, unsigned char *tag, const openssl_crypt_context_t& context)
 {
 	EVP_CIPHER_CTX *ctx = static_cast<EVP_CIPHER_CTX*>(context.get());
 
@@ -145,7 +145,7 @@ int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aa
 
 int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
 	int aad_len, unsigned char *tag, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *plaintext, openssl_crypt_context_t context)
+	unsigned char *plaintext, const openssl_crypt_context_t& context)
 {
 	EVP_CIPHER_CTX *ctx = static_cast<EVP_CIPHER_CTX*>(context.get());
 
