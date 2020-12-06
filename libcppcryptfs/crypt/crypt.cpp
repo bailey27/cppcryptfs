@@ -45,10 +45,8 @@ handleErrors()
 	throw (-1);
 }
 
-static void free_crypt_context(void* context)
+static void free_crypt_context(EVP_CIPHER_CTX* ctx)
 {
-	EVP_CIPHER_CTX* ctx = (EVP_CIPHER_CTX*)context;
-
 	/* Clean up */
 	if (ctx)
 		EVP_CIPHER_CTX_free(ctx);
