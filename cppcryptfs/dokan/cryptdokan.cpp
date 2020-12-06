@@ -1934,7 +1934,9 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 	  return -1;
   }
 
-  if (is_mountpoint_a_dir(mountpoint) && !is_suitable_mountpoint(mountpoint)) {
+  bool mount_point_is_a_dir = is_mountpoint_a_dir(mountpoint);
+
+  if (mount_point_is_a_dir && !is_suitable_mountpoint(mountpoint)) {
 	  if (!PathFileExists(mountpoint)) {
 		  mes = L"the mount point directory does not exist";
 	  } else {
@@ -2204,14 +2206,19 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
     DWORD wait_result = WAIT_TIMEOUT;
 
+    // polling makes sense only on drive letters because a mount point dir will
+    // already exist.  Also, Dokany calls back fast if the mount point is a dir
+
+    bool do_fast_mounting = opts.fastmounting && !mount_point_is_a_dir;
+
     while (wait_result == WAIT_TIMEOUT && elapsed < MOUNT_TIMEOUT) {
        
         wait_result = WaitForMultipleObjects(
-                sizeof(handles) / sizeof(handles[0]), handles, FALSE, opts.fastmounting ? FAST_MOUNTING_WAIT : MOUNT_TIMEOUT);        
+                sizeof(handles) / sizeof(handles[0]), handles, FALSE, do_fast_mounting ? FAST_MOUNTING_WAIT : MOUNT_TIMEOUT);
 
-        if (opts.fastmounting) {
+        if (do_fast_mounting) {
             // it currently takes about 5 seconds for Dokany to call back that the fs mounted
-            // but the fs actually mounts almost instantly.
+            // if the mount point is a drive letter, but the fs actually mounts almost instantly.
             // so we also poll on it existing and assume everything succeded if it does exist
             if (wait_result == WAIT_TIMEOUT && ::PathFileExists(con->GetConfig()->m_mountpoint.c_str())) {
                 wait_result = WAIT_OBJECT_0;
