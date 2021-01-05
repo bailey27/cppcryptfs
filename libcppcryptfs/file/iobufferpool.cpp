@@ -29,95 +29,77 @@ THE SOFTWARE.
 #include "stdafx.h"
 #include "iobufferpool.h"
 
-IoBufferPool* IoBufferPool::getInstance(size_t buffer_size)
-{
-	static IoBufferPool  instance;
+IoBufferPool IoBufferPool::instance;
 
-	// We don't need to care about thread safety with this singleton
-	// because getInstance() is called with an argument only during a mount operation which 
-	// is always initiated from the main thread. If instance.m_buffer_size is not
-	// 0 then init() won't be called again.
-	// The methods that involve IoBuffers are all thread-safe.
-	if (buffer_size == 0 && instance.m_buffer_size == 0) {
-		throw std::runtime_error("error: attempting to use uninitialized IoBufferPool");
-	}
-
-	if (buffer_size != 0 && instance.m_buffer_size == 0) {
-		instance.init(buffer_size);
-	}
-	return &instance;
+IoBufferPool& IoBufferPool::getInstance()
+{	
+	return instance;
 }
 
-IoBuffer::IoBuffer(bool fromPool, size_t bufferSize)
+void IoBuffer::reallocate(size_t bufferSize, size_t ivbufferSize)
+{
+	auto total_size = bufferSize + ivbufferSize;
+
+	if (m_storage.size() < total_size) {
+		m_storage.clear();
+		m_storage.resize(total_size);
+	}
+
+	if (bufferSize > 0) {
+		m_pBuf = &m_storage[0];
+	} else {
+		m_pBuf = nullptr;
+	}
+
+	if (ivbufferSize > 0) {
+		m_pIvBuf = &m_storage[bufferSize];
+	} else {
+		m_pIvBuf = nullptr;
+	}
+}
+
+IoBuffer::IoBuffer(bool fromPool, size_t bufferSize, size_t ivbufferSize)
 {
 	m_bIsFromPool = fromPool;
-	m_bufferSize = bufferSize;
-	m_pBuf = NULL;
-	m_pBuf = new unsigned char[bufferSize];
+	
+	reallocate(bufferSize, ivbufferSize);
 }
 
-IoBuffer::~IoBuffer()
-{
-	if (m_pBuf)
-		delete[] m_pBuf;
-}
 
-void IoBufferPool::lock()
-{
-	EnterCriticalSection(&m_crit);
-}
-
-void IoBufferPool::unlock()
-{
-	LeaveCriticalSection(&m_crit);
-}
-
-void IoBufferPool::init(size_t buffer_size)
-{
-	if (buffer_size == 0) {
-		throw std::runtime_error("error: attempting to init IoBufferPool with buffer_size of 0");
-	}
-	m_buffer_size = buffer_size;
-	m_num_buffers = 0;
-	InitializeCriticalSection(&m_crit);
-}
 
 IoBufferPool::~IoBufferPool()
 {
 	for (IoBuffer* pBuf : m_buffers) {
 		delete pBuf;
-	}
-
-	if (m_buffer_size) { // was initialized
-		DeleteCriticalSection(&m_crit);
-	}
+	}	
 }
 
-IoBuffer * IoBufferPool::GetIoBuffer(size_t buffer_size)
+IoBuffer * IoBufferPool::GetIoBuffer(size_t buffer_size, size_t ivbuffer_size)
 {
-	IoBuffer *pb = NULL;
+	IoBuffer* pb = nullptr;
 
-	if (buffer_size <= m_buffer_size) {
-		lock();
-		try {
-			if (m_buffers.size() > 0) {
-				pb = m_buffers.front();
-				m_buffers.pop_front();
-			} else if (m_num_buffers < m_max_buffers) {
-				pb = new IoBuffer(true, m_buffer_size);
-				m_num_buffers++;
-			}
-		} catch (...) {
-			pb = NULL;
+	bool will_be_from_pool = false;
+
+	m_mutex.lock();
+
+	if (!m_buffers.empty()) {
+		pb = m_buffers.front();
+		m_buffers.pop_front();	
+	} else if (m_num_buffers < m_max_buffers) {
+		will_be_from_pool = true;
+		++m_num_buffers;
+	}
+
+	m_mutex.unlock();
+
+	try {
+		if (pb) {
+			pb->reallocate(buffer_size, ivbuffer_size);
+		} else {
+			pb = new IoBuffer(will_be_from_pool, buffer_size, ivbuffer_size);
 		}
-		unlock();
-	} 
-	if (pb == NULL) {
-		try {
-			pb = new IoBuffer(false, buffer_size);
-		} catch (...) {
-			pb = NULL;
-		}
+	} catch (const std::bad_alloc&) {
+		pb = nullptr;
 	}
 	
 	return pb;
@@ -125,11 +107,14 @@ IoBuffer * IoBufferPool::GetIoBuffer(size_t buffer_size)
 
 void IoBufferPool::ReleaseIoBuffer(IoBuffer * pBuf)
 {
-
 	if (pBuf->m_bIsFromPool) {
-		lock();
-		m_buffers.push_front(pBuf);
-		unlock();
+		m_mutex.lock();
+		try {
+			m_buffers.push_front(pBuf);
+		} catch (const std::bad_alloc&) {
+			delete pBuf;
+		}
+		m_mutex.unlock();
 	} else {
 		delete pBuf;
 	}

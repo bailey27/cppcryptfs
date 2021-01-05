@@ -205,7 +205,7 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 		if (blocks_spanned > 1 && m_con->m_bufferblocks > 1) {
 			inputbuflen = min(m_con->m_bufferblocks, blocks_spanned)*CIPHER_BS;
-			iobuf = IoBufferPool::getInstance()->GetIoBuffer(inputbuflen);
+			iobuf = IoBufferPool::getInstance().GetIoBuffer(inputbuflen, 0);
 			if (iobuf == NULL) {
 				SetLastError(ERROR_OUTOFMEMORY);
 				throw(-1);
@@ -298,7 +298,7 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 	}	
 
 	if (iobuf)
-		IoBufferPool::getInstance()->ReleaseIoBuffer(iobuf);
+		IoBufferPool::getInstance().ReleaseIoBuffer(iobuf);
 
 	return bRet;
 }
@@ -441,31 +441,33 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 	int blocks_spanned = (int)(((offset + buflen - 1) / PLAIN_BS) - (offset / PLAIN_BS)) + 1;
 
-	BYTE* ivbufptr;
-	BYTE* ivbufbase;
-	// If we're going to use less than 256 (4KB) of iv's (engough to write 1MB), 
-	// then use the stack buffer.  Otherwise, use the vector.	
-	TempBuffer<BYTE, 256 * BLOCK_IV_LEN> ivbuf(blocks_spanned * BLOCK_IV_LEN);	
+	BYTE* ivbufptr = nullptr;
+	BYTE* ivbufbase = nullptr;
 
-	ivbufptr = ivbufbase = ivbuf.get();
-
-	if (ivbufptr == nullptr)
-		return FALSE;	
-
-	if (!get_random_bytes(m_con, ivbufptr, BLOCK_IV_LEN * blocks_spanned)) {		
-		return FALSE;
-	}
+	BYTE ivbuf[4096];
 
 	try {
 
 		if (blocks_spanned > 1 && m_con->m_bufferblocks > 1) {
 			outputbuflen = min(m_con->m_bufferblocks, blocks_spanned)*CIPHER_BS;
-			iobuf = IoBufferPool::getInstance()->GetIoBuffer(outputbuflen);
+			iobuf = IoBufferPool::getInstance().GetIoBuffer(outputbuflen, static_cast<size_t>(blocks_spanned) * BLOCK_IV_LEN);
 			if (iobuf == NULL) {
 				SetLastError(ERROR_OUTOFMEMORY);
 				throw(-1);
 			}
 			outputbuf = iobuf->m_pBuf;
+			ivbufptr = ivbufbase = iobuf->m_pIvBuf;
+		} else {
+			if (blocks_spanned <= sizeof(ivbuf) / BLOCK_IV_LEN) {
+				ivbufptr = ivbufbase = ivbuf;
+			} else {
+				iobuf = IoBufferPool::getInstance().GetIoBuffer(0, static_cast<size_t>(blocks_spanned) * BLOCK_IV_LEN);
+				ivbufptr = ivbufbase = iobuf->m_pIvBuf;
+			}
+		}
+
+		if (!get_random_bytes(m_con, ivbufptr, blocks_spanned * BLOCK_IV_LEN)) {
+			throw(-1);
 		}
 
 		BYTE cipher_buf[CIPHER_BS];
@@ -565,7 +567,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 	*pNwritten = min(*pNwritten, buflen);
 
 	if (iobuf)
-		IoBufferPool::getInstance()->ReleaseIoBuffer(iobuf);	
+		IoBufferPool::getInstance().ReleaseIoBuffer(iobuf);	
 
 	// we didn't use all ivs or went past the end of our ivs which is bad
 	if (ivbufptr != ivbufbase + blocks_spanned * BLOCK_IV_LEN) {

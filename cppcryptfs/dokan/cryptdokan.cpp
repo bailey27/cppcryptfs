@@ -2024,13 +2024,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
     CryptContext *con = &tdata->con;
 
-    con->m_bufferblocks = min(256, max(1, opts.numbufferblocks));
-
-	// initialize IoBufferPool singleton (will init if not already inited)
-	// block size is tuned for first mounted filesystem
-	// if subsquent mounts require a larger block due to setting being changed
-	// then those mounts buffers will come from the heap instead of the pool
-    IoBufferPool::getInstance(con->m_bufferblocks * CIPHER_BS); 
+    con->m_bufferblocks = min(4096, max(1, opts.numbufferblocks));	 
 
     con->m_dir_iv_cache.SetTTL(opts.cachettl);
     con->m_case_cache.SetTTL(opts.cachettl);

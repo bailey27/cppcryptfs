@@ -32,6 +32,8 @@ THE SOFTWARE.
 #include <windows.h>
 #include <list>
 #include <stdexcept>
+#include <vector>
+#include <mutex>
 
 using namespace std;
 
@@ -39,41 +41,41 @@ class IoBuffer {
 public:
 
 	unsigned char *m_pBuf;
-	size_t m_bufferSize;
+	unsigned char* m_pIvBuf;
 	bool m_bIsFromPool;
+	vector<unsigned char> m_storage;
 
 	// disallow copying
 	IoBuffer(IoBuffer const&) = delete;
 	void operator=(IoBuffer const&) = delete;
 
-	IoBuffer(bool fromPool, size_t bufferSize);
-	virtual ~IoBuffer();
+	IoBuffer(bool fromPool, size_t bufferSize, size_t ivbuffer_size);
+
+	void reallocate(size_t bufferSize, size_t ivbuffer_size);
+	~IoBuffer() = default;
 
 };
 
 class IoBufferPool {
 private:
-	CRITICAL_SECTION m_crit;
-	const int m_max_buffers = 10;
+	mutex m_mutex;
+	const int m_max_buffers = 15;	
 	int m_num_buffers;
-	size_t m_buffer_size;
 	list<IoBuffer*> m_buffers;
-	void lock();
-	void unlock();
 
-	void init(size_t buffer_size);
+	IoBufferPool() : m_num_buffers(0) {};
 
-	IoBufferPool() { m_buffer_size = 0; }
+	static IoBufferPool instance;
 
 public:
 
-	static IoBufferPool* getInstance(size_t buffer_size = 0);
+	static IoBufferPool& getInstance();
 
 	// disallow copying
 	IoBufferPool(IoBufferPool const&) = delete;
 	void operator=(IoBufferPool const&) = delete;
 
-	virtual ~IoBufferPool();
-	IoBuffer *GetIoBuffer(size_t buffer_size);
+	~IoBufferPool();
+	IoBuffer *GetIoBuffer(size_t buffer_size, size_t ivbufer_size);
 	void ReleaseIoBuffer(IoBuffer *pBuf);
 };
