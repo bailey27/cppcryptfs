@@ -80,17 +80,18 @@ IoBuffer * IoBufferPool::GetIoBuffer(size_t buffer_size, size_t ivbuffer_size)
 
 	bool will_be_from_pool = false;
 
-	m_mutex.lock();
+	if (buffer_size + ivbuffer_size <= m_max_pool_buffer_size) {
 
-	if (!m_buffers.empty()) {
-		pb = m_buffers.front();
-		m_buffers.pop_front();	
-	} else if (m_num_buffers < m_max_buffers) {
-		will_be_from_pool = true;
-		++m_num_buffers;
+		lock_guard<mutex> lock(m_mutex);
+
+		if (!m_buffers.empty()) {
+			pb = m_buffers.front();
+			m_buffers.pop_front();
+		} else if (m_num_buffers < m_max_buffers) {
+			will_be_from_pool = true;
+			++m_num_buffers;
+		}		
 	}
-
-	m_mutex.unlock();
 
 	try {
 		if (pb) {
@@ -108,13 +109,12 @@ IoBuffer * IoBufferPool::GetIoBuffer(size_t buffer_size, size_t ivbuffer_size)
 void IoBufferPool::ReleaseIoBuffer(IoBuffer * pBuf)
 {
 	if (pBuf->m_bIsFromPool) {
-		m_mutex.lock();
+		lock_guard<mutex> lock(m_mutex);
 		try {
 			m_buffers.push_front(pBuf);
 		} catch (const std::bad_alloc&) {
 			delete pBuf;
-		}
-		m_mutex.unlock();
+		}		
 	} else {
 		delete pBuf;
 	}

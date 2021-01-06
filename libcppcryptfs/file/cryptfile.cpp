@@ -446,19 +446,24 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 	BYTE ivbuf[4096];
 
+	bool ivsonstack = static_cast<size_t>(blocks_spanned) * BLOCK_IV_LEN <= sizeof(ivbuf);
+
 	try {
 
 		if (blocks_spanned > 1 && m_con->m_bufferblocks > 1) {
 			outputbuflen = min(m_con->m_bufferblocks, blocks_spanned)*CIPHER_BS;
-			iobuf = IoBufferPool::getInstance().GetIoBuffer(outputbuflen, static_cast<size_t>(blocks_spanned) * BLOCK_IV_LEN);
+			iobuf = IoBufferPool::getInstance().GetIoBuffer(outputbuflen, ivsonstack ? 0 : static_cast<size_t>(blocks_spanned) * BLOCK_IV_LEN);
 			if (iobuf == NULL) {
 				SetLastError(ERROR_OUTOFMEMORY);
 				throw(-1);
 			}
 			outputbuf = iobuf->m_pBuf;
-			ivbufptr = ivbufbase = iobuf->m_pIvBuf;
+			if (ivsonstack)
+				ivbufptr = ivbufbase = ivbuf;
+			else
+				ivbufptr = ivbufbase = iobuf->m_pIvBuf;
 		} else {
-			if (blocks_spanned <= sizeof(ivbuf) / BLOCK_IV_LEN) {
+			if (ivsonstack) {
 				ivbufptr = ivbufbase = ivbuf;
 			} else {
 				iobuf = IoBufferPool::getInstance().GetIoBuffer(0, static_cast<size_t>(blocks_spanned) * BLOCK_IV_LEN);

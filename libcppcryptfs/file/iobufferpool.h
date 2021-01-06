@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include <stdexcept>
 #include <vector>
 #include <mutex>
+#include <crypt/cryptdefs.h>
 
 using namespace std;
 
@@ -59,6 +60,8 @@ public:
 class IoBufferPool {
 private:
 	mutex m_mutex;
+	// the size below is to accomodate the maximum i/o buffer size + enough IVs to write up to 64MB
+	const size_t m_max_pool_buffer_size = ((MAX_IO_BUFFER_KB*1024)/PLAIN_BS)*CIPHER_BS + ((64*1024*1024)/PLAIN_BS)*BLOCK_IV_LEN;
 	const int m_max_buffers = 15;	
 	int m_num_buffers;
 	list<IoBuffer*> m_buffers;
