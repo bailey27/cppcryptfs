@@ -454,7 +454,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 			outputbuflen = min(m_con->m_bufferblocks, blocks_spanned)*CIPHER_BS;
 			iobuf = IoBufferPool::getInstance().GetIoBuffer(outputbuflen, ivsonstack ? 0 : static_cast<size_t>(blocks_spanned) * BLOCK_IV_LEN);
 			if (iobuf == NULL) {
-				SetLastError(ERROR_OUTOFMEMORY);
+				::SetLastError(ERROR_OUTOFMEMORY);
 				throw(-1);
 			}
 			outputbuf = iobuf->m_pBuf;
@@ -467,6 +467,10 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 				ivbufptr = ivbufbase = ivbuf;
 			} else {
 				iobuf = IoBufferPool::getInstance().GetIoBuffer(0, static_cast<size_t>(blocks_spanned) * BLOCK_IV_LEN);
+				if (iobuf == NULL) {
+					::SetLastError(ERROR_OUTOFMEMORY);
+					throw(-1);
+				}
 				ivbufptr = ivbufbase = iobuf->m_pIvBuf;
 			}
 		}
@@ -575,7 +579,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 		IoBufferPool::getInstance().ReleaseIoBuffer(iobuf);	
 
 	// we didn't use all ivs or went past the end of our ivs which is bad
-	if (ivbufptr != ivbufbase + blocks_spanned * BLOCK_IV_LEN) {
+	if (ivbufptr != ivbufbase + static_cast<size_t>(blocks_spanned) * BLOCK_IV_LEN) {
 		assert(false);
 		::SetLastError(ERROR_BAD_LENGTH);
 		bRet = FALSE;

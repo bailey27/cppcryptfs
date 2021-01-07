@@ -83,7 +83,7 @@ END_MESSAGE_MAP()
 
 // CSettingsPropertyPage message handlers
 
-static int buffer_sizes[] = { 4, 8, 16, 32, 64, 128, 256, 512, MAX_IO_BUFFER_KB };
+static int buffer_sizes[] = { 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, MAX_IO_BUFFER_KB };
 
 static int ttls[] = { 0, 1, 2, 5, 10, 15, 30, 45, 60, 90, 120, 300, 600, 900, 1800, 3600};
 

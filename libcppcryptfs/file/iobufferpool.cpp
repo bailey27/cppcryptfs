@@ -42,7 +42,7 @@ void IoBuffer::reallocate(size_t bufferSize, size_t ivbufferSize)
 
 	if (m_storage.size() < total_size) {
 		m_storage.clear();
-		m_storage.resize(total_size);
+		m_storage.resize(max(total_size, min(m_storage.size() * 2, IoBufferPool::m_max_pool_buffer_size)));		
 	}
 
 	if (bufferSize > 0) {
@@ -58,10 +58,8 @@ void IoBuffer::reallocate(size_t bufferSize, size_t ivbufferSize)
 	}
 }
 
-IoBuffer::IoBuffer(bool fromPool, size_t bufferSize, size_t ivbufferSize)
-{
-	m_bIsFromPool = fromPool;
-	
+IoBuffer::IoBuffer(bool fromPool, size_t bufferSize, size_t ivbufferSize) : m_bIsFromPool(fromPool)
+{		
 	reallocate(bufferSize, ivbufferSize);
 }
 
