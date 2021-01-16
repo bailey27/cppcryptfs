@@ -322,7 +322,10 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 	opts.numthreads = theApp.GetProfileInt(L"Settings", L"Threads", PER_FILESYSTEM_THREADS_DEFAULT);
 
-	opts.numbufferblocks = theApp.GetProfileInt(L"Settings", L"BufferBlocks", BUFFERBLOCKS_DEFAULT);
+	opts.numbufferblocks = theApp.GetProfileInt(L"Settings", L"BufferBlocks", BUFFERBLOCKS_DEFAULT);	
+
+	if (opts.numbufferblocks < 1 || opts.numbufferblocks * 4 > MAX_IO_BUFFER_KB || !is_power_of_two(opts.numbufferblocks))
+		opts.numbufferblocks = BUFFERBLOCKS_DEFAULT;
 
 	opts.cachettl = theApp.GetProfileInt(L"Settings", L"CacheTTL", CACHETTL_DEFAULT);
 

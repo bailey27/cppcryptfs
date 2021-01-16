@@ -82,8 +82,6 @@ get_random_bytes(CryptContext *con, unsigned char *buf, DWORD len);
 
 bool get_sys_random_bytes(unsigned char *buf, DWORD len);
 
-DWORD getppid();
-
 bool have_args();
 
 bool OpenConsole(DWORD pid = 0);
@@ -97,6 +95,12 @@ bool touppercase(LPCWSTR in, wstring& out);
 int compare_names(CryptContext *con, LPCWSTR name1, LPCWSTR name2);
 
 bool is_all_zeros(const BYTE *buf, size_t len);
+
+template <typename T>
+bool is_power_of_two(const T& num)
+{
+	return ((num != 1) && (num & (num - 1))) == 0;
+}
 
 BOOL GetPathHash(LPCWSTR path, wstring& hashstr);
 
@@ -116,7 +120,7 @@ const wchar_t* get_command_line_usage();
 // TempBuffer<char, 1024> tmp(len);
 // char *p = tmp.get();
 // or it can be constructed before size is known and then
-// get with a lenghthwill resize it.
+// get with a length will resize it.
 // e.g.
 // TempBuffer<char, 1024> tmp;
 // size_t len = get_needed_len();

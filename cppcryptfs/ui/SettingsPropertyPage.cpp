@@ -83,7 +83,9 @@ END_MESSAGE_MAP()
 
 // CSettingsPropertyPage message handlers
 
-static int buffer_sizes[] = { 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, MAX_IO_BUFFER_KB };
+typedef int buffer_size_t;
+
+static buffer_size_t buffer_sizes[] = { 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, MAX_IO_BUFFER_KB };
 
 static int ttls[] = { 0, 1, 2, 5, 10, 15, 30, 45, 60, 90, 120, 300, 600, 900, 1800, 3600};
 
@@ -101,6 +103,15 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 	int nThreads = theApp.GetProfileInt(L"Settings", L"Threads", PER_FILESYSTEM_THREADS_DEFAULT);
 
 	int bufferblocks = theApp.GetProfileInt(L"Settings", L"BufferBlocks", BUFFERBLOCKS_DEFAULT);
+
+	buffer_size_t kb = bufferblocks * 4;
+	
+	auto p = bsearch(&kb, buffer_sizes, _countof(buffer_sizes), sizeof(buffer_size_t), [](const void* pkey, const void* pval) -> int {
+		return *reinterpret_cast<const buffer_size_t*>(pkey) - *reinterpret_cast<const buffer_size_t*>(pval);
+	});
+
+	if (!p)
+		bufferblocks = BUFFERBLOCKS_DEFAULT;
 
 	int cachettl = theApp.GetProfileInt(L"Settings", L"CacheTTL", CACHETTL_DEFAULT);
 

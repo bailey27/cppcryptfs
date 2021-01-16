@@ -365,6 +365,11 @@ BOOL CryptFileForward::WriteVersionAndFileId()
 BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNwritten, LONGLONG offset, BOOL bWriteToEndOfFile, BOOL bPagingIo)
 {
 	
+	char dbg_buf[64];
+
+	sprintf_s(dbg_buf, "write thread %u\n", GetCurrentThreadId());
+	OutputDebugStringA(dbg_buf);
+
 	if (m_real_file_size == (long long)-1)
 		return FALSE;
 
