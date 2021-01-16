@@ -2,6 +2,13 @@
 
 Changelog
 ------------
+
+VSOMETHING SOMEDATE
+fix tab order
+add larger iobuffer sizes
+increase max number of threads
+make better use of stack buffers
+
 v1.4.3.5, Dec 6 2020
 * Use fast mounting only if mount point is a drive letter.  
   It doesn't make sense to poll on an existing dir, and 

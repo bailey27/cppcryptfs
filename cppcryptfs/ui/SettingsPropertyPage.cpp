@@ -172,7 +172,10 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	WCHAR buf[80];
 
-	for (i = 0; i < 15; i++) {
+#define DOKAN_MAX_THREAD 63 // too many problems trying to include dokan.h here
+
+	for (i = 0; i <= DOKAN_MAX_THREAD; i++) {
+		
 		if (i == 0) {
 			CString def = L"Dokany default (";
 			WCHAR buf[32];
