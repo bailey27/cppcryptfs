@@ -78,16 +78,28 @@ IoBuffer * IoBufferPool::GetIoBuffer(size_t buffer_size, size_t ivbuffer_size)
 
 	bool will_be_from_pool = false;
 
-	if (buffer_size + ivbuffer_size <= m_max_pool_buffer_size) {
+	auto total_size = buffer_size + ivbuffer_size;
+
+	if (total_size <= m_max_pool_buffer_size) {
 
 		lock_guard<mutex> lock(m_mutex);
 
 		if (!m_buffers.empty()) {
-			pb = m_buffers.front();
-			m_buffers.pop_front();
-		} else if (m_num_buffers < m_max_buffers) {
+			pb = m_buffers.front();			
+			if (total_size > pb->m_storage.size()) {				
+				auto growth = total_size - pb->m_storage.size();
+				if (m_current_size + growth > m_max_size) {			
+					pb = nullptr;
+				} else {
+					m_current_size += growth;
+				}
+			}			
+			if (pb) {
+				m_buffers.pop_front();
+			}
+		} else if (m_current_size + total_size <= m_max_size) {
 			will_be_from_pool = true;
-			++m_num_buffers;
+			m_current_size += total_size;
 		}		
 	}
 
@@ -106,6 +118,10 @@ IoBuffer * IoBufferPool::GetIoBuffer(size_t buffer_size, size_t ivbuffer_size)
 
 void IoBufferPool::ReleaseIoBuffer(IoBuffer * pBuf)
 {
+
+	if (!pBuf)
+		return;
+
 	if (pBuf->m_bIsFromPool) {
 		lock_guard<mutex> lock(m_mutex);
 		try {

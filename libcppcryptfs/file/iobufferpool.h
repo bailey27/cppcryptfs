@@ -60,11 +60,11 @@ public:
 class IoBufferPool {
 private:
 	mutex m_mutex;	
-	static const int m_max_buffers = 15;	
-	int m_num_buffers;
+	static const size_t m_max_size = 70*1024*1024;	
+	size_t m_current_size;
 	list<IoBuffer*> m_buffers;
 
-	IoBufferPool() : m_num_buffers(0) {};
+	IoBufferPool() : m_current_size(0) {};
 
 	static IoBufferPool instance;
 
