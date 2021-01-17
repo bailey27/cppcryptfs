@@ -172,7 +172,7 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	WCHAR buf[80];
 
-#define DOKAN_MAX_THREAD 63 // too many problems trying to include dokan.h here
+#define DOKAN_MAX_THREAD 63 // this is defined in a header file that Dokany doesn't distribute
 
 	for (i = 0; i <= DOKAN_MAX_THREAD; i++) {
 		
