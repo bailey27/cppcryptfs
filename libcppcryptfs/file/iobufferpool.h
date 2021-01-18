@@ -59,7 +59,7 @@ public:
 
 class IoBufferPool {
 private:
-	mutex m_mutex;	
+	mutex m_mutex;		
 	static const size_t m_max_size = 70*1024*1024;	
 	size_t m_current_size;
 	list<IoBuffer*> m_buffers;
@@ -69,6 +69,7 @@ private:
 	static IoBufferPool instance;
 
 public:
+
 	// the size below is to accomodate the maximum i/o buffer size + enough IVs to write up to 64MB
 	static const size_t m_max_pool_buffer_size = ((MAX_IO_BUFFER_KB * 1024) / PLAIN_BS) * CIPHER_BS + ((64 * 1024 * 1024) / PLAIN_BS) * BLOCK_IV_LEN;
 

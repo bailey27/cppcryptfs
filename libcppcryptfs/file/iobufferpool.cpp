@@ -42,7 +42,7 @@ void IoBuffer::reallocate(size_t bufferSize, size_t ivbufferSize)
 
 	if (m_storage.size() < total_size) {
 		m_storage.clear();
-		m_storage.resize(max(total_size, min(m_storage.size() * 2, IoBufferPool::m_max_pool_buffer_size)));		
+		m_storage.resize(max(total_size, min(m_storage.size() * 2, IoBufferPool::m_max_pool_buffer_size)));				
 	}
 
 	if (bufferSize > 0) {
@@ -72,8 +72,10 @@ IoBufferPool::~IoBufferPool()
 	}	
 }
 
+
 IoBuffer * IoBufferPool::GetIoBuffer(size_t buffer_size, size_t ivbuffer_size)
 {
+
 	IoBuffer* pb = nullptr;
 
 	bool will_be_from_pool = false;
@@ -111,7 +113,7 @@ IoBuffer * IoBufferPool::GetIoBuffer(size_t buffer_size, size_t ivbuffer_size)
 		}
 	} catch (const std::bad_alloc&) {
 		pb = nullptr;
-	}
+	}	
 	
 	return pb;
 }
