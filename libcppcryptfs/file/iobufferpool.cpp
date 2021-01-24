@@ -67,6 +67,11 @@ IoBuffer::IoBuffer(bool fromPool, size_t bufferSize, size_t ivbufferSize) : m_bI
 
 IoBufferPool::~IoBufferPool()
 {
+#if 0
+	char buf[64];
+	sprintf_s(buf, "num iobuffers = %d\n", static_cast<int>(m_buffers.size()));
+	OutputDebugStringA(buf);
+#endif
 	for (IoBuffer* pBuf : m_buffers) {
 		delete pBuf;
 	}	

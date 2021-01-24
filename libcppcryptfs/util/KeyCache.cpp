@@ -183,9 +183,9 @@ void KeyCache::ClearInternal(bool disable)
 		for (auto& it : m_entries) {
 			if (it.second.valid && (disable || !it.second.accessed)) {
 #ifdef _DEBUG
-				char buf[64];
-				sprintf_s(buf, "clearing keys for cache id %llu\n", it.first);
-				OutputDebugStringA(buf);
+				//char buf[64];
+				//sprintf_s(buf, "clearing keys for cache id %llu\n", it.first);
+				//OutputDebugStringA(buf);
 #endif
 				it.second.Clear();
 				m_valid_count--;

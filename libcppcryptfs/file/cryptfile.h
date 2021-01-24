@@ -115,26 +115,26 @@ private:
 		}
 	}
 
-	// toggles mode from shared<=>exclusive
-	void ReLock()
+	void ReLock(bool exclusive)
 	{
-		Unlock();
-		m_bExclusiveLock = !m_bExclusiveLock;
+		Unlock();		
+		m_bExclusiveLock = exclusive;
 		Lock();
 	}
 
-	bool HaveExclusiveLock() { return m_bExclusiveLock; };
+	void ReLock()
+	{
+		ReLock(m_bExclusiveLock);
+	}
 
 	void GoExclusive()
 	{
-		if (!HaveExclusiveLock())
-			ReLock();
+		ReLock(true);
 	}
 
 	void GoShared()
-	{
-		if (HaveExclusiveLock())
-			ReLock();
+	{	
+		ReLock(false);
 	}
 
 public:

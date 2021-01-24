@@ -37,9 +37,40 @@ THE SOFTWARE.
 
 using namespace std;
 
+class CryptFileMutex {
+private:
+	// the outer mutex is for fairness so exclusive lockers can get in
+	// because they need to do only a small portion of their work in exclusive mode
+	mutex m_outer_mutex;  
+	shared_mutex m_inner_mutex;
+public:
+	void lock() 
+	{
+		lock_guard<mutex> lck(m_outer_mutex);
+		m_inner_mutex.lock();		
+	}
+
+	void lock_shared() 
+	{		
+		lock_guard<mutex> lck(m_outer_mutex);
+		m_inner_mutex.lock_shared();
+	}
+
+	void unlock() 
+	{
+		m_inner_mutex.unlock();
+	}
+
+	void unlock_shared() 
+	{
+		m_inner_mutex.unlock_shared();
+	}
+
+};
+
 class CryptOpenFile {
 private:
-	shared_mutex m_mutex;
+	CryptFileMutex m_mutex;
 	unordered_map<HANDLE, DWORD> m_handles;
 public:
 	CryptOpenFile() = delete;

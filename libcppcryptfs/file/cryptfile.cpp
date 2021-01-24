@@ -219,6 +219,8 @@ BOOL CryptFileForward::Read(unsigned char *buf, DWORD buflen, LPDWORD pNread, LO
 
 		while (bytesleft > 0) {
 
+			ReLock(); // for fairness
+
 			LONGLONG blockno = offset / PLAIN_BS;
 			int blockoff = (int)(offset % PLAIN_BS);
 
@@ -404,19 +406,31 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 				buflen = (DWORD)(l.QuadPart - offset);
 			}
 		}
-	}
+	}	
+
+	// if we're going to increase the size of the file we need
+	// to hold onto exclusive access
+
+	bool bGrowingFile = false;
 
 	if (m_is_empty) {
+		bGrowingFile = true;
 		if (!WriteVersionAndFileId())
 			return FALSE;	
 	} else {
 		LARGE_INTEGER size_down;
 		size_down.QuadPart = m_real_file_size;
-		adjust_file_offset_down(size_down);
+		adjust_file_offset_down(size_down);				
+
+		if (offset + buflen > size_down.QuadPart) {
+			bGrowingFile = true;
+		}
+
 		// if creating a hole, call this->SetEndOfFile() to deal with last block if necessary
-		if (offset > size_down.QuadPart && (size_down.QuadPart % PLAIN_BS)) {
+		if ((offset > size_down.QuadPart) && (size_down.QuadPart % PLAIN_BS)) {
 			DbgPrint(L"Calling SetEndOfFile %llu to deal with hole\n", offset);
-			SetEndOfFile(offset, FALSE);
+			if (!SetEndOfFile(offset, FALSE))
+				return FALSE;			
 		}
 	}
 
@@ -494,8 +508,10 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 			}
 
 			if (blockoff == 0 && bytesleft >= PLAIN_BS) { // overwriting whole blocks
-
-				GoShared();
+				
+				// if bGrowingFile is true then we've got exclusive access for the duration of this operation
+				if (!bGrowingFile) 
+					GoShared();
 
 				if (outputbuf) {
 					if (outputbytes == 0)
@@ -527,10 +543,11 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 
 				unsigned char blockbuf[PLAIN_BS];
 
-				memset(blockbuf, 0, sizeof(blockbuf));
+				memset(blockbuf, 0, sizeof(blockbuf));				
 
-				// we need exclusive access
-				GoExclusive();
+				// if bGrowingFile is true then we've got exclusive access for the duration of this operation
+				if (!bGrowingFile)
+					GoExclusive(); // we need exclusive access
 
 				int blockbytes = read_block(m_con, m_handle, NULL, 0, NULL, m_header.fileid, blockno, blockbuf, context.get());
 
@@ -578,13 +595,13 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 	if (iobuf)
 		IoBufferPool::getInstance().ReleaseIoBuffer(iobuf);	
 
-	// we didn't use all ivs or went past the end of our ivs which is bad
-	if (ivbufptr != ivbufbase + static_cast<size_t>(blocks_spanned) * BLOCK_IV_LEN) {
+	// we didn't use all ivs or went past the end of our ivs which is bad	
+	if (bRet && (ivbufptr != ivbufbase + static_cast<size_t>(blocks_spanned) * BLOCK_IV_LEN)) {
 		assert(false);
 		::SetLastError(ERROR_BAD_LENGTH);
 		bRet = FALSE;
 	}
-
+	
 	return bRet;
 	
 }

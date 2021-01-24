@@ -39,6 +39,7 @@ class CryptContext;
 
 void SetDbgVars(BOOL DebugMode, BOOL UseStdErr, BOOL UseLogFile, FILE* logfile);
 void DbgPrint(LPCWSTR format, ...);
+void DbgPrintAlways(LPCWSTR format, ...);
 
 const char *
 unicode_to_utf8(const WCHAR *unicode_str, char *buf, int buflen);

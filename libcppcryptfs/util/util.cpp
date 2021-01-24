@@ -783,3 +783,33 @@ void DbgPrint(LPCWSTR format, ...) {
 		va_end(argp);
 	}
 }
+#if 1
+void DbgPrintAlways(LPCWSTR format, ...) {
+	
+		const WCHAR* outputString;
+		WCHAR* buffer = NULL;
+		size_t length;
+		va_list argp;
+
+		va_start(argp, format);
+		length = _vscwprintf(format, argp) + 1;
+		buffer = (WCHAR*)_malloca(length * sizeof(WCHAR));
+		if (buffer) {
+			vswprintf_s(buffer, length, format, argp);
+			outputString = buffer;
+		} else {
+			outputString = format;
+		}
+		if (s_UseStdErr) {
+			fputws(outputString, stderr);
+		} else if (s_UseLogFile && s_DebugLogFile) {
+			fputws(outputString, s_DebugLogFile);
+			fflush(s_DebugLogFile);
+		} else {
+			OutputDebugStringW(outputString);
+		}
+		if (buffer)
+			_freea(buffer);
+		va_end(argp);	
+}
+#endif
