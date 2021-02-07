@@ -3,7 +3,8 @@
 Changelog
 ------------
 
-VSOMETHING SOMEDATE
+NEXT SOMEDATE
+improve concurrency
 fix tab order
 add larger iobuffer sizes
 increase max number of threads
