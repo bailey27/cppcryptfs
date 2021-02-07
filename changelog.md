@@ -3,12 +3,12 @@
 Changelog
 ------------
 
-NEXT SOMEDATE
-improve concurrency
-fix tab order
-add larger iobuffer sizes
-increase max number of threads
-make better use of stack buffers
+v1.4.3.6, Feb 7 2021
+* Improve concurrency.
+* Fix tab order in ui.
+* Add 2MB and 4MB options for iobuffer sizes.
+* Increase max number of per-fs threads to 63.
+* Make better use of stack buffers.
 
 v1.4.3.5, Dec 6 2020
 * Use fast mounting only if mount point is a drive letter.  
