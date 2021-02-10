@@ -228,7 +228,7 @@ get_dir_iv(CryptContext *con, const WCHAR *path, unsigned char *diriv)
 }
 
 static bool
-convert_fdata(CryptContext *con, BOOL isRoot, const BYTE *dir_iv, const WCHAR *path, WIN32_FIND_DATAW& fdata, string *actual_encrypted)
+convert_fdata(CryptContext *con, BOOL isRoot, const BYTE *dir_iv, const WCHAR *path, WIN32_FIND_DATAW& fdata, string *actual_encrypted, wstring&  storage)
 {
 
 	if (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))
@@ -256,7 +256,7 @@ convert_fdata(CryptContext *con, BOOL isRoot, const BYTE *dir_iv, const WCHAR *p
 	
 
 	if (wcscmp(fdata.cFileName, L".") && wcscmp(fdata.cFileName, L"..")) {
-		wstring storage;
+		storage.clear();
 		const WCHAR *dname;
 		
 		if (isReverseConfig) {
@@ -354,6 +354,10 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 
 		string actual_encrypted;
 
+		wstring storage;
+
+		storage.reserve(MAX_PATH);
+
 		do {
 			if (reverse && !wcscmp(fdata.cFileName, L".")) {
 				fdata_dot = fdata;
@@ -361,7 +365,7 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 			if (!is_interesting_name(isRoot, fdata, con))
 				continue;
 			WIN32_FIND_DATAW fdata_orig = fdata;
-			if (!convert_fdata(con, isRoot, dir_iv, path, fdata, &actual_encrypted))
+			if (!convert_fdata(con, isRoot, dir_iv, path, fdata, &actual_encrypted, storage))
 				continue;
 			fillData(&fdata, &fdata_orig, dokan_cb, dokan_ctx);
 			if (reverse && !plaintext_names && is_long_name(fdata.cFileName)) {
@@ -452,7 +456,7 @@ read_virtual_file(CryptContext *con, LPCWSTR FileName, unsigned char *buf, DWORD
 
 #ifdef _WIN32
 DWORD
-get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HANDLE handle, LPBY_HANDLE_FILE_INFORMATION pInfo)
+get_file_information(CryptContext *con, function<LPCWSTR()> getEncPath, LPCWSTR inputPath, HANDLE handle, LPBY_HANDLE_FILE_INFORMATION pInfo)
 {
 	BOOL opened = FALSE;
 
@@ -466,14 +470,7 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 
 	bool is_name_file = rt_is_name_file(con, inputPath);
 
-	try {
-
-
-		LPCWSTR encpath = FileName;
-
-		if (!encpath)
-			throw((int)ERROR_OUTOFMEMORY);
-
+	try {	
 
 
 		if (!handle || (handle == INVALID_HANDLE_VALUE && !is_virtual)) {
@@ -484,7 +481,7 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 
 		if (is_dir_iv) {
 			wstring dirpath;
-			if (!get_file_directory(FileName, dirpath))
+			if (!get_file_directory(getEncPath(), dirpath))
 				throw((int)ERROR_ACCESS_DENIED);
 
 			HANDLE hDir = CreateFile(&dirpath[0], FILE_READ_ATTRIBUTES, 
@@ -557,14 +554,14 @@ get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HAN
 
 			// FileName is a root directory
 			// in this case, FindFirstFile can't get directory information
-			if (wcslen(FileName) == 1) {
+			if (wcslen(getEncPath()) == 1) {
 				
-				pInfo->dwFileAttributes = GetFileAttributes(encpath);
+				pInfo->dwFileAttributes = GetFileAttributes(getEncPath());
 
 			} else {
 				WIN32_FIND_DATAW find;
 				ZeroMemory(&find, sizeof(WIN32_FIND_DATAW));
-				HANDLE findHandle = FindFirstFile(encpath, &find);
+				HANDLE findHandle = FindFirstFile(getEncPath(), &find);
 				if (findHandle == INVALID_HANDLE_VALUE) {
 					DWORD error = GetLastError();
 					

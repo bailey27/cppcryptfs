@@ -611,6 +611,9 @@ const WCHAR * // get encrypted path
 encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *actual_encrypted)
 {
 
+	storage.clear();
+	storage.reserve(wcslen(path) * 2);
+
 	const WCHAR *rval = NULL;
 
 	CryptConfig *config = con->GetConfig();

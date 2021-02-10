@@ -914,7 +914,18 @@ static NTSTATUS DOKAN_CALLBACK CryptGetFileInformation(
 
   NTSTATUS status;
 
-  if (get_file_information(GetContext(), filePath, FileName, handle,
+  auto getEncPath = [&filePath]() {
+
+      LPCWSTR ep = static_cast<LPCWSTR>(filePath);
+
+      if (!ep) {
+        throw((int)ERROR_INVALID_PARAMETER);
+      }
+
+      return ep;
+  };
+
+  if (get_file_information(GetContext(), getEncPath, FileName, handle,
                            HandleFileInformation) != 0) {
     DWORD error = GetLastError();
     DbgPrint(L"GetFileInfo failed(%d)\n", error);
@@ -1406,7 +1417,18 @@ static NTSTATUS DOKAN_CALLBACK CryptSetAllocationSize(
   BY_HANDLE_FILE_INFORMATION finfo;
   DWORD error = 0;
   try {
-    if (get_file_information(GetContext(), filePath, FileName, handle,
+
+    auto getEncPath = [&filePath]() {
+      LPCWSTR ep = static_cast<LPCWSTR>(filePath);
+
+      if (!ep) {
+        throw((int)ERROR_INVALID_PARAMETER);
+      }
+
+      return ep;
+    };
+
+    if (get_file_information(GetContext(), getEncPath, FileName, handle,
                              &finfo) != 0) {
       throw(-1);
     }

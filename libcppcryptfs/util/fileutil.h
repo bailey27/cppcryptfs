@@ -32,6 +32,7 @@ THE SOFTWARE.
 
 #include <string>
 #include <vector>
+#include <functional>
 
 using namespace std;
 
@@ -47,7 +48,7 @@ DWORD
 find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFillFindData, void * dokan_cb, void * dokan_ctx);
 
 DWORD
-get_file_information(CryptContext *con, LPCWSTR FileName, LPCWSTR inputPath, HANDLE handle, LPBY_HANDLE_FILE_INFORMATION pInfo);
+get_file_information(CryptContext *con, function<LPCWSTR()> getFileName, LPCWSTR inputPath, HANDLE handle, LPBY_HANDLE_FILE_INFORMATION pInfo);
 
 bool
 create_dir_iv(CryptContext *con, LPCWSTR path); // path is unencrypted
