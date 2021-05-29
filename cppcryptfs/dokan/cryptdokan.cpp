@@ -2552,9 +2552,9 @@ bool get_dokany_version(wstring& ver, vector<int>& v)
 // returns true with message if there will maybe be a problem
 bool check_dokany_version(wstring& mes)
 {
-	const int required_major = 1;
-	const int required_middle = 4;
-	const wstring required_ver = L"1.4.x.x";
+	constexpr int required_major = 1;
+	constexpr int required_middle = 5;
+    const wstring required_ver =  to_wstring(required_major) + L"." + to_wstring(required_middle) +  L".x.x";
 	
 	mes = L"";
 
@@ -2578,17 +2578,17 @@ bool check_dokany_version(wstring& mes)
 	}
 	
 	if (major != required_major) {
-		mes = L"Dokany version " + ver + L" is not compatible.  Please install Dokany " + required_ver;
+		mes = L"The installed Dokany version " + ver + L" is not compatible.  Please install Dokany " + required_ver;
 		return false; // error
 	}
 	
 	if (major == required_major && middle < required_middle) {
-		mes = L"Dokany version " + ver + L" is not compatible.  Please install Dokany " + required_ver;
+		mes = L"The installed Dokany version " + ver + L" is not compatible.  Please install Dokany " + required_ver;
 		return false; // error
 	}
 
 	if (major == required_major && middle > required_middle) {
-		mes = L"Dokany version " + ver + L" is has not been tested.  Please install Dokany " + required_ver;
+		mes = L"The installed Dokany version is " + ver + L", and it has not been tested with cppcryptfs.  Please install Dokany " + required_ver;
 		return true; // warning
 	}
 
