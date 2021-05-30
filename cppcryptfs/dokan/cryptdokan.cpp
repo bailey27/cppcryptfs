@@ -537,6 +537,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
         
         DokanFileInfo->Context =
             (ULONG64)handle; // save the file handle in Context
+        GetContext()->m_open_handles.insert(handle);
 
         // this is a directory so no need to store it in the openfiles map
 
@@ -631,6 +632,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
       DokanFileInfo->Context =
           (ULONG64)handle; // save the file handle in Context
+      GetContext()->m_open_handles.insert(handle);
 
       if (handle && handle != INVALID_HANDLE_VALUE) {
           GetContext()->m_openfiles.OpenFile(FileName, handle);
@@ -670,9 +672,12 @@ static void DOKAN_CALLBACK CryptCloseFile(LPCWSTR FileName,
     DbgPrint(L"CloseFile: %s, %x\n", FileName, (DWORD)DokanFileInfo->Context);
     DbgPrint(L"\terror : not cleanuped file\n\n");
     if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE) {
-        CloseHandle((HANDLE)DokanFileInfo->Context);
-        if (!DokanFileInfo->IsDirectory)
-            GetContext()->m_openfiles.CloseFile(FileName, (HANDLE)DokanFileInfo->Context);
+      GetContext()->m_open_handles.erase((HANDLE)DokanFileInfo->Context);
+      ::CloseHandle((HANDLE)DokanFileInfo->Context);
+      if (!DokanFileInfo->IsDirectory) {
+        GetContext()->m_openfiles.CloseFile(FileName,
+                                            (HANDLE)DokanFileInfo->Context);
+      }      
     }
     DokanFileInfo->Context = 0;
   } else {
@@ -687,6 +692,7 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
   if (DokanFileInfo->Context) {
     DbgPrint(L"Cleanup: %s, %x\n\n", FileName, (DWORD)DokanFileInfo->Context);
     if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE) {
+        GetContext()->m_open_handles.erase((HANDLE)DokanFileInfo->Context);
         CloseHandle((HANDLE)(DokanFileInfo->Context));
         if (!DokanFileInfo->IsDirectory)
             GetContext()->m_openfiles.CloseFile(FileName, (HANDLE)DokanFileInfo->Context);

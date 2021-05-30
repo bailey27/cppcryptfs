@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include <windows.h>
 #include <vector>
 #include <mutex>
+#include <unordered_set>
 #include "crypt/eme.h"
 #include "crypt/randombytes.h"
 #include "filename/dirivcache.h"
@@ -66,6 +67,7 @@ public:
 	bool m_cacheKeysInMemory;
 	vector<wstring> m_deletable_files;
 	CryptOpenFiles m_openfiles;
+	unordered_set<HANDLE> m_open_handles;
 private:
 	bool m_caseinsensitive;
 public:

@@ -36,7 +36,7 @@ class MountPointManager {
 private:
 	unordered_map<wstring, CryptThreadData*> m_tdatas;
 	MountPointManager() {}
-public:
+public:    
 	// disallow copying
 	MountPointManager(MountPointManager const&) = delete;
 	void operator=(MountPointManager const&) = delete;
@@ -69,8 +69,7 @@ public:
 	// returns actual mount point (in case used to mount it 
 	// which is how the key is stored
 	bool find (const WCHAR *mountpoint, wstring& mpstr) const;
-	void get_mount_points(vector<wstring>& mps, function<bool(const wchar_t *)> filter = NULL) const;
-	
+	void get_mount_points(vector<wstring>& mps, function<bool(const wchar_t *)> filter = NULL) const;	
 
 	// these functions in cryptdokan use the private methods of MountPointManager()
 

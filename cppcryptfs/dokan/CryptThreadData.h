@@ -36,7 +36,7 @@ public:
 	DOKAN_OPTIONS options;
 	CryptContext con;
 	wstring mountpoint;
-	HANDLE hThread;
+	HANDLE hThread;   
 	// disallow copying
 	CryptThreadData(CryptThreadData const&) = delete;
 	void operator=(CryptThreadData const&) = delete;

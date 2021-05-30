@@ -32,5 +32,5 @@ CryptThreadData::~CryptThreadData()
 {
 	if (hThread != NULL) {
 		CloseHandle(hThread);
-	}
+	}	
 }

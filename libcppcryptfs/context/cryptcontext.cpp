@@ -108,6 +108,10 @@ CryptContext::~CryptContext()
 	if (m_config)
 		delete m_config;
 
+	for (auto& h : m_open_handles) {
+		::CloseHandle(h);
+	}
+
 }
 
 void CryptContext::GetFsInfo(FsInfo & info)
