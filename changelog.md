@@ -3,6 +3,12 @@
 Changelog
 ------------
 
+v1.4.3.7, May 31 2021
+* Close any left over open file or dirctory handles when dismounting a 
+  filesystem (issue #126).
+* Add setting to prompt user when dismounting a filesystem that is still
+  in use (has open file or directory handles).
+
 v1.4.3.6, Feb 7 2021
 * Improve concurrency.
 * Fix tab order in ui.
