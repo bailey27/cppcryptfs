@@ -78,6 +78,11 @@ BOOL CCryptPropertySheet::CanClose()
 		if (MessageBox(L"All mounted cppcryptfs filesystems will be dismounted. Do you really wish to exit?", L"cppcryptfs",
 			MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
 
+			CString open_handles_mes = CheckOpenHandles(m_hWnd, nullptr, true, false).c_str();
+
+			if (open_handles_mes.GetLength() > 0)
+				return FALSE;
+
 			int i;
 			for (i = 0; i < 26; i++) {
 				if (theApp.m_mountedLetters & (1<<i)) {

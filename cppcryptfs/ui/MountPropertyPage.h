@@ -41,7 +41,7 @@ private:
 	wstring m_output_str;
 	vector<wchar_t> m_buf;
 	HANDLE m_hPipe = INVALID_HANDLE_VALUE;
-public:
+public:	
 	OutputHandler(HANDLE hPipe);
 	virtual ~OutputHandler();
 	bool have_pipe() { return m_hPipe != INVALID_HANDLE_VALUE && m_hPipe != NULL; }
@@ -56,7 +56,7 @@ class CMountPropertyPage : public CCryptPropertyPage
 
 private:
 	static  void HandleTooltipsActivation(MSG *pMsg, CWnd *This, CWnd *disabledCtrls[], int numOfCtrls, CToolTipCtrl *pTooltip);
-	int OpenFileManagementShell(const CString& mp);
+	int OpenFileManagementShell(const CString& mp);	
 protected:
 	CToolTipCtrl m_ToolTip;
 	void AddMountPoint(const CString& path);
@@ -86,9 +86,9 @@ public:
 
 	CString Mount(LPCWSTR argPath = NULL, LPCWSTR argMountPoint = NULL, LPCWSTR argPassword = NULL, bool argReadOnly = false, LPCWSTR argConfigPath = NULL, bool argReverse = false);
 
-	CString Dismount(LPCWSTR argMountPoint = NULL);
+	CString Dismount(LPCWSTR argMountPoint, bool interactive, bool forceDismount);
 
-	CString DismountAll();
+	CString DismountAll(bool interactive, bool forceDismount);
 
 	DWORD GetUsedDrives();
 

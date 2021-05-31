@@ -63,6 +63,8 @@ int mount_crypt_fs(const WCHAR *mountpoint, const WCHAR *path,
 
 BOOL unmount_crypt_fs(const WCHAR *mountpoint, bool wait, wstring &mes);
 
+int get_open_handle_count(const wchar_t* mountpoint = nullptr);
+
 BOOL wait_for_all_unmounted();
 
 BOOL write_volume_name_if_changed(WCHAR dl, wstring &mes);

@@ -2291,6 +2291,11 @@ BOOL wait_for_all_unmounted() {
 }
 
 
+int get_open_handle_count(const wchar_t* mountpoint)
+{
+    return MountPointManager::getInstance().get_open_handle_count(mountpoint);
+}
+
 
 BOOL write_volume_name_if_changed(WCHAR dl, wstring& mes) {
 

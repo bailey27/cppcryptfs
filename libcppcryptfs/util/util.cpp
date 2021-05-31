@@ -711,6 +711,7 @@ Mounting:
 Unmounting:
   -u, --unmount=D          unmount drive letter D or dir DIR
   -u, --unmount=all        unmount all drives
+  -f, --force              force unmounting if in use
 
 Misc:
   -t, --tray               hide in system tray

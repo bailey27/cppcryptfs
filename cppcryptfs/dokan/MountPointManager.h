@@ -69,7 +69,8 @@ public:
 	// returns actual mount point (in case used to mount it 
 	// which is how the key is stored
 	bool find (const WCHAR *mountpoint, wstring& mpstr) const;
-	void get_mount_points(vector<wstring>& mps, function<bool(const wchar_t *)> filter = NULL) const;	
+	void get_mount_points(vector<wstring>& mps, function<bool(const wchar_t *)> filter = NULL) const;
+    int get_open_handle_count(const wchar_t *mountpoint = nullptr);	
 
 	// these functions in cryptdokan use the private methods of MountPointManager()
 

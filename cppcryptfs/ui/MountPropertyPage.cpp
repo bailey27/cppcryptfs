@@ -44,6 +44,7 @@ THE SOFTWARE.
 #include "util/fileutil.h"
 #include "util/getopt.h"
 #include "cryptdefaults.h"
+#include "ui/uiutil.h"
 #include "ui/savedpasswords.h"
 #include "ui/FsInfoDialog.h"
 #include "dokan/MountPointManager.h"
@@ -751,12 +752,12 @@ void CMountPropertyPage::OnClickedMount()
 
 void CMountPropertyPage::OnClickedDismount()
 {
-	CString mes = Dismount();
-	if (mes.GetLength() > 0)
+	CString mes = Dismount(nullptr, true, false);
+	if (mes.GetLength() > 0 && mes != L"operation cancelled by user")
 		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 }
 
-CString CMountPropertyPage::Dismount(LPCWSTR argMountPoint)
+CString CMountPropertyPage::Dismount(LPCWSTR argMountPoint, bool interactive, bool forceDismount)
 {
 
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
@@ -805,6 +806,11 @@ CString CMountPropertyPage::Dismount(LPCWSTR argMountPoint)
 			mes += wmes.c_str();
 	}
 
+	CString open_handles_mes = CheckOpenHandles(m_hWnd, cmp, interactive, forceDismount).c_str();
+
+	if (open_handles_mes.GetLength() > 0)
+		return open_handles_mes;
+
 	theApp.DoWaitCursor(1);
 	wstring wmes;
 	BOOL bresult = unmount_crypt_fs(cmp, true, wmes);
@@ -835,10 +841,10 @@ CString CMountPropertyPage::Dismount(LPCWSTR argMountPoint)
 void CMountPropertyPage::OnClickedDismountAll()
 {
 
-	DismountAll();
+	DismountAll(true, false);
 }
 
-CString CMountPropertyPage::DismountAll()
+CString CMountPropertyPage::DismountAll(bool interactive, bool forceDismount)
 {
 	// TODO: Add your control notification handler code here
 
@@ -857,6 +863,11 @@ CString CMountPropertyPage::DismountAll()
 	bool volnameFailure = false;
 
 	DWORD mounted_letters = theApp.m_mountedLetters;
+
+	CString open_handles_mes = CheckOpenHandles(m_hWnd, nullptr, interactive, forceDismount).c_str();
+
+	if (open_handles_mes.GetLength() > 0)
+		return open_handles_mes;
 
 	for (i = 0; i < count; i++) {
 		CString cmp;
@@ -1275,6 +1286,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 	bool reverse = false;
 	CString config_path;
 	bool use_saved_password = false;
+	bool force = false;
 
 	CString list_arg;
 
@@ -1288,6 +1300,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 			{L"password", required_argument, 0, 'p'},
 			{ L"config", required_argument, 0, 'c' },
 			{L"unmount",  required_argument, 0, 'u'},
+			{L"force",  no_argument, 0, 'f'},
 			{L"readonly",  no_argument, 0, 'r'},
 			{ L"reverse",  no_argument, 0, 's' },
 			{ L"saved-password",  no_argument, 0, 'P' },
@@ -1306,7 +1319,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 
 		while (1) {
 
-			c = getopt_long(argc, argv, L"m:d:p:u:vhxtl::rsc:Pi:CD", long_options, &option_index);
+			c = getopt_long(argc, argv, L"m:d:p:u:vhxtl::rsc:Pi:CDf", long_options, &option_index);
 
 			if (c == -1)
 				break;
@@ -1314,6 +1327,9 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 			switch (c) {
 			case '?':
 				invalid_opt = TRUE;
+				break;
+			case 'f':
+				force = true;
 				break;
 			case 'r':
 				readonly = true;
@@ -1501,10 +1517,10 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 			}
 		} else if (dismount) {
 			if (dismount_all) {
-				errMes = DismountAll();
+				errMes = DismountAll(false, force);
 			} else {
 				if (mountPoint.GetLength() > 0)
-					errMes = Dismount(mountPoint);
+					errMes = Dismount(mountPoint, false, force);
 				else
 					errMes = L"drive letter/mount point must be specified";			
 			}
@@ -1636,7 +1652,7 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 		switch (retVal) {
 		case DismountV: {
 			if (cmp.GetLength() > 1) {
-				Dismount(cmp);
+				Dismount(cmp, true, false);
 			}
 			break;
 		}
@@ -1906,3 +1922,4 @@ int CMountPropertyPage::OpenFileManagementShell(const CString& mp)
 		return result ? result : SE_ERR_OOM;
 	}
 }
+

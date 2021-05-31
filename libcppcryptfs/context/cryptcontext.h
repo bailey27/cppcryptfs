@@ -42,6 +42,41 @@ THE SOFTWARE.
 #include "context/FsInfo.h"
 #include "file/openfiles.h"
 
+
+// This stores handles to open files so any left over after unmounting can be cleaned up
+class CryptOpenHandles {
+private:
+	unordered_set<HANDLE> m_handles;
+	mutex m_mutex;
+public:
+	// disallow copying
+	CryptOpenHandles(CryptOpenHandles const&) = delete;
+	void operator=(CryptOpenHandles const&) = delete;
+
+	CryptOpenHandles() {};
+
+	void insert(HANDLE h) 
+	{
+		lock_guard<mutex> lck(m_mutex);
+		m_handles.insert(h);
+	}
+	void erase(HANDLE h)
+	{
+		lock_guard<mutex> lck(m_mutex);
+		m_handles.erase(h);
+	}
+	size_t size() {
+		lock_guard<mutex> lck(m_mutex);
+		return m_handles.size();
+	}
+	virtual ~CryptOpenHandles()
+	{
+		for (auto& h : m_handles) {
+			::CloseHandle(h);
+		}
+	}
+};
+
 // number of threads Dokany uses if threads is 0. Found from code inspection, not in header file
 #define CRYPT_DOKANY_DEFAULT_NUM_THREADS 5 
 
@@ -67,7 +102,7 @@ public:
 	bool m_cacheKeysInMemory;
 	vector<wstring> m_deletable_files;
 	CryptOpenFiles m_openfiles;
-	unordered_set<HANDLE> m_open_handles;
+	CryptOpenHandles m_open_handles;
 private:
 	bool m_caseinsensitive;
 public:
