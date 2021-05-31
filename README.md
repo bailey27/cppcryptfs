@@ -317,7 +317,7 @@ Note:  this setting has no effect when the mount point is an empty NTFS director
 
 This setting is enabled by default.
 
-** Warn if in use when dismountig **
+**Warn if in use when dismounting**
 
 If this setting is on, then if there are still any open files or directories 
 on a mounted filesystem when the user tries to dismount the filesystem,
