@@ -71,7 +71,7 @@ public:
 	}
 	virtual ~CryptOpenHandles()
 	{
-		for (auto& h : m_handles) {
+		for (auto h : m_handles) {
 			::CloseHandle(h);
 		}
 	}
