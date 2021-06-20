@@ -345,3 +345,15 @@ UINT CCryptPropertySheet::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
 	}
 	return CPropertySheet::OnPowerBroadcast(nPowerEvent, nEventData);
 }
+
+
+BOOL CCryptPropertySheet::PreTranslateMessage(MSG* pMsg)
+{
+	// minimize to system tray if control+T is pressed (CTRL_T is ascii 20)
+	if (pMsg->message == WM_CHAR && pMsg->wParam == 20) {
+		PostMessage(WM_SYSCOMMAND, SC_CLOSE, TRUE);
+		return TRUE;
+	}
+
+	return CPropertySheet::PreTranslateMessage(pMsg);
+}

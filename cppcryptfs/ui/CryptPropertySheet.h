@@ -67,6 +67,7 @@ public:
 	afx_msg BOOL OnDeviceChange(UINT nEventType, DWORD_PTR dwData);
 	afx_msg void OnEndSession(BOOL bEnding);
 	afx_msg UINT OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData);
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
 
 
