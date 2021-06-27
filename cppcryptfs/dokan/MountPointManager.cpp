@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2020 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2021 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -140,104 +140,124 @@ bool MountPointManager::unmount_all(bool wait)
 	return result;
 }
 
-	BOOL MountPointManager::wait_multiple_and_destroy(int count, HANDLE handles[], wstring mountpoints[])
-	{
+BOOL MountPointManager::wait_multiple_and_destroy(int count, HANDLE handles[], wstring mountpoints[])
+{
 
-		const DWORD timeout = UNMOUNT_TIMEOUT;
+	const DWORD timeout = UNMOUNT_TIMEOUT;
 
-		DWORD status = WaitForMultipleObjects(count, handles, TRUE, timeout);
+	DWORD status = WaitForMultipleObjects(count, handles, TRUE, timeout);
 
-		DWORD first = WAIT_OBJECT_0;
-		DWORD last = WAIT_OBJECT_0 + (count - 1);
+	DWORD first = WAIT_OBJECT_0;
+	DWORD last = WAIT_OBJECT_0 + (count - 1);
 
-		if (status >= first && status <= last) {
-			for (int i = 0; i < count; i++) {
-				destroy(mountpoints[i].c_str());
-			}
-			return TRUE;
-		} else {
-			return FALSE;
+	if (status >= first && status <= last) {
+		for (int i = 0; i < count; i++) {
+			destroy(mountpoints[i].c_str());
+		}
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+}
+
+BOOL MountPointManager::wait_all_and_destroy() {
+
+	HANDLE handles[MAXIMUM_WAIT_OBJECTS];
+	wstring mountpoints[MAXIMUM_WAIT_OBJECTS];
+
+	int count = 0;
+	for (auto &it : m_tdatas) {
+		mountpoints[count] = it.first;
+		handles[count++] = it.second->hThread;
+		if (count == MAXIMUM_WAIT_OBJECTS) {
+			if (!wait_multiple_and_destroy(count, handles, mountpoints))
+				return FALSE;
+			count = 0;
 		}
 	}
 
-	BOOL MountPointManager::wait_all_and_destroy() {
+	if (count)
+		return wait_multiple_and_destroy(count, handles, mountpoints);
+	else
+		return TRUE;
 
-		HANDLE handles[MAXIMUM_WAIT_OBJECTS];
-		wstring mountpoints[MAXIMUM_WAIT_OBJECTS];
+}
 
-		int count = 0;
-		for (auto &it : m_tdatas) {
-			mountpoints[count] = it.first;
-			handles[count++] = it.second->hThread;
-			if (count == MAXIMUM_WAIT_OBJECTS) {
-				if (!wait_multiple_and_destroy(count, handles, mountpoints))
-					return FALSE;
-				count = 0;
-			}
-		}
-
-		if (count)
-			return wait_multiple_and_destroy(count, handles, mountpoints);
-		else
-			return TRUE;
-
+bool MountPointManager::find(const WCHAR * mountpoint, wstring & mpstr) const
+{
+	auto it = m_tdatas.find(mountpoint); 
+	if (it != m_tdatas.end()) {
+		mpstr = it->first;
+		return true;
 	}
-
-	bool MountPointManager::find(const WCHAR * mountpoint, wstring & mpstr) const
-	{
-		auto it = m_tdatas.find(mountpoint); 
-		if (it != m_tdatas.end()) {
+	
+	for (auto it = m_tdatas.begin(); it != m_tdatas.end(); ++it) {
+		if (!lstrcmpi(it->first.c_str(), mountpoint)) {
 			mpstr = it->first;
 			return true;
 		}
-	
-		for (auto it = m_tdatas.begin(); it != m_tdatas.end(); ++it) {
-			if (!lstrcmpi(it->first.c_str(), mountpoint)) {
-				mpstr = it->first;
-				return true;
-			}
-		}
+	}
+	return false;
+}
+
+bool MountPointManager::get_path(const WCHAR *mountpoint, wstring& path)  const 
+{
+	wstring mpstr;
+	if (!find(mountpoint, mpstr)) {
+		return false;
+	}
+	auto it = m_tdatas.find(mpstr);
+	if (it == m_tdatas.end()) {
 		return false;
 	}
 
-	bool MountPointManager::get_path(const WCHAR *mountpoint, wstring& path)  const 
-	{
-		wstring mpstr;
-		if (!find(mountpoint, mpstr)) {
-			return false;
-		}
-		auto it = m_tdatas.find(mpstr);
-		if (it == m_tdatas.end()) {
-			return false;
-		}
+	path = it->second->con.GetConfig()->m_basedir;
 
-		path = it->second->con.GetConfig()->m_basedir;
-
-		// get rid of leading \\?\ for display
-		if (!wcsncmp(path.c_str(), L"\\\\?\\", wcslen(L"\\\\?\\"))) {
-			path = path.c_str() + wcslen(L"\\\\?\\");
-		}
-		return true;
+	// get rid of leading \\?\ for display
+	if (!wcsncmp(path.c_str(), L"\\\\?\\", wcslen(L"\\\\?\\"))) {
+		path = path.c_str() + wcslen(L"\\\\?\\");
 	}
+	return true;
+}
 
-	void MountPointManager::get_mount_points(vector<wstring>& mps, function<bool(const wchar_t *)> filter) const
-	{
-		for (auto it = m_tdatas.begin(); it != m_tdatas.end(); ++it) {
-			if (filter) {
-				if (filter(it->first.c_str())) {
-					mps.push_back(it->first);
-				}
-			} else {
+void MountPointManager::get_mount_points(vector<wstring>& mps, function<bool(const wchar_t *)> filter) const
+{
+	for (auto it = m_tdatas.begin(); it != m_tdatas.end(); ++it) {
+		if (filter) {
+			if (filter(it->first.c_str())) {
 				mps.push_back(it->first);
 			}
+		} else {
+			mps.push_back(it->first);
 		}
 	}
+}
 
-	void MountPointManager::apply(function<bool(const wchar_t*mountpoint, CryptThreadData*tdata)> f)
-	{
-		for (auto it = m_tdatas.begin(); it != m_tdatas.end(); ++it) {
-			if (!f(it->first.c_str(), it->second)) {
-				return;
-			}
+void MountPointManager::apply(function<bool(const wchar_t*mountpoint, CryptThreadData*tdata)> f)
+{
+	for (auto it = m_tdatas.begin(); it != m_tdatas.end(); ++it) {
+		if (!f(it->first.c_str(), it->second)) {
+			return;
 		}
 	}
+}
+
+
+int MountPointManager::get_open_handle_count(const wchar_t *mountpoint) 
+{
+	int count = 0;
+
+	if (!mountpoint) {
+		for (auto& td : m_tdatas) {
+			count += static_cast<int>(td.second->con.m_open_handles.size());
+		}
+	} else {
+		auto it = m_tdatas.find(mountpoint);
+		if (it == m_tdatas.end()) {
+			return -1;
+		}
+		count = static_cast<int>(it->second->con.m_open_handles.size());
+	}
+	 
+	return count;
+}

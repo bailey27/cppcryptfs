@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2020 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2021 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -50,6 +50,7 @@ CSettingsPropertyPage::CSettingsPropertyPage()
 	m_bMountManager = false;
 	m_bEnableSavingPasswords = false;
 	m_bNeverSaveHistory = false;
+	m_bWarnIfInUseOnDismounting = false;
 }
 
 CSettingsPropertyPage::~CSettingsPropertyPage()
@@ -78,6 +79,7 @@ BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_ENCRYPT_KEYS_IN_MEMORY, &CSettingsPropertyPage::OnClickedEncryptKeysInMemory)
 	ON_BN_CLICKED(IDC_CACHE_KEYS_IN_MEMORY, &CSettingsPropertyPage::OnClickedCacheKeysInMemory)
 	ON_BN_CLICKED(IDC_FAST_MOUNTING, &CSettingsPropertyPage::OnBnClickedFastMounting)
+	ON_BN_CLICKED(IDC_WARN_IF_IN_USE_ON_DISMOUNTING, &CSettingsPropertyPage::OnClickedWarnIfInUseOnDismounting)
 END_MESSAGE_MAP()
 
 
@@ -140,15 +142,19 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 		FAST_MOUNTING_DEFAULT) != 0;
 
 
+	bool bWarnIfInUseOnDismounting = theApp.GetProfileIntW(L"Settings", L"WarnIfInUseOnDismounting",
+		WARN_IF_IN_USE_ON_DISMOUNT_DEFAULT) != 0;
+
+
 	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, 
 								bEnableSavingPasswords, bNeverSaveHistory, bDeleteSpurriousFiles, bOpenOnMounting,
-								bEncryptKeysInMemory, bCacheKeysInMemory, bFastMounting);
+								bEncryptKeysInMemory, bCacheKeysInMemory, bFastMounting, bWarnIfInUseOnDismounting);
 }
 
 BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, 
 						bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords, bool bNeverSaveHistory,
 						bool bDeleteSpurriousFiles, bool bOpenOnMounting, bool bEncryptKeysInMemory,
-						bool bCacheKeysInMemory, bool bFastMounting)
+						bool bCacheKeysInMemory, bool bFastMounting, bool bWarnIfInUseOnDismounting)
 {
 
 	m_bCaseInsensitive =  bCaseInsensitive;
@@ -160,6 +166,7 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	m_bEncryptKeysInMemory = bEncryptKeysInMemory;
 	m_bCacheKeysInMemory = bCacheKeysInMemory;
 	m_bFastMounting = bFastMounting;
+	m_bWarnIfInUseOnDismounting = bWarnIfInUseOnDismounting;
 
 	int i;
 
@@ -253,6 +260,8 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	CheckDlgButton(IDC_FAST_MOUNTING, m_bFastMounting ? 1 : 0);
 
+	CheckDlgButton(IDC_WARN_IF_IN_USE_ON_DISMOUNTING, m_bWarnIfInUseOnDismounting ? 1 : 0);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -333,6 +342,7 @@ void CSettingsPropertyPage::SaveSettings()
 	m_bEncryptKeysInMemory = !m_bEncryptKeysInMemory; // ditto
 	m_bCacheKeysInMemory = !m_bCacheKeysInMemory; // ditto
 	m_bFastMounting = !m_bFastMounting; // ditto
+	m_bWarnIfInUseOnDismounting = !m_bWarnIfInUseOnDismounting; // ditto
 
 	OnBnClickedCaseinsensitive();
 	OnClickedMountmanager();
@@ -343,6 +353,7 @@ void CSettingsPropertyPage::SaveSettings()
 	OnClickedEncryptKeysInMemory();
 	OnClickedCacheKeysInMemory();
 	OnBnClickedFastMounting();
+	OnClickedWarnIfInUseOnDismounting();
 }
 
 void CSettingsPropertyPage::OnBnClickedDefaults()
@@ -352,7 +363,8 @@ void CSettingsPropertyPage::OnBnClickedDefaults()
 	SetControls(PER_FILESYSTEM_THREADS_DEFAULT, BUFFERBLOCKS_DEFAULT, CACHETTL_DEFAULT, 
 		CASEINSENSITIVE_DEFAULT, MOUNTMANAGER_DEFAULT, ENABLE_SAVING_PASSWORDS_DEFAULT,
 		NEVER_SAVE_HISTORY_DEFAULT, DELETE_SPURRIOUS_FILES_DEFAULT, OPEN_ON_MOUNTING_DEFAULT,
-		ENCRYPT_KEYS_IN_MEMORY_DEFAULT, CACHE_KEYS_IN_MEMORY_DEFAULT, FAST_MOUNTING_DEFAULT);
+		ENCRYPT_KEYS_IN_MEMORY_DEFAULT, CACHE_KEYS_IN_MEMORY_DEFAULT, FAST_MOUNTING_DEFAULT,
+		WARN_IF_IN_USE_ON_DISMOUNT_DEFAULT);
 
 	SaveSettings();
 }
@@ -365,7 +377,8 @@ void CSettingsPropertyPage::OnBnClickedRecommended()
 	SetControls(PER_FILESYSTEM_THREADS_RECOMMENDED, BUFFERBLOCKS_RECOMMENDED, CACHETTL_RECOMMENDED, 
 		CASEINSENSITIVE_RECOMMENDED, MOUNTMANAGER_RECOMMENDED, ENABLE_SAVING_PASSWORDS_RECOMMENDED,
 		NEVER_SAVE_HISTORY_RECOMMENDED, DELETE_SUPRRIOUS_FILES_RECOMMENDED, OPEN_ON_MOUNTING_RECOMMENDED,
-		ENCRYPT_KEYS_IN_MEMORY_RECOMMENDED, CACHE_KEYS_IN_MEMORY_RECOMMENDED, FAST_MOUNTING_RECOMMENDED);
+		ENCRYPT_KEYS_IN_MEMORY_RECOMMENDED, CACHE_KEYS_IN_MEMORY_RECOMMENDED, FAST_MOUNTING_RECOMMENDED,
+		WARN_IF_IN_USE_ON_DISMOUNT_RECOMMENDED);
 
 	SaveSettings();
 }
@@ -524,4 +537,16 @@ void CSettingsPropertyPage::OnBnClickedFastMounting()
 	CheckDlgButton(IDC_FAST_MOUNTING, m_bFastMounting ? 1 : 0);
 
 	theApp.WriteProfileInt(L"Settings", L"FastMounting", m_bFastMounting ? 1 : 0);
+}
+
+
+void CSettingsPropertyPage::OnClickedWarnIfInUseOnDismounting()
+{
+	// TODO: Add your control notification handler code here
+
+	m_bWarnIfInUseOnDismounting = !m_bWarnIfInUseOnDismounting;
+
+	CheckDlgButton(IDC_WARN_IF_IN_USE_ON_DISMOUNTING, m_bWarnIfInUseOnDismounting ? 1 : 0);
+
+	theApp.WriteProfileInt(L"Settings", L"WarnIfInUseOnDismounting", m_bWarnIfInUseOnDismounting ? 1 : 0);
 }

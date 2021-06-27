@@ -2,7 +2,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2020 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2021 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -537,6 +537,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
         
         DokanFileInfo->Context =
             (ULONG64)handle; // save the file handle in Context
+        GetContext()->m_open_handles.insert(handle);
 
         // this is a directory so no need to store it in the openfiles map
 
@@ -631,6 +632,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
       DokanFileInfo->Context =
           (ULONG64)handle; // save the file handle in Context
+      GetContext()->m_open_handles.insert(handle);
 
       if (handle && handle != INVALID_HANDLE_VALUE) {
           GetContext()->m_openfiles.OpenFile(FileName, handle);
@@ -670,9 +672,12 @@ static void DOKAN_CALLBACK CryptCloseFile(LPCWSTR FileName,
     DbgPrint(L"CloseFile: %s, %x\n", FileName, (DWORD)DokanFileInfo->Context);
     DbgPrint(L"\terror : not cleanuped file\n\n");
     if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE) {
-        CloseHandle((HANDLE)DokanFileInfo->Context);
-        if (!DokanFileInfo->IsDirectory)
-            GetContext()->m_openfiles.CloseFile(FileName, (HANDLE)DokanFileInfo->Context);
+      GetContext()->m_open_handles.erase((HANDLE)DokanFileInfo->Context);
+      ::CloseHandle((HANDLE)DokanFileInfo->Context);
+      if (!DokanFileInfo->IsDirectory) {
+        GetContext()->m_openfiles.CloseFile(FileName,
+                                            (HANDLE)DokanFileInfo->Context);
+      }      
     }
     DokanFileInfo->Context = 0;
   } else {
@@ -687,6 +692,7 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
   if (DokanFileInfo->Context) {
     DbgPrint(L"Cleanup: %s, %x\n\n", FileName, (DWORD)DokanFileInfo->Context);
     if ((HANDLE)DokanFileInfo->Context != INVALID_HANDLE_VALUE) {
+        GetContext()->m_open_handles.erase((HANDLE)DokanFileInfo->Context);
         CloseHandle((HANDLE)(DokanFileInfo->Context));
         if (!DokanFileInfo->IsDirectory)
             GetContext()->m_openfiles.CloseFile(FileName, (HANDLE)DokanFileInfo->Context);
@@ -2307,6 +2313,11 @@ BOOL wait_for_all_unmounted() {
 }
 
 
+int get_open_handle_count(const wchar_t* mountpoint)
+{
+    return MountPointManager::getInstance().get_open_handle_count(mountpoint);
+}
+
 
 BOOL write_volume_name_if_changed(WCHAR dl, wstring& mes) {
 
@@ -2574,9 +2585,9 @@ bool get_dokany_version(wstring& ver, vector<int>& v)
 // returns true with message if there will maybe be a problem
 bool check_dokany_version(wstring& mes)
 {
-	const int required_major = 1;
-	const int required_middle = 4;
-	const wstring required_ver = L"1.4.x.x";
+	constexpr int required_major = 1;
+	constexpr int required_middle = 5;
+    const wstring required_ver =  to_wstring(required_major) + L"." + to_wstring(required_middle) +  L".x.x";
 	
 	mes = L"";
 
@@ -2600,17 +2611,17 @@ bool check_dokany_version(wstring& mes)
 	}
 	
 	if (major != required_major) {
-		mes = L"Dokany version " + ver + L" is not compatible.  Please install Dokany " + required_ver;
+		mes = L"The installed Dokany version " + ver + L" is not compatible.  Please install Dokany " + required_ver;
 		return false; // error
 	}
 	
 	if (major == required_major && middle < required_middle) {
-		mes = L"Dokany version " + ver + L" is not compatible.  Please install Dokany " + required_ver;
+		mes = L"The installed Dokany version " + ver + L" is not compatible.  Please install Dokany " + required_ver;
 		return false; // error
 	}
 
 	if (major == required_major && middle > required_middle) {
-		mes = L"Dokany version " + ver + L" is has not been tested.  Please install Dokany " + required_ver;
+		mes = L"The installed Dokany version is " + ver + L", and it has not been tested with cppcryptfs.  Please install Dokany " + required_ver;
 		return true; // warning
 	}
 

@@ -2,7 +2,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2020 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2021 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -36,7 +36,7 @@ class MountPointManager {
 private:
 	unordered_map<wstring, CryptThreadData*> m_tdatas;
 	MountPointManager() {}
-public:
+public:    
 	// disallow copying
 	MountPointManager(MountPointManager const&) = delete;
 	void operator=(MountPointManager const&) = delete;
@@ -70,7 +70,7 @@ public:
 	// which is how the key is stored
 	bool find (const WCHAR *mountpoint, wstring& mpstr) const;
 	void get_mount_points(vector<wstring>& mps, function<bool(const wchar_t *)> filter = NULL) const;
-	
+    int get_open_handle_count(const wchar_t *mountpoint = nullptr);	
 
 	// these functions in cryptdokan use the private methods of MountPointManager()
 

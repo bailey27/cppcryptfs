@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2020 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2021 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -62,6 +62,8 @@ int mount_crypt_fs(const WCHAR *mountpoint, const WCHAR *path,
                    wstring &mes, const CryptMountOptions &ops);
 
 BOOL unmount_crypt_fs(const WCHAR *mountpoint, bool wait, wstring &mes);
+
+int get_open_handle_count(const wchar_t* mountpoint = nullptr);
 
 BOOL wait_for_all_unmounted();
 

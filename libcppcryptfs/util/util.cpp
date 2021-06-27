@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2020 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2021 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -711,6 +711,7 @@ Mounting:
 Unmounting:
   -u, --unmount=D          unmount drive letter D or dir DIR
   -u, --unmount=all        unmount all drives
+  -f, --force              force unmounting if in use
 
 Misc:
   -t, --tray               hide in system tray

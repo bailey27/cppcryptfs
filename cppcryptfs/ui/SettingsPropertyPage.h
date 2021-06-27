@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2020 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2021 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -47,6 +47,7 @@ public:
 	bool m_bEncryptKeysInMemory;
 	bool m_bCacheKeysInMemory;
 	bool m_bFastMounting;
+	bool m_bWarnIfInUseOnDismounting;
 
 	// disallow copying
 	CSettingsPropertyPage(CSettingsPropertyPage const&) = delete;
@@ -62,7 +63,7 @@ public:
 protected:
 	BOOL SetControls(int nThreads, int nBufferBlocks, int nCacheTTL, bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords,
 						bool bNeverSaveHistory, bool bDeleteSpurriousFiles, bool bOpenOnMounting, bool bEncryptKeysInMemory,
-						bool bCacheKeysInMemory, bool bFastMounting);
+						bool bCacheKeysInMemory, bool bFastMounting, bool bWarnIfInUseOnDismounting);
 	void SaveSettings();
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -85,4 +86,5 @@ public:
 	afx_msg void OnClickedEncryptKeysInMemory();
 	afx_msg void OnClickedCacheKeysInMemory();
 	afx_msg void OnBnClickedFastMounting();
+	afx_msg void OnClickedWarnIfInUseOnDismounting();
 };

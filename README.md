@@ -70,7 +70,7 @@ Build Requirements
 
 There are detailed build instructions in [INSTALL.md](INSTALL.md).
 
-cppcryptfs is currently up-to-date with Dokany 1.4.0.1000
+cppcryptfs is currently up-to-date with Dokany 1.5.0.3000
 
 
 Use
@@ -301,9 +301,6 @@ When the system is about to enter standby or hibernation modes, cppcryptfs autom
 
 This setting is not enabled in either the Default or Recommended settings.
 
-**Defaults and Recommended**
-
-Currently, the default and recommended settings are the same.
 
 **Enable fast mounting**
 
@@ -319,6 +316,19 @@ With this setting enabled, a successful mount operation is indicated as such on 
 Note:  this setting has no effect when the mount point is an empty NTFS directory and not a drive letter.  Dokany signals a successful mounting quickly if the mount point is a directory, and polling doesn't make sense in this case.
 
 This setting is enabled by default.
+
+**Warn if in use when dismounting**
+
+If this setting is on, then if there are still any open files or directories 
+on a mounted filesystem when the user tries to dismount the filesystem,
+dismount all filesystems, or exit the program, then cppcryptfs will notify
+the user and ask if it should proceed with dismounting.
+
+If this setting is on, then the --force flag is needed on the command line when dismounting filesystems that are in use. 
+
+**Defaults and Recommended**
+
+Currently, the default and recommended settings are the same.
 
 **Reset Warnings**
 
@@ -412,6 +422,7 @@ Mounting:
 Unmounting:
   -u, --unmount=D          unmount drive letter D or dir DIR
   -u, --unmount=all        unmount all drives
+  -f, --force              force unmounting if in use
 
 Misc:
   -t, --tray               hide in system tray

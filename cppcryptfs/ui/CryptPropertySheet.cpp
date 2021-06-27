@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2020 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2021 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -77,6 +77,11 @@ BOOL CCryptPropertySheet::CanClose()
 		
 		if (MessageBox(L"All mounted cppcryptfs filesystems will be dismounted. Do you really wish to exit?", L"cppcryptfs",
 			MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
+
+			CString open_handles_mes = CheckOpenHandles(m_hWnd, nullptr, true, false).c_str();
+
+			if (open_handles_mes.GetLength() > 0)
+				return FALSE;
 
 			int i;
 			for (i = 0; i < 26; i++) {
@@ -186,7 +191,7 @@ void CCryptPropertySheet::OnSysCommand(UINT nID, LPARAM lParam)
 
 	switch (nID & 0xFFF0) {
 	case SC_CLOSE:
-		if (lParam) ShowWindow(SW_HIDE); else SetForegroundWindow(); return;
+		if (lParam) ShowWindow(SW_HIDE); else OnIdrExitcppcryptfs(); return;
 		break;
 	//case IDM_ABOUTBOX: CAboutDlg().DoModal();    return; // This line is only for a Dialog Application with an About Box.
 	default: CPropertySheet::OnSysCommand(nID, lParam); return;
@@ -339,4 +344,16 @@ UINT CCryptPropertySheet::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
 		KeyCache::GetInstance()->Enable();
 	}
 	return CPropertySheet::OnPowerBroadcast(nPowerEvent, nEventData);
+}
+
+
+BOOL CCryptPropertySheet::PreTranslateMessage(MSG* pMsg)
+{
+	// minimize to system tray if control+T is pressed (CTRL_T is ascii 20)
+	if (pMsg->message == WM_CHAR && pMsg->wParam == 20) {
+		PostMessage(WM_SYSCOMMAND, SC_CLOSE, TRUE);
+		return TRUE;
+	}
+
+	return CPropertySheet::PreTranslateMessage(pMsg);
 }

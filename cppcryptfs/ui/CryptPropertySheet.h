@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2020 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2021 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -67,6 +67,7 @@ public:
 	afx_msg BOOL OnDeviceChange(UINT nEventType, DWORD_PTR dwData);
 	afx_msg void OnEndSession(BOOL bEnding);
 	afx_msg UINT OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData);
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
 
 
