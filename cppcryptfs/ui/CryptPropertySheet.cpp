@@ -191,7 +191,7 @@ void CCryptPropertySheet::OnSysCommand(UINT nID, LPARAM lParam)
 
 	switch (nID & 0xFFF0) {
 	case SC_CLOSE:
-		if (lParam) ShowWindow(SW_HIDE); else SetForegroundWindow(); return;
+		if (lParam) ShowWindow(SW_HIDE); else OnIdrExitcppcryptfs(); return;
 		break;
 	//case IDM_ABOUTBOX: CAboutDlg().DoModal();    return; // This line is only for a Dialog Application with an About Box.
 	default: CPropertySheet::OnSysCommand(nID, lParam); return;
