@@ -107,7 +107,7 @@ DWORD WINAPI NamedPipeServerThreadProc(PVOID lpvParam)
 		// returns zero, GetLastError returns ERROR_PIPE_CONNECTED. 
 
 		auto hPipe = CreateNamedPipe(
-			CMD_NAMED_PIPE,             // pipe name 
+			GetNamedPipeName(),       // pipe name 
 			PIPE_ACCESS_DUPLEX,       // read/write access 
 			PIPE_TYPE_MESSAGE |       // message type pipe 
 			PIPE_READMODE_MESSAGE |   // message-read mode 

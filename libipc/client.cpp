@@ -77,7 +77,7 @@ int SendArgsToRunningInstance(LPCWSTR args, std::wstring& result, std::wstring& 
 	
 	while (true) {
 		hPipe = CreateFile(
-			CMD_NAMED_PIPE,   // pipe name 
+			GetNamedPipeName(),   // pipe name 
 			GENERIC_READ |  // read and write access 
 			GENERIC_WRITE,
 			0,              // no sharing 
@@ -106,7 +106,7 @@ int SendArgsToRunningInstance(LPCWSTR args, std::wstring& result, std::wstring& 
 		}
 
 		// All pipe instances are busy, so wait. 
-		if (!WaitNamedPipe(CMD_NAMED_PIPE, NMPWAIT_WAIT_FOREVER)) {
+		if (!WaitNamedPipe(GetNamedPipeName(), NMPWAIT_WAIT_FOREVER)) {
 			err = L"Named pipe connection wait failed.";
 			return SEND_ARGS_STATUS_ERROR;
 		}
