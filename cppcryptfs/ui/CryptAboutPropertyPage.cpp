@@ -74,8 +74,8 @@ static const WCHAR * components[] = {
 	L"cppcryptfs - Copyright (C) 2016-2021 Bailey Brown. All Rights Reserved.",
 	L"OpenSSL - Copyright (c) 1998-2019 The OpenSSL Project.  All rights reserved.",
 	L"RapidJSON - Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip. All rights reserved.",
-	L"Dokany (mirror) - Copyright (C) 2015 - 2019 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
-	L"Dokany (library) - Copyright (C) 2015 - 2019 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
+	L"Dokany (mirror) - Copyright (C) 2020 - 2021 Google, Inc.; Copyright (C) 2015 - 2019 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
+	L"Dokany (library) - Copyright (C) 2020 - 2021 Google, Inc.; Copyright (C) 2015 - 2019 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
 	L"100% free Secure Edit control MFC class - Copyright (c) 2003 Dominik Reichl",
 	L"getopt_port - Copyright (c) 2012-2017, Kim Grasman <kim.grasman@gmail.com>. All rights reserved.",
 	L"aes-siv - Copyright (c) 2015 ARKconcepts / Sasha Kotlyar",
@@ -314,6 +314,7 @@ static const WCHAR *licenses[] = {
 	L"project url: github.com/dokan-dev/dokany\r\n\r\n"
 	L"cppcryptfs usage: code from the mirror.c sample program from Dokany was used in modifed form in cppcryptfs (in cryptdokan.cpp).\r\n\r\n"
 	L"Dokany mirror.c copyright and license (MIT license):\r\n\r\n"
+	L"Copyright (C) 2020 - 2021 Google, Inc.\r\n"
 	L"Copyright (C) 2015 - 2019 Adrien J. <liryna.stark@gmail.com> and Maxime C. <maxime@islog.com>\r\n"
 	L"Copyright (C) 2007 - 2011 Hiroki Asakawa <info@dokan-dev.net>\r\n"
 	L"\r\n"
@@ -340,6 +341,7 @@ static const WCHAR *licenses[] = {
 	L"project url: github.com/dokan-dev/dokany\r\n\r\n"
 	L"cppcryptfs usage: dynamically linked library\r\n\r\n"
 	L"Dokany library copyright and license (GNU LGPL):\r\n\r\n"
+	L"Copyright (C) 2020 - 2021 Google, Inc.\r\n"
 	L"Copyright (C) 2015 - 2019 Adrien J. <liryna.stark@gmail.com> and Maxime C. <maxime@islog.com>\r\n"
 	L"Copyright (C) 2007 - 2011 Hiroki Asakawa <info@dokan-dev.net>\r\n\r\n"
 	L" GNU LESSER GENERAL PUBLIC LICENSE\r\n"
