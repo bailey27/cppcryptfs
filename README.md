@@ -326,6 +326,13 @@ the user and ask if it should proceed with dismounting.
 
 If this setting is on, then the --force flag is needed on the command line when dismounting filesystems that are in use. 
 
+**Deny Other Users**
+
+If this setting is enabled, then encrypted volumes will be accessible only to the user who started the instance of cppcryptfs who mounted it.  Any drive letters used for mounting 
+will still be visible to other users, but they will not be accessible to them.
+
+Also, when this setting is enabled, cppcryptfs will not accept connections from users other than the one who started it.
+
 **Defaults and Recommended**
 
 Currently, the default and recommended settings are the same.
