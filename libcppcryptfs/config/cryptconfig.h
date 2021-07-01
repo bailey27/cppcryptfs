@@ -63,6 +63,7 @@ public:
 	bool m_AESSIV;
 	bool m_Raw64;
 	bool m_HKDF;
+	bool m_DenyAccessToOthers;
 
 	bool m_reverse;
 

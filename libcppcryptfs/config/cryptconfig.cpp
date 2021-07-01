@@ -93,6 +93,8 @@ CryptConfig::CryptConfig()
 	m_pGcmContentKey = NULL;
 
 	m_fs_feature_disable_mask = 0;
+
+	m_DenyAccessToOthers = false;
 }
 
 

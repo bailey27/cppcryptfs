@@ -103,6 +103,9 @@ THE SOFTWARE.
 
 #include "../libcommonutil/commonutil.h"
 
+static wstring g_startupUsername;
+static wstring g_startupDomainName;
+
 
 
 static BOOL g_HasSeSecurityPrivilege;
@@ -134,47 +137,84 @@ CryptCaseStreamsCallback(PWIN32_FIND_STREAM_DATA pfdata, LPCWSTR encrypted_name,
   return 0;
 }
 
+
+
+static bool GetUserNameFromToken(HANDLE handle, wstring& user, wstring& domain)
+{
+    
+    UCHAR buffer[1024];
+    DWORD returnLength;
+    WCHAR accountName[256];
+    WCHAR domainName[256];
+    DWORD accountLength = sizeof(accountName) / sizeof(WCHAR);
+    DWORD domainLength = sizeof(domainName) / sizeof(WCHAR);
+    PTOKEN_USER tokenUser;
+    SID_NAME_USE snu;
+
+    if (!handle) {
+        handle = GetCurrentProcessToken();
+    }
+
+    if (!GetTokenInformation(handle, TokenUser, buffer, sizeof(buffer),
+        &returnLength)) {
+        //DbgPrint(L"  GetTokenInformaiton failed: %d\n", GetLastError());
+        return false;
+    }
+
+    tokenUser = (PTOKEN_USER)buffer;
+    if (!LookupAccountSid(NULL, tokenUser->User.Sid, accountName, &accountLength,
+        domainName, &domainLength, &snu)) {
+        //DbgPrint(L"  LookupAccountSid failed: %d\n", GetLastError());
+        return false;
+    }
+
+    //DbgPrint(L"  AccountName: %s, DomainName: %s\n", accountName, domainName);
+    
+    if (snu != SidTypeUser)
+        return false;
+
+    user = accountName;
+    domain = domainName;
+
+    return true;
+}
+
+static bool GetUserNameFromDokanFileInfo(PDOKAN_FILE_INFO DokanFileInfo, wstring& user, wstring& domain)
+{
+    HANDLE handle;
+
+    handle = DokanOpenRequestorToken(DokanFileInfo);
+    if (handle == INVALID_HANDLE_VALUE) {
+        DbgPrint(L"  DokanOpenRequestorToken failed\n");
+        return false;
+    }
+
+    bool bRet = GetUserNameFromToken(handle, user, domain);
+
+    CloseHandle(handle);
+
+    return bRet;
+}
+
+
 static void PrintUserName(PDOKAN_FILE_INFO DokanFileInfo) {
 
-// this function is expensive and doesn't seem to provide
-// any useful information in the log
+    // this function is expensive and doesn't seem to provide
+    // any useful information in the log
 #if 0
-  if (!g_DebugMode)
-    return;
+    if (!g_DebugMode)
+        return;
 
-  HANDLE handle;
-  UCHAR buffer[1024];
-  DWORD returnLength;
-  WCHAR accountName[256];
-  WCHAR domainName[256];
-  DWORD accountLength = sizeof(accountName) / sizeof(WCHAR);
-  DWORD domainLength = sizeof(domainName) / sizeof(WCHAR);
-  PTOKEN_USER tokenUser;
-  SID_NAME_USE snu;
+   
 
-  handle = DokanOpenRequestorToken(DokanFileInfo);
-  if (handle == INVALID_HANDLE_VALUE) {
-    DbgPrint(L"  DokanOpenRequestorToken failed\n");
-    return;
-  }
+    wstring accountName, domainName;
 
-  if (!GetTokenInformation(handle, TokenUser, buffer, sizeof(buffer),
-                           &returnLength)) {
-    DbgPrint(L"  GetTokenInformaiton failed: %d\n", GetLastError());
-    CloseHandle(handle);
-    return;
-  }
+    if (GetUserNameFromDokanFileInof(DokanFileInfo))
+        DbgPrint(L"  AccountName: %s, DomainName: %s\n", accountName.c_str(), domainName.c_str());
+    else
+        DbgPrint(L"GetUserNameFromToken failed\n");
 
-  CloseHandle(handle);
-
-  tokenUser = (PTOKEN_USER)buffer;
-  if (!LookupAccountSid(NULL, tokenUser->User.Sid, accountName, &accountLength,
-                        domainName, &domainLength, &snu)) {
-    DbgPrint(L"  LookupAccountSid failed: %d\n", GetLastError());
-    return;
-  }
-
-  DbgPrint(L"  AccountName: %s, DomainName: %s\n", accountName, domainName);
+   
 #endif // #if 0
 }
 
@@ -288,6 +328,17 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   DbgPrint(L"CreateFile : %s\n", FileName);
 
   PrintUserName(DokanFileInfo);
+
+  if (true) {
+      wstring user, domain;
+      if (!GetUserNameFromDokanFileInfo(DokanFileInfo, user, domain)) {
+          return STATUS_ACCESS_DENIED;
+      } else {
+          if (user != g_startupUsername || domain != g_startupDomainName) {
+              return STATUS_ACCESS_DENIED;
+          }
+      }
+  }
 
   // the block of code below was also commented out in the mirror.c sample
   // cppcryptfs modifies the flags after all the CheckFlag() stuff
@@ -2707,5 +2758,10 @@ void crypt_at_start()
     if (g_UseLogFile) {
         InitLogging();
     }
+
+    if (!GetUserNameFromToken(NULL, g_startupUsername, g_startupDomainName)) {
+        ::MessageBox(NULL, L"Unable to get username and domain name", L"cppcryptfs", MB_OK | MB_ICONERROR);
+    }
+    
     SetDbgVars(g_DebugMode, g_UseStdErr, g_UseLogFile, g_DebugLogFile);
 }
