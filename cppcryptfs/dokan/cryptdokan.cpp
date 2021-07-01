@@ -155,7 +155,7 @@ static bool GetUserNameFromDokanFileInfo(PDOKAN_FILE_INFO DokanFileInfo, wstring
     return bRet;
 }
 
-static bool DenyOtherUsers(CryptContext* con, PDOKAN_FILE_INFO DokanFileInfo)
+static bool DenyOtherUser(CryptContext* con, PDOKAN_FILE_INFO DokanFileInfo)
 {
     if (!con->m_denyOtherUsers) {
         return false;
@@ -305,7 +305,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
   PrintUserName(DokanFileInfo);
 
-  if (DenyOtherUsers(GetContext(), DokanFileInfo)) {
+  if (DenyOtherUser(GetContext(), DokanFileInfo)) {
       DbgPrint(L"Denied other user\n");
       return STATUS_ACCESS_DENIED;
   }
@@ -996,7 +996,7 @@ CryptFindFiles(LPCWSTR FileName,
 
   DbgPrint(L"FindFiles :%s\n", FileName);
 
-  if (DenyOtherUsers(GetContext(), DokanFileInfo)) {
+  if (DenyOtherUser(GetContext(), DokanFileInfo)) {
       DbgPrint(L"Denied other user\n");
       return STATUS_ACCESS_DENIED;
   }
@@ -1238,7 +1238,7 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 		The second step (the rename) is called "repair" here.
 	*/
 
-    if (DenyOtherUsers(GetContext(), DokanFileInfo)) {
+    if (DenyOtherUser(GetContext(), DokanFileInfo)) {
         DbgPrint(L"CryptMoveFile Denied other user\n");
         return STATUS_ACCESS_DENIED;
     }
@@ -1818,7 +1818,7 @@ NTSTATUS DOKAN_CALLBACK CryptFindStreamsInternal(
 
   DbgPrint(L"FindStreams :%s\n", FileName);
 
-  if (DenyOtherUsers(GetContext(), DokanFileInfo)) {
+  if (DenyOtherUser(GetContext(), DokanFileInfo)) {
       DbgPrint(L"Denied other user\n");
       return STATUS_ACCESS_DENIED;
   }
