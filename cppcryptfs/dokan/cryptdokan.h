@@ -53,6 +53,7 @@ typedef struct _struct_CryptMountOptions {
   bool encryptkeysinmemory;
   bool cachekeysinmemory;
   bool fastmounting;
+  bool denyotherusers;
 } CryptMountOptions;
 
 class FsInfo;

@@ -100,6 +100,7 @@ public:
 	bool m_delete_spurrious_files;
 	bool m_encryptKeysInMemory;
 	bool m_cacheKeysInMemory;
+	bool m_denyOtherUsers;
 	vector<wstring> m_deletable_files;
 	CryptOpenFiles m_openfiles;
 	CryptOpenHandles m_open_handles;

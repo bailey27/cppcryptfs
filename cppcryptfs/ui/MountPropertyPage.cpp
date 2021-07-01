@@ -344,6 +344,8 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 	opts.fastmounting = theApp.GetProfileInt(L"Settings", L"FastMounting", FAST_MOUNTING_DEFAULT) != 0;
 
+	opts.denyotherusers = theApp.GetProfileInt(L"Settings", L"DenyOtherUsers", DENY_OTHER_USERS_DEFAULT) != 0;
+
 	bool bSavePassword = argMountPoint == NULL && (IsDlgButtonChecked(IDC_SAVE_PASSWORD) != 0);	
 	
 	theApp.DoWaitCursor(1);

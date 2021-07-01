@@ -288,7 +288,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
   PrintUserName(DokanFileInfo);
 
-  if (true) {
+  if (GetContext()->m_denyOtherUsers) {
       wstring user, domain;
       if (!GetUserNameFromDokanFileInfo(DokanFileInfo, user, domain)) {
           return STATUS_ACCESS_DENIED;
@@ -2015,6 +2015,9 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
         tdata->con.GetConfig()->m_keybuf_manager.Activate();
     }
 
+ 
+    tdata->con.m_denyOtherUsers = opts.denyotherusers;
+    
     PDOKAN_OPERATIONS dokanOperations = &tdata->operations;
 
     init_security_name_privilege(); // make sure AddSecurityNamePrivilege() has been called, whether or not we can get it

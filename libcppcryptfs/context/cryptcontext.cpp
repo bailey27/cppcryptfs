@@ -70,6 +70,8 @@ CryptContext::CryptContext()
 
 	m_encryptKeysInMemory = false;
 	m_cacheKeysInMemory = false;
+
+	m_denyOtherUsers = false;
 }
 
 static void get_deletable_files(CryptContext *con, vector<wstring>& files)

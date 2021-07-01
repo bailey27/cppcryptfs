@@ -43,6 +43,7 @@ THE SOFTWARE.
 #include "ui/uiutil.h"
 #include "../libcppcryptfs/util/KeyCache.h"
 #include "crypt/crypt.h"
+#include "cryptdefaults.h"
 
 // CryptPropertySheet
 
@@ -254,7 +255,7 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 			return FALSE;
 		}
 
-		if (true) {
+		if (theApp.GetProfileInt(L"Settings", L"DenyOtherUsers", DENY_OTHER_USERS_DEFAULT) != 0) {
 			auto h_client_proc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, client_process_id);
 			if (h_client_proc == NULL) {
 				CloseHandle(hPipe);
