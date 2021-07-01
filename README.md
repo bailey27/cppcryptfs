@@ -414,6 +414,9 @@ cppcryptfsctl sets ERRORLEVEL to 0 on success, to 1 if an error occurs, and to 2
 
 Passwords passed through the command line are not really secure.  cppcryptfs locks and zeros its internal copies of the command line, but, for example, it does not zero the command line stored in the Windows PEB (Process Environment Block). Also, if cppcyrptfs is already running, then an invocation of cppcryptfs (or cppcryptfsctl) from the command line will cause it to pass the command line to the already running instance. It tries to do this in a fairly secure way.  It communicates with the running instance using a local Windows named pipe. If the program running on either side of the pipe is signed, then it verifies that the program on the other end of the pipe is also running from a signed executable and that the common name on both signatures are the same.  However, it is unknown how many times the command line might be copied by Windows out of cppcryptfs' control.  So there is some chance that a password passed via the command line might end up in the paging file if a paging file is being used.
 
+The name of the named pipe is decorated with the username and domain name of the user who started cppcryptfs.  Therefore cppcryptfs/cppcryptfsctl can be used to 
+communicate only with an instance of cppcryptfs started by the same user.
+
 ```
 Usage: cppcryptfs/cppcryptfsctl [OPTIONS]
 
