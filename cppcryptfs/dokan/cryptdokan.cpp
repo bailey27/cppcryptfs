@@ -155,6 +155,23 @@ static bool GetUserNameFromDokanFileInfo(PDOKAN_FILE_INFO DokanFileInfo, wstring
     return bRet;
 }
 
+static bool DenyOtherUsers(CryptContext* con, PDOKAN_FILE_INFO DokanFileInfo)
+{
+    if (!con->m_denyOtherUsers) {
+        return false;
+    } else {
+        wstring user, domain;
+        if (!GetUserNameFromDokanFileInfo(DokanFileInfo, user, domain)) {
+            DbgPrint(L"GetUserNameFromDokanFileInfo failed\n");
+            return true;
+        } else {
+            if (user != g_startupUsername || domain != g_startupDomainName) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
 
 static void PrintUserName(PDOKAN_FILE_INFO DokanFileInfo) {
 
@@ -288,15 +305,9 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
   PrintUserName(DokanFileInfo);
 
-  if (GetContext()->m_denyOtherUsers) {
-      wstring user, domain;
-      if (!GetUserNameFromDokanFileInfo(DokanFileInfo, user, domain)) {
-          return STATUS_ACCESS_DENIED;
-      } else {
-          if (user != g_startupUsername || domain != g_startupDomainName) {
-              return STATUS_ACCESS_DENIED;
-          }
-      }
+  if (DenyOtherUsers(GetContext(), DokanFileInfo)) {
+      DbgPrint(L"Denied other user\n");
+      return STATUS_ACCESS_DENIED;
   }
 
   // the block of code below was also commented out in the mirror.c sample
@@ -985,6 +996,11 @@ CryptFindFiles(LPCWSTR FileName,
 
   DbgPrint(L"FindFiles :%s\n", FileName);
 
+  if (DenyOtherUsers(GetContext(), DokanFileInfo)) {
+      DbgPrint(L"Denied other user\n");
+      return STATUS_ACCESS_DENIED;
+  }
+
   if (find_files(GetContext(), filePath.CorrectCasePath(), filePath,
                  crypt_fill_find_data, (void *)FillFindData,
                  (void *)DokanFileInfo) != 0) {
@@ -1221,6 +1237,11 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 
 		The second step (the rename) is called "repair" here.
 	*/
+
+    if (DenyOtherUsers(GetContext(), DokanFileInfo)) {
+        DbgPrint(L"CryptMoveFile Denied other user\n");
+        return STATUS_ACCESS_DENIED;
+    }
 
   bool needRepair = false;
 
@@ -1797,6 +1818,11 @@ NTSTATUS DOKAN_CALLBACK CryptFindStreamsInternal(
 
   DbgPrint(L"FindStreams :%s\n", FileName);
 
+  if (DenyOtherUsers(GetContext(), DokanFileInfo)) {
+      DbgPrint(L"Denied other user\n");
+      return STATUS_ACCESS_DENIED;
+  }
+
   if (rt_is_virtual_file(GetContext(), FileName)) {
     wcscpy_s(findData.cStreamName, L"::$DATA");
     if (rt_is_dir_iv_file(GetContext(), FileName)) {
@@ -2015,7 +2041,6 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
         tdata->con.GetConfig()->m_keybuf_manager.Activate();
     }
 
- 
     tdata->con.m_denyOtherUsers = opts.denyotherusers;
     
     PDOKAN_OPERATIONS dokanOperations = &tdata->operations;
