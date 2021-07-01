@@ -87,3 +87,6 @@ bool unmount_all(bool wait);
 void crypt_at_exit();
 
 void crypt_at_start();
+
+extern wstring g_startupUsername;
+extern wstring g_startupDomainName;

@@ -814,3 +814,39 @@ void DbgPrintAlways(LPCWSTR format, ...) {
 		va_end(argp);	
 }
 #endif
+
+bool GetUserNameFromToken(HANDLE handle, wstring& user, wstring& domain)
+{
+
+	UCHAR buffer[1024];
+	DWORD returnLength;
+	WCHAR accountName[256];
+	WCHAR domainName[256];
+	DWORD accountLength = sizeof(accountName) / sizeof(WCHAR);
+	DWORD domainLength = sizeof(domainName) / sizeof(WCHAR);
+	PTOKEN_USER tokenUser;
+	SID_NAME_USE snu;
+
+	if (!GetTokenInformation(handle, TokenUser, buffer, sizeof(buffer),
+		&returnLength)) {
+		//DbgPrint(L"  GetTokenInformaiton failed: %d\n", GetLastError());
+		return false;
+	}
+
+	tokenUser = (PTOKEN_USER)buffer;
+	if (!LookupAccountSid(NULL, tokenUser->User.Sid, accountName, &accountLength,
+		domainName, &domainLength, &snu)) {
+		//DbgPrint(L"  LookupAccountSid failed: %d\n", GetLastError());
+		return false;
+	}
+
+	//DbgPrint(L"  AccountName: %s, DomainName: %s\n", accountName, domainName);
+
+	if (snu != SidTypeUser)
+		return false;
+
+	user = accountName;
+	domain = domainName;
+
+	return true;
+}

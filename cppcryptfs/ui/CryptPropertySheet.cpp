@@ -254,6 +254,32 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 			return FALSE;
 		}
 
+		if (true) {
+			auto h_client_proc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, client_process_id);
+			if (h_client_proc == NULL) {
+				CloseHandle(hPipe);
+				return FALSE;
+			}
+			HANDLE h_client_tok;
+			if (!OpenProcessToken(h_client_proc, TOKEN_QUERY, &h_client_tok)) {
+				CloseHandle(h_client_proc);
+				CloseHandle(hPipe);
+				return FALSE;
+			}
+			CloseHandle(h_client_proc);
+			wstring client_user, client_domain;
+			if (!GetUserNameFromToken(h_client_tok, client_user, client_domain)) {
+				CloseHandle(h_client_tok);
+				CloseHandle(hPipe);
+				return FALSE;
+			}
+			CloseHandle(h_client_tok);
+			if (client_user != g_startupUsername || client_domain != g_startupDomainName) {
+				CloseHandle(hPipe);
+				return FALSE;
+			}
+		}
+
 		if (!ValidateNamedPipeConnection(client_process_id)) {
 			CloseHandle(hPipe);
 			return FALSE;

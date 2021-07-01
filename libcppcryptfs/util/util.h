@@ -154,3 +154,5 @@ public:
 		}
 	}
 };
+
+bool GetUserNameFromToken(HANDLE handle, wstring& user, wstring& domain);
