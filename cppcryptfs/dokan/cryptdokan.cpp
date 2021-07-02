@@ -151,7 +151,7 @@ static bool GetUserNameFromDokanFileInfo(PDOKAN_FILE_INFO DokanFileInfo, wstring
     return bRet;
 }
 
-static bool DenyOtherUser(CryptContext* con, PDOKAN_FILE_INFO DokanFileInfo)
+static bool DenyOtherUser(const CryptContext* con, PDOKAN_FILE_INFO DokanFileInfo)
 {
     if (!con->m_denyOtherUsers) {
         return false;
@@ -992,11 +992,6 @@ CryptFindFiles(LPCWSTR FileName,
 
   DbgPrint(L"FindFiles :%s\n", FileName);
 
-  if (DenyOtherUser(GetContext(), DokanFileInfo)) {
-      DbgPrint(L"Denied other user\n");
-      return STATUS_ACCESS_DENIED;
-  }
-
   if (find_files(GetContext(), filePath.CorrectCasePath(), filePath,
                  crypt_fill_find_data, (void *)FillFindData,
                  (void *)DokanFileInfo) != 0) {
@@ -1233,11 +1228,6 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
 
 		The second step (the rename) is called "repair" here.
 	*/
-
-    if (DenyOtherUser(GetContext(), DokanFileInfo)) {
-        DbgPrint(L"CryptMoveFile Denied other user\n");
-        return STATUS_ACCESS_DENIED;
-    }
 
   bool needRepair = false;
 
@@ -1813,11 +1803,6 @@ NTSTATUS DOKAN_CALLBACK CryptFindStreamsInternal(
   int count = 0;
 
   DbgPrint(L"FindStreams :%s\n", FileName);
-
-  if (DenyOtherUser(GetContext(), DokanFileInfo)) {
-      DbgPrint(L"Denied other user\n");
-      return STATUS_ACCESS_DENIED;
-  }
 
   if (rt_is_virtual_file(GetContext(), FileName)) {
     wcscpy_s(findData.cStreamName, L"::$DATA");
