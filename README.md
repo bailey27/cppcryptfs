@@ -330,8 +330,15 @@ If this setting is on, then the --force flag is needed on the command line when 
 
 If this setting is enabled, then encrypted volumes will be accessible only to the user who started the instance of cppcryptfs who mounted it.  Any drive letters used for mounting 
 will still be visible to other users, but they will not be accessible to them.
+The check is done only in calls to the CreateFile API (which both creates new files and directories and opens existing ones).  Denying access to other users
+only in CreateFile appears to be sufficient.
 
-Also, when this setting is enabled, cppcryptfs will not accept connections from users other than the one who started it.
+This feature has been tested by attempting to access the mounted volume while
+logged in as another user.  The testing involved using Windows explorer file manager, the command line, and a program that attempted to use the MoveFile and FindFirstFile/FindNextFile apis.  In all cases, ERROR_ACCESS_DENIED was returned
+as expected.  However, this testing does not amount to extensive penetration testing to make sure it is impossible to circumvent the the check in place.  You can be reasonably confident that this setting makes a mounted volume safe from
+access by an ordinary user you are sharing the computer with, but a determined
+and knowlegable attacker could possibly find a way to circumvent it.
+
 
 **Defaults and Recommended**
 
