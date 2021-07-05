@@ -3,6 +3,11 @@
 Changelog
 ------------
 
+v1.4.3.8, Jun 5 2021
+* Make CTRL+T minimize to tray.  Make ALT+F4 work for closing app.
+* Add "Deny other users" setting to prevent other logged-on users
+  from accessing mounted filesystems.
+
 v1.4.3.7, May 31 2021
 * Close any left over open file or dirctory handles when dismounting a 
   filesystem (issue #126).
