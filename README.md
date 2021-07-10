@@ -326,6 +326,8 @@ the user and ask if it should proceed with dismounting.
 
 If this setting is on, then the --force flag is needed on the command line when dismounting filesystems that are in use. 
 
+This setting is not enabled in either the Default or Recommended settings.
+
 **Deny Other Users**
 
 If this setting is enabled, then encrypted volumes will be accessible only to the user who started the instance of cppcryptfs that mounted them.  Any drive letters used for mounting 
@@ -337,8 +339,12 @@ only in CreateFile appears to be sufficient.
 The scope of testing of this feature makes the developer confident that this setting makes a mounted volume safe from
 access by an another ordinary logged-on user who is sharing the same computer.  However, it is not certain that a determined and knowlegable attacker would not be able to find a way to circumvent this protection.
 
+This setting is not enabled in either the Default or Recommended settings.
 
 **Defaults and Recommended**
+
+These buttons restore all settings to either the default settings or
+the recommended settings.
 
 Currently, the default and recommended settings are the same.
 
