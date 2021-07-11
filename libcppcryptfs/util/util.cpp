@@ -825,7 +825,7 @@ bool GetUserNameFromToken(HANDLE handle, wstring& user, wstring& domain)
 	DWORD accountLength = sizeof(accountName) / sizeof(WCHAR);
 	DWORD domainLength = sizeof(domainName) / sizeof(WCHAR);
 	PTOKEN_USER tokenUser;
-	SID_NAME_USE snu;
+	SID_NAME_USE snu;		
 
 	if (!GetTokenInformation(handle, TokenUser, buffer, sizeof(buffer),
 		&returnLength)) {

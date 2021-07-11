@@ -256,6 +256,17 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 		}
 
 		if (theApp.GetProfileInt(L"Settings", L"DenyOtherUsers", DENY_OTHER_USERS_DEFAULT) != 0) {
+			static wstring startupUserName, startupDomainName;
+			static once_flag once;
+			static bool got_user_and_domain = false;
+			call_once(once, [&]() {
+				if (GetUserNameFromToken(GetCurrentProcessToken(), startupUserName, startupDomainName)) {
+					got_user_and_domain = true;
+				}
+			});
+			if (!got_user_and_domain) {
+				return FALSE;
+			}
 			auto h_client_proc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, client_process_id);
 			if (h_client_proc == NULL) {
 				CloseHandle(hPipe);
@@ -275,7 +286,7 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 				return FALSE;
 			}
 			CloseHandle(h_client_tok);
-			if (client_user != g_startupUsername || client_domain != g_startupDomainName) {
+			if (client_user != startupUserName || client_domain != startupDomainName) {
 				CloseHandle(hPipe);
 				return FALSE;
 			}

@@ -156,6 +156,10 @@ static bool DenyOtherUser(const CryptContext* con, PDOKAN_FILE_INFO DokanFileInf
     if (!con->m_denyOtherUsers) {
         return false;
     } else {
+        if (g_startupUsername.length() == 0 || g_startupDomainName.length() == 0) {
+            DbgPrint(L"Startup user or domain name is empty\n");
+            return true;
+        }
         wstring user, domain;
         if (!GetUserNameFromDokanFileInfo(DokanFileInfo, user, domain)) {
             DbgPrint(L"GetUserNameFromDokanFileInfo failed\n");
@@ -2727,9 +2731,7 @@ void crypt_at_start()
         InitLogging();
     }
 
-    if (!GetUserNameFromToken(GetCurrentProcessToken(), g_startupUsername, g_startupDomainName)) {
-        ::MessageBox(NULL, L"Unable to get username and domain name", L"cppcryptfs", MB_OK | MB_ICONERROR);
-    }
-    
+    GetUserNameFromToken(GetCurrentProcessToken(), g_startupUsername, g_startupDomainName);
+          
     SetDbgVars(g_DebugMode, g_UseStdErr, g_UseLogFile, g_DebugLogFile);
 }

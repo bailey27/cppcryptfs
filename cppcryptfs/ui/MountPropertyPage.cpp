@@ -346,6 +346,12 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 	opts.denyotherusers = theApp.GetProfileInt(L"Settings", L"DenyOtherUsers", DENY_OTHER_USERS_DEFAULT) != 0;
 
+	if (opts.denyotherusers) {
+		if (g_startupUsername.length() == 0 || g_startupDomainName.length() == 0) {			
+			return CString(L"Unable to get username and domain name.  Deny other users setting will not work and must be disabled.");			
+		}
+	}
+
 	bool bSavePassword = argMountPoint == NULL && (IsDlgButtonChecked(IDC_SAVE_PASSWORD) != 0);	
 	
 	theApp.DoWaitCursor(1);
