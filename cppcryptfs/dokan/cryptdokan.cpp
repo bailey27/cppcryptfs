@@ -2731,7 +2731,8 @@ void crypt_at_start()
         InitLogging();
     }
 
-    GetUserNameFromToken(GetCurrentProcessToken(), g_startupUsername, g_startupDomainName);
+    // using GetCurrentProcessToken() fails on some systems
+    GetUserNameFromToken(NULL, g_startupUsername, g_startupDomainName);
           
     SetDbgVars(g_DebugMode, g_UseStdErr, g_UseLogFile, g_DebugLogFile);
 }

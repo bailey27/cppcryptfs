@@ -815,6 +815,21 @@ void DbgPrintAlways(LPCWSTR format, ...) {
 }
 #endif
 
+
+struct ProcessTokenCloser {
+	HANDLE handle;
+	ProcessTokenCloser()
+	{
+		handle = NULL;
+	}
+	~ProcessTokenCloser()
+	{
+		if (handle != NULL) {
+			CloseHandle(handle);
+		}
+	}
+};
+
 bool GetUserNameFromToken(HANDLE handle, wstring& user, wstring& domain)
 {
 
@@ -825,7 +840,23 @@ bool GetUserNameFromToken(HANDLE handle, wstring& user, wstring& domain)
 	DWORD accountLength = sizeof(accountName) / sizeof(WCHAR);
 	DWORD domainLength = sizeof(domainName) / sizeof(WCHAR);
 	PTOKEN_USER tokenUser;
-	SID_NAME_USE snu;		
+	SID_NAME_USE snu;	
+	ProcessTokenCloser tc;
+
+	if (handle == NULL) {
+		// getting errors using the pseudo-handle on some systems.
+		HANDLE hProc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetCurrentProcessId());
+		if (!hProc) {			
+			return false;
+		}
+		const BOOL op_result = OpenProcessToken(hProc, TOKEN_QUERY, &handle);
+		CloseHandle(hProc);
+		if (!op_result) {			
+			return false;
+		} else {
+			tc.handle = handle;
+		}
+	}
 
 	if (!GetTokenInformation(handle, TokenUser, buffer, sizeof(buffer),
 		&returnLength)) {
