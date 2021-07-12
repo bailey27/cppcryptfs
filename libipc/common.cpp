@@ -43,7 +43,12 @@ const wchar_t* GetNamedPipeName()
 
 	call_once(once, [&]() {
 		wstring user, domain;
-		GetUserNameFromToken(NULL, user, domain);  // using GetCurrentProcessToken() fails on some systems
+		// using GetCurrentProcessToken() fails on some systems
+		HANDLE h = OpenTokenForCurrentProcess();
+		if (h) {
+			GetUserNameFromToken(h, user, domain);
+			CloseHandle(h);
+		}
 		pipe_name = CMD_NAMED_PIPE_BASE + wstring(L"_") + user + L"_" + domain;;
 	});
 

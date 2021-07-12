@@ -155,4 +155,6 @@ public:
 	}
 };
 
+HANDLE OpenTokenForCurrentProcess();
+
 bool GetUserNameFromToken(HANDLE handle, wstring& user, wstring& domain);
