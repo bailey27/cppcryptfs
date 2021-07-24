@@ -99,11 +99,6 @@ THE SOFTWARE.
 
 #include "../libcommonutil/commonutil.h"
 
-wstring g_startupUsername;
-wstring g_startupDomainName;
-
-
-
 static BOOL g_HasSeSecurityPrivilege;
 
 #ifdef _DEBUG
@@ -144,7 +139,24 @@ static bool GetUserNameFromDokanFileInfo(PDOKAN_FILE_INFO DokanFileInfo, wstring
         return false;
     }
 
-    bool bRet = GetUserNameFromToken(handle, user, domain);
+    const bool bRet = GetUserNameFromToken(handle, user, domain);
+
+    CloseHandle(handle);
+
+    return bRet;
+}
+
+static bool GetSessionIdFromDokanFileInfo(PDOKAN_FILE_INFO DokanFileInfo, DWORD& sessionid)
+{
+    HANDLE handle;
+
+    handle = DokanOpenRequestorToken(DokanFileInfo);
+    if (handle == INVALID_HANDLE_VALUE) {
+        DbgPrint(L"  DokanOpenRequestorToken failed\n");
+        return false;
+    }
+
+    const bool bRet = GetSessionIdFromToken(handle, sessionid);
 
     CloseHandle(handle);
 
@@ -156,20 +168,20 @@ static bool DenyOtherUser(const CryptContext* con, PDOKAN_FILE_INFO DokanFileInf
     if (!con->m_denyOtherUsers) {
         return false;
     } else {
-        if (g_startupUsername.length() == 0 || g_startupDomainName.length() == 0) {
-            DbgPrint(L"Startup user or domain name is empty\n");
+        DWORD mySessionId = 0xffffffff;
+        if (!ProcessIdToSessionId(GetCurrentProcessId(), &mySessionId)) {
+            const DWORD lastErr = GetLastError();
+            DbgPrint(L"Unable to get sessionId for current process, LastErr = %u\n", lastErr);
             return true;
         }
-        wstring user, domain;
-        if (!GetUserNameFromDokanFileInfo(DokanFileInfo, user, domain)) {
-            DbgPrint(L"GetUserNameFromDokanFileInfo failed\n");
+        DWORD theirSessionId = 0xfffffffe;
+        if (!GetSessionIdFromDokanFileInfo(DokanFileInfo, theirSessionId)) {
+            const DWORD lastErr = GetLastError();
+            DbgPrint(L"Unable to get sessionId for remote process, LastErr = %u\n", lastErr);
             return true;
-        } else {
-            if (user != g_startupUsername || domain != g_startupDomainName) {
-                return true;
-            }
         }
-        return false;
+        // session id 0 is for services like AV
+        return mySessionId != theirSessionId && theirSessionId != 0;
     }
 }
 
@@ -2729,14 +2741,7 @@ void crypt_at_start()
 {
     if (g_UseLogFile) {
         InitLogging();
-    }
-
-    // using GetCurrentProcessToken() fails on some systems
-    HANDLE h = OpenTokenForCurrentProcess();
-    if (h) {
-        GetUserNameFromToken(h, g_startupUsername, g_startupDomainName);
-        CloseHandle(h);
-    }
+    }    
           
     SetDbgVars(g_DebugMode, g_UseStdErr, g_UseLogFile, g_DebugLogFile);
 }

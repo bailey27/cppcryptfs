@@ -158,3 +158,7 @@ public:
 HANDLE OpenTokenForCurrentProcess();
 
 bool GetUserNameFromToken(HANDLE handle, wstring& user, wstring& domain);
+
+bool GetSessionIdFromToken(HANDLE handle, DWORD& sessionid);
+
+bool CanGetSessionIdOk();

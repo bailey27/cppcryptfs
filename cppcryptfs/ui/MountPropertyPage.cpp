@@ -346,9 +346,16 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 	opts.denyotherusers = theApp.GetProfileInt(L"Settings", L"DenyOtherUsers", DENY_OTHER_USERS_DEFAULT) != 0;
 
-	if (opts.denyotherusers) {
-		if (g_startupUsername.length() == 0 || g_startupDomainName.length() == 0) {			
-			return CString(L"Unable to get username and domain name.  Deny other users setting will not work and must be disabled.");			
+	if (opts.denyotherusers) {		
+		if (!CanGetSessionIdOk()) {			
+			return CString(L"Unable to get session id.  Deny other users setting will not work and must be disabled.");			
+		}
+		DWORD sessionId = 0xffffffff;
+		if (!ProcessIdToSessionId(GetCurrentProcessId(), &sessionId)) {
+			return CString(L"Unable to get current process session id.  Deny other users setting will not work and must be disabled.");
+		}
+		if (sessionId == 0) {
+			return CString(L"Current session id is 0.  Deny other users setting will not work and must be disabled.");
 		}
 	}
 

@@ -866,5 +866,47 @@ bool GetUserNameFromToken(HANDLE handle, wstring& user, wstring& domain)
 	user = accountName;
 	domain = domainName;
 
+	DWORD sessionid = 0;
+
+	if (GetTokenInformation(handle, TokenSessionId, &sessionid, sizeof(sessionid), &returnLength)) {
+		DbgPrint(L"SessionId = %u\n", sessionid);
+	} else {
+		DbgPrint(L"failed to get SessionId\n");
+	}
+
 	return true;
+}
+
+bool GetSessionIdFromToken(HANDLE handle, DWORD &sessionid)
+{
+	DWORD returnLength;
+
+	if (GetTokenInformation(handle, TokenSessionId, &sessionid, sizeof(sessionid), &returnLength) && 
+			returnLength == sizeof(sessionid)) {
+		DbgPrint(L"SessionId = %u\n", sessionid);
+		return true;
+	} else {
+		DWORD lastErr = GetLastError();
+		DbgPrint(L"failed to get SessionId, LastErr = %u\n", lastErr);
+		return false;
+	}	
+}
+
+bool CanGetSessionIdOk()
+{
+	DWORD sessionid1 = 0;
+	DWORD sessionid2 = 0;
+
+	// using GetCurrentProcessToken() fails on some systems
+	HANDLE h = OpenTokenForCurrentProcess();
+	if (h == NULL)
+		return false;
+	const bool got1ok = GetSessionIdFromToken(h, sessionid1);
+	CloseHandle(h);
+	if (!got1ok)
+		return false;
+
+	const bool got2ok = ProcessIdToSessionId(GetCurrentProcessId(), &sessionid2);
+
+	return got2ok && sessionid1 == sessionid2;
 }
