@@ -36,20 +36,28 @@ THE SOFTWARE.
 
 using namespace std;
 
-const wchar_t* GetNamedPipeName()
+const wchar_t* GetNamedPipeName(bool check_env)
 {
 	static wstring pipe_name;
 	static once_flag once;
 
 	call_once(once, [&]() {
-		wstring user, domain;
-		// using GetCurrentProcessToken() fails on some systems
-		HANDLE h = OpenTokenForCurrentProcess();
-		if (h) {
-			GetUserNameFromToken(h, user, domain);
-			CloseHandle(h);
+		wstring session_decoration;
+		if (check_env) {
+			wchar_t ses_env[128];
+			size_t retlen = 0;
+			auto err = _wgetenv_s(&retlen, ses_env, L"CPPCRYPTFS_SESSIONID");
+			if (err == 0 && retlen > 0) {
+				session_decoration = ses_env;
+			}
 		}
-		pipe_name = CMD_NAMED_PIPE_BASE + wstring(L"_") + user + L"_" + domain;;
+		if (session_decoration.length() == 0) {
+			DWORD sessionid;
+			if (ProcessIdToSessionId(GetCurrentProcessId(), &sessionid)) {
+				session_decoration = to_wstring(sessionid);
+			}
+		}		
+		pipe_name = CMD_NAMED_PIPE_BASE + wstring(L"_") + session_decoration;		
 	});
 
 	return pipe_name.c_str();

@@ -255,40 +255,42 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 			return FALSE;
 		}
 
-		if (theApp.GetProfileInt(L"Settings", L"DenyOtherUsers", DENY_OTHER_USERS_DEFAULT) != 0) {
-			static wstring startupUserName, startupDomainName;
-			static once_flag once;
-			static bool got_user_and_domain = false;
-			call_once(once, [&]() {
-				if (GetUserNameFromToken(GetCurrentProcessToken(), startupUserName, startupDomainName)) {
-					got_user_and_domain = true;
+		bool denyOtherUsers = theApp.GetProfileInt(L"Settings", L"DenyOtherUsers", DENY_OTHER_USERS_DEFAULT) != 0;
+		bool denyServices = theApp.GetProfileInt(L"Settings", L"DenyServices", DENY_SERVICES_DEFAULT) != 0;
+
+		if (denyOtherUsers || denyServices) {
+
+			DWORD theirSessionId;
+			if (!ProcessIdToSessionId(client_process_id, &theirSessionId)) {
+				CloseHandle(hPipe);
+				return FALSE;
+			}
+
+			if (theirSessionId == 0 && denyServices) {			
+				CloseHandle(hPipe);
+				return FALSE;
+			}
+
+			if (denyOtherUsers && theirSessionId != 0) {
+				static DWORD mySessionId;
+				static once_flag once;
+				static bool got_my_sessionid = false;
+				call_once(once, [&]() {
+					if (ProcessIdToSessionId(GetCurrentProcessId(), &mySessionId)) {
+						got_my_sessionid = true;
+					}
+					});
+
+				if (!got_my_sessionid) {
+					CloseHandle(hPipe);
+					return FALSE;
 				}
-			});
-			if (!got_user_and_domain) {
-				return FALSE;
-			}
-			auto h_client_proc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, client_process_id);
-			if (h_client_proc == NULL) {
-				CloseHandle(hPipe);
-				return FALSE;
-			}
-			HANDLE h_client_tok;
-			if (!OpenProcessToken(h_client_proc, TOKEN_QUERY, &h_client_tok)) {
-				CloseHandle(h_client_proc);
-				CloseHandle(hPipe);
-				return FALSE;
-			}
-			CloseHandle(h_client_proc);
-			wstring client_user, client_domain;
-			if (!GetUserNameFromToken(h_client_tok, client_user, client_domain)) {
-				CloseHandle(h_client_tok);
-				CloseHandle(hPipe);
-				return FALSE;
-			}
-			CloseHandle(h_client_tok);
-			if (client_user != startupUserName || client_domain != startupDomainName) {
-				CloseHandle(hPipe);
-				return FALSE;
+
+
+				if (theirSessionId != mySessionId) {
+					CloseHandle(hPipe);
+					return FALSE;
+				}
 			}
 		}
 

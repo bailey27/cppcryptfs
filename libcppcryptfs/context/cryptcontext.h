@@ -101,6 +101,7 @@ public:
 	bool m_encryptKeysInMemory;
 	bool m_cacheKeysInMemory;
 	bool m_denyOtherUsers;
+	bool m_denyServices;
 	vector<wstring> m_deletable_files;
 	CryptOpenFiles m_openfiles;
 	CryptOpenHandles m_open_handles;

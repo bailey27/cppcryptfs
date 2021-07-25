@@ -99,6 +99,9 @@ THE SOFTWARE.
 
 #include "../libcommonutil/commonutil.h"
 
+static DWORD g_SessionId;
+static BOOL  g_GotSessionId = FALSE;
+
 static BOOL g_HasSeSecurityPrivilege;
 
 #ifdef _DEBUG
@@ -163,25 +166,33 @@ static bool GetSessionIdFromDokanFileInfo(PDOKAN_FILE_INFO DokanFileInfo, DWORD&
     return bRet;
 }
 
+// deny other users based on SessionId 
 static bool DenyOtherUser(const CryptContext* con, PDOKAN_FILE_INFO DokanFileInfo)
 {
-    if (!con->m_denyOtherUsers) {
+    if (!con->m_denyOtherUsers && !con->m_denyServices) {
         return false;
-    } else {
-        DWORD mySessionId = 0xffffffff;
-        if (!ProcessIdToSessionId(GetCurrentProcessId(), &mySessionId)) {
-            const DWORD lastErr = GetLastError();
-            DbgPrint(L"Unable to get sessionId for current process, LastErr = %u\n", lastErr);
-            return true;
-        }
-        DWORD theirSessionId = 0xfffffffe;
+    } else {        
+        DWORD theirSessionId = 0xffffffff;
         if (!GetSessionIdFromDokanFileInfo(DokanFileInfo, theirSessionId)) {
             const DWORD lastErr = GetLastError();
             DbgPrint(L"Unable to get sessionId for remote process, LastErr = %u\n", lastErr);
             return true;
         }
+
         // session id 0 is for services like AV
-        return mySessionId != theirSessionId && theirSessionId != 0;
+        if (theirSessionId == 0) {
+            return con->m_denyServices;
+        }
+
+        if (!con->m_denyOtherUsers) {
+            return false;
+        }
+        
+        if (g_GotSessionId) {
+            return theirSessionId != g_SessionId;
+        } else {
+            return true;
+        }
     }
 }
 
@@ -2039,6 +2050,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     }
 
     tdata->con.m_denyOtherUsers = opts.denyotherusers;
+    tdata->con.m_denyServices = opts.denyservices;
     
     PDOKAN_OPERATIONS dokanOperations = &tdata->operations;
 
@@ -2638,8 +2650,8 @@ bool check_dokany_version(wstring& mes)
 		return false;
 	}
 
-	int major = v[0];
-	int middle = v[1];
+	const int major = v[0];
+	const int middle = v[1];
 
 	if (major == required_major && middle == required_middle) {
 		return true;
@@ -2727,7 +2739,7 @@ static void InitLogging()
 
     wstring logname = wstring(logdir) + L"\\cppcryptfs-" + year + L"-" + month + L"-" + day + L"_" + hour + L"." + minute + L"." + second + L".log";
 
-    int result = _wfopen_s(&g_DebugLogFile, logname.c_str(), L"at+");
+    const int result = _wfopen_s(&g_DebugLogFile, logname.c_str(), L"at+");
 
     if (result == 0) {
         ::MessageBox(NULL, (wstring(L"Logging to ") + logname).c_str(), L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
@@ -2742,6 +2754,20 @@ void crypt_at_start()
     if (g_UseLogFile) {
         InitLogging();
     }    
+
+    if (ProcessIdToSessionId(GetCurrentProcessId(), &g_SessionId)) {
+        g_GotSessionId = TRUE;
+    }
           
     SetDbgVars(g_DebugMode, g_UseStdErr, g_UseLogFile, g_DebugLogFile);
+}
+
+bool have_sessionid() noexcept
+{
+    return g_GotSessionId != FALSE;
+}
+
+DWORD get_sessionid() noexcept
+{
+    return g_SessionId;
 }

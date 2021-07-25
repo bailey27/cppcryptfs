@@ -50,6 +50,8 @@ public:
 	bool longFileNames;
 	bool encryptKeysInMemory;
 	bool cacheKeysInMemory;
+	bool denyOtherUsers;
+	bool denyServices;
 
 	FsInfo();
 	virtual ~FsInfo();

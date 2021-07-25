@@ -52,6 +52,7 @@ CSettingsPropertyPage::CSettingsPropertyPage()
 	m_bNeverSaveHistory = false;
 	m_bWarnIfInUseOnDismounting = false;
 	m_bDenyOtherUsers = false;
+	m_bDenyServices = false;
 }
 
 CSettingsPropertyPage::~CSettingsPropertyPage()
@@ -82,6 +83,7 @@ BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_FAST_MOUNTING, &CSettingsPropertyPage::OnBnClickedFastMounting)
 	ON_BN_CLICKED(IDC_WARN_IF_IN_USE_ON_DISMOUNTING, &CSettingsPropertyPage::OnClickedWarnIfInUseOnDismounting)
 	ON_BN_CLICKED(IDC_DENY_OTHER_USERS, &CSettingsPropertyPage::OnClickedDenyOtherUsers)
+	ON_BN_CLICKED(IDC_DENY_SERVICES, &CSettingsPropertyPage::OnClickedDenyServices)
 END_MESSAGE_MAP()
 
 
@@ -150,18 +152,21 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 	bool bDenyOtherUsers = theApp.GetProfileIntW(L"Settings", L"DenyOtherUsers",
 		DENY_OTHER_USERS_DEFAULT) != 0;
 
+	bool bDenyServices = theApp.GetProfileIntW(L"Settings", L"DenyServices",
+		DENY_SERVICES_DEFAULT) != 0;
+
 
 	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, 
 								bEnableSavingPasswords, bNeverSaveHistory, bDeleteSpurriousFiles, bOpenOnMounting,
 								bEncryptKeysInMemory, bCacheKeysInMemory, bFastMounting, bWarnIfInUseOnDismounting,
-								bDenyOtherUsers);
+								bDenyOtherUsers, bDenyServices);
 }
 
 BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, 
 						bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords, bool bNeverSaveHistory,
 						bool bDeleteSpurriousFiles, bool bOpenOnMounting, bool bEncryptKeysInMemory,
 						bool bCacheKeysInMemory, bool bFastMounting, bool bWarnIfInUseOnDismounting,
-						bool bDenyOtherUsers)
+						bool bDenyOtherUsers, bool bDenyServices)
 {
 
 	m_bCaseInsensitive =  bCaseInsensitive;
@@ -175,6 +180,7 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	m_bFastMounting = bFastMounting;
 	m_bWarnIfInUseOnDismounting = bWarnIfInUseOnDismounting;
 	m_bDenyOtherUsers = bDenyOtherUsers;
+	m_bDenyServices = bDenyServices;
 
 	int i;
 
@@ -272,6 +278,8 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	CheckDlgButton(IDC_DENY_OTHER_USERS, m_bDenyOtherUsers ? 1 : 0);
 
+	CheckDlgButton(IDC_DENY_SERVICES, m_bDenyServices ? 1 : 0);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -354,6 +362,7 @@ void CSettingsPropertyPage::SaveSettings()
 	m_bFastMounting = !m_bFastMounting; // ditto
 	m_bWarnIfInUseOnDismounting = !m_bWarnIfInUseOnDismounting; // ditto
 	m_bDenyOtherUsers = !m_bDenyOtherUsers; // ditto
+	m_bDenyServices = !m_bDenyServices; // ditto
 
 	OnBnClickedCaseinsensitive();
 	OnClickedMountmanager();
@@ -366,6 +375,7 @@ void CSettingsPropertyPage::SaveSettings()
 	OnBnClickedFastMounting();
 	OnClickedWarnIfInUseOnDismounting();
 	OnClickedDenyOtherUsers();
+	OnClickedDenyServices();
 }
 
 void CSettingsPropertyPage::OnBnClickedDefaults()
@@ -376,7 +386,7 @@ void CSettingsPropertyPage::OnBnClickedDefaults()
 		CASEINSENSITIVE_DEFAULT, MOUNTMANAGER_DEFAULT, ENABLE_SAVING_PASSWORDS_DEFAULT,
 		NEVER_SAVE_HISTORY_DEFAULT, DELETE_SPURRIOUS_FILES_DEFAULT, OPEN_ON_MOUNTING_DEFAULT,
 		ENCRYPT_KEYS_IN_MEMORY_DEFAULT, CACHE_KEYS_IN_MEMORY_DEFAULT, FAST_MOUNTING_DEFAULT,
-		WARN_IF_IN_USE_ON_DISMOUNT_DEFAULT, DENY_OTHER_USERS_DEFAULT);
+		WARN_IF_IN_USE_ON_DISMOUNT_DEFAULT, DENY_OTHER_USERS_DEFAULT, DENY_SERVICES_DEFAULT);
 
 	SaveSettings();
 }
@@ -390,7 +400,7 @@ void CSettingsPropertyPage::OnBnClickedRecommended()
 		CASEINSENSITIVE_RECOMMENDED, MOUNTMANAGER_RECOMMENDED, ENABLE_SAVING_PASSWORDS_RECOMMENDED,
 		NEVER_SAVE_HISTORY_RECOMMENDED, DELETE_SUPRRIOUS_FILES_RECOMMENDED, OPEN_ON_MOUNTING_RECOMMENDED,
 		ENCRYPT_KEYS_IN_MEMORY_RECOMMENDED, CACHE_KEYS_IN_MEMORY_RECOMMENDED, FAST_MOUNTING_RECOMMENDED,
-		WARN_IF_IN_USE_ON_DISMOUNT_RECOMMENDED, DENY_OTHER_USERS_RECOMMENDED);
+		WARN_IF_IN_USE_ON_DISMOUNT_RECOMMENDED, DENY_OTHER_USERS_RECOMMENDED, DENY_SERVICES_RECOMMENDED);
 
 	SaveSettings();
 }
@@ -573,4 +583,16 @@ void CSettingsPropertyPage::OnClickedDenyOtherUsers()
 	CheckDlgButton(IDC_DENY_OTHER_USERS, m_bDenyOtherUsers ? 1 : 0);
 
 	theApp.WriteProfileInt(L"Settings", L"DenyOtherUsers", m_bDenyOtherUsers ? 1 : 0);
+}
+
+
+void CSettingsPropertyPage::OnClickedDenyServices()
+{
+	// TODO: Add your control notification handler code here
+
+	m_bDenyServices = !m_bDenyServices;
+
+	CheckDlgButton(IDC_DENY_SERVICES, m_bDenyServices ? 1 : 0);
+
+	theApp.WriteProfileInt(L"Settings", L"DenyServices", m_bDenyServices ? 1 : 0);
 }

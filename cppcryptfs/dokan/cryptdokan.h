@@ -54,6 +54,7 @@ typedef struct _struct_CryptMountOptions {
   bool cachekeysinmemory;
   bool fastmounting;
   bool denyotherusers;
+  bool denyservices;
 } CryptMountOptions;
 
 class FsInfo;
@@ -88,4 +89,8 @@ bool unmount_all(bool wait);
 void crypt_at_exit();
 
 void crypt_at_start();
+
+bool have_sessionid() noexcept;
+
+DWORD get_sessionid() noexcept;
 

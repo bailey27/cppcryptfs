@@ -44,6 +44,8 @@ FsInfo::FsInfo()
 	this->reverse = false;
 	this->encryptKeysInMemory = false;
 	this->cacheKeysInMemory = false;
+	this->denyOtherUsers = false;
+	this->denyServices = false;
 }
 
 FsInfo::~FsInfo()

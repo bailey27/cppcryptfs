@@ -43,4 +43,4 @@ THE SOFTWARE.
 #define CMD_PIPE_MAX_ARGS_LEN_USER 4000 // show this limit to the user
 #define CMD_NAMED_PIPE_BUFSIZE (CMD_PIPE_MAX_ARGS_LEN*sizeof(WCHAR))
 
-const wchar_t* GetNamedPipeName();
+const wchar_t* GetNamedPipeName(bool check_env);

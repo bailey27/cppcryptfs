@@ -106,6 +106,8 @@ BOOL CFsInfoDialog::OnInitDialog()
 	SetDlgItemText(IDC_LONG_FILE_NAMES, m_info.longFileNames ? yes : no);	
 	SetDlgItemText(IDC_ENCRYPT_KEYS_IN_MEM, m_info.encryptKeysInMemory ? yes : no);
 	SetDlgItemText(IDC_CACHE_KEYS_IN_MEM, m_info.encryptKeysInMemory ? (m_info.cacheKeysInMemory ? yes : no) : na);
+	SetDlgItemText(IDC_DENY_OTHER_USERS_TXT, m_info.denyOtherUsers ? yes : no);
+	SetDlgItemText(IDC_DENY_SERVICES_TXT, m_info.denyServices ? yes : no);
 
 	wstring txt;
 	txt = to_wstring(m_info.ioBufferSize);

@@ -99,15 +99,14 @@ int WriteToNamedPipe(HANDLE hPipe, const wstring& str)
 DWORD WINAPI NamedPipeServerThreadProc(PVOID lpvParam)
 {
 	//_tprintf(TEXT("\nPipe Server: Main thread awaiting client connection on %s\n"), lpszPipename);
-
-
+	
 	while (true) {
 		// Wait for the client to connect; if it succeeds, 
 		// the function returns a nonzero value. If the function
 		// returns zero, GetLastError returns ERROR_PIPE_CONNECTED. 
 
 		auto hPipe = CreateNamedPipe(
-			GetNamedPipeName(),       // pipe name 
+			GetNamedPipeName(false),       // pipe name 
 			PIPE_ACCESS_DUPLEX,       // read/write access 
 			PIPE_TYPE_MESSAGE |       // message type pipe 
 			PIPE_READMODE_MESSAGE |   // message-read mode 
