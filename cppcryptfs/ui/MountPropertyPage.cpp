@@ -975,6 +975,10 @@ BOOL CMountPropertyPage::OnSetActive()
 							continue;
 						}
 
+						if (is_mountpoint_a_drive(mountPoint) && !IsDriveLetterAvailable(*(LPCWSTR)mountPoint)) {
+							continue;
+						}
+
 						LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true);
 
 						if (!SavedPasswords::RetrievePassword(m_lastDirs[i], password.m_buf, password.m_len)) {
