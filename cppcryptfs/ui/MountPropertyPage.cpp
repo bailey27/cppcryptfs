@@ -347,6 +347,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 	opts.denyotherusers = theApp.GetProfileInt(L"Settings", L"DenyOtherUsers", DENY_OTHER_USERS_DEFAULT) != 0;
 
 	bool bSavePassword = argMountPoint == NULL && (IsDlgButtonChecked(IDC_SAVE_PASSWORD) != 0);	
+	bool bAutoMount = argMountPoint == NULL && (IsDlgButtonChecked(IDC_AUTO_MOUNT) != 0);
 	
 	theApp.DoWaitCursor(1);
 	int result = mount_crypt_fs(cmp, cpath, config_path, password.m_buf, error_mes, opts);
@@ -397,6 +398,8 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 				flags |= REVERSE_FLAG;
 			if (bSavePassword)
 				flags |= SAVE_PASSWORD_FLAG;
+			if (bAutoMount)
+				flags |= AUTO_MOUNT_FLAG;
 			theApp.WriteProfileInt(L"MountFlags", path_hash, flags);
 		}
 
@@ -1007,6 +1010,7 @@ BOOL CMountPropertyPage::OnSetActive()
 						int flags = theApp.GetProfileInt(L"MountFlags", path_hash, 0);
 						CheckDlgButton(IDC_READONLY, (flags & READONLY_FLAG) != 0);
 						CheckDlgButton(IDC_REVERSE, (flags & REVERSE_FLAG) != 0);
+						CheckDlgButton(IDC_AUTO_MOUNT, (flags & AUTO_MOUNT_FLAG) != 0);
 
 						LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true);
 
@@ -1093,6 +1097,7 @@ void CMountPropertyPage::OnCbnSelchangePath()
 	int flags = theApp.GetProfileInt(L"MountFlags", path_hash, 0);
 	CheckDlgButton(IDC_READONLY, (flags & READONLY_FLAG) != 0);
 	CheckDlgButton(IDC_REVERSE, (flags & REVERSE_FLAG) != 0);
+	CheckDlgButton(IDC_AUTO_MOUNT, (flags & AUTO_MOUNT_FLAG) != 0);
 
 	BOOL save_passwords_enabled = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
 
