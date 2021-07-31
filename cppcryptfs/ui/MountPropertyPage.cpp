@@ -347,6 +347,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 	opts.denyotherusers = theApp.GetProfileInt(L"Settings", L"DenyOtherUsers", DENY_OTHER_USERS_DEFAULT) != 0;
 
 	bool bSavePassword = argMountPoint == NULL && (IsDlgButtonChecked(IDC_SAVE_PASSWORD) != 0);	
+	bool bAutoMount = argMountPoint == NULL && (IsDlgButtonChecked(IDC_AUTO_MOUNT) != 0);
 	
 	theApp.DoWaitCursor(1);
 	int result = mount_crypt_fs(cmp, cpath, config_path, password.m_buf, error_mes, opts);
@@ -397,6 +398,8 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 				flags |= REVERSE_FLAG;
 			if (bSavePassword)
 				flags |= SAVE_PASSWORD_FLAG;
+			if (bAutoMount)
+				flags |= AUTO_MOUNT_FLAG;
 			theApp.WriteProfileInt(L"MountFlags", path_hash, flags);
 		}
 
@@ -956,6 +959,37 @@ BOOL CMountPropertyPage::OnSetActive()
 						pBox->SetWindowTextW(m_lastDirs[i]);
 					}
 					pBox->InsertString(i, m_lastDirs[i]);
+
+					//Mount it when AUTO_MOUNT and firstRun
+					if (bMountFrameFirstRun){
+						CString path_hash;
+						wstring hash;
+						if (!GetPathHash(m_lastDirs[i], hash))
+							continue;
+
+						path_hash = hash.c_str();
+						int flags = theApp.GetProfileInt(L"MountFlags", path_hash, 0);
+						if (flags & AUTO_MOUNT_FLAG) {
+							CString mountPoint = theApp.GetProfileString(L"MountPoints", path_hash, NULL);
+							if (mountPoint.GetLength() == 0) {
+								MessageBox(L"Fail to retrive MountPoint for " + m_lastDirs[i], L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+								continue;
+							}
+
+							LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true);
+
+							if (!SavedPasswords::RetrievePassword(m_lastDirs[i], password.m_buf, password.m_len)) {
+								MessageBox(L"Fail to retrive password for " + m_lastDirs[i], L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+								continue;
+							}
+
+							CString config_path = theApp.GetProfileString(L"ConfigPaths", path_hash, NULL);
+							CString errMes = Mount(m_lastDirs[i], mountPoint, password.m_buf, flags & READONLY_FLAG, config_path.GetLength() > 0 ? config_path : NULL, flags & REVERSE_FLAG);
+							if (errMes.GetLength() > 0) {
+								MessageBox(errMes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+							}
+						}
+					}
 				}
 			}
 		}
@@ -1007,6 +1041,7 @@ BOOL CMountPropertyPage::OnSetActive()
 						int flags = theApp.GetProfileInt(L"MountFlags", path_hash, 0);
 						CheckDlgButton(IDC_READONLY, (flags & READONLY_FLAG) != 0);
 						CheckDlgButton(IDC_REVERSE, (flags & REVERSE_FLAG) != 0);
+						CheckDlgButton(IDC_AUTO_MOUNT, (flags & AUTO_MOUNT_FLAG) != 0);
 
 						LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true);
 
@@ -1036,6 +1071,8 @@ BOOL CMountPropertyPage::OnSetActive()
 
 	if (!save_passwords_enabled)
 		CheckDlgButton(IDC_SAVE_PASSWORD, FALSE);
+
+	bMountFrameFirstRun = 0;
 
 	return CCryptPropertyPage::OnSetActive();
 }
@@ -1093,6 +1130,7 @@ void CMountPropertyPage::OnCbnSelchangePath()
 	int flags = theApp.GetProfileInt(L"MountFlags", path_hash, 0);
 	CheckDlgButton(IDC_READONLY, (flags & READONLY_FLAG) != 0);
 	CheckDlgButton(IDC_REVERSE, (flags & REVERSE_FLAG) != 0);
+	CheckDlgButton(IDC_AUTO_MOUNT, (flags & AUTO_MOUNT_FLAG) != 0);
 
 	BOOL save_passwords_enabled = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
 
