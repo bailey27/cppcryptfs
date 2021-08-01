@@ -77,6 +77,9 @@ public:
 	CImageList m_imageList;
 	int m_imageIndex;
 
+	//Check if this is the first time running mount page
+	bool bMountFrameFirstRun = 1;
+
 public:
 	virtual void DefaultAction();
 
