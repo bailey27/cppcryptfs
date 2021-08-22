@@ -998,7 +998,7 @@ BOOL CMountPropertyPage::OnSetActive()
 							}
 
 							CString config_path = theApp.GetProfileString(L"ConfigPaths", path_hash, NULL);
-							CString errMes = Mount(m_lastDirs[i], mountPoint, password.m_buf, flags & READONLY_FLAG, config_path.GetLength() > 0 ? config_path : NULL, flags & REVERSE_FLAG);
+							CString errMes = Mount(m_lastDirs[i], mountPoint, password.m_buf, flags & READONLY_FLAG, config_path.GetLength() > 0 ? config_path : NULL, flags & REVERSE_FLAG);							
 							if (errMes.GetLength() > 0) {
 								MessageBox(errMes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 							}
@@ -1044,7 +1044,7 @@ BOOL CMountPropertyPage::OnSetActive()
 			CComboBox *pBoxPath = (CComboBox*)GetDlgItem(IDC_PATH);
 			if (pBoxPath) {
 				CString cpath;
-				pBoxPath->GetWindowText(cpath);
+				pBoxPath->GetWindowText(cpath);				
 				if (cpath.GetLength() > 0) {
 					CString path_hash;
 					wstring hash;
@@ -1062,9 +1062,11 @@ BOOL CMountPropertyPage::OnSetActive()
 						if ((flags & SAVE_PASSWORD_FLAG) && save_passwords_enabled && SavedPasswords::RetrievePassword(cpath, password.m_buf, password.m_len)) {
 
 							password.m_buf[MAX_PASSWORD_LEN] = '\0';
-							CSecureEdit *pEd = (CSecureEdit*)GetDlgItem(IDC_PASSWORD);
-							if (pEd) {
-								pEd->SetRealText(password.m_buf);
+							if (!IsPathMounted(cpath)) {
+								CSecureEdit* pEd = (CSecureEdit*)GetDlgItem(IDC_PASSWORD);
+								if (pEd) {
+									pEd->SetRealText(password.m_buf);
+								}
 							}
 						} else {
 							CSecureEdit *pEd = (CSecureEdit*)GetDlgItem(IDC_PASSWORD);
@@ -1977,3 +1979,21 @@ int CMountPropertyPage::OpenFileManagementShell(const CString& mp)
 	}
 }
 
+bool CMountPropertyPage::IsPathMounted(LPCWSTR path)
+{
+	CListCtrl* pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
+
+	if (!pList)
+		return false;
+
+	auto count = pList->GetItemCount();
+
+	for (int i = 0; i < count; ++i) {
+		CString mounted_path = pList->GetItemText(i, PATH_INDEX);
+		if (mounted_path == path) {
+			return true;
+		}
+	}
+
+	return false;
+}

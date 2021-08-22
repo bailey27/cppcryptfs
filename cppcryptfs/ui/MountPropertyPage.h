@@ -101,6 +101,8 @@ public:
 
 	void PrintInfo(OutputHandler& output_handler, LPCWSTR mountpoint);
 
+	bool IsPathMounted(LPCWSTR path);
+
 	virtual void OnExit() override;
 
 
