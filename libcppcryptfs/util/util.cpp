@@ -700,42 +700,44 @@ const wchar_t* get_command_line_usage()
 LR"(Usage: cppcryptfs/cppcryptfsctl [OPTIONS]
 
 Mounting:
-  -m, --mount=PATH         mount filesystem located at PATH
-  -d, --drive=D            mount to drive letter D or empty dir DIR
-  -p, --password=PASS      use password PASS
-  -P, --saved-password     use saved password
-  -r, --readonly           mount read-only
-  -c, --config=PATH        path to config file for init/mount
-  -s, --reverse            init/mount reverse filesystem (implies siv for init)
+  -m, --mount=PATH            mount filesystem located at PATH
+  -d, --drive=D               mount to drive letter D or empty dir DIR
+  -p, --password=PASS         use password PASS
+  -P, --saved-password        use saved password
+  -r, --readonly              mount read-only
+  -c, --config=PATH           path to config file for init/mount
+  -s, --reverse               init/mount reverse filesystem (implies siv for init)
+  --deny-other-sessions [1|0] enable/disable preventing other sessions from accessing
+  --deny-services [1|0]       enable/disable preventing services from accessing
 
 Unmounting:
-  -u, --unmount=D          unmount drive letter D or dir DIR
-  -u, --unmount=all        unmount all drives
-  -f, --force              force unmounting if in use
+  -u, --unmount=D             unmount drive letter D or dir DIR
+  -u, --unmount=all           unmount all drives
+  -f, --force                 force unmounting if in use
 
 Misc:
-  -t, --tray               hide in system tray
-  -x, --exit               exit if no drives mounted
-  -l, --list               list available and mounted drive letters (with paths)
-  -ld:\p, --list=d:\p      list plaintext and encrypted filenames
-  -C, --csv                file list is comma-delimited
-  -D, --dir                file list dirs first and w/ trailing \"\\\"
-  -i, --info=D             show information about mounted filesystem
-  -v, --version            print version (use --init -v for cppcryptfsctl ver)
-  -h, --help               display this help message
+  -t, --tray                  hide in system tray
+  -x, --exit                  exit if no drives mounted
+  -l, --list                  list available and mounted drive letters (with paths)
+  -ld:\p, --list=d:\p         list plaintext and encrypted filenames
+  -C, --csv                   file list is comma-delimited
+  -D, --dir                   file list dirs first and w/ trailing \"\\\"
+  -i, --info=D                show information about mounted filesystem
+  -v, --version               print version (use --init -v for cppcryptfsctl ver)
+  -h, --help                  display this help message
 
 Initializing (cppcryptfsctl only):
-  -I, --init=PATH          Initialize encrypted filesystem located at PATH
-  -V, --volumename=NAME    specify volume name for filesystem
-  -T, --plaintext          use plaintext filenames (default is AES256-EME)
-  -S, --siv                use AES256-SIV for data encryption (default is GCM)
-  -L, --longnames [0|1]    enable/disable LFNs. defaults to enabled (1)
-  -b, --streams   [0|1]    enable/disable streams. defaults to enabled (1)
+  -I, --init=PATH             Initialize encrypted filesystem located at PATH
+  -V, --volumename=NAME       specify volume name for filesystem
+  -T, --plaintext             use plaintext filenames (default is AES256-EME)
+  -S, --siv                   use AES256-SIV for data encryption (default is GCM)
+  -L, --longnames [1|0]       enable/disable LFNs. defaults to enabled (1)
+  -b, --streams   [1|0]       enable/disable streams. defaults to enabled (1)
 
 Recovery/Maintenance (cppcryptfsctl only):
-  --changepassword=PATH	   Change password used to protect master key
-  --printmasterkey=PATH    Print master key in human-readable format
-  --recover=PATH           Prompt for master key and new password to recover
+  --changepassword=PATH       Change password used to protect master key
+  --printmasterkey=PATH       Print master key in human-readable format
+  --recover=PATH              Prompt for master key and new password to recover
 )";
 	// --changepassword short form is 1
 }

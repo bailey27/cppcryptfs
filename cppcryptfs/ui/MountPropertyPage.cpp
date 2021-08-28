@@ -1296,6 +1296,35 @@ static void usage(OutputHandler& output_handler)
 	output_handler.print(CMD_PIPE_ERROR, get_command_line_usage());
 }
 
+struct IntSettingSetterRestorer {
+	wstring name;
+	int saved_val;
+	int new_val;
+	bool inited = false;
+	void IntSettingSetterRestorer::init(const wchar_t* sname, int default_val, int newval)
+	{
+
+		inited = true;
+
+		name = sname;
+
+		saved_val = theApp.GetProfileInt(L"Settings", name.c_str(), default_val);
+
+		new_val = newval;
+
+		if (new_val != saved_val)
+			theApp.WriteProfileInt(L"Settings", name.c_str(), new_val);
+	}
+	~IntSettingSetterRestorer()
+	{
+		if (inited) {
+			if (new_val != saved_val) {
+				theApp.WriteProfileInt(L"Settings", name.c_str(), saved_val);
+			}
+		}
+	}
+};
+
 
 void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HANDLE hPipe)
 {
@@ -1343,7 +1372,9 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 	CString config_path;
 	bool use_saved_password = false;
 	bool force = false;
-
+	int deny_other_sessions = -1;
+	int deny_services = -1;
+	
 	CString list_arg;
 
 	try {
@@ -1367,6 +1398,8 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 			{L"dir",  no_argument, 0, 'D'},
 			{L"version",  no_argument, 0, 'v' },
 			{L"help",  no_argument, 0, 'h'},
+			{L"deny-other-sessions",  required_argument, 0, '3'},
+			{L"deny-services",  required_argument, 0, '4'},
 			{0, 0, 0, 0}
 		};
 
@@ -1381,6 +1414,12 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 				break;
 
 			switch (c) {
+			case '3':
+				deny_other_sessions = *optarg == '0' ? 0 : 1;
+				break;
+			case '4':
+				deny_services = *optarg == '0' ? 0 : 1;
+				break;
 			case '?':
 				invalid_opt = TRUE;
 				break;
@@ -1459,7 +1498,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 	} catch (int err) {
 		if (err) {
 			if (errMes.GetLength() == 0)
-				errMes = L"unexpected exception";
+				errMes = L"invalid argument";
 		}
 	}
 
@@ -1566,10 +1605,19 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 				}
 			}
 			if (errMes.GetLength() < 1) {
-				if (mountPoint.GetLength() > 0)
+				if (mountPoint.GetLength() > 0) {
+					IntSettingSetterRestorer deny_other_sessions_setter;
+					IntSettingSetterRestorer deny_services_setter;
+					if (deny_other_sessions != -1) {
+						deny_other_sessions_setter.init(L"DenyOtherUsers", DENY_OTHER_USERS_DEFAULT, deny_other_sessions);
+					}
+					if (deny_services != -1) {
+						deny_services_setter.init(L"DenyServices", DENY_SERVICES_DEFAULT, deny_services);
+					}
 					errMes = Mount(path, mountPoint, password.m_buf, readonly, config_path.GetLength() > 0 ? config_path : NULL, reverse);
-				else
+				} else {
 					errMes = L"drive letter/mount point must be specified";
+				}
 			}
 		} else if (dismount) {
 			if (dismount_all) {
