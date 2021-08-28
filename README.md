@@ -148,12 +148,14 @@ After you mount the filesystem, you will then have a new drive letter, and you c
 
 If you check "Read-only", then the filesystem will be mounted read-only (write-protected).
 
-
 For an explanation of how saved passwords work in cppcryptfs, please see the section on "Saved Passwords" below.
+
+If you check "Auto mount" (which needs a saved password to work), then the next time you start cppcryptfs, that path will be mounted to that mount point upon startup.  You must have saved the password for that mount for this to work.  
+
+The path will continue to automount until you manually mount it wwith "Auto mount" unchecked.
 
 For technical details of the cryptographic design of gocryptfs, please visit
 the [gocryptfs project page](https://github.com/rfjakob/gocryptfs).
-
 
 When you are finished using the drive letter, go to the "Mount" tab and select the drive letter and click on "Dismount" or click "Dismount All".  The drive letter(s) will be dismounted, and the encryption keys will be erased from memory. 
 
@@ -328,18 +330,29 @@ If this setting is on, then the --force flag is needed on the command line when 
 
 This setting is not enabled in either the Default or Recommended settings.
 
-**Deny Other Users**
+**Deny Other Sessions**
 
-If this setting is enabled, then encrypted volumes will be accessible only to the user who started the instance of cppcryptfs that mounted them.  Any drive letters used for mounting 
-will still be visible to other users, but they will not be accessible to them.
+If this setting is enabled, then encrypted volumes will be accessible only in the session that started the instance of cppcryptfs that mounted them.  Any drive letters used for mounting 
+will still be visible to other sessions, but they will not be accessible to them.
 
-The check is done only in calls to the CreateFile API (which both creates new files and directories and opens existing ones).  Denying access to other users
+The check is done only in calls to the CreateFile API (which both creates new files and directories and opens existing ones).  Denying access to other sessions 
 only in CreateFile appears to be sufficient.
 
 The scope of testing of this feature makes the developer confident that this setting makes a mounted volume safe from
-access by an another ordinary logged-on user who is sharing the same computer.  However, it is not certain that a determined and knowlegable attacker would not be able to find a way to circumvent this protection.
+access by an another ordinary logged-on user who is sharing the same computer and logged into a different session.  However, it is not certain that a determined and knowlegable attacker would not be able to find a way to circumvent this protection.  
+
+Please see the descrition of Deny Services below for more information.
 
 This setting is not enabled in either the Default or Recommended settings.
+
+**Deny Services**
+
+If this setting is enabled, then encrypted volumes will not be accessible by Windows services running in session 0.  
+
+It is possible for Windows services running under the system account or processes created by users with the "Act as part of the operating system" user right to create access tokens and set whatever session id they want in them.  So this protection is not absolute but should prevent Windows services from accessing mounted filesystems in normal use situations.
+
+This setting is not enabled in either the Default or Recommended settings.
+
 
 **Defaults and Recommended**
 
@@ -429,45 +442,49 @@ The name of the named pipe is decorated with the username and domain name of the
 communicate only with an instance of cppcryptfs started by the same user.
 
 ```
+
 Usage: cppcryptfs/cppcryptfsctl [OPTIONS]
 
 Mounting:
-  -m, --mount=PATH         mount filesystem located at PATH
-  -d, --drive=D            mount to drive letter D or empty dir DIR
-  -p, --password=PASS      use password PASS
-  -P, --saved-password     use saved password
-  -r, --readonly           mount read-only
-  -c, --config=PATH        path to config file for init/mount
-  -s, --reverse            init/mount reverse filesystem (implies siv for init)
+  -m, --mount=PATH            mount filesystem located at PATH
+  -d, --drive=D               mount to drive letter D or empty dir DIR
+  -p, --password=PASS         use password PASS
+  -P, --saved-password        use saved password
+  -r, --readonly              mount read-only
+  -c, --config=PATH           path to config file for init/mount
+  -s, --reverse               init/mount reverse filesystem (implies siv for init)
+  --deny-other-sessions [1|0] enable/disable preventing other sessions from accessing
+  --deny-services [1|0]       enable/disable preventing services from accessing
 
 Unmounting:
-  -u, --unmount=D          unmount drive letter D or dir DIR
-  -u, --unmount=all        unmount all drives
-  -f, --force              force unmounting if in use
+  -u, --unmount=D             unmount drive letter D or dir DIR
+  -u, --unmount=all           unmount all drives
+  -f, --force                 force unmounting if in use
 
 Misc:
-  -t, --tray               hide in system tray
-  -x, --exit               exit if no drives mounted
-  -l, --list               list available and mounted drive letters (with paths)
-  -ld:\p, --list=d:\p      list plaintext and encrypted filenames
-  -C, --csv                file list is comma-delimited
-  -D, --dir                file list dirs first and w/ trailing \"\\\"
-  -i, --info=D             show information about mounted filesystem
-  -v, --version            print version (use --init -v for cppcryptfsctl ver)
-  -h, --help               display this help message
+  -t, --tray                  hide in system tray
+  -x, --exit                  exit if no drives mounted
+  -l, --list                  list available and mounted drive letters (with paths)
+  -ld:\p, --list=d:\p         list plaintext and encrypted filenames
+  -C, --csv                   file list is comma-delimited
+  -D, --dir                   file list dirs first and w/ trailing \"\\\"
+  -i, --info=D                show information about mounted filesystem
+  -v, --version               print version (use --init -v for cppcryptfsctl ver)
+  -h, --help                  display this help message
 
 Initializing (cppcryptfsctl only):
-  -I, --init=PATH          Initialize encrypted filesystem located at PATH
-  -V, --volumename=NAME    specify volume name for filesystem
-  -T, --plaintext          use plaintext filenames (default is AES256-EME)
-  -S, --siv                use AES256-SIV for data encryption (default is GCM)
-  -L, --longnames [0|1]    enable/disable LFNs. defaults to enabled (1)
-  -b, --streams   [0|1]    enable/disable streams. defaults to enabled (1)
+  -I, --init=PATH             Initialize encrypted filesystem located at PATH
+  -V, --volumename=NAME       specify volume name for filesystem
+  -T, --plaintext             use plaintext filenames (default is AES256-EME)
+  -S, --siv                   use AES256-SIV for data encryption (default is GCM)
+  -L, --longnames [1|0]       enable/disable LFNs. defaults to enabled (1)
+  -b, --streams   [1|0]       enable/disable streams. defaults to enabled (1)
 
 Recovery/Maintenance (cppcryptfsctl only):
-  --changepassword=PATH    Change password used to protect master key
-  --printmasterkey=PATH    Print master key in human-readable format
-  --recover=PATH           Prompt for master key and new password to recover
+  --changepassword=PATH       Change password used to protect master key
+  --printmasterkey=PATH       Print master key in human-readable format
+  --recover=PATH              Prompt for master key and new password to recover
+
 ```
 
 Only cppcryptfsctl can create a filesystem from the command line(--init).  To create a filesystem with cppcryptfs you have to use the GUI.  
