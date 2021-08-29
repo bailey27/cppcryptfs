@@ -706,9 +706,9 @@ Mounting:
   -P, --saved-password        use saved password
   -r, --readonly              mount read-only
   -c, --config=PATH           path to config file for init/mount
-  -s, --reverse               init/mount reverse filesystem (implies siv for init)
-  --deny-other-sessions [1|0] enable/disable preventing other sessions from accessing
-  --deny-services [1|0]       enable/disable preventing services from accessing
+  -s, --reverse               init/mount reverse fs (implies siv for init)
+  --deny-other-sessions [1|0] enable/disable deny other sessions from accessing
+  --deny-services [1|0]       enable/disable deny services from accessing
 
 Unmounting:
   -u, --unmount=D             unmount drive letter D or dir DIR
@@ -718,19 +718,19 @@ Unmounting:
 Misc:
   -t, --tray                  hide in system tray
   -x, --exit                  exit if no drives mounted
-  -l, --list                  list available and mounted drive letters (with paths)
+  -l, --list                  list avail drive letters and mounted fs 
   -ld:\p, --list=d:\p         list plaintext and encrypted filenames
   -C, --csv                   file list is comma-delimited
   -D, --dir                   file list dirs first and w/ trailing \"\\\"
   -i, --info=D                show information about mounted filesystem
-  -v, --version               print version (use --init -v for cppcryptfsctl ver)
+  -v, --version               print ver (use --init -v for cppcryptfsctl ver)
   -h, --help                  display this help message
 
 Initializing (cppcryptfsctl only):
   -I, --init=PATH             Initialize encrypted filesystem located at PATH
   -V, --volumename=NAME       specify volume name for filesystem
   -T, --plaintext             use plaintext filenames (default is AES256-EME)
-  -S, --siv                   use AES256-SIV for data encryption (default is GCM)
+  -S, --siv                   use AES256-SIV for data encr (default is GCM)
   -L, --longnames [1|0]       enable/disable LFNs. defaults to enabled (1)
   -b, --streams   [1|0]       enable/disable streams. defaults to enabled (1)
 
