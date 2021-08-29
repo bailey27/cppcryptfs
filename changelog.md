@@ -2,6 +2,11 @@
 
 Changelog
 ------------
+v1.4.3.9, Aug 29 2021
+* Change deny other users to be deny other sessions.  This functionality
+  is now based on SessionId instead of Username.
+* Add Deny Services option (deny access from SessionId 0).
+* Add auto-mount functionality contributed by atYuguo
 
 v1.4.3.8, Jun 5 2021
 * Make CTRL+T minimize to tray.  Make ALT+F4 work for closing app.
