@@ -11,7 +11,7 @@ cppcryptfs is an implementation of the gocryptfs filesystem in C++ for Windows. 
 cppcrypts provides on-the-fly, at-rest and in-the-cloud encryption of files and file names in a virtual filesystem.  It uses the [Dokany](https://github.com/dokan-dev/dokany) driver and library to provide a virtual fileystem in user mode under Windows.
 
 
-you can use cppcryptfs to create an encrypted filesystem in a folder.  The encrypted filesystem is protected with a password that you choose.  
+You can use cppcryptfs to create an encrypted filesystem in a folder.  The encrypted filesystem is protected with a password that you choose.  
 
 When you use cppcryptfs to mount the encrypted filesystem by providing the password, then you have a new drive letter in Windows.  This virtual drive letter gives you an unencrypted view of your files.  The encryption and decryption are done on the fly and are transparent to applications that use the files on that virtual drive.
 
