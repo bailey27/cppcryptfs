@@ -65,7 +65,7 @@ public:
 protected:
 	BOOL SetControls(int nThreads, int nBufferBlocks, int nCacheTTL, bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords,
 						bool bNeverSaveHistory, bool bDeleteSpurriousFiles, bool bOpenOnMounting, bool bEncryptKeysInMemory,
-						bool bCacheKeysInMemory, bool bFastMounting, bool bWarnIfInUseOnDismounting, bool bDenyOtherUsers, bool bDenyServices);
+						bool bCacheKeysInMemory, bool bFastMounting, bool bWarnIfInUseOnDismounting, bool bDenyOtherSessions, bool bDenyServices);
 	void SaveSettings();
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support

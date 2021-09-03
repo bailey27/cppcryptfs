@@ -167,9 +167,9 @@ static bool GetSessionIdFromDokanFileInfo(PDOKAN_FILE_INFO DokanFileInfo, DWORD&
 }
 
 // deny other users based on SessionId 
-static bool DenyOtherUser(const CryptContext* con, PDOKAN_FILE_INFO DokanFileInfo)
+static bool DenyOtherSession(const CryptContext* con, PDOKAN_FILE_INFO DokanFileInfo)
 {
-    if (!con->m_denyOtherUsers && !con->m_denyServices) {
+    if (!con->m_denyOtherSessions && !con->m_denyServices) {
         return false;
     } else {        
         DWORD theirSessionId = 0xffffffff;
@@ -184,7 +184,7 @@ static bool DenyOtherUser(const CryptContext* con, PDOKAN_FILE_INFO DokanFileInf
             return con->m_denyServices;
         }
 
-        if (!con->m_denyOtherUsers) {
+        if (!con->m_denyOtherSessions) {
             return false;
         }
         
@@ -328,7 +328,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
 
   PrintUserName(DokanFileInfo);
 
-  if (DenyOtherUser(GetContext(), DokanFileInfo)) {
+  if (DenyOtherSession(GetContext(), DokanFileInfo)) {
       DbgPrint(L"Denied other user\n");
       return STATUS_ACCESS_DENIED;
   }
@@ -2049,7 +2049,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
         tdata->con.GetConfig()->m_keybuf_manager.Activate();
     }
 
-    tdata->con.m_denyOtherUsers = opts.denyotherusers;
+    tdata->con.m_denyOtherSessions = opts.denyothersessions;
     tdata->con.m_denyServices = opts.denyservices;
     
     PDOKAN_OPERATIONS dokanOperations = &tdata->operations;

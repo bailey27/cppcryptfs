@@ -149,8 +149,8 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 	bool bWarnIfInUseOnDismounting = theApp.GetProfileIntW(L"Settings", L"WarnIfInUseOnDismounting",
 		WARN_IF_IN_USE_ON_DISMOUNT_DEFAULT) != 0;
 
-	bool bDenyOtherUsers = theApp.GetProfileIntW(L"Settings", L"DenyOtherUsers",
-		DENY_OTHER_USERS_DEFAULT) != 0;
+	bool bDenyOtherSessions = theApp.GetProfileIntW(L"Settings", L"DenyOtherSessions",
+		DENY_OTHER_SESSIONS_DEFAULT) != 0;
 
 	bool bDenyServices = theApp.GetProfileIntW(L"Settings", L"DenyServices",
 		DENY_SERVICES_DEFAULT) != 0;
@@ -159,14 +159,14 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, 
 								bEnableSavingPasswords, bNeverSaveHistory, bDeleteSpurriousFiles, bOpenOnMounting,
 								bEncryptKeysInMemory, bCacheKeysInMemory, bFastMounting, bWarnIfInUseOnDismounting,
-								bDenyOtherUsers, bDenyServices);
+								bDenyOtherSessions, bDenyServices);
 }
 
 BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, 
 						bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords, bool bNeverSaveHistory,
 						bool bDeleteSpurriousFiles, bool bOpenOnMounting, bool bEncryptKeysInMemory,
 						bool bCacheKeysInMemory, bool bFastMounting, bool bWarnIfInUseOnDismounting,
-						bool bDenyOtherUsers, bool bDenyServices)
+						bool bDenyOtherSessions, bool bDenyServices)
 {
 
 	m_bCaseInsensitive =  bCaseInsensitive;
@@ -179,7 +179,7 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	m_bCacheKeysInMemory = bCacheKeysInMemory;
 	m_bFastMounting = bFastMounting;
 	m_bWarnIfInUseOnDismounting = bWarnIfInUseOnDismounting;
-	m_bDenyOtherUsers = bDenyOtherUsers;
+	m_bDenyOtherUsers = bDenyOtherSessions;
 	m_bDenyServices = bDenyServices;
 
 	int i;
@@ -386,7 +386,7 @@ void CSettingsPropertyPage::OnBnClickedDefaults()
 		CASEINSENSITIVE_DEFAULT, MOUNTMANAGER_DEFAULT, ENABLE_SAVING_PASSWORDS_DEFAULT,
 		NEVER_SAVE_HISTORY_DEFAULT, DELETE_SPURRIOUS_FILES_DEFAULT, OPEN_ON_MOUNTING_DEFAULT,
 		ENCRYPT_KEYS_IN_MEMORY_DEFAULT, CACHE_KEYS_IN_MEMORY_DEFAULT, FAST_MOUNTING_DEFAULT,
-		WARN_IF_IN_USE_ON_DISMOUNT_DEFAULT, DENY_OTHER_USERS_DEFAULT, DENY_SERVICES_DEFAULT);
+		WARN_IF_IN_USE_ON_DISMOUNT_DEFAULT, DENY_OTHER_SESSIONS_DEFAULT, DENY_SERVICES_DEFAULT);
 
 	SaveSettings();
 }
@@ -400,7 +400,7 @@ void CSettingsPropertyPage::OnBnClickedRecommended()
 		CASEINSENSITIVE_RECOMMENDED, MOUNTMANAGER_RECOMMENDED, ENABLE_SAVING_PASSWORDS_RECOMMENDED,
 		NEVER_SAVE_HISTORY_RECOMMENDED, DELETE_SUPRRIOUS_FILES_RECOMMENDED, OPEN_ON_MOUNTING_RECOMMENDED,
 		ENCRYPT_KEYS_IN_MEMORY_RECOMMENDED, CACHE_KEYS_IN_MEMORY_RECOMMENDED, FAST_MOUNTING_RECOMMENDED,
-		WARN_IF_IN_USE_ON_DISMOUNT_RECOMMENDED, DENY_OTHER_USERS_RECOMMENDED, DENY_SERVICES_RECOMMENDED);
+		WARN_IF_IN_USE_ON_DISMOUNT_RECOMMENDED, DENY_OTHER_SESSIONS_RECOMMENDED, DENY_SERVICES_RECOMMENDED);
 
 	SaveSettings();
 }

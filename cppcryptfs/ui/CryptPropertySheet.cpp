@@ -255,10 +255,10 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 			return FALSE;
 		}
 
-		bool denyOtherUsers = theApp.GetProfileInt(L"Settings", L"DenyOtherUsers", DENY_OTHER_USERS_DEFAULT) != 0;
+		bool denyOtherSessions = theApp.GetProfileInt(L"Settings", L"DenyOtherSessions", DENY_OTHER_SESSIONS_DEFAULT) != 0;
 		bool denyServices = theApp.GetProfileInt(L"Settings", L"DenyServices", DENY_SERVICES_DEFAULT) != 0;
 
-		if (denyOtherUsers || denyServices) {
+		if (denyOtherSessions || denyServices) {
 
 			DWORD theirSessionId;
 			if (!ProcessIdToSessionId(client_process_id, &theirSessionId)) {
@@ -271,7 +271,7 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 				return FALSE;
 			}
 
-			if (denyOtherUsers && theirSessionId != 0) {
+			if (denyOtherSessions && theirSessionId != 0) {
 				static DWORD mySessionId;
 				static once_flag once;
 				static bool got_my_sessionid = false;

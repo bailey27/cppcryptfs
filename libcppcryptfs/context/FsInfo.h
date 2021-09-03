@@ -50,7 +50,7 @@ public:
 	bool longFileNames;
 	bool encryptKeysInMemory;
 	bool cacheKeysInMemory;
-	bool denyOtherUsers;
+	bool denyOtherSessions;
 	bool denyServices;
 
 	FsInfo();

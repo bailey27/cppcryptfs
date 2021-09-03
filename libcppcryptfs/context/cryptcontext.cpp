@@ -71,7 +71,7 @@ CryptContext::CryptContext()
 	m_encryptKeysInMemory = false;
 	m_cacheKeysInMemory = false;
 
-	m_denyOtherUsers = false;
+	m_denyOtherSessions = false;
 	m_denyServices = false;
 }
 
@@ -116,7 +116,7 @@ void CryptContext::GetFsInfo(FsInfo & info)
 {
 	
 	info.denyServices = this->m_denyServices;
-	info.denyOtherUsers = this->m_denyOtherUsers;
+	info.denyOtherSessions = this->m_denyOtherSessions;
 	info.encryptKeysInMemory = this->m_encryptKeysInMemory;
 	info.cacheKeysInMemory = this->m_cacheKeysInMemory;
 	info.cacheTTL = m_cache_ttl;

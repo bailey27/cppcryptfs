@@ -344,11 +344,11 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 	opts.fastmounting = theApp.GetProfileInt(L"Settings", L"FastMounting", FAST_MOUNTING_DEFAULT) != 0;
 
-	opts.denyotherusers = theApp.GetProfileInt(L"Settings", L"DenyOtherUsers", DENY_OTHER_USERS_DEFAULT) != 0;
+	opts.denyothersessions = theApp.GetProfileInt(L"Settings", L"DenyOtherSessions", DENY_OTHER_SESSIONS_DEFAULT) != 0;
 
 	opts.denyservices = theApp.GetProfileInt(L"Settings", L"DenyServices", DENY_SERVICES_DEFAULT) != 0;
 
-	if (opts.denyotherusers || opts.denyservices) {		
+	if (opts.denyothersessions || opts.denyservices) {		
 		if (!CanGetSessionIdOk()) {			
 			return CString(L"Unable to get session id.  Deny other sessions/Deny services setting will not work and must be disabled.");			
 		}		
@@ -1609,7 +1609,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 					IntSettingSetterRestorer deny_other_sessions_setter;
 					IntSettingSetterRestorer deny_services_setter;
 					if (deny_other_sessions != -1) {
-						deny_other_sessions_setter.init(L"DenyOtherUsers", DENY_OTHER_USERS_DEFAULT, deny_other_sessions);
+						deny_other_sessions_setter.init(L"DenyOtherSessions", DENY_OTHER_SESSIONS_DEFAULT, deny_other_sessions);
 					}
 					if (deny_services != -1) {
 						deny_services_setter.init(L"DenyServices", DENY_SERVICES_DEFAULT, deny_services);
