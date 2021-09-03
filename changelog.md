@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.3.10, Sep 3 2021
+* Noticed previous release was compiled with AES-NI instructions
+  (hardware AES) support disabled.  This release fixes that.
+
 v1.4.3.9, Aug 29 2021
 * Change deny other users to be deny other sessions.  This functionality
   is now based on SessionId instead of Username.
