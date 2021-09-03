@@ -82,7 +82,7 @@ BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_CACHE_KEYS_IN_MEMORY, &CSettingsPropertyPage::OnClickedCacheKeysInMemory)
 	ON_BN_CLICKED(IDC_FAST_MOUNTING, &CSettingsPropertyPage::OnBnClickedFastMounting)
 	ON_BN_CLICKED(IDC_WARN_IF_IN_USE_ON_DISMOUNTING, &CSettingsPropertyPage::OnClickedWarnIfInUseOnDismounting)
-	ON_BN_CLICKED(IDC_DENY_OTHER_USERS, &CSettingsPropertyPage::OnClickedDenyOtherUsers)
+	ON_BN_CLICKED(IDC_DENY_OTHER_SESSIONS, &CSettingsPropertyPage::OnClickedDenyOtherSessions)
 	ON_BN_CLICKED(IDC_DENY_SERVICES, &CSettingsPropertyPage::OnClickedDenyServices)
 END_MESSAGE_MAP()
 
@@ -276,7 +276,7 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	CheckDlgButton(IDC_WARN_IF_IN_USE_ON_DISMOUNTING, m_bWarnIfInUseOnDismounting ? 1 : 0);
 
-	CheckDlgButton(IDC_DENY_OTHER_USERS, m_bDenyOtherSessions ? 1 : 0);
+	CheckDlgButton(IDC_DENY_OTHER_SESSIONS, m_bDenyOtherSessions ? 1 : 0);
 
 	CheckDlgButton(IDC_DENY_SERVICES, m_bDenyServices ? 1 : 0);
 
@@ -374,7 +374,7 @@ void CSettingsPropertyPage::SaveSettings()
 	OnClickedCacheKeysInMemory();
 	OnBnClickedFastMounting();
 	OnClickedWarnIfInUseOnDismounting();
-	OnClickedDenyOtherUsers();
+	OnClickedDenyOtherSessions();
 	OnClickedDenyServices();
 }
 
@@ -574,13 +574,13 @@ void CSettingsPropertyPage::OnClickedWarnIfInUseOnDismounting()
 }
 
 
-void CSettingsPropertyPage::OnClickedDenyOtherUsers()
+void CSettingsPropertyPage::OnClickedDenyOtherSessions()
 {
 	// TODO: Add your control notification handler code here
 
 	m_bDenyOtherSessions = !m_bDenyOtherSessions;
 
-	CheckDlgButton(IDC_DENY_OTHER_USERS, m_bDenyOtherSessions ? 1 : 0);
+	CheckDlgButton(IDC_DENY_OTHER_SESSIONS, m_bDenyOtherSessions ? 1 : 0);
 
 	theApp.WriteProfileInt(L"Settings", L"DenyOtherSessions", m_bDenyOtherSessions ? 1 : 0);
 }

@@ -181,7 +181,11 @@ static bool DenyOtherSession(const CryptContext* con, PDOKAN_FILE_INFO DokanFile
 
         // session id 0 is for services like AV
         if (theirSessionId == 0) {
-            return con->m_denyServices;
+            const auto result = con->m_denyServices;
+            if (result) {
+                DbgPrint(L"Denied access by a service\n");
+            }
+            return result;
         }
 
         if (!con->m_denyOtherSessions) {
@@ -189,8 +193,13 @@ static bool DenyOtherSession(const CryptContext* con, PDOKAN_FILE_INFO DokanFile
         }
         
         if (g_GotSessionId) {
-            return theirSessionId != g_SessionId;
+           const auto result = theirSessionId != g_SessionId;
+           if (result) {
+               DbgPrint(L"Denied access by other session\n");
+           }
+           return result;
         } else {
+            DbgPrint(L"Denied access because deny other sessions in effect but were unable to obtain our session id\n");
             return true;
         }
     }
@@ -329,7 +338,7 @@ CryptCreateFile(LPCWSTR FileName, PDOKAN_IO_SECURITY_CONTEXT SecurityContext,
   PrintUserName(DokanFileInfo);
 
   if (DenyOtherSession(GetContext(), DokanFileInfo)) {
-      DbgPrint(L"Denied other user\n");
+      DbgPrint(L"Denied other session or a service\n");
       return STATUS_ACCESS_DENIED;
   }
 

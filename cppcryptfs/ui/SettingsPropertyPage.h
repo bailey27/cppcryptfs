@@ -89,6 +89,6 @@ public:
 	afx_msg void OnClickedCacheKeysInMemory();
 	afx_msg void OnBnClickedFastMounting();
 	afx_msg void OnClickedWarnIfInUseOnDismounting();
-	afx_msg void OnClickedDenyOtherUsers();
+	afx_msg void OnClickedDenyOtherSessions();
 	afx_msg void OnClickedDenyServices();
 };
