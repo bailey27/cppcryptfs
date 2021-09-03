@@ -51,7 +51,7 @@ CSettingsPropertyPage::CSettingsPropertyPage()
 	m_bEnableSavingPasswords = false;
 	m_bNeverSaveHistory = false;
 	m_bWarnIfInUseOnDismounting = false;
-	m_bDenyOtherUsers = false;
+	m_bDenyOtherSessions = false;
 	m_bDenyServices = false;
 }
 
@@ -179,7 +179,7 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 	m_bCacheKeysInMemory = bCacheKeysInMemory;
 	m_bFastMounting = bFastMounting;
 	m_bWarnIfInUseOnDismounting = bWarnIfInUseOnDismounting;
-	m_bDenyOtherUsers = bDenyOtherSessions;
+	m_bDenyOtherSessions = bDenyOtherSessions;
 	m_bDenyServices = bDenyServices;
 
 	int i;
@@ -276,7 +276,7 @@ BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cach
 
 	CheckDlgButton(IDC_WARN_IF_IN_USE_ON_DISMOUNTING, m_bWarnIfInUseOnDismounting ? 1 : 0);
 
-	CheckDlgButton(IDC_DENY_OTHER_USERS, m_bDenyOtherUsers ? 1 : 0);
+	CheckDlgButton(IDC_DENY_OTHER_USERS, m_bDenyOtherSessions ? 1 : 0);
 
 	CheckDlgButton(IDC_DENY_SERVICES, m_bDenyServices ? 1 : 0);
 
@@ -361,7 +361,7 @@ void CSettingsPropertyPage::SaveSettings()
 	m_bCacheKeysInMemory = !m_bCacheKeysInMemory; // ditto
 	m_bFastMounting = !m_bFastMounting; // ditto
 	m_bWarnIfInUseOnDismounting = !m_bWarnIfInUseOnDismounting; // ditto
-	m_bDenyOtherUsers = !m_bDenyOtherUsers; // ditto
+	m_bDenyOtherSessions = !m_bDenyOtherSessions; // ditto
 	m_bDenyServices = !m_bDenyServices; // ditto
 
 	OnBnClickedCaseinsensitive();
@@ -578,11 +578,11 @@ void CSettingsPropertyPage::OnClickedDenyOtherUsers()
 {
 	// TODO: Add your control notification handler code here
 
-	m_bDenyOtherUsers = !m_bDenyOtherUsers;
+	m_bDenyOtherSessions = !m_bDenyOtherSessions;
 
-	CheckDlgButton(IDC_DENY_OTHER_USERS, m_bDenyOtherUsers ? 1 : 0);
+	CheckDlgButton(IDC_DENY_OTHER_USERS, m_bDenyOtherSessions ? 1 : 0);
 
-	theApp.WriteProfileInt(L"Settings", L"DenyOtherUsers", m_bDenyOtherUsers ? 1 : 0);
+	theApp.WriteProfileInt(L"Settings", L"DenyOtherSessions", m_bDenyOtherSessions ? 1 : 0);
 }
 
 

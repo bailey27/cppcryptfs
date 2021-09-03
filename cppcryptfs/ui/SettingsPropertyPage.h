@@ -48,7 +48,7 @@ public:
 	bool m_bCacheKeysInMemory;
 	bool m_bFastMounting;
 	bool m_bWarnIfInUseOnDismounting;
-	bool m_bDenyOtherUsers;
+	bool m_bDenyOtherSessions;
 	bool m_bDenyServices;
 
 	// disallow copying
