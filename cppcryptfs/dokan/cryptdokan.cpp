@@ -2712,12 +2712,13 @@ void crypt_at_exit()
 
 static void InitLogging()
 {
+    
     const WCHAR* logdir = L"C:\\cppcryptfslogs";
 
     if (!PathFileExists(logdir)) {
         ::MessageBox(NULL, (wstring(L"Unable to init logging.  Please create ") + logdir).c_str(), L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
         return;
-    }
+    }    
 
     auto pad2 = [](int n) {
 

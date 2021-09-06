@@ -759,13 +759,17 @@ void SetDbgVars(BOOL DebugMode, BOOL UseStdErr, BOOL UseLogFile, FILE* logfile)
 
 void DbgPrint(LPCWSTR format, ...) {
 	if (s_DebugMode) {
+
+		static mutex mtx;
+		lock_guard<mutex> lck(mtx);
+
 		const WCHAR* outputString;
 		WCHAR* buffer = NULL;
 		size_t length;
 		va_list argp;
 
 		va_start(argp, format);
-		length = _vscwprintf(format, argp) + 1;
+		length = static_cast<size_t>(_vscwprintf(format, argp) + 1);
 		buffer = (WCHAR*)_malloca(length * sizeof(WCHAR));
 		if (buffer) {
 			vswprintf_s(buffer, length, format, argp);
