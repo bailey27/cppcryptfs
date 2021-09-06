@@ -769,7 +769,7 @@ void DbgPrint(LPCWSTR format, ...) {
 		va_list argp;
 
 		va_start(argp, format);
-		length = static_cast<size_t>(_vscwprintf(format, argp) + 1);
+		length = static_cast<ptrdiff_t>(_vscwprintf(format, argp)) + 1;
 		buffer = (WCHAR*)_malloca(length * sizeof(WCHAR));
 		if (buffer) {
 			vswprintf_s(buffer, length, format, argp);
