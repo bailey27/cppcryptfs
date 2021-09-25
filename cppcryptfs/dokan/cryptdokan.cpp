@@ -2214,8 +2214,14 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
     if (bGotVI) {
 
-      size_t maxlength = !wcscmp(fs_name, L"NTFS") ? MAX_VOLUME_NAME_LENGTH
+      const auto is_ntfs = !wcscmp(fs_name, L"NTFS");
+
+      const size_t maxlength =  is_ntfs ? MAX_VOLUME_NAME_LENGTH
                                                    : MAX_FAT_VOLUME_NAME_LENGTH;
+
+      if (0 && !is_ntfs) {
+          con->m_flushwrites = true;
+      }
 
       if (config->m_VolumeName.size() > maxlength)
         config->m_VolumeName.erase(maxlength, wstring::npos);
@@ -2760,7 +2766,8 @@ static void InitLogging()
 }
 
 void crypt_at_start()
-{
+{   
+
     if (g_UseLogFile) {
         InitLogging();
     }    
