@@ -116,7 +116,7 @@ CryptContext::~CryptContext()
 
 void CryptContext::GetFsInfo(FsInfo & info)
 {
-	
+	info.flushAfterWrite = this->m_flushafterwrite;
 	info.denyServices = this->m_denyServices;
 	info.denyOtherSessions = this->m_denyOtherSessions;
 	info.encryptKeysInMemory = this->m_encryptKeysInMemory;

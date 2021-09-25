@@ -52,6 +52,7 @@ public:
 	bool cacheKeysInMemory;
 	bool denyOtherSessions;
 	bool denyServices;
+	bool flushAfterWrite;
 
 	FsInfo();
 	virtual ~FsInfo();
