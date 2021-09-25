@@ -74,7 +74,7 @@ CryptContext::CryptContext()
 	m_denyOtherSessions = false;
 	m_denyServices = false;
 
-	m_flushwrites = false;
+	m_flushafterwrite = false;
 }
 
 static void get_deletable_files(CryptContext *con, vector<wstring>& files)

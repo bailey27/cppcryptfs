@@ -586,7 +586,7 @@ BOOL CryptFileForward::Write(const unsigned char *buf, DWORD buflen, LPDWORD pNw
 				throw(-1);
 		}
 
-		if (m_con->m_flushwrites) {
+		if (m_con->m_flushafterwrite) {
 			::FlushFileBuffers(m_handle);
 		}
 

@@ -2222,19 +2222,19 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
           // flush after write is an OR of all specified conditions so no else here
 
           if (opts.flushafterwrite.exFAT && !lstrcmpi(fs_name, L"exFAT")) {
-              con->m_flushwrites = true;
+              con->m_flushafterwrite = true;
           }
           if (opts.flushafterwrite.fat32 && !lstrcmpi(fs_name, L"FAT32")) {
-              con->m_flushwrites = true;
+              con->m_flushafterwrite = true;
           }
           if (opts.flushafterwrite.ntfs && !lstrcmpi(fs_name, L"NTFS")) {
-              con->m_flushwrites = true;
+              con->m_flushafterwrite = true;
           }
           if (opts.flushafterwrite.not_ntfs && lstrcmpi(fs_name, L"NTFS")) {
-              con->m_flushwrites = true;
+              con->m_flushafterwrite = true;
           }
           if (opts.flushafterwrite.sparse_files_not_supported && !(fs_flags & FILE_SUPPORTS_SPARSE_FILES)) {
-              con->m_flushwrites = true;
+              con->m_flushafterwrite = true;
           }
       }
 

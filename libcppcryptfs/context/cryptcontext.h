@@ -102,7 +102,7 @@ public:
 	bool m_cacheKeysInMemory;
 	bool m_denyOtherSessions;
 	bool m_denyServices;
-	bool m_flushwrites;
+	bool m_flushafterwrite;
 	vector<wstring> m_deletable_files;
 	CryptOpenFiles m_openfiles;
 	CryptOpenHandles m_open_handles;
