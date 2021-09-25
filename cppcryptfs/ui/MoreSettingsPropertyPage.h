@@ -29,6 +29,9 @@ THE SOFTWARE.
 */
 
 #include "CryptPropertyPage.h"
+#include "CryptSetting.h"
+#include <memory>
+#include <unordered_map>
 
 // CMoreSettingsPropertyPage dialog
 
@@ -40,6 +43,8 @@ public:
 	CMoreSettingsPropertyPage();   // standard constructor
 	virtual ~CMoreSettingsPropertyPage();
 
+	
+
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_MORESETTINGS };
@@ -47,8 +52,20 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
+	BOOL SetControls(CryptSetting::SetType set_type, bool save = true);
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnClickedExfat();
+	virtual BOOL OnInitDialog();
+
+protected:
+	std::unordered_map<int, std::unique_ptr<CryptSetting>> m_controls;
+	void SetControlChanged(int id);
+public:
+	afx_msg void OnClickedDefaults();
+	afx_msg void OnClickedRecommended();
+	afx_msg void OnClickedFat32();
+	afx_msg void OnClickedNtfs();
+	afx_msg void OnClickedNotntfs();
+	afx_msg void OnClickedNosparsefiles();
 };
