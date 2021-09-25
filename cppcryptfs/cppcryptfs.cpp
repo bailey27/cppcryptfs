@@ -40,6 +40,7 @@ THE SOFTWARE.
 #include "ui/MountPropertyPage.h"
 #include "ui/CreatePropertyPage.h"
 #include "ui/SettingsPropertyPage.h"
+#include "ui/MoreSettingsPropertyPage.h"
 #include "ui/CryptAboutPropertyPage.h"
 #include "ui/RecentItems.h"
 #include "ui/TrayIcon.h"
@@ -265,6 +266,10 @@ BOOL CcppcryptfsApp::InitInstance()
 	CSettingsPropertyPage settings;
 
 	dlg.AddPage(&settings);
+
+	CMoreSettingsPropertyPage more_settings;
+
+	dlg.AddPage(&more_settings);
 
 	CCryptAboutPropertyPage about;
 

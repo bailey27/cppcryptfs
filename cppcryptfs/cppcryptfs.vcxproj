@@ -219,6 +219,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ui\MoreSettingsPropertyPage.h" />
     <ClInclude Include="config\cryptconfig.h" />
     <ClInclude Include="context\cryptcontext.h" />
     <ClInclude Include="cppcryptfs.h" />
@@ -249,6 +250,7 @@
     <ClInclude Include="ui\uiutil.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ui\MoreSettingsPropertyPage.cpp" />
     <ClCompile Include="cppcryptfs.cpp" />
     <ClCompile Include="dokan\cryptdokan.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
