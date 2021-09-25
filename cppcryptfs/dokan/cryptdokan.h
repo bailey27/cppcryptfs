@@ -40,6 +40,14 @@ typedef struct _struct_win32_find_data_pair {
   WIN32_FIND_DATAW fdata_orig;
 } FindDataPair;
 
+struct FlushAfterWriteOptions {
+    bool ntfs : 1;
+    bool not_ntfs : 1;
+    bool fat32 : 1;
+    bool exFAT : 1;
+    bool sparse_files_not_supported : 1;
+};
+
 typedef struct _struct_CryptMountOptions {
   int numthreads;
   int numbufferblocks;
@@ -55,6 +63,7 @@ typedef struct _struct_CryptMountOptions {
   bool fastmounting;
   bool denyothersessions;
   bool denyservices;
+  FlushAfterWriteOptions flushafterwrite;
 } CryptMountOptions;
 
 class FsInfo;
