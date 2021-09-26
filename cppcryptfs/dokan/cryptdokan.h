@@ -41,36 +41,34 @@ typedef struct _struct_win32_find_data_pair {
 } FindDataPair;
 
 struct FlushAfterWriteOptions {
-    bool ntfs : 1;
-    bool not_ntfs : 1;
-    bool fat32 : 1;
-    bool exFAT : 1;
-    bool sparse_files_not_supported : 1;
+    bool ntfs = 0;
+    bool not_ntfs = 0;
+    bool fat32 = 0;
+    bool exFAT = 0;
+    bool sparse_files_not_supported = 0;
 };
 
-typedef struct _struct_CryptMountOptions {
-  int numthreads;
-  int numbufferblocks;
-  int cachettl;
-  bool readonly;
-  bool reverse;
-  bool caseinsensitive;
-  bool mountmanager;
-  bool mountmanagerwarn;
-  bool deletespurriousfiles;
-  bool encryptkeysinmemory;
-  bool cachekeysinmemory;
-  bool fastmounting;
-  bool denyothersessions;
-  bool denyservices;
+struct CryptMountOptions {
+  int numthreads = 0;
+  int numbufferblocks = 0;
+  int cachettl = 0; 
+  bool caseinsensitive = 0;
+  bool mountmanager = 0;
+  bool mountmanagerwarn = 0;
+  bool deletespurriousfiles = 0;
+  bool encryptkeysinmemory = 0;
+  bool cachekeysinmemory = 0;
+  bool fastmounting = 0;
+  bool denyothersessions = 0;
+  bool denyservices = 0;
   FlushAfterWriteOptions flushafterwrite;
-} CryptMountOptions;
+};
 
 class FsInfo;
 
 int mount_crypt_fs(const WCHAR *mountpoint, const WCHAR *path,
                    const WCHAR *config_path, const WCHAR *password,
-                   wstring &mes, const CryptMountOptions &ops);
+                   wstring &mes, bool reverse, bool readonly, const CryptMountOptions &ops);
 
 BOOL unmount_crypt_fs(const WCHAR *mountpoint, bool wait, wstring &mes);
 

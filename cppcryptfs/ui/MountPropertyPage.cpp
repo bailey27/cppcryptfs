@@ -30,6 +30,7 @@ THE SOFTWARE.
 //
 
 #include "stdafx.h"
+#include "ui/CryptSettings.h"
 #include "cppcryptfs.h"
 #include "MountPropertyPage.h"
 #include "afxdialogex.h"
@@ -315,38 +316,10 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 	// if non-zero dl is specified as arg, then use arg for readonly
 
 	CryptMountOptions opts;
-	memset(&opts, 0, sizeof(opts));
 
-	opts.reverse = reverse;
+	bool readonly = argMountPoint != NULL ? argReadOnly : IsDlgButtonChecked(IDC_READONLY) != 0;
 
-	opts.readonly = argMountPoint != NULL ? argReadOnly : IsDlgButtonChecked(IDC_READONLY) != 0;
-
-	opts.numthreads = theApp.GetProfileInt(L"Settings", L"Threads", PER_FILESYSTEM_THREADS_DEFAULT);
-
-	opts.numbufferblocks = theApp.GetProfileInt(L"Settings", L"BufferBlocks", BUFFERBLOCKS_DEFAULT);	
-
-	if (opts.numbufferblocks < 1 || opts.numbufferblocks * 4 > MAX_IO_BUFFER_KB || !is_power_of_two(opts.numbufferblocks))
-		opts.numbufferblocks = BUFFERBLOCKS_DEFAULT;
-
-	opts.cachettl = theApp.GetProfileInt(L"Settings", L"CacheTTL", CACHETTL_DEFAULT);
-
-	opts.caseinsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", CASEINSENSITIVE_DEFAULT) != 0;
-
-	opts.mountmanager = theApp.GetProfileInt(L"Settings", L"MountManager", MOUNTMANAGER_DEFAULT) != 0;
-
-	opts.mountmanagerwarn = theApp.GetProfileInt(L"Settings", L"MountManagerWarn", MOUNTMANAGERWARN_DEFAULT) != 0;
-
-	opts.deletespurriousfiles = theApp.GetProfileInt(L"Settings", L"DeleteSpurriousFiles", MOUNTMANAGERWARN_DEFAULT) != 0;
-
-	opts.encryptkeysinmemory = theApp.GetProfileInt(L"Settings", L"EncryptKeysInMemory", ENCRYPT_KEYS_IN_MEMORY_DEFAULT) != 0;
-
-	opts.cachekeysinmemory = theApp.GetProfileInt(L"Settings", L"CacheKeysInMemory", CACHE_KEYS_IN_MEMORY_DEFAULT) != 0;
-
-	opts.fastmounting = theApp.GetProfileInt(L"Settings", L"FastMounting", FAST_MOUNTING_DEFAULT) != 0;
-
-	opts.denyothersessions = theApp.GetProfileInt(L"Settings", L"DenyOtherSessions", DENY_OTHER_SESSIONS_DEFAULT) != 0;
-
-	opts.denyservices = theApp.GetProfileInt(L"Settings", L"DenyServices", DENY_SERVICES_DEFAULT) != 0;
+	GetSettings(opts);
 
 	if (opts.denyothersessions || opts.denyservices) {		
 		if (!CanGetSessionIdOk()) {			
@@ -359,18 +332,12 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 			return CString(L"Current session id is 0.  Deny other sessions/Deny services setting will not work and must be disabled.");
 		}
 	}
-
-	opts.flushafterwrite.exFAT = theApp.GetProfileInt(L"Settings", L"FlushAfterWriteExFAT", FLUSH_AFTER_WRITE_EXFAT_DEFAULT) != 0;
-	opts.flushafterwrite.fat32 = theApp.GetProfileInt(L"Settings", L"FlushAfterWriteFAT32", FLUSH_AFTER_WRITE_FAT32_DEFAULT) != 0;
-	opts.flushafterwrite.ntfs = theApp.GetProfileInt(L"Settings", L"FlushAfterWriteNTFS", FLUSH_AFTER_WRITE_NTFS_DEFAULT) != 0;
-	opts.flushafterwrite.not_ntfs= theApp.GetProfileInt(L"Settings", L"FlushAfterWriteNotNTFS", FLUSH_AFTER_WRITE_NOT_NTFS_DEFAULT) != 0;
-	opts.flushafterwrite.sparse_files_not_supported = theApp.GetProfileInt(L"Settings", L"FlushAfterWriteNoSparseFiles", FLUSH_AFTER_WRITE_NO_SPARSE_FILES_DEFAULT) != 0;
-
+	
 	bool bSavePassword = argMountPoint == NULL && (IsDlgButtonChecked(IDC_SAVE_PASSWORD) != 0);	
 	bool bAutoMount = argMountPoint == NULL && (IsDlgButtonChecked(IDC_AUTO_MOUNT) != 0);
 	
 	theApp.DoWaitCursor(1);
-	int result = mount_crypt_fs(cmp, cpath, config_path, password.m_buf, error_mes, opts);
+	int result = mount_crypt_fs(cmp, cpath, config_path, password.m_buf, error_mes, reverse, readonly, opts);
 	theApp.DoWaitCursor(-1);
 
 	if (result != 0) {
@@ -403,7 +370,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 		theApp.WriteProfileString(L"MountPoints", L"LastMountPoint", is_mountpoint_a_drive(cmp) ? dl : cmp);
 
-		theApp.WriteProfileStringW(L"MountOptions", L"ReadOnly", opts.readonly ? L"1" : L"0");
+		theApp.WriteProfileStringW(L"MountOptions", L"ReadOnly", readonly ? L"1" : L"0");
 
 		CString path_hash;
 		wstring hash;
@@ -412,7 +379,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 			theApp.WriteProfileString(L"MountPoints", path_hash, is_mountpoint_a_drive(cmp) ? dl : cmp);
 			theApp.WriteProfileString(L"ConfigPaths", path_hash, config_path);
 			int flags = 0;
-			if (opts.readonly)
+			if (readonly)
 				flags |= READONLY_FLAG;
 			if (reverse)
 				flags |= REVERSE_FLAG;

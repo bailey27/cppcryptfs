@@ -220,6 +220,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ui\CryptSetting.h" />
+    <ClInclude Include="ui\CryptSettings.h" />
     <ClInclude Include="ui\MoreSettingsPropertyPage.h" />
     <ClInclude Include="config\cryptconfig.h" />
     <ClInclude Include="context\cryptcontext.h" />
@@ -252,6 +253,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ui\CryptSetting.cpp" />
+    <ClCompile Include="ui\CryptSettings.cpp" />
     <ClCompile Include="ui\MoreSettingsPropertyPage.cpp" />
     <ClCompile Include="cppcryptfs.cpp" />
     <ClCompile Include="dokan\cryptdokan.cpp">

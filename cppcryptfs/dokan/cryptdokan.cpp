@@ -2004,7 +2004,7 @@ static DWORD WINAPI CryptThreadProc(_In_ LPVOID lpParameter
 
 int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
                    const WCHAR *config_path, const WCHAR *password,
-                   wstring &mes, const CryptMountOptions& opts) {
+                   wstring &mes, bool reverse, bool readonly, const CryptMountOptions& opts) {
   mes.clear();
 
   if (config_path && *config_path == '\0')
@@ -2143,7 +2143,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
     dokanOptions->MountPoint = tdata->mountpoint.c_str();
 
-    if (!config->read(mes, config_path, opts.reverse)) {
+    if (!config->read(mes, config_path, reverse)) {
       if (mes.length() < 1)
         mes = L"unable to load config\n";
       throw(-1);
@@ -2251,7 +2251,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
       DbgPrint(L"GetVolumeInformation failed, lasterr = %u\n", lasterr);
     }
 
-    if (config->m_reverse || opts.readonly) {
+    if (config->m_reverse || readonly) {
       dokanOptions->Options |= DOKAN_OPTION_WRITE_PROTECT;
 	  con->m_read_only = true;
     } else if (opts.mountmanager) {
