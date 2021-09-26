@@ -360,11 +360,11 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 		}
 	}
 
-	opts.flushafterwrite.exFAT = theApp.GetProfileInt(L"MoreSettings", L"FlushAfterWriteExFAT", FLUSH_AFTER_WRITE_EXFAT_DEFAULT) != 0;
-	opts.flushafterwrite.fat32 = theApp.GetProfileInt(L"MoreSettings", L"FlushAfterWriteFAT32", FLUSH_AFTER_WRITE_FAT32_DEFAULT) != 0;
-	opts.flushafterwrite.ntfs = theApp.GetProfileInt(L"MoreSettings", L"FlushAfterWriteNTFS", FLUSH_AFTER_WRITE_NTFS_DEFAULT) != 0;
-	opts.flushafterwrite.not_ntfs= theApp.GetProfileInt(L"MoreSettings", L"FlushAfterWriteNotNTFS", FLUSH_AFTER_WRITE_NOT_NTFS_DEFAULT) != 0;
-	opts.flushafterwrite.sparse_files_not_supported = theApp.GetProfileInt(L"MoreSettings", L"FlushAfterWriteNoSparseFiles", FLUSH_AFTER_WRITE_NO_SPARSE_FILES_DEFAULT) != 0;
+	opts.flushafterwrite.exFAT = theApp.GetProfileInt(L"Settings", L"FlushAfterWriteExFAT", FLUSH_AFTER_WRITE_EXFAT_DEFAULT) != 0;
+	opts.flushafterwrite.fat32 = theApp.GetProfileInt(L"Settings", L"FlushAfterWriteFAT32", FLUSH_AFTER_WRITE_FAT32_DEFAULT) != 0;
+	opts.flushafterwrite.ntfs = theApp.GetProfileInt(L"Settings", L"FlushAfterWriteNTFS", FLUSH_AFTER_WRITE_NTFS_DEFAULT) != 0;
+	opts.flushafterwrite.not_ntfs= theApp.GetProfileInt(L"Settings", L"FlushAfterWriteNotNTFS", FLUSH_AFTER_WRITE_NOT_NTFS_DEFAULT) != 0;
+	opts.flushafterwrite.sparse_files_not_supported = theApp.GetProfileInt(L"Settings", L"FlushAfterWriteNoSparseFiles", FLUSH_AFTER_WRITE_NO_SPARSE_FILES_DEFAULT) != 0;
 
 	bool bSavePassword = argMountPoint == NULL && (IsDlgButtonChecked(IDC_SAVE_PASSWORD) != 0);	
 	bool bAutoMount = argMountPoint == NULL && (IsDlgButtonChecked(IDC_AUTO_MOUNT) != 0);
