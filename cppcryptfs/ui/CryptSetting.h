@@ -29,6 +29,7 @@ THE SOFTWARE.
 #pragma once
 
 #include "stdafx.h"
+#include <functional>
 #include "cppcryptfs.h"
 #include "CryptPropertyPage.h"
 #include "cryptdefaults.h"
@@ -64,10 +65,11 @@ public:
 class CryptComboBoxSetting : public CryptSetting {
 
 protected:
-	const vector<wstring> m_selections;
+	 std::function<void(CComboBox*, int val)> m_set_from_registry;
+	 std::function<bool(CComboBox*, int& val)> m_get_from_control;
 public:
-	CryptComboBoxSetting(CCryptPropertyPage& dlg, int id, CryptSettingsRegistryValuesKeys key, const vector<wstring> selections)
-		: CryptSetting(dlg, id, key), m_selections(selections) {}
+	CryptComboBoxSetting(CCryptPropertyPage& dlg, int id, CryptSettingsRegistryValuesKeys key, std::function<void(CComboBox*, int val)> set_from_registry, std::function<bool(CComboBox*, int& val)> get_from_control)
+		: CryptSetting(dlg, id, key),  m_set_from_registry(set_from_registry), m_get_from_control(get_from_control) {}
 	virtual ~CryptComboBoxSetting() = default;
 
 	virtual void Set(SetType set_type, bool save = true) override;

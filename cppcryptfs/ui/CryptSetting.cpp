@@ -27,6 +27,7 @@ THE SOFTWARE.
 */
 
 #include "stdafx.h"
+#include "afxdialogex.h"
 #include "CryptSetting.h"
 #include "CryptSettings.h"
 
@@ -51,7 +52,8 @@ void CryptCheckBoxSetting::Set(SetType set_type, bool save)
 		break;
 	}
 	
-	m_dlg.CheckDlgButton(m_id, val ? 1 : 0);
+	if (set_type != SetType::Changed)
+		m_dlg.CheckDlgButton(m_id, val ? 1 : 0);
 
 	if (save)
 		SaveSetting(m_key, val);
@@ -63,4 +65,36 @@ void CryptCheckBoxSetting::Set(SetType set_type, bool save)
 
 void CryptComboBoxSetting::Set(SetType set_type, bool save)
 {
+
+	int val = 0;
+
+	auto pBox = reinterpret_cast<CComboBox*>(m_dlg.GetDlgItem(m_id));
+
+	assert(pBox);
+
+	if (!pBox)
+		return;
+
+	switch (set_type) {
+	case SetType::Current:
+		GetSettingCurrent(m_key, val);
+		break;
+	case SetType::Default:
+		GetSettingDefault(m_key, val);
+		break;
+	case SetType::Recommended:
+		GetSettingRecommended(m_key, val);
+		break;
+	case SetType::Changed:
+		if (!m_get_from_control(pBox, val))
+			return;
+		break;
+	}
+
+	if (set_type != SetType::Changed) {
+		m_set_from_registry(pBox, val);
+	} 
+	
+	if (save)
+		SaveSetting(m_key, val);
 }
