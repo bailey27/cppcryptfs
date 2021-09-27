@@ -32,40 +32,162 @@ THE SOFTWARE.
 #include "CryptSettings.h"
 #include "dokan/cryptdokan.h"
 #include "util/util.h"
+#include <assert.h>
+#include <afx.h>
+
+
+
+
+
+
+static unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> get_settings_registry_map()
+{
+	unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> m;
+
+#define INIT_SETTINGS_REGISTRY_MAP_ENTRY(key, val) \
+	m[key] = CryptSettingConsts(L#val, key##_DEFAULT, key##_RECOMMENDED)
+
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(PER_FILESYSTEM_THREADS, Threads);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(BUFFERBLOCKS, BufferBlocks);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(CACHETTL, CacheTTL);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(CASEINSENSITIVE, CaseInsensitive);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(MOUNTMANAGER, MountManager);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(MOUNTMANAGERWARN, MountManagerWarn);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(DELETE_SPURRIOUS_FILES, DeleteSpurriousFiles);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(ENCRYPT_KEYS_IN_MEMORY, EncryptKeysInMemory);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(CACHE_KEYS_IN_MEMORY, CacheKeysInMemory);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(FAST_MOUNTING, FastMounting);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(DENY_OTHER_SESSIONS, DenyOtherSessions);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(DENY_SERVICES, DenyServices);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(FLUSH_AFTER_WRITE_EXFAT, FlushAfterWriteExFAT);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(FLUSH_AFTER_WRITE_FAT32, FlushAfterWriteFAT32);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(FLUSH_AFTER_WRITE_NTFS, FlushAfterWriteNTFS);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(FLUSH_AFTER_WRITE_NOT_NTFS, FlushAfterWriteNotNTFS);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(FLUSH_AFTER_WRITE_NO_SPARSE_FILES, FlushAfterWriteNoSparseFiles);
+
+	return m;
+}
+
+static unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> settings_registry_map = get_settings_registry_map();
+
+bool GetSettingDefault(CryptSettingsRegistryValuesKeys key, int& default)
+{
+	auto it = settings_registry_map.find(key);
+	if (it == settings_registry_map.end())
+		return false;
+
+	default = it->second.default;
+
+	return true;
+}
+
+bool GetSettingDefault(CryptSettingsRegistryValuesKeys key, bool& default)
+{
+	int val;
+	if (!GetSettingRecommended(key, val))
+		return false;
+
+	default = val != 0;
+
+	return true;
+}
+
+bool GetSettingRecommended(CryptSettingsRegistryValuesKeys key, int& recommended)
+{
+	auto it = settings_registry_map.find(key);
+	if (it == settings_registry_map.end())
+		return false;
+
+	recommended = it->second.recommended;
+
+	return true;
+}
+
+bool GetSettingRecommended(CryptSettingsRegistryValuesKeys key, bool& recommended)
+{
+	int val;
+	if (!GetSettingRecommended(key, val))
+		return false;
+
+	recommended = val != 0;
+
+	return true;
+}
+
+
+bool GetSettingCurrent(CryptSettingsRegistryValuesKeys key, int& current)
+{
+	auto it = settings_registry_map.find(key);
+	if (it == settings_registry_map.end())
+		return false;
+
+	auto val = theApp.GetProfileInt(L"Settings", it->second.regval_name.c_str(), it->second.default);
+
+	current = val;
+
+	return true;
+}
+
+bool GetSettingCurrent(CryptSettingsRegistryValuesKeys key, bool& current)
+{
+	int val = 0;	
+	if (!GetSettingCurrent(key, val))
+		return false;
+
+	current = val != 0;
+
+	return true;
+}
+
 
 void GetSettings(CryptMountOptions &opts)
 {
+		
+	VERIFY(GetSettingCurrent(PER_FILESYSTEM_THREADS, opts.numthreads));
 
-	opts.numthreads = theApp.GetProfileInt(L"Settings", L"Threads", PER_FILESYSTEM_THREADS_DEFAULT);
-
-	opts.numbufferblocks = theApp.GetProfileInt(L"Settings", L"BufferBlocks", BUFFERBLOCKS_DEFAULT);
-
+	VERIFY(GetSettingCurrent(BUFFERBLOCKS, opts.numbufferblocks));
+	
 	if (opts.numbufferblocks < 1 || opts.numbufferblocks * 4 > MAX_IO_BUFFER_KB || !is_power_of_two(opts.numbufferblocks))
 		opts.numbufferblocks = BUFFERBLOCKS_DEFAULT;
 
-	opts.cachettl = theApp.GetProfileInt(L"Settings", L"CacheTTL", CACHETTL_DEFAULT);
+	VERIFY(GetSettingCurrent(CACHETTL, opts.cachettl));
+	
+	VERIFY(GetSettingCurrent(CASEINSENSITIVE, opts.caseinsensitive));
+	
+	VERIFY(GetSettingCurrent(MOUNTMANAGER, opts.mountmanager));
+	
+	VERIFY(GetSettingCurrent(MOUNTMANAGERWARN, opts.mountmanagerwarn));
+	
+	VERIFY(GetSettingCurrent(DELETE_SPURRIOUS_FILES, opts.deletespurriousfiles));
+	
+	VERIFY(GetSettingCurrent(ENCRYPT_KEYS_IN_MEMORY, opts.encryptkeysinmemory));
+	
+	VERIFY(GetSettingCurrent(CACHE_KEYS_IN_MEMORY, opts.cachekeysinmemory));
+	
+	VERIFY(GetSettingCurrent(FAST_MOUNTING, opts.fastmounting));
+	
+	VERIFY(GetSettingCurrent(DENY_OTHER_SESSIONS, opts.denyothersessions));
 
-	opts.caseinsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", CASEINSENSITIVE_DEFAULT) != 0;
+	VERIFY(GetSettingCurrent(DENY_SERVICES, opts.denyservices));
 
-	opts.mountmanager = theApp.GetProfileInt(L"Settings", L"MountManager", MOUNTMANAGER_DEFAULT) != 0;
+	VERIFY(GetSettingCurrent(FLUSH_AFTER_WRITE_EXFAT, opts.flushafterwrite.exFAT));
+	
+	VERIFY(GetSettingCurrent(FLUSH_AFTER_WRITE_FAT32, opts.flushafterwrite.fat32));
+	
+	VERIFY(GetSettingCurrent(FLUSH_AFTER_WRITE_NTFS, opts.flushafterwrite.ntfs));	
 
-	opts.mountmanagerwarn = theApp.GetProfileInt(L"Settings", L"MountManagerWarn", MOUNTMANAGERWARN_DEFAULT) != 0;
+	VERIFY(GetSettingCurrent(FLUSH_AFTER_WRITE_NOT_NTFS, opts.flushafterwrite.not_ntfs));
+	
+	VERIFY(GetSettingCurrent(FLUSH_AFTER_WRITE_NO_SPARSE_FILES, opts.flushafterwrite.sparse_files_not_supported));	
+}
 
-	opts.deletespurriousfiles = theApp.GetProfileInt(L"Settings", L"DeleteSpurriousFiles", DELETE_SPURRIOUS_FILES_DEFAULT) != 0;
 
-	opts.encryptkeysinmemory = theApp.GetProfileInt(L"Settings", L"EncryptKeysInMemory", ENCRYPT_KEYS_IN_MEMORY_DEFAULT) != 0;
+bool SaveSetting(CryptSettingsRegistryValuesKeys key, int val)
+{
+	auto it = settings_registry_map.find(key);
 
-	opts.cachekeysinmemory = theApp.GetProfileInt(L"Settings", L"CacheKeysInMemory", CACHE_KEYS_IN_MEMORY_DEFAULT) != 0;
+	if (it == settings_registry_map.end())
+		return false;
 
-	opts.fastmounting = theApp.GetProfileInt(L"Settings", L"FastMounting", FAST_MOUNTING_DEFAULT) != 0;
-
-	opts.denyothersessions = theApp.GetProfileInt(L"Settings", L"DenyOtherSessions", DENY_OTHER_SESSIONS_DEFAULT) != 0;
-
-	opts.denyservices = theApp.GetProfileInt(L"Settings", L"DenyServices", DENY_SERVICES_DEFAULT) != 0;
-
-	opts.flushafterwrite.exFAT = theApp.GetProfileInt(L"Settings", L"FlushAfterWriteExFAT", FLUSH_AFTER_WRITE_EXFAT_DEFAULT) != 0;
-	opts.flushafterwrite.fat32 = theApp.GetProfileInt(L"Settings", L"FlushAfterWriteFAT32", FLUSH_AFTER_WRITE_FAT32_DEFAULT) != 0;
-	opts.flushafterwrite.ntfs = theApp.GetProfileInt(L"Settings", L"FlushAfterWriteNTFS", FLUSH_AFTER_WRITE_NTFS_DEFAULT) != 0;
-	opts.flushafterwrite.not_ntfs = theApp.GetProfileInt(L"Settings", L"FlushAfterWriteNotNTFS", FLUSH_AFTER_WRITE_NOT_NTFS_DEFAULT) != 0;
-	opts.flushafterwrite.sparse_files_not_supported = theApp.GetProfileInt(L"Settings", L"FlushAfterWriteNoSparseFiles", FLUSH_AFTER_WRITE_NO_SPARSE_FILES_DEFAULT) != 0;
+	return theApp.WriteProfileInt(L"Settings", it->second.regval_name.c_str(), val) != FALSE;
 }

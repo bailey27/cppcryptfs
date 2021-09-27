@@ -79,20 +79,15 @@ BOOL CMoreSettingsPropertyPage::OnInitDialog()
 
 	// TODO:  Add extra initialization here
 
-	m_controls.emplace(IDC_EXFAT, make_unique<CryptCheckBoxSetting>(*this, IDC_EXFAT, L"Settings", L"FlushAfterWriteExFAT", 
-		FLUSH_AFTER_WRITE_EXFAT_DEFAULT, FLUSH_AFTER_WRITE_EXFAT_RECOMMENDED));
+	m_controls.emplace(IDC_EXFAT, make_unique<CryptCheckBoxSetting>(*this, IDC_EXFAT, FLUSH_AFTER_WRITE_EXFAT));
 
-	m_controls.emplace(IDC_FAT32, make_unique<CryptCheckBoxSetting>(*this, IDC_FAT32, L"Settings", L"FlushAfterWriteFAT32",
-		FLUSH_AFTER_WRITE_FAT32_DEFAULT, FLUSH_AFTER_WRITE_FAT32_RECOMMENDED));
+	m_controls.emplace(IDC_FAT32, make_unique<CryptCheckBoxSetting>(*this, IDC_FAT32, FLUSH_AFTER_WRITE_FAT32));
 
-	m_controls.emplace(IDC_NTFS, make_unique<CryptCheckBoxSetting>(*this, IDC_NTFS, L"Settings", L"FlushAfterWriteNTFS",
-		FLUSH_AFTER_WRITE_NTFS_DEFAULT, FLUSH_AFTER_WRITE_NTFS_RECOMMENDED));
+	m_controls.emplace(IDC_NTFS, make_unique<CryptCheckBoxSetting>(*this, IDC_NTFS, FLUSH_AFTER_WRITE_NTFS));
 
-	m_controls.emplace(IDC_NOTNTFS, make_unique<CryptCheckBoxSetting>(*this, IDC_NOTNTFS, L"Settings", L"FlushAfterWriteNotNTFS",
-		FLUSH_AFTER_WRITE_NOT_NTFS_DEFAULT, FLUSH_AFTER_WRITE_NOT_NTFS_RECOMMENDED));
+	m_controls.emplace(IDC_NOTNTFS, make_unique<CryptCheckBoxSetting>(*this, IDC_NOTNTFS, FLUSH_AFTER_WRITE_NOT_NTFS));
 
-	m_controls.emplace(IDC_NOSPARSEFILES, make_unique<CryptCheckBoxSetting>(*this, IDC_NOSPARSEFILES, L"Settings", L"FlushAfterWriteNoSparseFiles",
-		FLUSH_AFTER_WRITE_NO_SPARSE_FILES_DEFAULT, FLUSH_AFTER_WRITE_NO_SPARSE_FILES_RECOMMENDED));
+	m_controls.emplace(IDC_NOSPARSEFILES, make_unique<CryptCheckBoxSetting>(*this, IDC_NOSPARSEFILES, FLUSH_AFTER_WRITE_NO_SPARSE_FILES));
 
 	
 	return SetControls(CryptSetting::SetType::Current);  // return TRUE unless you set the focus to a control

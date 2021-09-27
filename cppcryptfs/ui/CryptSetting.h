@@ -31,6 +31,8 @@ THE SOFTWARE.
 #include "stdafx.h"
 #include "cppcryptfs.h"
 #include "CryptPropertyPage.h"
+#include "cryptdefaults.h"
+#include "CryptSettings.h"
 
 
 class CryptSetting
@@ -40,24 +42,33 @@ public:
 
 	virtual void Set(CryptSetting::SetType set_type, bool save = true) = 0;
 protected:
-	CCryptPropertyPage& m_dlg;
-	const WCHAR* m_section;
-	const WCHAR* m_setting;
+	CCryptPropertyPage& m_dlg;	
 	const int m_id;
-	const int m_default;
-	const int m_recommended;
-	int m_current;
+	const enum CryptSettingsRegistryValuesKeys m_key;	
+	
 		
 public:
-	CryptSetting(CCryptPropertyPage& dlg, int id, const WCHAR* section, const WCHAR* setting, int default, int recommended);
+	CryptSetting(CCryptPropertyPage& dlg, int id, enum CryptSettingsRegistryValuesKeys key) : m_dlg(dlg), m_id(id), m_key(key) {}
 	virtual ~CryptSetting() = default;
 };
 
 class CryptCheckBoxSetting : public CryptSetting {
 public:
-	CryptCheckBoxSetting(CCryptPropertyPage& dlg, int id, const WCHAR* section, const WCHAR* setting, int default, int recommended)
-		: CryptSetting(dlg, id, section, setting, default, recommended) {}
+	CryptCheckBoxSetting(CCryptPropertyPage& dlg, int id,  enum CryptSettingsRegistryValuesKeys key)
+		: CryptSetting(dlg, id, key) {}
 	virtual ~CryptCheckBoxSetting() = default;
+
+	virtual void Set(SetType set_type, bool save = true) override;
+};
+
+class CryptComboBoxSetting : public CryptSetting {
+
+protected:
+	const vector<wstring> m_selections;
+public:
+	CryptComboBoxSetting(CCryptPropertyPage& dlg, int id, CryptSettingsRegistryValuesKeys key, const vector<wstring> selections)
+		: CryptSetting(dlg, id, key), m_selections(selections) {}
+	virtual ~CryptComboBoxSetting() = default;
 
 	virtual void Set(SetType set_type, bool save = true) override;
 };

@@ -28,38 +28,39 @@ THE SOFTWARE.
 
 #include "stdafx.h"
 #include "CryptSetting.h"
+#include "CryptSettings.h"
 
-
-CryptSetting::CryptSetting(CCryptPropertyPage& dlg, int id, const WCHAR* section, const WCHAR* setting, int default, int recommended)
-	: m_dlg(dlg), m_id(id), m_section(section), m_setting(setting), m_default(default), m_recommended(recommended)
-{
-	m_current = theApp.GetProfileInt(section, setting, default);
-}
 
 void CryptCheckBoxSetting::Set(SetType set_type, bool save)
 {
-	auto val = m_current;
+	bool val = false;
 
 	switch (set_type) {
 	case SetType::Current:
-		val = m_current;
+		GetSettingCurrent(m_key, val);
 		break;
 	case SetType::Default:
-		val = m_default;
+		GetSettingDefault(m_key, val);
 		break;
 	case SetType::Recommended:
-		val = m_recommended;
+		GetSettingRecommended(m_key, val);
 		break;
 	case SetType::Changed:
-		val = !m_current;
+		GetSettingCurrent(m_key, val);
+		val = !val;
 		break;
 	}
-
-	m_current = val;
-
+	
 	m_dlg.CheckDlgButton(m_id, val ? 1 : 0);
 
 	if (save)
-		theApp.WriteProfileInt(m_section, m_setting, val);
+		SaveSetting(m_key, val);
 	
+}
+
+
+
+
+void CryptComboBoxSetting::Set(SetType set_type, bool save)
+{
 }

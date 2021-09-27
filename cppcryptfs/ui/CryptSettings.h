@@ -27,6 +27,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <string>
+
 struct CryptMountOptions;
+
+struct CryptSettingConsts {
+	std::wstring regval_name;
+	int default;
+	int recommended;
+	CryptSettingConsts() : regval_name(L""), default(0), recommended(0) {}
+	CryptSettingConsts(const wchar_t* name, int default, int recommended) :
+		regval_name((name)), default(default), recommended(recommended) {}
+};
+
+bool GetSettingDefault(enum CryptSettingsRegistryValuesKeys key, int& default);
+bool GetSettingRecommended(enum CryptSettingsRegistryValuesKeys key, int& recommended);
+bool GetSettingDefault(enum CryptSettingsRegistryValuesKeys key, bool& default);
+bool GetSettingRecommended(enum CryptSettingsRegistryValuesKeys key, bool& recommended);
+bool GetSettingCurrent(enum CryptSettingsRegistryValuesKeys key, bool& cur);
+bool GetSettingCurrent(enum CryptSettingsRegistryValuesKeys key, int& cur);
+
+bool SaveSetting(enum CryptSettingsRegistryValuesKeys key, int val);
 
 void GetSettings(CryptMountOptions& opts);
