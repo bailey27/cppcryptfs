@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include "ui/MountMangerDialog.h"
 #include "ui/cryptdefaults.h"
 #include "ui/certutil.h"
-
+#include "ui/CryptSettings.h"
 #include "dokan/cryptdokan.h"
 
 using namespace std;
@@ -93,7 +93,8 @@ bool DeleteAllRegisteryValues(LPCWSTR regPath, wstring& mes)
 
 bool NeverSaveHistory()
 {
-	bool bNeverSaveHistory = AfxGetApp()->GetProfileIntW(L"Settings", L"NeverSaveHistory", NEVER_SAVE_HISTORY_DEFAULT) != 0;
+	bool bNeverSaveHistory = false;
+	CryptSettings::getInstance().GetSettingCurrent(NEVER_SAVE_HISTORY, bNeverSaveHistory);
 	return bNeverSaveHistory;
 }
 
@@ -103,7 +104,8 @@ wstring CheckOpenHandles(HWND hWnd, const wchar_t* mp, bool interactive, bool fo
 	if (force)
 		return L"";
 
-	auto warn = AfxGetApp()->GetProfileInt(L"Settings", L"WarnIfInUseOnDismounting", WARN_IF_IN_USE_ON_DISMOUNT_DEFAULT);
+	bool warn = false;
+	CryptSettings::getInstance().GetSettingCurrent(WARN_IF_IN_USE_ON_DISMOUNT, warn);
 
 	if (!warn) {
 		return L"";

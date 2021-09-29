@@ -29,12 +29,16 @@ THE SOFTWARE.
 #pragma once
 
 #include "CryptPropertyPage.h"
+#include <unordered_map>
+#include <memory>
+#include "CryptSetting.h"
 
 // CSettingsPropertyPage dialog
 
 class CSettingsPropertyPage : public CCryptPropertyPage
 {
 	DECLARE_DYNAMIC(CSettingsPropertyPage)
+
 
 public:
 
@@ -51,6 +55,7 @@ public:
 	bool m_bDenyOtherSessions;
 	bool m_bDenyServices;
 
+
 	// disallow copying
 	CSettingsPropertyPage(CSettingsPropertyPage const&) = delete;
 	void operator=(CSettingsPropertyPage const&) = delete;
@@ -63,10 +68,9 @@ public:
 	enum { IDD = IDD_SETTINGS };
 #endif
 protected:
-	BOOL SetControls(int nThreads, int nBufferBlocks, int nCacheTTL, bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords,
-						bool bNeverSaveHistory, bool bDeleteSpurriousFiles, bool bOpenOnMounting, bool bEncryptKeysInMemory,
-						bool bCacheKeysInMemory, bool bFastMounting, bool bWarnIfInUseOnDismounting, bool bDenyOtherSessions, bool bDenyServices);
-	void SaveSettings();
+	std::unordered_map<int, std::unique_ptr<CryptSetting>> m_controls;
+	void SetControlChanged(int id);
+	void SetControls(CryptSetting::SetType set_type);	
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
@@ -91,4 +95,6 @@ public:
 	afx_msg void OnClickedWarnIfInUseOnDismounting();
 	afx_msg void OnClickedDenyOtherSessions();
 	afx_msg void OnClickedDenyServices();
+
+
 };

@@ -58,13 +58,13 @@ void CMoreSettingsPropertyPage::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CMoreSettingsPropertyPage, CCryptPropertyPage)
-	ON_BN_CLICKED(IDC_EXFAT, &CMoreSettingsPropertyPage::OnClickedExfat)
+	ON_BN_CLICKED(IDC_FLUSH_AFTER_WRITE_EXFAT, &CMoreSettingsPropertyPage::OnClickedExfat)
 	ON_BN_CLICKED(IDC_DEFAULTS, &CMoreSettingsPropertyPage::OnClickedDefaults)
 	ON_BN_CLICKED(IDC_RECOMMENDED, &CMoreSettingsPropertyPage::OnClickedRecommended)
-	ON_BN_CLICKED(IDC_FAT32, &CMoreSettingsPropertyPage::OnClickedFat32)
-	ON_BN_CLICKED(IDC_NTFS, &CMoreSettingsPropertyPage::OnClickedNtfs)
-	ON_BN_CLICKED(IDC_NOTNTFS, &CMoreSettingsPropertyPage::OnClickedNotntfs)
-	ON_BN_CLICKED(IDC_NOSPARSEFILES, &CMoreSettingsPropertyPage::OnClickedNosparsefiles)
+	ON_BN_CLICKED(IDC_FLUSH_AFTER_WRITE_FAT32, &CMoreSettingsPropertyPage::OnClickedFat32)
+	ON_BN_CLICKED(IDC_FLUSH_AFTER_WRITE_NTFS, &CMoreSettingsPropertyPage::OnClickedNtfs)
+	ON_BN_CLICKED(IDC_FLUSH_AFTER_WRITE_NOT_NTFS, &CMoreSettingsPropertyPage::OnClickedNotntfs)
+	ON_BN_CLICKED(IDC_FLUSH_AFTER_WRITE_NO_SPARSE_FILES, &CMoreSettingsPropertyPage::OnClickedNosparsefiles)
 END_MESSAGE_MAP()
 
 
@@ -77,35 +77,40 @@ BOOL CMoreSettingsPropertyPage::OnInitDialog()
 {
 	CCryptPropertyPage::OnInitDialog();
 
-	// TODO:  Add extra initialization here
+#define DO_CHECKBOX(tok) \
+	m_controls.emplace(IDC_##tok, make_unique<CryptCheckBoxSetting>(*this, IDC_##tok, tok));
 
-	m_controls.emplace(IDC_EXFAT, make_unique<CryptCheckBoxSetting>(*this, IDC_EXFAT, FLUSH_AFTER_WRITE_EXFAT));
+	DO_CHECKBOX(FLUSH_AFTER_WRITE_EXFAT);
 
-	m_controls.emplace(IDC_FAT32, make_unique<CryptCheckBoxSetting>(*this, IDC_FAT32, FLUSH_AFTER_WRITE_FAT32));
+	DO_CHECKBOX(FLUSH_AFTER_WRITE_FAT32);
 
-	m_controls.emplace(IDC_NTFS, make_unique<CryptCheckBoxSetting>(*this, IDC_NTFS, FLUSH_AFTER_WRITE_NTFS));
+	DO_CHECKBOX(FLUSH_AFTER_WRITE_NTFS);
 
-	m_controls.emplace(IDC_NOTNTFS, make_unique<CryptCheckBoxSetting>(*this, IDC_NOTNTFS, FLUSH_AFTER_WRITE_NOT_NTFS));
+	DO_CHECKBOX(FLUSH_AFTER_WRITE_NOT_NTFS);
 
-	m_controls.emplace(IDC_NOSPARSEFILES, make_unique<CryptCheckBoxSetting>(*this, IDC_NOSPARSEFILES, FLUSH_AFTER_WRITE_NO_SPARSE_FILES));
-
+	DO_CHECKBOX(FLUSH_AFTER_WRITE_NO_SPARSE_FILES);
 	
-	return SetControls(CryptSetting::SetType::Current);  // return TRUE unless you set the focus to a control
-				  // EXCEPTION: OCX Property Pages should return FALSE
+	SetControls(CryptSetting::SetType::Current);  
+	
+	// return TRUE unless you set the focus to a control
+	// EXCEPTION: OCX Property Pages should return FALSE
+
+	return TRUE;
 }
 
 
-BOOL CMoreSettingsPropertyPage::SetControls(CryptSetting::SetType set_type, bool save)
+void CMoreSettingsPropertyPage::SetControls(CryptSetting::SetType set_type)
 {
 	for (auto& c : m_controls) {
-		c.second->Set(set_type, save);
-	}
-	return TRUE;
+		c.second->Set(set_type);
+	}	
 }
 
 void CMoreSettingsPropertyPage::SetControlChanged(int id)
 {
 	auto it = m_controls.find(id);
+
+	assert(it != m_controls.end());
 
 	if (it == m_controls.end())
 		return;
@@ -115,49 +120,41 @@ void CMoreSettingsPropertyPage::SetControlChanged(int id)
 
 void CMoreSettingsPropertyPage::OnClickedDefaults()
 {
-	// TODO: Add your control notification handler code here
 	SetControls(CryptSetting::SetType::Default);
 }
 
 
 void CMoreSettingsPropertyPage::OnClickedRecommended()
 {
-	// TODO: Add your control notification handler code here
 	SetControls(CryptSetting::SetType::Recommended);
 }
 
 
 void CMoreSettingsPropertyPage::OnClickedExfat()
 {
-	// TODO: Add your control notification handler code here
-
-	SetControlChanged(IDC_EXFAT);
+	SetControlChanged(IDC_FLUSH_AFTER_WRITE_EXFAT);
 }
 
 
 void CMoreSettingsPropertyPage::OnClickedFat32()
 {
-	// TODO: Add your control notification handler code here
-	SetControlChanged(IDC_FAT32);
+	SetControlChanged(IDC_FLUSH_AFTER_WRITE_FAT32);
 }
 
 
 void CMoreSettingsPropertyPage::OnClickedNtfs()
 {
-	// TODO: Add your control notification handler code here
-	SetControlChanged(IDC_NTFS);
+	SetControlChanged(IDC_FLUSH_AFTER_WRITE_NTFS);
 }
 
 
 void CMoreSettingsPropertyPage::OnClickedNotntfs()
 {
-	// TODO: Add your control notification handler code here
-	SetControlChanged(IDC_NOTNTFS);
+	SetControlChanged(IDC_FLUSH_AFTER_WRITE_NOT_NTFS);
 }
 
 
 void CMoreSettingsPropertyPage::OnClickedNosparsefiles()
 {
-	// TODO: Add your control notification handler code here
-	SetControlChanged(IDC_NOSPARSEFILES);
+	SetControlChanged(IDC_FLUSH_AFTER_WRITE_NO_SPARSE_FILES);
 }

@@ -319,7 +319,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 	bool readonly = argMountPoint != NULL ? argReadOnly : IsDlgButtonChecked(IDC_READONLY) != 0;
 
-	GetSettings(opts);
+	CryptSettings::getInstance().GetSettings(opts);
 
 	if (opts.denyothersessions || opts.denyservices) {		
 		if (!CanGetSessionIdOk()) {			

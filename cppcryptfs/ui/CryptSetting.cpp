@@ -32,31 +32,32 @@ THE SOFTWARE.
 #include "CryptSettings.h"
 
 
+
 void CryptCheckBoxSetting::Set(SetType set_type, bool save)
 {
 	bool val = false;
 
 	switch (set_type) {
 	case SetType::Current:
-		GetSettingCurrent(m_key, val);
+		CryptSettings::getInstance().GetSettingCurrent(m_key, val);
 		break;
 	case SetType::Default:
-		GetSettingDefault(m_key, val);
+		CryptSettings::getInstance().GetSettingDefault(m_key, val);
 		break;
 	case SetType::Recommended:
-		GetSettingRecommended(m_key, val);
+		CryptSettings::getInstance().GetSettingRecommended(m_key, val);
 		break;
 	case SetType::Changed:
-		GetSettingCurrent(m_key, val);
+		CryptSettings::getInstance().GetSettingCurrent(m_key, val);
 		val = !val;
 		break;
 	}
 	
-	if (set_type != SetType::Changed)
+	if (set_type != SetType::Changed && m_id)
 		m_dlg.CheckDlgButton(m_id, val ? 1 : 0);
 
 	if (save)
-		SaveSetting(m_key, val);
+		CryptSettings::getInstance().SaveSetting(m_key, val);
 	
 }
 
@@ -77,13 +78,13 @@ void CryptComboBoxSetting::Set(SetType set_type, bool save)
 
 	switch (set_type) {
 	case SetType::Current:
-		GetSettingCurrent(m_key, val);
+		CryptSettings::getInstance().GetSettingCurrent(m_key, val);
 		break;
 	case SetType::Default:
-		GetSettingDefault(m_key, val);
+		CryptSettings::getInstance().GetSettingDefault(m_key, val);
 		break;
 	case SetType::Recommended:
-		GetSettingRecommended(m_key, val);
+		CryptSettings::getInstance().GetSettingRecommended(m_key, val);
 		break;
 	case SetType::Changed:
 		if (!m_get_from_control(pBox, val))
@@ -96,5 +97,5 @@ void CryptComboBoxSetting::Set(SetType set_type, bool save)
 	} 
 	
 	if (save)
-		SaveSetting(m_key, val);
+		CryptSettings::getInstance().SaveSetting(m_key, val);
 }

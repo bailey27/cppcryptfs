@@ -28,6 +28,7 @@ THE SOFTWARE.
 */
 
 #include <string>
+#include <unordered_map>
 
 struct CryptMountOptions;
 
@@ -40,13 +41,34 @@ struct CryptSettingConsts {
 		regval_name((name)), default(default), recommended(recommended) {}
 };
 
-bool GetSettingDefault(enum CryptSettingsRegistryValuesKeys key, int& default);
-bool GetSettingRecommended(enum CryptSettingsRegistryValuesKeys key, int& recommended);
-bool GetSettingDefault(enum CryptSettingsRegistryValuesKeys key, bool& default);
-bool GetSettingRecommended(enum CryptSettingsRegistryValuesKeys key, bool& recommended);
-bool GetSettingCurrent(enum CryptSettingsRegistryValuesKeys key, bool& cur);
-bool GetSettingCurrent(enum CryptSettingsRegistryValuesKeys key, int& cur);
 
-bool SaveSetting(enum CryptSettingsRegistryValuesKeys key, int val);
+class CryptSettings {
+private:
+	
+	CryptSettings() = default;
 
-void GetSettings(CryptMountOptions& opts);
+	static std::unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> m_settings_registry_map;
+public:
+
+	static CryptSettings& getInstance();
+
+	bool GetSettingDefault(enum CryptSettingsRegistryValuesKeys key, int& default);
+	bool GetSettingRecommended(enum CryptSettingsRegistryValuesKeys key, int& recommended);
+	bool GetSettingDefault(enum CryptSettingsRegistryValuesKeys key, bool& default);
+	bool GetSettingRecommended(enum CryptSettingsRegistryValuesKeys key, bool& recommended);
+	bool GetSettingCurrent(enum CryptSettingsRegistryValuesKeys key, bool& cur);
+	bool GetSettingCurrent(enum CryptSettingsRegistryValuesKeys key, int& cur);
+
+	bool SaveSetting(enum CryptSettingsRegistryValuesKeys key, int val);
+
+	void GetSettings(CryptMountOptions& opts);
+
+
+	// disallow copying and moving
+	CryptSettings(CryptSettings const&) = delete;
+	void operator=(CryptSettings const&) = delete;
+
+	CryptSettings(CryptSettings const&&) = delete;
+	void operator=(CryptSettings const&&) = delete;
+
+};

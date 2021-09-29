@@ -64,9 +64,7 @@ private:
 	size_t m_current_size;
 	list<IoBuffer*> m_buffers;
 
-	IoBufferPool() : m_current_size(0) {};
-
-	static IoBufferPool instance;
+	IoBufferPool() : m_current_size(0) {};	
 
 public:
 
@@ -75,9 +73,11 @@ public:
 
 	static IoBufferPool& getInstance();
 
-	// disallow copying
+	// disallow copying and moving
 	IoBufferPool(IoBufferPool const&) = delete;
 	void operator=(IoBufferPool const&) = delete;
+	IoBufferPool(IoBufferPool const&&) = delete;
+	void operator=(IoBufferPool const&&) = delete;
 
 	~IoBufferPool();
 	IoBuffer *GetIoBuffer(size_t buffer_size, size_t ivbufer_size);

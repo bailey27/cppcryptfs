@@ -42,34 +42,45 @@ public:
 	typedef enum { Default, Recommended, Current, Changed } SetType;
 
 	virtual void Set(CryptSetting::SetType set_type, bool save = true) = 0;
-protected:
-	CCryptPropertyPage& m_dlg;	
-	const int m_id;
+protected:	
 	const enum CryptSettingsRegistryValuesKeys m_key;	
 	
 		
 public:
-	CryptSetting(CCryptPropertyPage& dlg, int id, enum CryptSettingsRegistryValuesKeys key) : m_dlg(dlg), m_id(id), m_key(key) {}
+	CryptSetting(enum CryptSettingsRegistryValuesKeys key) : m_key(key) {}
 	virtual ~CryptSetting() = default;
 };
 
-class CryptCheckBoxSetting : public CryptSetting {
+class CryptSettingControl : public CryptSetting 
+{
+public:	
+	
+protected:
+	CCryptPropertyPage& m_dlg;
+	const int m_id;
+	
+public:
+	CryptSettingControl(CCryptPropertyPage& dlg, int id, enum CryptSettingsRegistryValuesKeys key) : CryptSetting(key), m_dlg(dlg), m_id(id) {}
+	virtual ~CryptSettingControl() = default;
+};
+
+class CryptCheckBoxSetting : public CryptSettingControl {
 public:
 	CryptCheckBoxSetting(CCryptPropertyPage& dlg, int id,  enum CryptSettingsRegistryValuesKeys key)
-		: CryptSetting(dlg, id, key) {}
+		: CryptSettingControl(dlg, id, key) {}
 	virtual ~CryptCheckBoxSetting() = default;
 
 	virtual void Set(SetType set_type, bool save = true) override;
 };
 
-class CryptComboBoxSetting : public CryptSetting {
+class CryptComboBoxSetting : public CryptSettingControl {
 
 protected:
 	 std::function<void(CComboBox*, int val)> m_set_from_registry;
 	 std::function<bool(CComboBox*, int& val)> m_get_from_control;
 public:
 	CryptComboBoxSetting(CCryptPropertyPage& dlg, int id, CryptSettingsRegistryValuesKeys key, std::function<void(CComboBox*, int val)> set_from_registry, std::function<bool(CComboBox*, int& val)> get_from_control)
-		: CryptSetting(dlg, id, key),  m_set_from_registry(set_from_registry), m_get_from_control(get_from_control) {}
+		: CryptSettingControl(dlg, id, key),  m_set_from_registry(set_from_registry), m_get_from_control(get_from_control) {}
 	virtual ~CryptComboBoxSetting() = default;
 
 	virtual void Set(SetType set_type, bool save = true) override;

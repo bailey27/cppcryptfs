@@ -104,344 +104,232 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 {
 	CCryptPropertyPage::OnInitDialog();
 
-	// TODO:  Add extra initialization here
+	auto threads_set_from_registry = [](CComboBox* pBox, int val) {
+		int i;		
 
-	int nThreads = theApp.GetProfileInt(L"Settings", L"Threads", PER_FILESYSTEM_THREADS_DEFAULT);
+		if (!pBox)
+			return;
 
-	int bufferblocks = theApp.GetProfileInt(L"Settings", L"BufferBlocks", BUFFERBLOCKS_DEFAULT);
+		pBox->ResetContent();
 
-	buffer_size_t kb = bufferblocks * 4;
-	
-	auto p = bsearch(&kb, buffer_sizes, _countof(buffer_sizes), sizeof(buffer_size_t), [](const void* pkey, const void* pval) -> int {
-		return *reinterpret_cast<const buffer_size_t*>(pkey) - *reinterpret_cast<const buffer_size_t*>(pval);
-	});
-
-	if (!p)
-		bufferblocks = BUFFERBLOCKS_DEFAULT;
-
-	int cachettl = theApp.GetProfileInt(L"Settings", L"CacheTTL", CACHETTL_DEFAULT);
-
-	bool bCaseInsensitive = theApp.GetProfileInt(L"Settings", L"CaseInsensitive", CASEINSENSITIVE_DEFAULT) != 0;
-
-	bool bMountManager = theApp.GetProfileInt(L"Settings", L"MountManager", MOUNTMANAGER_DEFAULT) != 0;
-
-	bool bEnableSavingPasswords = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", 
-											ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
-
-	bool bNeverSaveHistory = NeverSaveHistory();
-
-	bool bDeleteSpurriousFiles = theApp.GetProfileInt(L"Settings", L"DeleteSpurriousFiles",
-											DELETE_SPURRIOUS_FILES_DEFAULT) != 0;
-
-	bool bOpenOnMounting = theApp.GetProfileIntW(L"Settings", L"OpenOnMounting",
-											OPEN_ON_MOUNTING_DEFAULT) != 0;
-
-	bool bEncryptKeysInMemory = theApp.GetProfileIntW(L"Settings", L"EncryptKeysInMemory",
-											ENCRYPT_KEYS_IN_MEMORY_DEFAULT) != 0;
-
-	bool bCacheKeysInMemory = theApp.GetProfileIntW(L"Settings", L"CacheKeysInMemory",
-											CACHE_KEYS_IN_MEMORY_DEFAULT) != 0;
-
-	bool bFastMounting = theApp.GetProfileIntW(L"Settings", L"FastMounting",
-		FAST_MOUNTING_DEFAULT) != 0;
-
-
-	bool bWarnIfInUseOnDismounting = theApp.GetProfileIntW(L"Settings", L"WarnIfInUseOnDismounting",
-		WARN_IF_IN_USE_ON_DISMOUNT_DEFAULT) != 0;
-
-	bool bDenyOtherSessions = theApp.GetProfileIntW(L"Settings", L"DenyOtherSessions",
-		DENY_OTHER_SESSIONS_DEFAULT) != 0;
-
-	bool bDenyServices = theApp.GetProfileIntW(L"Settings", L"DenyServices",
-		DENY_SERVICES_DEFAULT) != 0;
-
-
-	return SetControls(nThreads, bufferblocks, cachettl, bCaseInsensitive, bMountManager, 
-								bEnableSavingPasswords, bNeverSaveHistory, bDeleteSpurriousFiles, bOpenOnMounting,
-								bEncryptKeysInMemory, bCacheKeysInMemory, bFastMounting, bWarnIfInUseOnDismounting,
-								bDenyOtherSessions, bDenyServices);
-}
-
-BOOL CSettingsPropertyPage::SetControls(int nThreads, int bufferblocks, int cachettl, 
-						bool bCaseInsensitive, bool bMountManager, bool bEnableSavingPasswords, bool bNeverSaveHistory,
-						bool bDeleteSpurriousFiles, bool bOpenOnMounting, bool bEncryptKeysInMemory,
-						bool bCacheKeysInMemory, bool bFastMounting, bool bWarnIfInUseOnDismounting,
-						bool bDenyOtherSessions, bool bDenyServices)
-{
-
-	m_bCaseInsensitive =  bCaseInsensitive;
-	m_bMountManager = bMountManager;
-	m_bEnableSavingPasswords = bEnableSavingPasswords;
-	m_bNeverSaveHistory = bNeverSaveHistory;
-	m_bDeleteSpurriousFiles = bDeleteSpurriousFiles;
-	m_bOpenOnMounting = bOpenOnMounting;
-	m_bEncryptKeysInMemory = bEncryptKeysInMemory;
-	m_bCacheKeysInMemory = bCacheKeysInMemory;
-	m_bFastMounting = bFastMounting;
-	m_bWarnIfInUseOnDismounting = bWarnIfInUseOnDismounting;
-	m_bDenyOtherSessions = bDenyOtherSessions;
-	m_bDenyServices = bDenyServices;
-
-	int i;
-
-	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_THREADS);
-
-	if (!pBox)
-		return FALSE;
-
-	pBox->ResetContent();
-
-	WCHAR buf[80];
+		WCHAR buf[80];
 
 #define DOKAN_MAX_THREAD 63 // this is defined in a header file that Dokany doesn't distribute
 
-	for (i = 0; i <= DOKAN_MAX_THREAD; i++) {
-		
-		if (i == 0) {
-			CString def = L"Dokany default (";
-			WCHAR buf[32];
-			*buf = '\0';
-			_snwprintf_s(buf, _TRUNCATE, L"%d", CRYPT_DOKANY_DEFAULT_NUM_THREADS);
-			def += buf;
-			def += L")";
-			pBox->AddString(def);
-		} else {
-			swprintf_s(buf, L"%d", i);
+		for (i = 0; i <= DOKAN_MAX_THREAD; i++) {
+
+			if (i == 0) {
+				CString def = L"Dokany default (";
+				WCHAR buf[32];
+				*buf = '\0';
+				_snwprintf_s(buf, _TRUNCATE, L"%d", CRYPT_DOKANY_DEFAULT_NUM_THREADS);
+				def += buf;
+				def += L")";
+				pBox->AddString(def);
+			} else {
+				swprintf_s(buf, L"%d", i);
+				pBox->AddString(buf);
+			}
+		}
+		pBox->SetCurSel(val);
+	};
+
+	auto threads_get_from_control = [](CComboBox* pBox, int& val) { val = pBox->GetCurSel(); return true;  };
+
+	m_controls.emplace(IDC_THREADS, make_unique<CryptComboBoxSetting>(*this, IDC_THREADS, PER_FILESYSTEM_THREADS, threads_set_from_registry, threads_get_from_control));
+
+	auto bufferblocks_set_from_registry = [](CComboBox* pBox, int val) {
+
+		int bufferblocks = val;
+
+		buffer_size_t kb = bufferblocks * 4;
+
+		auto p = bsearch(&kb, buffer_sizes, _countof(buffer_sizes), sizeof(buffer_size_t), [](const void* pkey, const void* pval) -> int {
+			return *reinterpret_cast<const buffer_size_t*>(pkey) - *reinterpret_cast<const buffer_size_t*>(pval);
+			});
+
+		if (!p)
+			bufferblocks = BUFFERBLOCKS_DEFAULT;
+
+		WCHAR buf[80];
+		if (!pBox)
+			return;
+
+		pBox->ResetContent();
+
+		for (int i = 0; i < sizeof(buffer_sizes) / sizeof(buffer_sizes[0]); i++) {
+			swprintf_s(buf, L"%d", buffer_sizes[i]);
 			pBox->AddString(buf);
 		}
-	}
 
-	pBox->SetCurSel(nThreads);
+		int bits = 0;
 
-	pBox = (CComboBox*)GetDlgItem(IDC_BUFFERSIZE);
-
-	if (!pBox)
-		return FALSE;
-
-	pBox->ResetContent();
-
-	for (i = 0; i < sizeof(buffer_sizes)/sizeof(buffer_sizes[0]); i++) {
-		swprintf_s(buf, L"%d", buffer_sizes[i]);
-		pBox->AddString(buf);
-	}
-
-	int bits = 0;
-
-	int n = bufferblocks;
-	while (n) {
-		bits++;
-		n >>= 1;
-	}
-
-	pBox->SetCurSel(bits-1);
-
-	pBox = (CComboBox*)GetDlgItem(IDC_CACHETTL);
-
-	if (!pBox)
-		return FALSE;
-
-	pBox->ResetContent();
-
-	static_assert(sizeof(ttls) / sizeof(ttls[0]) == sizeof(ttl_strings) / sizeof(ttl_strings[0]), 
-					"mismatch in sizes of ttls/ttl_strings");
-
-	int selitem = 0;
-
-	for (i = 0; i < sizeof(ttls) / sizeof(ttls[0]); i++) {
-		pBox->AddString(ttl_strings[i]);
-		if (cachettl == ttls[i]) {
-			selitem = i;
+		int n = bufferblocks;
+		while (n) {
+			bits++;
+			n >>= 1;
 		}
-	}
 
-	pBox->SetCurSel(selitem);
+		pBox->SetCurSel(bits - 1);
+	}; 
 
-	CheckDlgButton(IDC_CASEINSENSITIVE, m_bCaseInsensitive ? 1 : 0);
+	auto bufferblocks_get_from_control = [](CComboBox* pBox, int &val) { val = 1 << pBox->GetCurSel(); return true; };
 
-	CheckDlgButton(IDC_MOUNTMANAGER, m_bMountManager ? 1 : 0);
+	m_controls.emplace(IDC_BUFFERSIZE, make_unique<CryptComboBoxSetting>(*this, IDC_BUFFERSIZE, BUFFERBLOCKS, bufferblocks_set_from_registry, bufferblocks_get_from_control));
 
-	CheckDlgButton(IDC_ENABLE_SAVING_PASSWORDS, m_bEnableSavingPasswords ? 1 : 0);
 
-	CheckDlgButton(IDC_NEVER_SAVE_HISTORY, m_bNeverSaveHistory ? 1 : 0);
+	auto cachettl_set_from_registry = [](CComboBox* pBox, int val) {
+		pBox->ResetContent();
 
-	CheckDlgButton(IDC_DELETE_SPURRIOUS_FILES, m_bDeleteSpurriousFiles ? 1 : 0);
+		static_assert(sizeof(ttls) / sizeof(ttls[0]) == sizeof(ttl_strings) / sizeof(ttl_strings[0]),
+			"mismatch in sizes of ttls/ttl_strings");
 
-	CheckDlgButton(IDC_OPEN_ON_MOUNTING, m_bOpenOnMounting ? 1 : 0);
+		int selitem = 0;
 
-	CheckDlgButton(IDC_ENCRYPT_KEYS_IN_MEMORY, m_bEncryptKeysInMemory ? 1 : 0);
+		for (int i = 0; i < sizeof(ttls) / sizeof(ttls[0]); i++) {
+			pBox->AddString(ttl_strings[i]);
+			if (val == ttls[i]) {
+				selitem = i;
+			}
+		}
 
-	CheckDlgButton(IDC_CACHE_KEYS_IN_MEMORY, m_bCacheKeysInMemory ? 1 : 0);
+		pBox->SetCurSel(selitem);
+	};
 
-	CheckDlgButton(IDC_FAST_MOUNTING, m_bFastMounting ? 1 : 0);
+	auto cachettl_get_from_control = [](CComboBox* pBox, int& val) {
+		int selIndex = pBox->GetCurSel();
 
-	CheckDlgButton(IDC_WARN_IF_IN_USE_ON_DISMOUNTING, m_bWarnIfInUseOnDismounting ? 1 : 0);
+		int cachettl = ttls[selIndex];
 
-	CheckDlgButton(IDC_DENY_OTHER_SESSIONS, m_bDenyOtherSessions ? 1 : 0);
+		val = cachettl;
 
-	CheckDlgButton(IDC_DENY_SERVICES, m_bDenyServices ? 1 : 0);
+		return true;
+	};
 
-	return TRUE;  // return TRUE unless you set the focus to a control
-				  // EXCEPTION: OCX Property Pages should return FALSE
+	m_controls.emplace(IDC_CACHETTL, make_unique<CryptComboBoxSetting>(*this, IDC_CACHETTL, CACHETTL, cachettl_set_from_registry, cachettl_get_from_control));
+
+#define DO_CHECKBOX(tok) \
+	m_controls.emplace(IDC_##tok, make_unique<CryptCheckBoxSetting>(*this, IDC_##tok, tok));
+	
+
+	DO_CHECKBOX(CASEINSENSITIVE);
+
+	DO_CHECKBOX(MOUNTMANAGER);
+
+	DO_CHECKBOX(ENABLE_SAVING_PASSWORDS);
+
+	DO_CHECKBOX(NEVER_SAVE_HISTORY);
+
+	DO_CHECKBOX(DELETE_SPURRIOUS_FILES);
+
+	DO_CHECKBOX(OPEN_ON_MOUNTING);
+
+	DO_CHECKBOX(ENCRYPT_KEYS_IN_MEMORY);
+
+	DO_CHECKBOX(CACHE_KEYS_IN_MEMORY);
+
+	DO_CHECKBOX(FAST_MOUNTING);
+
+	DO_CHECKBOX(WARN_IF_IN_USE_ON_DISMOUNT);
+
+	DO_CHECKBOX(DENY_OTHER_SESSIONS);
+
+	DO_CHECKBOX(DENY_SERVICES);
+
+	SetControls(CryptSetting::SetType::Current);  
+	
+	// return TRUE unless you set the focus to a control
+	// EXCEPTION: OCX Property Pages should return FALSE
+
+	return TRUE;
 }
+
+void CSettingsPropertyPage::SetControls(CryptSetting::SetType set_type)
+{
+	for (auto& c : m_controls) {
+		c.second->Set(set_type);
+	}	
+}
+
+void CSettingsPropertyPage::SetControlChanged(int id)
+{
+	auto it = m_controls.find(id);
+
+	assert(it != m_controls.end());
+
+	if (it == m_controls.end())
+		return;
+
+	it->second->Set(CryptSetting::Changed);
+}
+
 
 
 void CSettingsPropertyPage::OnSelchangeThreads()
 {
-	// TODO: Add your control notification handler code here
-
-	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_THREADS);
-
-	if (!pBox)
-		return;
-
-	int nThreads = pBox->GetCurSel();
-
-	theApp.WriteProfileInt(L"Settings", L"Threads", nThreads);
+	SetControlChanged(IDC_THREADS);
 }
 
 
 void CSettingsPropertyPage::OnSelchangeBuffersize()
 {
-	// TODO: Add your control notification handler code here
-
-	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_BUFFERSIZE);
-
-	if (!pBox)
-		return;
-
-	int selIndex = pBox->GetCurSel();
-
-	int nBlocks = 1 << selIndex;
-
-	theApp.WriteProfileInt(L"Settings",  L"BufferBlocks", nBlocks);
+	SetControlChanged(IDC_BUFFERSIZE);
 }
 
 void CSettingsPropertyPage::OnCbnSelchangeCachettl()
 {
-	// TODO: Add your control notification handler code here
-
-	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_CACHETTL);
-
-	if (!pBox)
-		return;
-
-	int selIndex = pBox->GetCurSel();
-
-	int cachettl = ttls[selIndex];
-
-	theApp.WriteProfileInt(L"Settings",  L"CacheTTL", cachettl);
+	SetControlChanged(IDC_CACHETTL);
 }
 
 
 void CSettingsPropertyPage::OnBnClickedCaseinsensitive()
 {
-	// TODO: Add your control notification handler code here
-
-	m_bCaseInsensitive = !m_bCaseInsensitive;
-
-	CheckDlgButton(IDC_CASEINSENSITIVE, m_bCaseInsensitive ? 1 : 0);
-
-	theApp.WriteProfileInt(L"Settings", L"CaseInsensitive", m_bCaseInsensitive ? 1 : 0);
+	SetControlChanged(IDC_CASEINSENSITIVE);
 }
 
 
-void CSettingsPropertyPage::SaveSettings()
-{
-	OnSelchangeThreads();
-	OnSelchangeBuffersize();
-	OnCbnSelchangeCachettl();
-
-	m_bCaseInsensitive = !m_bCaseInsensitive; // OnBnClickedCaseinsensitive() flips it
-	m_bMountManager = !m_bMountManager; // ditto
-	m_bEnableSavingPasswords = !m_bEnableSavingPasswords; // ditto
-	m_bNeverSaveHistory = !m_bNeverSaveHistory; // ditto
-	m_bDeleteSpurriousFiles = !m_bDeleteSpurriousFiles; // ditto
-	m_bOpenOnMounting = !m_bOpenOnMounting; // ditto
-	m_bEncryptKeysInMemory = !m_bEncryptKeysInMemory; // ditto
-	m_bCacheKeysInMemory = !m_bCacheKeysInMemory; // ditto
-	m_bFastMounting = !m_bFastMounting; // ditto
-	m_bWarnIfInUseOnDismounting = !m_bWarnIfInUseOnDismounting; // ditto
-	m_bDenyOtherSessions = !m_bDenyOtherSessions; // ditto
-	m_bDenyServices = !m_bDenyServices; // ditto
-
-	OnBnClickedCaseinsensitive();
-	OnClickedMountmanager();
-	OnClickedEnableSavingPasswords();
-	OnClickedNeverSaveHistory();
-	OnClickedDeleteSpurriousFiles();
-	OnClickedOpenOnMounting();
-	OnClickedEncryptKeysInMemory();
-	OnClickedCacheKeysInMemory();
-	OnBnClickedFastMounting();
-	OnClickedWarnIfInUseOnDismounting();
-	OnClickedDenyOtherSessions();
-	OnClickedDenyServices();
-}
 
 void CSettingsPropertyPage::OnBnClickedDefaults()
 {
-	// TODO: Add your control notification handler code here
-
-	SetControls(PER_FILESYSTEM_THREADS_DEFAULT, BUFFERBLOCKS_DEFAULT, CACHETTL_DEFAULT, 
-		CASEINSENSITIVE_DEFAULT, MOUNTMANAGER_DEFAULT, ENABLE_SAVING_PASSWORDS_DEFAULT,
-		NEVER_SAVE_HISTORY_DEFAULT, DELETE_SPURRIOUS_FILES_DEFAULT, OPEN_ON_MOUNTING_DEFAULT,
-		ENCRYPT_KEYS_IN_MEMORY_DEFAULT, CACHE_KEYS_IN_MEMORY_DEFAULT, FAST_MOUNTING_DEFAULT,
-		WARN_IF_IN_USE_ON_DISMOUNT_DEFAULT, DENY_OTHER_SESSIONS_DEFAULT, DENY_SERVICES_DEFAULT);
-
-	SaveSettings();
+	SetControls(CryptSetting::SetType::Default);
 }
 
 
 void CSettingsPropertyPage::OnBnClickedRecommended()
 {
-	// TODO: Add your control notification handler code here
-
-	SetControls(PER_FILESYSTEM_THREADS_RECOMMENDED, BUFFERBLOCKS_RECOMMENDED, CACHETTL_RECOMMENDED, 
-		CASEINSENSITIVE_RECOMMENDED, MOUNTMANAGER_RECOMMENDED, ENABLE_SAVING_PASSWORDS_RECOMMENDED,
-		NEVER_SAVE_HISTORY_RECOMMENDED, DELETE_SPURRIOUS_FILES_RECOMMENDED, OPEN_ON_MOUNTING_RECOMMENDED,
-		ENCRYPT_KEYS_IN_MEMORY_RECOMMENDED, CACHE_KEYS_IN_MEMORY_RECOMMENDED, FAST_MOUNTING_RECOMMENDED,
-		WARN_IF_IN_USE_ON_DISMOUNT_RECOMMENDED, DENY_OTHER_SESSIONS_RECOMMENDED, DENY_SERVICES_RECOMMENDED);
-
-	SaveSettings();
+	SetControls(CryptSetting::SetType::Recommended);
 }
 
 
 
 void CSettingsPropertyPage::OnClickedMountmanager()
 {
-	// TODO: Add your control notification handler code here
-
-	m_bMountManager = !m_bMountManager;
-
-	CheckDlgButton(IDC_MOUNTMANAGER, m_bMountManager ? 1 : 0);
-
-	theApp.WriteProfileInt(L"Settings", L"MountManager", m_bMountManager ? 1 : 0);
+	SetControlChanged(IDC_MOUNTMANAGER);	
 }
 
 
 void CSettingsPropertyPage::OnClickedResetwarnings()
 {
-	// TODO: Add your control notification handler code here
-
-	theApp.WriteProfileInt(L"Settings", L"MountManagerWarn", MOUNTMANAGERWARN_DEFAULT);
+	CryptSettings::getInstance().SaveSetting(MOUNTMANAGERWARN, MOUNTMANAGERWARN_DEFAULT);
 }
 
 
 void CSettingsPropertyPage::OnClickedEnableSavingPasswords()
 {
-	// TODO: Add your control notification handler code here
+	
 
-	m_bEnableSavingPasswords = !m_bEnableSavingPasswords;
+	SetControlChanged(IDC_ENABLE_SAVING_PASSWORDS);	
 
-	CheckDlgButton(IDC_ENABLE_SAVING_PASSWORDS, m_bEnableSavingPasswords ? 1 : 0);
+	bool enablesavingpasswords = false;
+	CryptSettings::getInstance().GetSettingCurrent(ENABLE_SAVING_PASSWORDS, enablesavingpasswords);
 
-	if (m_bEnableSavingPasswords) {
-
-		if (m_bNeverSaveHistory) {
+	if (enablesavingpasswords) {
+		bool neversavehistory = false;
+		CryptSettings::getInstance().GetSettingCurrent(NEVER_SAVE_HISTORY, neversavehistory);
+		if (neversavehistory) {
 			MessageBox(L"Passwords will not be saved if \"Never save history\" is turned on.",
 				L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
-		}
-		theApp.WriteProfileInt(L"Settings", L"EnableSavingPasswords", TRUE);
+		}		
 	} else {
 		theApp.WriteProfileInt(L"Settings", L"EnableSavingPasswords", FALSE);
 		int numSavedPasswords = SavedPasswords::ClearSavedPasswords(FALSE);
@@ -461,17 +349,19 @@ void CSettingsPropertyPage::OnClickedEnableSavingPasswords()
 
 void CSettingsPropertyPage::OnClickedNeverSaveHistory()
 {
-	// TODO: Add your control notification handler code here
+	
 
-	m_bNeverSaveHistory = !m_bNeverSaveHistory;
+	SetControlChanged(IDC_NEVER_SAVE_HISTORY);
 
-	CheckDlgButton(IDC_NEVER_SAVE_HISTORY, !!m_bNeverSaveHistory);
+	bool neversavehistory = false;
+	CryptSettings::getInstance().GetSettingCurrent(NEVER_SAVE_HISTORY, neversavehistory);
 
-	theApp.WriteProfileInt(L"Settings", L"NeverSaveHistory", !!m_bNeverSaveHistory);
+	if (neversavehistory) {
 
-	if (m_bNeverSaveHistory) {
+		bool enablesavingpasswords = false;
+		CryptSettings::getInstance().GetSettingCurrent(ENABLE_SAVING_PASSWORDS, enablesavingpasswords);
 
-		if (m_bEnableSavingPasswords) {
+		if (enablesavingpasswords) {
 			MessageBox(L"If you turn on \"Never save history\", saved passwords will not be deleted, but new passwords will not "
 						   L"be saved.  To delete any saved passwords, uncheck \"Enable saved passwords\".",
 				L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
@@ -505,94 +395,48 @@ void CSettingsPropertyPage::OnClickedNeverSaveHistory()
 
 
 void CSettingsPropertyPage::OnClickedDeleteSpurriousFiles()
-{
-	// TODO: Add your control notification handler code here
-	m_bDeleteSpurriousFiles = !m_bDeleteSpurriousFiles;
-
-	CheckDlgButton(IDC_DELETE_SPURRIOUS_FILES, m_bDeleteSpurriousFiles ? 1 : 0);
-
-	theApp.WriteProfileInt(L"Settings", L"DeleteSpurriousFiles", m_bDeleteSpurriousFiles ? 1 : 0);
+{	
+	SetControlChanged(IDC_DELETE_SPURRIOUS_FILES);	
 }
 
 
 void CSettingsPropertyPage::OnClickedOpenOnMounting()
 {
-	// TODO: Add your control notification handler code here
-	m_bOpenOnMounting = !m_bOpenOnMounting;
-
-	CheckDlgButton(IDC_OPEN_ON_MOUNTING, m_bOpenOnMounting ? 1 : 0);
-
-	theApp.WriteProfileInt(L"Settings", L"OpenOnMounting", m_bOpenOnMounting ? 1 : 0);
+	SetControlChanged(IDC_OPEN_ON_MOUNTING);
 }
 
 
 void CSettingsPropertyPage::OnClickedEncryptKeysInMemory()
 {
-	// TODO: Add your control notification handler code here
-
-	m_bEncryptKeysInMemory = !m_bEncryptKeysInMemory;
-
-	CheckDlgButton(IDC_ENCRYPT_KEYS_IN_MEMORY, m_bEncryptKeysInMemory ? 1 : 0);
-
-	theApp.WriteProfileInt(L"Settings", L"EncryptKeysInMemory", m_bEncryptKeysInMemory ? 1 : 0);
+	SetControlChanged(IDC_ENCRYPT_KEYS_IN_MEMORY);	
 }
 
 
 void CSettingsPropertyPage::OnClickedCacheKeysInMemory()
 {
-	// TODO: Add your control notification handler code here
-
-	m_bCacheKeysInMemory = !m_bCacheKeysInMemory;
-
-	CheckDlgButton(IDC_CACHE_KEYS_IN_MEMORY, m_bCacheKeysInMemory ? 1 : 0);
-
-	theApp.WriteProfileInt(L"Settings", L"CacheKeysInMemory", m_bCacheKeysInMemory ? 1 : 0);
+	SetControlChanged(IDC_CACHE_KEYS_IN_MEMORY);	
 }
 
 
 void CSettingsPropertyPage::OnBnClickedFastMounting()
 {
-	// TODO: Add your control notification handler code here
-
-	m_bFastMounting = !m_bFastMounting;
-
-	CheckDlgButton(IDC_FAST_MOUNTING, m_bFastMounting ? 1 : 0);
-
-	theApp.WriteProfileInt(L"Settings", L"FastMounting", m_bFastMounting ? 1 : 0);
+	SetControlChanged(IDC_FAST_MOUNTING);	
 }
 
 
 void CSettingsPropertyPage::OnClickedWarnIfInUseOnDismounting()
 {
-	// TODO: Add your control notification handler code here
-
-	m_bWarnIfInUseOnDismounting = !m_bWarnIfInUseOnDismounting;
-
-	CheckDlgButton(IDC_WARN_IF_IN_USE_ON_DISMOUNTING, m_bWarnIfInUseOnDismounting ? 1 : 0);
-
-	theApp.WriteProfileInt(L"Settings", L"WarnIfInUseOnDismounting", m_bWarnIfInUseOnDismounting ? 1 : 0);
+	SetControlChanged(IDC_WARN_IF_IN_USE_ON_DISMOUNTING);	
 }
 
 
 void CSettingsPropertyPage::OnClickedDenyOtherSessions()
-{
-	// TODO: Add your control notification handler code here
-
-	m_bDenyOtherSessions = !m_bDenyOtherSessions;
-
-	CheckDlgButton(IDC_DENY_OTHER_SESSIONS, m_bDenyOtherSessions ? 1 : 0);
-
-	theApp.WriteProfileInt(L"Settings", L"DenyOtherSessions", m_bDenyOtherSessions ? 1 : 0);
+{	
+	SetControlChanged(IDC_DENY_OTHER_SESSIONS);
 }
 
 
 void CSettingsPropertyPage::OnClickedDenyServices()
 {
-	// TODO: Add your control notification handler code here
-
-	m_bDenyServices = !m_bDenyServices;
-
-	CheckDlgButton(IDC_DENY_SERVICES, m_bDenyServices ? 1 : 0);
-
-	theApp.WriteProfileInt(L"Settings", L"DenyServices", m_bDenyServices ? 1 : 0);
+	SetControlChanged(IDC_DENY_SERVICES);	
 }

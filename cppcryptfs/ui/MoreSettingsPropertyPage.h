@@ -52,15 +52,18 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	BOOL SetControls(CryptSetting::SetType set_type, bool save = true);
+
+	std::unordered_map<int, std::unique_ptr<CryptSetting>> m_controls;
+	void SetControlChanged(int id);
+	void SetControls(CryptSetting::SetType set_type);
+
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnClickedExfat();
 	virtual BOOL OnInitDialog();
 
-protected:
-	std::unordered_map<int, std::unique_ptr<CryptSetting>> m_controls;
-	void SetControlChanged(int id);
+
+	
 public:
 	afx_msg void OnClickedDefaults();
 	afx_msg void OnClickedRecommended();

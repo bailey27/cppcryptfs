@@ -38,6 +38,12 @@ THE SOFTWARE.
 
 
 
+CryptSettings& CryptSettings::getInstance()
+{
+	static CryptSettings instance;
+
+	return instance;
+}
 
 
 static unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> get_settings_registry_map()
@@ -53,10 +59,14 @@ static unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> g
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(CASEINSENSITIVE, CaseInsensitive);
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(MOUNTMANAGER, MountManager);
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(MOUNTMANAGERWARN, MountManagerWarn);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(ENABLE_SAVING_PASSWORDS, EnableSavingPasswords);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(NEVER_SAVE_HISTORY, NeverSaveHistory);
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(DELETE_SPURRIOUS_FILES, DeleteSpurriousFiles);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(OPEN_ON_MOUNTING, OpenOnMounting);
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(ENCRYPT_KEYS_IN_MEMORY, EncryptKeysInMemory);
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(CACHE_KEYS_IN_MEMORY, CacheKeysInMemory);
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(FAST_MOUNTING, FastMounting);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(WARN_IF_IN_USE_ON_DISMOUNT, WarnIfInUseOnDismounting);
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(DENY_OTHER_SESSIONS, DenyOtherSessions);
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(DENY_SERVICES, DenyServices);
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(FLUSH_AFTER_WRITE_EXFAT, FlushAfterWriteExFAT);
@@ -68,12 +78,13 @@ static unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> g
 	return m;
 }
 
-static unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> settings_registry_map = get_settings_registry_map();
+unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> CryptSettings::m_settings_registry_map = get_settings_registry_map();
 
-bool GetSettingDefault(CryptSettingsRegistryValuesKeys key, int& default)
+bool CryptSettings::GetSettingDefault(CryptSettingsRegistryValuesKeys key, int& default)
 {
-	auto it = settings_registry_map.find(key);
-	if (it == settings_registry_map.end())
+	auto it = m_settings_registry_map.find(key);
+	assert(it != m_settings_registry_map.end());
+	if (it == m_settings_registry_map.end())
 		return false;
 
 	default = it->second.default;
@@ -81,7 +92,7 @@ bool GetSettingDefault(CryptSettingsRegistryValuesKeys key, int& default)
 	return true;
 }
 
-bool GetSettingDefault(CryptSettingsRegistryValuesKeys key, bool& default)
+bool CryptSettings::GetSettingDefault(CryptSettingsRegistryValuesKeys key, bool& default)
 {
 	int val;
 	if (!GetSettingRecommended(key, val))
@@ -92,10 +103,11 @@ bool GetSettingDefault(CryptSettingsRegistryValuesKeys key, bool& default)
 	return true;
 }
 
-bool GetSettingRecommended(CryptSettingsRegistryValuesKeys key, int& recommended)
+bool CryptSettings::GetSettingRecommended(CryptSettingsRegistryValuesKeys key, int& recommended)
 {
-	auto it = settings_registry_map.find(key);
-	if (it == settings_registry_map.end())
+	auto it = m_settings_registry_map.find(key);
+	assert(it != m_settings_registry_map.end());
+	if (it == m_settings_registry_map.end())
 		return false;
 
 	recommended = it->second.recommended;
@@ -103,7 +115,7 @@ bool GetSettingRecommended(CryptSettingsRegistryValuesKeys key, int& recommended
 	return true;
 }
 
-bool GetSettingRecommended(CryptSettingsRegistryValuesKeys key, bool& recommended)
+bool CryptSettings::GetSettingRecommended(CryptSettingsRegistryValuesKeys key, bool& recommended)
 {
 	int val;
 	if (!GetSettingRecommended(key, val))
@@ -115,10 +127,11 @@ bool GetSettingRecommended(CryptSettingsRegistryValuesKeys key, bool& recommende
 }
 
 
-bool GetSettingCurrent(CryptSettingsRegistryValuesKeys key, int& current)
+bool CryptSettings::GetSettingCurrent(CryptSettingsRegistryValuesKeys key, int& current)
 {
-	auto it = settings_registry_map.find(key);
-	if (it == settings_registry_map.end())
+	auto it = m_settings_registry_map.find(key);
+	assert(it != m_settings_registry_map.end());
+	if (it == m_settings_registry_map.end())
 		return false;
 
 	auto val = theApp.GetProfileInt(L"Settings", it->second.regval_name.c_str(), it->second.default);
@@ -128,7 +141,7 @@ bool GetSettingCurrent(CryptSettingsRegistryValuesKeys key, int& current)
 	return true;
 }
 
-bool GetSettingCurrent(CryptSettingsRegistryValuesKeys key, bool& current)
+bool CryptSettings::GetSettingCurrent(CryptSettingsRegistryValuesKeys key, bool& current)
 {
 	int val = 0;	
 	if (!GetSettingCurrent(key, val))
@@ -140,7 +153,7 @@ bool GetSettingCurrent(CryptSettingsRegistryValuesKeys key, bool& current)
 }
 
 
-void GetSettings(CryptMountOptions &opts)
+void CryptSettings::GetSettings(CryptMountOptions &opts)
 {
 		
 	VERIFY(GetSettingCurrent(PER_FILESYSTEM_THREADS, opts.numthreads));
@@ -182,11 +195,11 @@ void GetSettings(CryptMountOptions &opts)
 }
 
 
-bool SaveSetting(CryptSettingsRegistryValuesKeys key, int val)
+bool CryptSettings::SaveSetting(CryptSettingsRegistryValuesKeys key, int val)
 {
-	auto it = settings_registry_map.find(key);
+	auto it = m_settings_registry_map.find(key);
 
-	if (it == settings_registry_map.end())
+	if (it == m_settings_registry_map.end())
 		return false;
 
 	return theApp.WriteProfileInt(L"Settings", it->second.regval_name.c_str(), val) != FALSE;

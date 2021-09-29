@@ -29,10 +29,11 @@ THE SOFTWARE.
 #include "stdafx.h"
 #include "iobufferpool.h"
 
-IoBufferPool IoBufferPool::instance;
 
 IoBufferPool& IoBufferPool::getInstance()
 {	
+	static IoBufferPool instance;
+
 	return instance;
 }
 
