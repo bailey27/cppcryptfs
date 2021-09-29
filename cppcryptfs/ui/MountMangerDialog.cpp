@@ -5,6 +5,8 @@
 #include "cppcryptfs.h"
 #include "MountMangerDialog.h"
 #include "afxdialogex.h"
+#include "cryptdefaults.h"
+#include "ui/CryptSettings.h"
 
 
 // CMountMangerDialog dialog
@@ -50,6 +52,6 @@ void CMountMangerDialog::OnBnClickedOk()
 void CMountMangerDialog::OnBnClickedDontshowagain()
 {
 	// TODO: Add your control notification handler code here
-
-	theApp.WriteProfileInt(L"Settings", L"MountManagerWarn", !IsDlgButtonChecked(IDC_DONTSHOWAGAIN));
+	
+	CryptSettings::getInstance().SaveSetting(MOUNTMANAGERWARN, !IsDlgButtonChecked(IDC_DONTSHOWAGAIN));
 }

@@ -41,6 +41,7 @@ THE SOFTWARE.
 #include "util/util.h"
 #include "dokan/MountPointManager.h"
 #include "ui/uiutil.h"
+#include "ui/CryptSettings.h"
 #include "../libcppcryptfs/util/KeyCache.h"
 #include "crypt/crypt.h"
 #include "cryptdefaults.h"
@@ -255,8 +256,11 @@ BOOL CCryptPropertySheet::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct
 			return FALSE;
 		}
 
-		bool denyOtherSessions = theApp.GetProfileInt(L"Settings", L"DenyOtherSessions", DENY_OTHER_SESSIONS_DEFAULT) != 0;
-		bool denyServices = theApp.GetProfileInt(L"Settings", L"DenyServices", DENY_SERVICES_DEFAULT) != 0;
+		bool denyOtherSessions = false;
+		CryptSettings::getInstance().GetSettingCurrent(DENY_OTHER_SESSIONS, denyOtherSessions);
+
+		bool denyServices = false;
+		CryptSettings::getInstance().GetSettingCurrent(DENY_SERVICES, denyServices);
 
 		if (denyOtherSessions || denyServices) {
 

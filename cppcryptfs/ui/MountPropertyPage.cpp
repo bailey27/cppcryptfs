@@ -48,6 +48,7 @@ THE SOFTWARE.
 #include "ui/uiutil.h"
 #include "ui/savedpasswords.h"
 #include "ui/FsInfoDialog.h"
+#include "ui/CryptSettings.h"
 #include "dokan/MountPointManager.h"
 #include "../libipc/server.h"
 #include "../libcommonutil/commonutil.h"
@@ -392,8 +393,8 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 	}
 
-	bool bOpenOnMounting = theApp.GetProfileIntW(L"Settings", L"OpenOnMounting",
-		OPEN_ON_MOUNTING_DEFAULT) != 0;
+	bool bOpenOnMounting = false;
+	CryptSettings::getInstance().GetSettingCurrent(OPEN_ON_MOUNTING, bOpenOnMounting);
 
 	if (bOpenOnMounting) {
 		OpenFileManagementShell(cmp);
@@ -717,7 +718,8 @@ void CMountPropertyPage::OnClickedMount()
 {
 	// TODO: Add your control notification handler code here
 
-	BOOL save_passwords_enabled = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
+	bool save_passwords_enabled = false;
+	CryptSettings::getInstance().GetSettingCurrent(ENABLE_SAVING_PASSWORDS, save_passwords_enabled);
 
 	CSecureEdit *pEd = (CSecureEdit*)GetDlgItem(IDC_PASSWORD);
 	if (pEd && save_passwords_enabled) {
@@ -986,7 +988,8 @@ BOOL CMountPropertyPage::OnSetActive()
 
 	ritems2.Populate(m_lastConfigs, path_initial_default);
 
-	BOOL save_passwords_enabled = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
+	bool save_passwords_enabled = false;
+	CryptSettings::getInstance().GetSettingCurrent(ENABLE_SAVING_PASSWORDS, save_passwords_enabled);
 
 	m_ToolTip.Activate(!save_passwords_enabled);
 
@@ -1121,7 +1124,8 @@ void CMountPropertyPage::OnCbnSelchangePath()
 	CheckDlgButton(IDC_REVERSE, (flags & REVERSE_FLAG) != 0);
 	CheckDlgButton(IDC_AUTO_MOUNT, (flags & AUTO_MOUNT_FLAG) != 0);
 
-	BOOL save_passwords_enabled = theApp.GetProfileInt(L"Settings", L"EnableSavingPasswords", ENABLE_SAVING_PASSWORDS_DEFAULT) != 0;
+	bool save_passwords_enabled = false;
+	CryptSettings::getInstance().GetSettingCurrent(ENABLE_SAVING_PASSWORDS, save_passwords_enabled);
 
 	CheckDlgButton(IDC_SAVE_PASSWORD, (flags & SAVE_PASSWORD_FLAG) && save_passwords_enabled);
 
@@ -1270,29 +1274,29 @@ static void usage(OutputHandler& output_handler)
 }
 
 struct IntSettingSetterRestorer {
-	wstring name;
+	enum CryptSettingsRegistryValuesKeys m_key;
 	int saved_val;
 	int new_val;
 	bool inited = false;
-	void IntSettingSetterRestorer::init(const wchar_t* sname, int default_val, int newval)
+	void IntSettingSetterRestorer::init(enum CryptSettingsRegistryValuesKeys key, int newval)
 	{
-
 		inited = true;
 
-		name = sname;
+		m_key = key;
 
-		saved_val = theApp.GetProfileInt(L"Settings", name.c_str(), default_val);
+		saved_val = 0;
+		CryptSettings::getInstance().GetSettingCurrent(m_key, saved_val);
 
 		new_val = newval;
 
 		if (new_val != saved_val)
-			theApp.WriteProfileInt(L"Settings", name.c_str(), new_val);
+			CryptSettings::getInstance().SaveSetting(m_key, new_val);
 	}
 	~IntSettingSetterRestorer()
 	{
 		if (inited) {
 			if (new_val != saved_val) {
-				theApp.WriteProfileInt(L"Settings", name.c_str(), saved_val);
+				CryptSettings::getInstance().SaveSetting(m_key, saved_val);
 			}
 		}
 	}
@@ -1582,10 +1586,10 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 					IntSettingSetterRestorer deny_other_sessions_setter;
 					IntSettingSetterRestorer deny_services_setter;
 					if (deny_other_sessions != -1) {
-						deny_other_sessions_setter.init(L"DenyOtherSessions", DENY_OTHER_SESSIONS_DEFAULT, deny_other_sessions);
+						deny_other_sessions_setter.init(DENY_OTHER_SESSIONS, deny_other_sessions);
 					}
 					if (deny_services != -1) {
-						deny_services_setter.init(L"DenyServices", DENY_SERVICES_DEFAULT, deny_services);
+						deny_services_setter.init(DENY_SERVICES, deny_services);
 					}
 					errMes = Mount(path, mountPoint, password.m_buf, readonly, config_path.GetLength() > 0 ? config_path : NULL, reverse);
 				} else {

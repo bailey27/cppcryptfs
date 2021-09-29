@@ -330,8 +330,7 @@ void CSettingsPropertyPage::OnClickedEnableSavingPasswords()
 			MessageBox(L"Passwords will not be saved if \"Never save history\" is turned on.",
 				L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
 		}		
-	} else {
-		theApp.WriteProfileInt(L"Settings", L"EnableSavingPasswords", FALSE);
+	} else {		
 		int numSavedPasswords = SavedPasswords::ClearSavedPasswords(FALSE);
 		if (numSavedPasswords < 0) {
 			MessageBox(L"unable to count saved passwords", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
