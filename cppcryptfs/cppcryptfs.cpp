@@ -323,7 +323,7 @@ BOOL CcppcryptfsApp::InitInstance()
 
 BOOL CcppcryptfsApp::WriteProfileInt(LPCWSTR section, LPCWSTR entry, INT val)
 {
-	if (lstrcmpi(section, L"Settings") && NeverSaveHistory()) {
+	if (lstrcmpi(section, CryptSettingsRegValName) && NeverSaveHistory()) {
 		return TRUE;
 	}
 
@@ -332,7 +332,7 @@ BOOL CcppcryptfsApp::WriteProfileInt(LPCWSTR section, LPCWSTR entry, INT val)
 
 BOOL CcppcryptfsApp::WriteProfileString(LPCWSTR section, LPCWSTR entry, LPCWSTR val)
 {
-	if (lstrcmpi(section, L"Settings") && NeverSaveHistory()) {
+	if (lstrcmpi(section, CryptSettingsRegValName) && NeverSaveHistory()) {
 		return TRUE;
 	}
 
@@ -341,7 +341,7 @@ BOOL CcppcryptfsApp::WriteProfileString(LPCWSTR section, LPCWSTR entry, LPCWSTR 
 
 BOOL CcppcryptfsApp::WriteProfileBinary(LPCWSTR section, LPCWSTR entry, LPBYTE pData, UINT nBytes)
 {
-	if (lstrcmpi(section, L"Settings") && NeverSaveHistory()) {
+	if (lstrcmpi(section, CryptSettingsRegValName) && NeverSaveHistory()) {
 		return TRUE;
 	}
 

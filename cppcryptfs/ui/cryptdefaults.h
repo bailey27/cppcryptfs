@@ -29,6 +29,9 @@ THE SOFTWARE.
 #pragma once
 
 
+constexpr const WCHAR* CryptSettingsRegValName = L"Settings";
+
+
 enum CryptSettingsRegistryValuesKeys {
 	PER_FILESYSTEM_THREADS, 
 	BUFFERBLOCKS,

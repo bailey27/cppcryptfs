@@ -45,10 +45,10 @@ struct CryptSettingConsts {
 class CryptSettings {
 private:
 	
-	CryptSettings() = default;
+	CryptSettings();
 
-	static std::unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> m_settings_registry_map;
-public:
+	std::unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> m_settings_registry_map;
+public:	
 
 	static CryptSettings& getInstance();
 

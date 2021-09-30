@@ -46,12 +46,11 @@ CryptSettings& CryptSettings::getInstance()
 }
 
 
-static unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> get_settings_registry_map()
+CryptSettings::CryptSettings() 
 {
-	unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> m;
 
 #define INIT_SETTINGS_REGISTRY_MAP_ENTRY(key, val) \
-	m[key] = CryptSettingConsts(L#val, key##_DEFAULT, key##_RECOMMENDED)
+	m_settings_registry_map[key] = CryptSettingConsts(L#val, key##_DEFAULT, key##_RECOMMENDED)
 
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(PER_FILESYSTEM_THREADS, Threads);
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(BUFFERBLOCKS, BufferBlocks);
@@ -75,10 +74,8 @@ static unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> g
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(FLUSH_AFTER_WRITE_NOT_NTFS, FlushAfterWriteNotNTFS);
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(FLUSH_AFTER_WRITE_NO_SPARSE_FILES, FlushAfterWriteNoSparseFiles);
 
-	return m;
 }
 
-unordered_map<enum CryptSettingsRegistryValuesKeys, CryptSettingConsts> CryptSettings::m_settings_registry_map = get_settings_registry_map();
 
 bool CryptSettings::GetSettingDefault(CryptSettingsRegistryValuesKeys key, int& default)
 {
@@ -134,7 +131,7 @@ bool CryptSettings::GetSettingCurrent(CryptSettingsRegistryValuesKeys key, int& 
 	if (it == m_settings_registry_map.end())
 		return false;
 
-	auto val = theApp.GetProfileInt(L"Settings", it->second.regval_name.c_str(), it->second.default);
+	auto val = theApp.GetProfileInt(CryptSettingsRegValName, it->second.regval_name.c_str(), it->second.default);
 
 	current = val;
 
@@ -202,5 +199,5 @@ bool CryptSettings::SaveSetting(CryptSettingsRegistryValuesKeys key, int val)
 	if (it == m_settings_registry_map.end())
 		return false;
 
-	return theApp.WriteProfileInt(L"Settings", it->second.regval_name.c_str(), val) != FALSE;
+	return theApp.WriteProfileInt(CryptSettingsRegValName, it->second.regval_name.c_str(), val) != FALSE;
 }
