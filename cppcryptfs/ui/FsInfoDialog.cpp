@@ -109,6 +109,7 @@ BOOL CFsInfoDialog::OnInitDialog()
 	SetDlgItemText(IDC_DENY_OTHER_SESSIONS_TXT, m_info.denyOtherSessions ? yes : no);
 	SetDlgItemText(IDC_DENY_SERVICES_TXT, m_info.denyServices ? yes : no);
 	SetDlgItemText(IDC_FLUSH_AFTER_WRITE_TXT, m_info.flushAfterWrite ? yes : no);
+	SetDlgItemText(IDC_DELETE_SPURRIOUS_FILES, m_info.deleteSpurriousFiles ? yes : no);
 
 	wstring txt;
 	txt = to_wstring(m_info.ioBufferSize);

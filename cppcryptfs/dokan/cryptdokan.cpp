@@ -2269,6 +2269,9 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 	  }
     }
 
+    con->m_delete_spurrious_files = con->m_delete_spurrious_files && !con->GetConfig()->m_PlaintextNames
+        && !con->GetConfig()->m_reverse;
+
 	if (!con->FinalInitBeforeMounting(opts.cachekeysinmemory)) {
       mes = L"context final init failed";
       throw(-1);

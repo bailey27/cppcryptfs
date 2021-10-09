@@ -46,6 +46,8 @@ FsInfo::FsInfo()
 	this->cacheKeysInMemory = false;
 	this->denyOtherSessions = false;
 	this->denyServices = false;
+	this->flushAfterWrite = false;
+	this->deleteSpurriousFiles = false;
 }
 
 FsInfo::~FsInfo()

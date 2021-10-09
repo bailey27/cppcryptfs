@@ -116,6 +116,7 @@ CryptContext::~CryptContext()
 
 void CryptContext::GetFsInfo(FsInfo & info)
 {
+	info.deleteSpurriousFiles = this->m_delete_spurrious_files;
 	info.flushAfterWrite = this->m_flushafterwrite;
 	info.denyServices = this->m_denyServices;
 	info.denyOtherSessions = this->m_denyOtherSessions;

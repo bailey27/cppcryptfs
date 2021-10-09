@@ -53,6 +53,7 @@ public:
 	bool denyOtherSessions;
 	bool denyServices;
 	bool flushAfterWrite;
+	bool deleteSpurriousFiles;
 
 	FsInfo();
 	virtual ~FsInfo();
