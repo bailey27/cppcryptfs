@@ -95,6 +95,8 @@ CryptConfig::CryptConfig()
 	m_fs_feature_disable_mask = 0;
 
 	m_DenyAccessToOthers = false;
+
+	m_longNameMax = MAX_FILENAME_LEN;
 }
 
 
@@ -290,6 +292,8 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 			}
 		}
 
+		bool bHasLongNameMaxFeatureFlag = false;
+
 		if (d.HasMember("FeatureFlags") && !d["FeatureFlags"].IsNull() && d["FeatureFlags"].IsArray()) {
 
 			rapidjson::Value& flags = d["FeatureFlags"];
@@ -312,6 +316,8 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 						m_Raw64 = true;
 					} else if (!strcmp(itr->GetString(), "HKDF")) {
 						m_HKDF = true;
+					} else if (!strcmp(itr->GetString(), "LongNameMax")) {
+						bHasLongNameMaxFeatureFlag = true;
 					} else {
 						wstring wflag;
 						if (utf8_to_unicode(itr->GetString(), wflag)) {
@@ -324,6 +330,22 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 					}
 				}
 			}
+		}
+
+		if (d.HasMember("LongNameMax") && !d["LongNameMax"].IsNull() && d["LongNameMax"].IsInt()) {
+			if (!bHasLongNameMaxFeatureFlag) {
+				mes = L"config has LongNameMax value but no LongNameMax feature flag set";
+				throw(-1);
+			}
+			rapidjson::Value& lnmax = d["LongNameMax"];
+			m_longNameMax = lnmax.GetInt();			
+			if (m_longNameMax < MIN_LONGNAMEMAX || m_longNameMax > MAX_LONGNAMEMAX) {
+				mes = L"LongNameMax is " + to_wstring(m_longNameMax) + L" which is out of allowed range (62 to 255 inclusisve)";
+				throw(-1);
+			}
+		} else if (bHasLongNameMaxFeatureFlag) {
+			mes = L"config has LongNameMax feature flag set but no LongNameMax value";
+			throw(-1);
 		}
 
 		

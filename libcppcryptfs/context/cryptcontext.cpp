@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include "stdafx.h"
 #include "crypt/crypt.h"
 #include "util/fileutil.h"
+#include "filename/cryptfilename.h"
 #include "cryptcontext.h"
 
 static RandomBytes random_bytes;
@@ -100,6 +101,30 @@ static void get_deletable_files(CryptContext *con, vector<wstring>& files)
 bool CryptContext::FinalInitBeforeMounting(bool use_key_cache)
 {
 	get_deletable_files(this, m_deletable_files);
+
+	if (!m_config->m_PlaintextNames && m_config->m_longNameMax != MAX_FILENAME_LEN) {
+		auto snmax = 0;
+		auto set_snmax = [&](int lnmax_val, int snmax_val) {
+			if (snmax < 1 && m_config->m_longNameMax <= lnmax_val) {
+				snmax = snmax_val;
+			}
+		};
+		set_snmax(63, 31);
+		set_snmax(85, 47);
+		set_snmax(106, 63);
+		set_snmax(127, 79);
+		set_snmax(149, 95);
+		set_snmax(170, 111);
+		set_snmax(191, 127);
+		set_snmax(213, 143);
+		set_snmax(234, 159);
+		set_snmax(254, 175);
+
+		if (snmax < 1) {
+			return false;
+		}
+		m_shorNameMax = snmax;
+	}
 
 	return m_config->m_keybuf_manager.Finalize(use_key_cache);
 }

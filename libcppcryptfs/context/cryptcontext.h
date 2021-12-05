@@ -106,6 +106,7 @@ public:
 	vector<wstring> m_deletable_files;
 	CryptOpenFiles m_openfiles;
 	CryptOpenHandles m_open_handles;
+	int m_shorNameMax = SHORT_NAME_MAX_DEFAULT;
 private:
 	bool m_caseinsensitive;
 public:

@@ -62,6 +62,9 @@ THE SOFTWARE.
 #define DIR_IV_NAME (L"gocryptfs.diriv")
 
 #define MAX_FILENAME_LEN 255
+#define MAX_LONGNAMEMAX MAX_FILENAME_LEN
+#define MIN_LONGNAMEMAX 62
+#define SHORT_NAME_MAX_DEFAULT 175 // for when longname max is MAX_FILENAME_LEN
 
 #define MAX_PASSWORD_LEN 255
 

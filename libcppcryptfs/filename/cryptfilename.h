@@ -48,8 +48,6 @@ THE SOFTWARE.
 #define LONGNAME_PREFIX_LEN 19
 #define LONGNAME_SUFFIX_LEN 5
 
-#define SHORT_NAME_MAX 176 // (after utf8 transform)
-
 bool is_long_name(const WCHAR *filename);
 
 bool is_long_name_file(const WCHAR *filename);

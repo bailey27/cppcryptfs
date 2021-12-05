@@ -54,6 +54,7 @@ private:
 	LockZeroBuffer<unsigned char> *m_pKeyBuf;
 	LockZeroBuffer<BYTE> *m_pGcmContentKey;
 	bool m_DirIV;
+	void GetShortNameMax();
 public:
 	wstring m_configPath;
 	bool DirIV() { return m_DirIV; };
@@ -66,6 +67,8 @@ public:
 	bool m_DenyAccessToOthers;
 
 	bool m_reverse;
+
+	int m_longNameMax;
 
 	int m_Version;
 	wstring m_VolumeName;

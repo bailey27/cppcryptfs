@@ -183,7 +183,7 @@ encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCH
 		return NULL;	
 	}
 
-	if (con->GetConfig()->m_LongNames && storage.length() > MAX_FILENAME_LEN) {
+	if (con->GetConfig()->m_LongNames && storage.length() > con->GetConfig()->m_longNameMax) {
 		string utf8;
 		if (!unicode_to_utf8(storage.c_str(), utf8)) {
 			DbgPrint(L"\tencrypt_filename: unicode_to_utf8 failed for longname : %s\n", storage.c_str());
@@ -447,7 +447,7 @@ decrypt_reverse_longname(CryptContext *con, LPCWSTR filename, LPCWSTR plain_path
 				if (!unicode_to_utf8(fdata.cFileName, utf8name))
 					throw(-1);
 
-				if (utf8name.length() <= SHORT_NAME_MAX)
+				if (utf8name.length() <= con->m_shorNameMax)
 					continue;				
 
 				if (!encrypt_filename(con, dir_iv, fdata.cFileName, find_enc, &actual_encrypted))
