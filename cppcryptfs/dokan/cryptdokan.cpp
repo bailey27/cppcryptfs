@@ -1977,7 +1977,14 @@ static NTSTATUS DOKAN_CALLBACK CryptGetDiskFreeSpace(
   CryptConfig *config = con->GetConfig();
 
   if (config->m_basedir.size() > 0) {
-    if (GetDiskFreeSpaceExW(&config->m_basedir[0],
+    auto pbasedir = config->m_basedir.c_str();
+    wstring basedir_with_slash;    
+    if (config->m_basedir[config->m_basedir.size() - 1] == ':') {
+        basedir_with_slash = config->m_basedir;
+        basedir_with_slash.push_back(L'\\');
+        pbasedir = basedir_with_slash.c_str();
+    }
+    if (GetDiskFreeSpaceExW(pbasedir,
                             (PULARGE_INTEGER)FreeBytesAvailable,
                             (PULARGE_INTEGER)TotalNumberOfBytes,
                             (PULARGE_INTEGER)TotalNumberOfFreeBytes)) {
