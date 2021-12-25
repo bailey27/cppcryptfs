@@ -273,6 +273,10 @@ convert_fdata(CryptContext *con, BOOL isRoot, const BYTE *dir_iv, const WCHAR *p
 		if (!dname)
 			return false;
 
+		// wcscpy_s throws a weird exception if src is too long so check the length before calling it
+		if (wcslen(dname) >= std::size(fdata.cFileName)) {
+			return false;
+		}
 		if (wcscpy_s(fdata.cFileName, dname)) {
 			return false;
 		}
