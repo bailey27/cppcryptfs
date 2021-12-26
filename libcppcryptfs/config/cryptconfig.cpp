@@ -336,7 +336,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 					auto lnm = lnm_val.GetInt();
 					try {						
 						if (lnm < MIN_LONGNAMEMAX || lnm > MAX_LONGNAMEMAX) {
-							throw(std::invalid_argument("longname max out of range"));
+							throw(std::invalid_argument("LongNameMax out of range"));
 						}
 						m_LongNameMax = lnm;
 					} catch (std::invalid_argument&) {
