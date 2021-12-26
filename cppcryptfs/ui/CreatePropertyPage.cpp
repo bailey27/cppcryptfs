@@ -117,8 +117,10 @@ void CCreatePropertyPage::CreateCryptfs()
 	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN + 1, pPass->m_strRealText))
 		return;
 
-	if (wcslen(password.m_buf) < 1)
+	if (wcslen(password.m_buf) < 1) {
+		MessageBox(L"please enter a password", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
+	}
 
 	CSecureEdit *pPass2 = &m_password2;
 
@@ -142,8 +144,10 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	pWnd->GetWindowTextW(cpath);
 
-	if (cpath.GetLength() < 1)
+	if (cpath.GetLength() < 1) {
+		MessageBox(L"please enter a path", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
+	}
 
 	if (!PathFileExists(cpath)) {
 		CString mes;
