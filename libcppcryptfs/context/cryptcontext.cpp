@@ -102,10 +102,10 @@ bool CryptContext::FinalInitBeforeMounting(bool use_key_cache)
 {
 	get_deletable_files(this, m_deletable_files);
 
-	if (!m_config->m_PlaintextNames && m_config->m_longNameMax != MAX_FILENAME_LEN) {
+	if (!m_config->m_PlaintextNames && m_config->m_LongNameMax != MAX_FILENAME_LEN) {
 		auto snmax = 0;
 		auto set_snmax = [&](int lnmax_val, int snmax_val) {
-			if (snmax < 1 && m_config->m_longNameMax <= lnmax_val) {
+			if (snmax < 1 && m_config->m_LongNameMax <= lnmax_val) {
 				snmax = snmax_val;
 			}
 		};
@@ -123,7 +123,7 @@ bool CryptContext::FinalInitBeforeMounting(bool use_key_cache)
 		if (snmax < 1) {
 			return false;
 		}
-		m_shorNameMax = snmax;
+		m_shortNameMax = snmax;
 	}
 
 	return m_config->m_keybuf_manager.Finalize(use_key_cache);

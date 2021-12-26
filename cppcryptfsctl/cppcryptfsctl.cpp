@@ -169,13 +169,15 @@ static int do_self_args(int argc, wchar_t* const argv[])
     wstring config_path;
     wstring volume_name;
 
+    int longnamemax = MAX_LONGNAMEMAX;
+
     static struct option long_options[] =
     {
         {L"init",   required_argument,  0, 'I'},        
         {L"config", required_argument, 0, 'c' },      
         {L"reverse",  no_argument, 0, 's' },
         {L"plaintextnames",  no_argument, 0, 'T' },
-        {L"longnames",  required_argument, 0, 'L' },
+        {L"longnames",  required_argument, 0, 'L' },        
         {L"streams",  required_argument, 0, 'b'},
         {L"volumename",  required_argument, 0, 'V'},
         {L"siv",  no_argument, 0, 'S'},        
@@ -184,13 +186,14 @@ static int do_self_args(int argc, wchar_t* const argv[])
         {L"changepassword",   required_argument,  0, '0'},
         {L"printmasterkey",   required_argument,  0, '1'},
         {L"recover",   required_argument,  0, '2'},
+        {L"longnamemax",  required_argument, 0, '3' },
         {0, 0, 0, 0}
     };
 
 
 
     while (true) {
-        c = getopt_long(argc, argv, L"I:c:sTL:b:V:Svh0:1:2:", long_options, &option_index);
+        c = getopt_long(argc, argv, L"I:c:sTL:b:V:Svh0:1:2:3:", long_options, &option_index);
 
         if (c == -1)
             break;
@@ -210,6 +213,9 @@ static int do_self_args(int argc, wchar_t* const argv[])
         case '2':
             do_recover = true;
             recover_path = optarg;
+            break;
+        case '3':
+            longnamemax = _wtoi(optarg);
             break;
         case 'I':
             if (wcscmp(optarg, L"-v") == 0) {
@@ -251,6 +257,11 @@ static int do_self_args(int argc, wchar_t* const argv[])
             do_help = true;
             break;      
         }
+    }
+
+    if (longnamemax < MIN_LONGNAMEMAX || longnamemax > MAX_LONGNAMEMAX) {
+        wcerr << L"Invalid longnamemax specified.  Valid range is 62 to 255\n";
+        return 1;
     }
 
     if (invalid_opt && !do_help) {
@@ -314,7 +325,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
             wcerr << L"password too long.  max length is " << MAX_PASSWORD_LEN << endl;
         }        
     
-        bool result = config.create(fs_path.c_str(), config_path.c_str(), password.m_buf, !plaintext_names, plaintext_names, longnames, reverse || siv, reverse, volume_name.c_str(), !streams, mes);
+        bool result = config.create(fs_path.c_str(), config_path.c_str(), password.m_buf, !plaintext_names, plaintext_names, longnames, reverse || siv, reverse, volume_name.c_str(), !streams, longnamemax, mes);
 
         if (!result) {
             wcerr << mes << endl;

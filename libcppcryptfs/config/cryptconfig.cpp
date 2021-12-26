@@ -83,6 +83,7 @@ CryptConfig::CryptConfig()
 	m_Raw64 = false;
 	m_HKDF = false;
 	m_reverse = false;
+	m_LongNameMax = MAX_LONGNAMEMAX;
 	
 	m_pKeyBuf = NULL;
 
@@ -95,8 +96,6 @@ CryptConfig::CryptConfig()
 	m_fs_feature_disable_mask = 0;
 
 	m_DenyAccessToOthers = false;
-
-	m_longNameMax = MAX_FILENAME_LEN;
 }
 
 
@@ -292,7 +291,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 			}
 		}
 
-		bool bHasLongNameMaxFeatureFlag = false;
+		bool hasLongNameMaxFlag = false;
 
 		if (d.HasMember("FeatureFlags") && !d["FeatureFlags"].IsNull() && d["FeatureFlags"].IsArray()) {
 
@@ -310,14 +309,14 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 						m_GCMIV128 = true;
 					} else if (!strcmp(itr->GetString(), "LongNames")) {
 						m_LongNames = true;
+					} else if (!strcmp(itr->GetString(), "LongNameMax")) {
+						hasLongNameMaxFlag = true;
 					} else if (!strcmp(itr->GetString(), "AESSIV")) {
 						m_AESSIV = true;
 					} else if (!strcmp(itr->GetString(), "Raw64")) {
 						m_Raw64 = true;
 					} else if (!strcmp(itr->GetString(), "HKDF")) {
 						m_HKDF = true;
-					} else if (!strcmp(itr->GetString(), "LongNameMax")) {
-						bHasLongNameMaxFeatureFlag = true;
 					} else {
 						wstring wflag;
 						if (utf8_to_unicode(itr->GetString(), wflag)) {
@@ -330,22 +329,25 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 					}
 				}
 			}
-		}
 
-		if (d.HasMember("LongNameMax") && !d["LongNameMax"].IsNull() && d["LongNameMax"].IsInt()) {
-			if (!bHasLongNameMaxFeatureFlag) {
-				mes = L"config has LongNameMax value but no LongNameMax feature flag set";
-				throw(-1);
+			if (hasLongNameMaxFlag) {
+				if (d.HasMember("LongNameMax") && !d["LongNameMax"].IsNull() && d["LongNameMax"].IsInt()) {
+					rapidjson::Value& lnm_val = d["LongNameMax"];
+					auto lnm = lnm_val.GetInt();
+					try {						
+						if (lnm < MIN_LONGNAMEMAX || lnm > MAX_LONGNAMEMAX) {
+							throw(std::invalid_argument("longname max out of range"));
+						}
+						m_LongNameMax = lnm;
+					} catch (std::invalid_argument&) {
+						mes = L"invalid LongNameMax in config file";
+						throw(-1);
+					}
+				} else {
+					mes = L"LongNameMax feature flag specified but no LongNameMax value provided";
+					throw(-1);
+				}
 			}
-			rapidjson::Value& lnmax = d["LongNameMax"];
-			m_longNameMax = lnmax.GetInt();			
-			if (m_longNameMax < MIN_LONGNAMEMAX || m_longNameMax > MAX_LONGNAMEMAX) {
-				mes = L"LongNameMax is " + to_wstring(m_longNameMax) + L" which is out of allowed range (62 to 255 inclusisve)";
-				throw(-1);
-			}
-		} else if (bHasLongNameMaxFeatureFlag) {
-			mes = L"config has LongNameMax feature flag set but no LongNameMax value";
-			throw(-1);
 		}
 
 		
@@ -829,7 +831,7 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 }
 
 
-bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, bool disablestreams, wstring& error_mes)
+bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, bool disablestreams, int longnamemax, wstring& error_mes)
 {
 
 	if (specified_config_file_path && *specified_config_file_path == '\0')
@@ -847,6 +849,9 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 	if (!m_PlaintextNames)
 		m_LongNames = longfilenames;
 
+	if (m_LongNames)
+		m_LongNameMax = longnamemax;
+
 	if (siv)
 		m_AESSIV = true;
 
@@ -855,7 +860,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 	m_HKDF = true;
 
 	if (reverse)
-		m_reverse = true;
+		m_reverse = true;	
 
 	try {
 
@@ -963,8 +968,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 				fprintf(fl, "\t\"Creator\": \"%s\",\n", creator);
 		}
 
-		fprintf(fl, "\t\"EncryptedKey\": \"%s\",\n", base64_key);
-
+		fprintf(fl, "\t\"EncryptedKey\": \"%s\",\n", base64_key);		
 		const char* base64_salt = scryptSalt.c_str();
 		fprintf(fl, "\t\"ScryptObject\": {\n");
 		fprintf(fl, "\t\t\"Salt\": \"%s\",\n", base64_salt);
@@ -985,6 +989,8 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 			fprintf(fl, "\t\t\"PlaintextNames\",\n");
 		else if (m_DirIV)
 			fprintf(fl, "\t\t\"DirIV\",\n");
+		if (m_LongNames && m_LongNameMax != MAX_LONGNAMEMAX)
+			fprintf(fl, "\t\t\"LongNameMax\",\n");
 		if (m_AESSIV)
 			fprintf(fl, "\t\t\"AESSIV\",\n");
 		if (m_HKDF)
@@ -992,7 +998,13 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 		if (m_Raw64)
 			fprintf(fl, "\t\t\"Raw64\",\n");
 		fprintf(fl, "\t\t\"GCMIV128\"\n");
-		fprintf(fl, "\t]\n");
+		if (m_LongNames && m_LongNameMax != MAX_LONGNAMEMAX) {
+			fprintf(fl, "\t],\n");
+			string s = "\t\"LongNameMax\": " + to_string(m_LongNameMax) + "\n";
+			fprintf(fl, s.c_str());
+		} else {
+			fprintf(fl, "\t]\n");
+		}
 		fprintf(fl, "}\n");
 
 		DWORD attr = GetFileAttributesW(&config_path[0]);

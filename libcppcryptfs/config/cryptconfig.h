@@ -53,8 +53,7 @@ public:
 private:
 	LockZeroBuffer<unsigned char> *m_pKeyBuf;
 	LockZeroBuffer<BYTE> *m_pGcmContentKey;
-	bool m_DirIV;
-	void GetShortNameMax();
+	bool m_DirIV;	
 public:
 	wstring m_configPath;
 	bool DirIV() { return m_DirIV; };
@@ -68,7 +67,7 @@ public:
 
 	bool m_reverse;
 
-	int m_longNameMax;
+	int m_LongNameMax;
 
 	int m_Version;
 	wstring m_VolumeName;
@@ -97,7 +96,7 @@ public:
 	bool decrypt_key(LPCTSTR password);
 
 	bool create(const WCHAR* path, const WCHAR* specified_config_path, const WCHAR* password, bool eme, bool plaintext, bool longfilenames,
-		bool siv, bool reverse, const WCHAR* volume_name, bool disablestreams, wstring& error_mes		
+		bool siv, bool reverse, const WCHAR* volume_name, bool disablestreams, int longnamemax, wstring& error_mes		
 	);
 
 	bool check_config(wstring& mes);

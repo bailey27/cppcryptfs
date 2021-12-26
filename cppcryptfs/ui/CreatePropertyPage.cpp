@@ -89,6 +89,8 @@ BEGIN_MESSAGE_MAP(CCreatePropertyPage, CPropertyPage)
 	ON_CBN_SELCHANGE(IDC_PATH, &CCreatePropertyPage::OnCbnSelchangePath)
 	ON_BN_CLICKED(IDC_REVERSE, &CCreatePropertyPage::OnClickedReverse)
 	ON_BN_CLICKED(IDC_SELECT_CONFIG_PATH, &CCreatePropertyPage::OnClickedSelectConfigPath)
+	ON_CBN_SELCHANGE(IDC_LONGNAMEMAX, &CCreatePropertyPage::OnSelchangeLongnamemax)
+	ON_BN_CLICKED(IDC_LONG_FILE_NAMES, &CCreatePropertyPage::OnClickedLongFileNames)
 END_MESSAGE_MAP()
 
 void CCreatePropertyPage::DefaultAction()
@@ -179,6 +181,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	bool eme = false;
 	bool plaintext = false;
 	bool longfilenames = false;
+	int longnamemax = MAX_LONGNAMEMAX;
 	bool reverse = false;
 	bool disablestreams = false;
 
@@ -198,6 +201,11 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	if (!plaintext) {
 		longfilenames = IsDlgButtonChecked(IDC_LONG_FILE_NAMES) != 0;
+		if (longfilenames) {
+			longnamemax = GetDlgItemInt(IDC_LONGNAMEMAX);
+			longnamemax = min(longnamemax, MAX_LONGNAMEMAX);
+			longnamemax = max(MIN_LONGNAMEMAX, longnamemax);
+		}
 	}
 
 	disablestreams = IsDlgButtonChecked(IDC_DISABLE_STREAMS) != 0;
@@ -220,7 +228,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	GetDlgItemText(IDC_VOLUME_NAME, volume_name);
 
 	theApp.DoWaitCursor(1);
-	bool bResult = config.create(cpath, config_path, password.m_buf, eme, plaintext, longfilenames, siv, reverse, volume_name, disablestreams, error_mes);
+	bool bResult = config.create(cpath, config_path, password.m_buf, eme, plaintext, longfilenames, siv, reverse, volume_name, disablestreams, longnamemax, error_mes);
 	theApp.DoWaitCursor(-1);
 
 	if (!bResult) {
@@ -337,6 +345,8 @@ BOOL CCreatePropertyPage::OnInitDialog()
 
 	CString clfns = theApp.GetProfileStringW(L"CreateOptions", L"LongFileNames", L"1");
 
+	int longnamemax = theApp.GetProfileIntW(L"CreateOptions", L"LongNameMax", MAX_LONGNAMEMAX);
+
 	CString cdisablestreams = theApp.GetProfileStringW(L"CreateOptions", L"DisableStreams", L"0");
 
 	CString creverse = theApp.GetProfileStringW(L"CreateOptions", L"Reverse", L"0");
@@ -395,6 +405,20 @@ BOOL CCreatePropertyPage::OnInitDialog()
 		}
 	}
 
+	pLbox = (CComboBox*)GetDlgItem(IDC_LONGNAMEMAX);
+
+	if (!pLbox)
+		return FALSE;
+
+	wstring lnm;
+	for (i = MIN_LONGNAMEMAX; i <= MAX_LONGNAMEMAX; ++i) {
+		lnm = to_wstring(i);
+		pLbox->InsertString(i - MIN_LONGNAMEMAX, lnm.c_str());
+		if (i == longnamemax) {
+			pLbox->SelectString(-1, lnm.c_str());
+		}
+	}
+	pLbox->EnableWindow(IsDlgButtonChecked(IDC_LONG_FILE_NAMES));
 
 	if (!m_password.ArePasswordBuffersLocked() || !m_password2.ArePasswordBuffersLocked()) {
 		MessageBox(L"unable to lock password buffers", L"cppcryptfs", MB_OK | MB_ICONERROR);
@@ -474,3 +498,20 @@ void CCreatePropertyPage::OnClickedSelectConfigPath()
 		pWnd->SetWindowTextW(cpath);
 }
 
+
+
+void CCreatePropertyPage::OnSelchangeLongnamemax()
+{
+	// TODO: Add your control notification handler code here
+}
+
+
+void CCreatePropertyPage::OnClickedLongFileNames()
+{
+	// TODO: Add your control notification handler code here
+
+	auto pLbox = (CComboBox*)GetDlgItem(IDC_LONGNAMEMAX);
+	if (pLbox) {
+		pLbox->EnableWindow(IsDlgButtonChecked(IDC_LONG_FILE_NAMES));
+	}
+}
