@@ -102,7 +102,6 @@ bool CryptContext::FinalInitBeforeMounting(bool use_key_cache)
 {
 	get_deletable_files(this, m_deletable_files);
 
-
 	auto get_snmax = [&](int lnmax)
 	{
 		int snmax = 0;
