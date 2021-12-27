@@ -155,6 +155,8 @@ BOOL CFsInfoDialog::OnInitDialog()
 	}
 	SetDlgItemText(IDC_DIRIV_CACHE_HR, txt.c_str());
 
+	SetDlgItemText(IDC_LONG_NAME_MAX, to_wstring(m_info.longNameMax).c_str());
+
 	// TODO:  Add extra initialization here
 
 	return TRUE;  // return TRUE unless you set the focus to a control

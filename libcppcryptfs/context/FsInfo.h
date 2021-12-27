@@ -54,6 +54,7 @@ public:
 	bool denyServices;
 	bool flushAfterWrite;
 	bool deleteSpurriousFiles;
+	int longNameMax;
 
 	FsInfo();
 	virtual ~FsInfo();

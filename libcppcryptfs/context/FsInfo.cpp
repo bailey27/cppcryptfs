@@ -48,6 +48,7 @@ FsInfo::FsInfo()
 	this->denyServices = false;
 	this->flushAfterWrite = false;
 	this->deleteSpurriousFiles = false;
+	this->longNameMax = 0;
 }
 
 FsInfo::~FsInfo()

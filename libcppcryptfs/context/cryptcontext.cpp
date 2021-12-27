@@ -230,4 +230,6 @@ void CryptContext::GetFsInfo(FsInfo & info)
 	hits = m_dir_iv_cache.hits();
 	lookups = m_dir_iv_cache.lookups();
 	info.dirIvCacheHitRatio = lookups ? (float)hits / (float)lookups : 0.0f;
+
+	info.longNameMax = m_config->m_LongNameMax;
 }
