@@ -102,10 +102,12 @@ bool CryptContext::FinalInitBeforeMounting(bool use_key_cache)
 {
 	get_deletable_files(this, m_deletable_files);
 
-	if (m_config->m_LongNames) {
-		auto snmax = 0;
+
+	auto get_snmax = [&](int lnmax)
+	{
+		int snmax = 0;
 		auto set_snmax = [&](int lnmax_val, int snmax_val) {
-			if (snmax < 1 && m_config->m_LongNameMax <= lnmax_val) {
+			if (snmax < 1 && lnmax <= lnmax_val) {
 				snmax = snmax_val;
 			}
 		};
@@ -121,12 +123,51 @@ bool CryptContext::FinalInitBeforeMounting(bool use_key_cache)
 		set_snmax(MAX_FILENAME_LEN, SHORT_NAME_MAX_DEFAULT);
 
 		if (snmax < 1) {
+			return  -1;
+		}
+		return snmax;
+	};
+
+	if (m_config->m_LongNames) {
+		
+		auto short_name_max = get_snmax(m_config->m_LongNameMax);
+		if (short_name_max < 1) {
 			return false;
 		}
-		m_shortNameMax = snmax;
-	}
+		m_shortNameMax = short_name_max;
+	};
 
-	return m_config->m_keybuf_manager.Finalize(use_key_cache);
+	auto result =  m_config->m_keybuf_manager.Finalize(use_key_cache);
+
+#if 0 // test code below
+#ifdef _DEBUG 
+	if (m_config->m_LongNames && !m_encryptKeysInMemory) {
+		unsigned char diriv[DIR_IV_LEN];
+		get_sys_random_bytes(diriv, static_cast<int>(std::size(diriv)));
+		wstring storage;
+		string actual_encrypted;		
+		wstring filename;
+		auto save_long_name_max = m_config->m_LongNameMax;
+		for (int i = MIN_LONGNAMEMAX; i <= MAX_FILENAME_LEN; ++i) {
+			m_config->m_LongNameMax = i;
+			for (int j = 1; j <= MAX_FILENAME_LEN; ++j) {
+				storage.clear();
+				actual_encrypted.clear();
+				filename.resize(j, L'_');
+				encrypt_filename(this, diriv, filename.c_str(), storage, &actual_encrypted);
+				if (is_long_name(storage.c_str())) {
+					auto snmax = get_snmax(i);
+					assert(snmax == j - 1);
+					break;
+				}
+			}
+		}
+		m_config->m_LongNameMax = save_long_name_max;
+	}
+#endif // ifdef _DEBUG
+#endif // if 0
+
+	return result;
 }
 
 
