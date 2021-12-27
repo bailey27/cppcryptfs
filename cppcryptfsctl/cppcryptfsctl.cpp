@@ -264,6 +264,16 @@ static int do_self_args(int argc, wchar_t* const argv[])
         return 1;
     }
 
+    if (longnamemax != MAX_LONGNAMEMAX && plaintext_names) {
+        wcerr << L"Invalid parmameter combination: longnamemax and plain text filenames\n";
+        return 1;
+    }
+
+    if (longnamemax != MAX_LONGNAMEMAX && !longnames) {
+        wcerr << L"Invalid parmameter combination: longnamemax and no longnames\n";
+        return 1;
+    }
+
     if (invalid_opt && !do_help) {
         wcerr << L"Invalid option. Try 'cppcryptfsctl --help' for more information." << endl;
         return 1;

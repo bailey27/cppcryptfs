@@ -733,6 +733,7 @@ Initializing (cppcryptfsctl only):
   -S, --siv                   use AES256-SIV for data encr (default is GCM)
   -L, --longnames [1|0]       enable/disable LFNs. defaults to enabled (1)
   -b, --streams   [1|0]       enable/disable streams. defaults to enabled (1)
+  --longnamemax   N			  limit filenames to at most N characters
 
 Recovery/Maintenance (cppcryptfsctl only):
   --changepassword=PATH       Change password used to protect master key
