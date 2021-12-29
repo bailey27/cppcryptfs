@@ -2,6 +2,16 @@
 
 Changelog
 ------------
+v1.4.3.11, Dec 29 2021
+* Add support for longnamemax.
+* Add settings for flush after write to work around timeout problem
+  when using exFAT drives.
+* Fix crash when using reverse mode and encountering long filenames
+  without long filenames enabled. Files with too-long names are now ignored
+  if long names are not enabled.
+* Fix incorrect disk space reported when using reverse mode filesystem
+  of whole drive.
+
 v1.4.3.10, Sep 3 2021
 * Noticed previous release was compiled with AES-NI instructions
   (hardware AES) support disabled.  This release fixes that.

@@ -254,6 +254,8 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	theApp.WriteProfileStringW(L"CreateOptions", L"LongFileNames", clfns);
 
+	theApp.WriteProfileInt(L"CreateOptions", L"LongNameMax", longnamemax);
+
 	CString cdisablestreams = IsDlgButtonChecked(IDC_DISABLE_STREAMS) ? L"1" : L"0";
 
 	theApp.WriteProfileStringW(L"CreateOptions", L"DisableStreams", cdisablestreams);

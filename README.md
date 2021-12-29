@@ -106,6 +106,8 @@ You can choose to have your file names encryped using AES256-EME or not to encry
 
 If "Long file names" is checked, then the names of files and directories can be up to 255 characters long when encrypted file names are used.  This option has no effect if plain text file names are used (plain text file names can be up to 255 characters long). See the section "File name and path length limits" near the end of this document for more information.  
 
+If a "Long name max" value that is less than 255 is selected (minimum value is 62), then cppcryptfs will limit filename length.  Even when 62 is selected, file names created will be up to 67 characters long.  This option is useful when using cloud services that have problems with filenames that are above a certain length.
+
 You can choose between AES256-GCM or AES256-SIV (RFC 5297) for file data encryption.  The default is AES256-GCM which is recommended. GCM is about twice as fast as SIV for streaming reads and writes.  SIV was implemented in order to support reverse mode. 
 
 Note: In the gocryptfs documentation, the SIV mode is referred to as AES-512-SIV, which is the proper name for this mode of operation. However, it is called AES256-SIV in cppcryptfs because the 512-bit SIV key is derived from the 256-bit master key (as is the case with gocryptfs).  Also, the developer of cppcryptfs doesn't want to call it AES512-SIV in the user interface because that might cause users to think that it is more secure than AES256-GCM.
@@ -366,6 +368,27 @@ Currently, the default and recommended settings are the same.
 Pressing the Reset Warnings button will turn back on any warning dialogs which were previously disabled by selecting "don't show this message again".
 
 
+More Settings
+---------
+There is also a settings tab.  
+
+![Alt text](/screenshots/screenshot_settings.png?raw=true "Settings tab")  
+*Recommended settings shown*
+
+The more settings tab has these additional settings:
+
+**Enable Flush After Write**
+A user reported that they were getting timeouts when copying lots of data to an external drive that was formatted using the exFAT filesystem.
+
+The problem seems to be specific to exFAT.
+
+The workaround is to enable flush after write.  When this setting is on, cppcryptfs will force Windows to write data to disk after every write operation cppcryptfs is asked to do.  
+
+This option reduces write performance noticeably. For copying large files, it's about 50% worse.  For lots of small files, it's much worse than that.
+
+The setting is on if any of the condidtions are true, so to enable it always, one could check both the "NTFS" and "Not NTFS" boxes.
+
+
 Saved Passwords
 ------
 
@@ -479,6 +502,7 @@ Initializing (cppcryptfsctl only):
   -S, --siv                   use AES256-SIV for data encr (default is GCM)
   -L, --longnames [1|0]       enable/disable LFNs. defaults to enabled (1)
   -b, --streams   [1|0]       enable/disable streams. defaults to enabled (1)
+  --longnamemax   N			  limit filenames to at most N characters
 
 Recovery/Maintenance (cppcryptfsctl only):
   --changepassword=PATH       Change password used to protect master key
