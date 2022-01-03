@@ -2486,6 +2486,79 @@ static int WINAPI crypt_fill_find_data_list(PWIN32_FIND_DATAW fdata,
   return 0;
 }
 
+wstring transform_path(const wchar_t* path, wstring& mes)
+{
+    vector<CryptThreadData*> tdatas;
+
+    const auto fetch = [&tdatas](const wchar_t* p, CryptThreadData* td) -> bool {
+        tdatas.push_back(td);
+        return true;
+    };
+
+    MountPointManager::getInstance().apply(fetch);
+
+    _locale_t locale = _create_locale(LC_ALL, "");
+
+    if (locale == NULL) {
+        mes = L"cannot create locale";
+        return nullptr;
+    }
+
+    bool encrypted = false;
+
+    CryptThreadData* tdata = nullptr;
+    for (auto td : tdatas) {
+        auto mp = td->mountpoint.c_str();
+        if (!_wcsnicmp_l(mp, path, wcslen(mp), locale)) {
+            tdata = td;
+            encrypted = false;
+            break;
+        } else if (!_wcsnicmp_l(td->con.GetConfig()->m_basedir.c_str(), (wstring(L"\\\\?\\") + path).c_str(), wcslen(td->con.GetConfig()->m_basedir.c_str()), locale)) {
+            tdata = td;
+            encrypted = true;
+            break;
+        }
+    }
+
+    _free_locale(locale);
+
+    if (!tdata) {
+        mes = L"could not found mount point or base dir";
+        return L"";
+    }
+
+    wstring storage;
+    if (encrypted) {
+        auto p = path + tdata->con.GetConfig()->m_basedir.length() - (std::size(L"\\\\?\\") - 1);
+
+        if (tdata->con.GetConfig()->m_reverse) {
+            if (!encrypt_path(&tdata->con, p, storage)) {
+                mes = L"failed to convert path";
+                return L"";
+            }          
+        } else {
+            if (!unencrypt_path(&tdata->con, p, storage)) {
+                mes = L"failed to unencrypt path";
+                return L"";
+            }
+        }
+        return tdata->mountpoint + storage;
+    } else {
+        auto p = path + tdata->mountpoint.length();
+        DOKAN_FILE_INFO dfi = {};
+        DOKAN_OPTIONS opts = {};
+        dfi.DokanOptions = &opts;
+        dfi.DokanOptions->GlobalContext = reinterpret_cast<LONG64>(&tdata->con);
+        FileNameEnc enc(&dfi, p, nullptr, false);      
+        auto pconv = static_cast<LPCWSTR>(enc);
+        if (!pconv) {
+            mes = L"failed to encrypt path";
+            return L"";
+        }
+        return pconv + std::size(L"\\\\?\\") - 1;
+    }
+}
+
 // called to list files from the command line (not by Dokany)
 BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
                 wstring &err_mes) {

@@ -1353,6 +1353,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 	int deny_services = -1;
 	
 	CString list_arg;
+	wstring transform_arg;
 
 	try {
 
@@ -1371,6 +1372,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 			{L"tray",  no_argument, 0, 't'},
 			{L"exit",  no_argument, 0, 'x'},
 			{L"list",  optional_argument, 0, 'l'},
+			{L"transform",  required_argument, 0, 'M'},
 			{L"csv",  no_argument, 0, 'C'},
 			{L"dir",  no_argument, 0, 'D'},
 			{L"version",  no_argument, 0, 'v' },
@@ -1385,7 +1387,7 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 
 		while (1) {
 
-			c = getopt_long(argc, argv, L"m:d:p:u:vhxtl::rsc:Pi:CDf", long_options, &option_index);
+			c = getopt_long(argc, argv, L"m:d:p:u:vhxtl::rsc:Pi:CDf34M:", long_options, &option_index);
 
 			if (c == -1)
 				break;
@@ -1447,6 +1449,13 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 				if (optarg)
 					list_arg = optarg;
 				break;
+			case 'M':
+				if (optarg) {
+					transform_arg = optarg;
+				} else {
+					throw(-1);
+				}
+				break;
 			case 't':
 				hide_to_system_tray = TRUE;
 				break;
@@ -1500,7 +1509,20 @@ void CMountPropertyPage::ProcessCommandLine(LPCWSTR szCmd, BOOL bOnStartup, HAND
 		if (do_help && printMessages)
 			usage(output_handler);
 	} else if (do_info) {
-		if (printMessages) PrintInfo(output_handler, mountPoint);
+		if (printMessages) 
+			PrintInfo(output_handler, mountPoint);
+	} else if (transform_arg.length() > 0) {
+		wstring err_mes;
+		bool encrypted = false;
+		auto tp = transform_path(transform_arg.c_str(), err_mes);
+		if (err_mes.length() > 0) {			
+			if (printMessages) 
+				output_handler.print(CMD_PIPE_ERROR, L"cppcryptfs: %s", err_mes.c_str());
+		} else {
+			auto fmt = L"%s\n";
+			if (printMessages) 
+				output_handler.print(CMD_PIPE_SUCCESS, fmt, tp.c_str());
+		}
 	} else if (do_list) {
 		CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS); 
 		if (pList) {
@@ -1964,6 +1986,16 @@ void CMountPropertyPage::PrintInfo(OutputHandler& output_handler, LPCWSTR mountp
 	output_handler.print(CMD_PIPE_SUCCESS, L"Case Cache Hit Ratio:  %s\n", info.caseCacheHitRatio < 0 ? L"n/a" : buf);
 	swprintf_s(buf, L"%0.2f%%", info.lfnCacheHitRatio*100);
 	output_handler.print(CMD_PIPE_SUCCESS, L"LFN Cache Hit Ratio:   %s\n", info.lfnCacheHitRatio < 0 ? L"n/a" : buf);
+
+	output_handler.print(CMD_PIPE_SUCCESS, L"Delete desktop.ini:    %s\n", info.deleteSpurriousFiles ? yes : no);
+	output_handler.print(CMD_PIPE_SUCCESS, L"Encrypt keys in mem:   %s\n", info.encryptKeysInMemory ? yes : no);
+	output_handler.print(CMD_PIPE_SUCCESS, L"Cache keys in memory:  %s\n", info.encryptKeysInMemory ? yes : no);
+	output_handler.print(CMD_PIPE_SUCCESS, L"Deny other sessions:   %s\n", info.denyOtherSessions ? yes : no);
+	output_handler.print(CMD_PIPE_SUCCESS, L"Deny services:         %s\n", info.denyServices ? yes : no);
+	output_handler.print(CMD_PIPE_SUCCESS, L"Flush after write:     %s\n", info.flushAfterWrite ? yes : no);
+	
+	swprintf_s(buf, L"%d", info.longNameMax);
+	output_handler.print(CMD_PIPE_SUCCESS, L"Long name max:         %s\n", buf);
 }
 
 

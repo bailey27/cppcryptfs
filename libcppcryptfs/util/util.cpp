@@ -721,7 +721,8 @@ Misc:
   -l, --list                  list avail drive letters and mounted fs 
   -ld:\p, --list=d:\p         list plaintext and encrypted filenames
   -C, --csv                   file list is comma-delimited
-  -D, --dir                   file list dirs first and w/ trailing \"\\\"
+  -D, --dir                   file list dirs first and w/ trailing \
+  -Mpath, --transform=path	  transform full path (encrypt or decrypt)
   -i, --info=D                show information about mounted filesystem
   -v, --version               print ver (use --init -v for cppcryptfsctl ver)
   -h, --help                  display this help message
@@ -733,7 +734,7 @@ Initializing (cppcryptfsctl only):
   -S, --siv                   use AES256-SIV for data encr (default is GCM)
   -L, --longnames [1|0]       enable/disable LFNs. defaults to enabled (1)
   -b, --streams   [1|0]       enable/disable streams. defaults to enabled (1)
-  --longnamemax   N			  limit filenames to at most N characters
+  --longnamemax N             limit filenames to at most N characters
 
 Recovery/Maintenance (cppcryptfsctl only):
   --changepassword=PATH       Change password used to protect master key

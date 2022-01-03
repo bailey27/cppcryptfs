@@ -317,7 +317,7 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 
 			DWORD nRead;
 
-			if (!ReadFile(hFile, longname_buf, sizeof(longname_buf), &nRead, NULL)) {
+			if (!ReadFile(hFile, longname_buf, sizeof(longname_buf)-1, &nRead, NULL)) {
 				CloseHandle(hFile);
 				return NULL;
 			}
@@ -606,6 +606,143 @@ decrypt_path(CryptContext *con, const WCHAR *path, wstring& storage)
 	return rval;
 }
 
+const WCHAR* // get decrypted path (used only by the --transform flag)
+unencrypt_path(CryptContext* con, const WCHAR* path, wstring& storage)
+{
+	const WCHAR* rval = NULL;
+
+	HANDLE hFind = NULL;
+
+	CryptConfig* config = con->GetConfig();
+
+	bool done = false;
+
+	try {
+
+		if (0 && !config->m_reverse)
+			throw(-1);
+
+		storage.clear();
+
+		if (config->m_PlaintextNames || (path[0] == '\\' && path[1] == '\0')) {
+
+			storage += path;
+
+		} else {
+
+			KeyDecryptor kdc(&config->m_keybuf_manager);
+
+			// in reverse mode we can short-circuit the process in the case where the final file or dir is a long file name
+			// and it is found in the long file name (lfn) cache
+
+			if (config->m_reverse) {
+				const WCHAR* last_elem = wcsrchr(path, '\\');
+
+				if (last_elem) {
+					last_elem++;
+					if (is_long_name(last_elem)) {
+						wstring base64_hash;
+						if (!extract_lfn_base64_hash(&last_elem[0], base64_hash)) {
+							throw(-1);
+						}
+						wstring lfn_path;
+						if (con->m_lfn_cache.lookup(&base64_hash[0], &storage, NULL)) {
+							done = true;
+						}
+					}
+				}
+			}
+
+			if (!done) {
+
+				wstring diriv_path = L"";
+
+				if (!config->m_reverse) {
+					diriv_path = config->m_basedir + L"\\";
+				}
+
+				if (*path && path[0] == '\\') {
+					storage.push_back('\\');
+					path++;
+				}
+
+				const TCHAR* p = path;
+
+				unsigned char dir_iv[DIR_IV_LEN];
+
+				if (config->m_reverse) {
+					if (!derive_path_iv(con, &diriv_path[0], dir_iv, TYPE_DIRIV))
+						throw(-1);
+				} else {
+					if (!get_dir_iv(con, diriv_path.c_str(), dir_iv))
+						throw(-1);
+				}
+
+				if (!con->GetConfig()->m_EMENames) {
+					// CBC names no longer supported
+					throw(-1);
+				}
+
+				wstring s;
+
+				wstring uni_plain_elem;
+
+				wstring last_diriv_path;
+
+				while (*p) {
+
+					s.clear();
+
+					uni_plain_elem.clear();
+
+					last_diriv_path = diriv_path;
+
+					while (*p && *p != '\\') {
+						diriv_path.push_back(*p);
+						s.push_back(*p++);
+					}
+
+					if (!config->m_reverse || !is_long_name(&s[0])) {
+						if (!decrypt_filename(con, dir_iv, last_diriv_path.c_str(), s.c_str(), uni_plain_elem)) {
+							throw(-1);
+						}
+					} else {
+						if (!decrypt_reverse_longname(con, &s[0], &storage[0], dir_iv, uni_plain_elem))
+							throw(-1);
+					}
+
+					storage.append(uni_plain_elem);
+
+					if (*p) {
+						diriv_path.push_back(*p);
+						storage.push_back(*p++); // append slash
+
+						if (config->m_reverse) {
+							if (!derive_path_iv(con, &diriv_path[0], dir_iv, TYPE_DIRIV)) {
+								throw(-1);
+							}
+						} else {
+							if (!get_dir_iv(con, diriv_path.c_str(), dir_iv)) {
+								throw(-1);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		rval = &storage[0];
+
+	} catch (...) {
+		rval = NULL;
+	}
+
+	if (hFind && hFind != INVALID_HANDLE_VALUE)
+		FindClose(hFind);
+
+	return rval;
+}
+
 
 const WCHAR * // get encrypted path
 encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *actual_encrypted)
@@ -620,7 +757,9 @@ encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *act
 
 	try {
 
-		storage = config->GetBaseDir();
+		if (!config->m_reverse) {
+			storage = config->GetBaseDir();
+		}		
 
 		if (config->m_PlaintextNames || (path[0] == '\\' && path[1] == '\0')) {
 
@@ -639,10 +778,19 @@ encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *act
 
 
 			unsigned char dir_iv[DIR_IV_LEN];
-
+#if 0
 			if (!get_dir_iv(con, &storage[0], dir_iv))
 				throw(L"get_dir_iv failed for " + storage);
 
+#else
+			if (config->m_reverse) {
+				if (!derive_path_iv(con, &storage[0], dir_iv, TYPE_DIRIV))
+					throw(L"get_dir_iv failed for " + storage);
+			} else {
+				if (!get_dir_iv(con, &storage[0], dir_iv))
+					throw(L"get_dir_iv failed for " + storage);
+			}
+#endif
 
 			if (!con->GetConfig()->m_EMENames) {
 				// CBC names no longer supported
@@ -673,10 +821,18 @@ encrypt_path(CryptContext *con, const WCHAR *path, wstring& storage, string *act
 
 				if (*p) {
 					storage.push_back(*p++); // append slash
-
+#if 0
 					if (!get_dir_iv(con, &storage[0], dir_iv))
 						throw(L"get_dir_iv failed for " + storage);
-
+#else
+					if (config->m_reverse) {
+						if (!derive_path_iv(con, &storage[0], dir_iv, TYPE_DIRIV))
+							throw(L"get_dir_iv failed for " + storage);
+					} else {
+						if (!get_dir_iv(con, &storage[0], dir_iv))
+							throw(L"get_dir_iv failed for " + storage);
+					}
+#endif
 				}
 
 			}

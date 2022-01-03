@@ -61,6 +61,9 @@ decrypt_filename(CryptContext *con, const BYTE *dir_iv, const WCHAR *path, const
 const WCHAR * // get decrypted path (used only in reverse mode)
 decrypt_path(CryptContext *con, const WCHAR *path, wstring& storage);
 
+const WCHAR* // get decrypted path (used only by the --transform option)
+unencrypt_path(CryptContext* con, const WCHAR* path, wstring& storage);
+
 const WCHAR * // returns base64-encoded, encrypted filename
 encrypt_filename(const CryptContext *con, const unsigned char *dir_iv, const WCHAR *filename, wstring& storage, string *actual_encrypted = NULL);
 

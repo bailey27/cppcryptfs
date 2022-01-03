@@ -84,6 +84,6 @@ public:
 		wstring &err_mes);
 	friend BOOL write_volume_name_if_changed(WCHAR dl, wstring& mes);
 	friend bool get_fs_info(const wchar_t *mountpoint, FsInfo& info);
-	
+	friend std::wstring transform_path(const wchar_t* path, wstring& mes);
 };
 

@@ -85,6 +85,8 @@ void init_security_name_privilege();
 BOOL list_files(const WCHAR *path, list<FindDataPair> &fileDatas,
                 wstring &err_mes);
 
+std::wstring transform_path(const wchar_t* path, wstring& mes);
+
 bool get_dokany_version(wstring &ver, vector<int> &v);
 
 bool check_dokany_version(wstring &mes);
