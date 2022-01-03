@@ -2130,7 +2130,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
 	con->m_cache_ttl = opts.cachettl;
 
-	con->m_threads = opts.numthreads ? opts.numthreads : 5;
+	con->m_threads = opts.multithreaded ? 5 : 1;
 
     CryptConfig *config = con->GetConfig();
 
@@ -2139,7 +2139,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     ZeroMemory(dokanOptions, sizeof(DOKAN_OPTIONS));
     dokanOptions->Version = DOKAN_VERSION;
 
-    dokanOptions->SingleThread = opts.numthreads == 1;
+    dokanOptions->SingleThread = !opts.multithreaded == 1;
 
 #ifdef _DEBUG
     dokanOptions->Timeout = 900000;

@@ -65,8 +65,7 @@ void CSettingsPropertyPage::DoDataExchange(CDataExchange* pDX)
 }
 
 
-BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)
-	ON_CBN_SELCHANGE(IDC_THREADS, &CSettingsPropertyPage::OnSelchangeThreads)
+BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)	
 	ON_CBN_SELCHANGE(IDC_BUFFERSIZE, &CSettingsPropertyPage::OnSelchangeBuffersize)
 	ON_BN_CLICKED(IDC_CASEINSENSITIVE, &CSettingsPropertyPage::OnBnClickedCaseinsensitive)
 	ON_CBN_SELCHANGE(IDC_CACHETTL, &CSettingsPropertyPage::OnCbnSelchangeCachettl)
@@ -84,6 +83,7 @@ BEGIN_MESSAGE_MAP(CSettingsPropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_WARN_IF_IN_USE_ON_DISMOUNTING, &CSettingsPropertyPage::OnClickedWarnIfInUseOnDismounting)
 	ON_BN_CLICKED(IDC_DENY_OTHER_SESSIONS, &CSettingsPropertyPage::OnClickedDenyOtherSessions)
 	ON_BN_CLICKED(IDC_DENY_SERVICES, &CSettingsPropertyPage::OnClickedDenyServices)
+	ON_BN_CLICKED(IDC_MULTITHREADED, &CSettingsPropertyPage::OnClickedMultithreaded)
 END_MESSAGE_MAP()
 
 
@@ -102,41 +102,7 @@ static const WCHAR* ttl_strings[] = { L"infinite", L"1 second", L"2 seconds", L"
 
 BOOL CSettingsPropertyPage::OnInitDialog()
 {
-	CCryptPropertyPage::OnInitDialog();
-
-	auto threads_set_from_registry = [](CComboBox* pBox, int val) {
-		int i;		
-
-		if (!pBox)
-			return;
-
-		pBox->ResetContent();
-
-		WCHAR buf[80];
-
-#define DOKAN_MAX_THREAD 63 // this is defined in a header file that Dokany doesn't distribute
-
-		for (i = 0; i <= DOKAN_MAX_THREAD; i++) {
-
-			if (i == 0) {
-				CString def = L"Dokany default (";
-				WCHAR buf[32];
-				*buf = '\0';
-				_snwprintf_s(buf, _TRUNCATE, L"%d", CRYPT_DOKANY_DEFAULT_NUM_THREADS);
-				def += buf;
-				def += L")";
-				pBox->AddString(def);
-			} else {
-				swprintf_s(buf, L"%d", i);
-				pBox->AddString(buf);
-			}
-		}
-		pBox->SetCurSel(val);
-	};
-
-	auto threads_get_from_control = [](CComboBox* pBox, int& val) { val = pBox->GetCurSel(); return true;  };
-
-	m_controls.emplace(IDC_THREADS, make_unique<CryptComboBoxSetting>(*this, IDC_THREADS, PER_FILESYSTEM_THREADS, threads_set_from_registry, threads_get_from_control));
+	CCryptPropertyPage::OnInitDialog();	
 
 	auto bufferblocks_set_from_registry = [](CComboBox* pBox, int val) {
 
@@ -235,6 +201,8 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 	DO_CHECKBOX(DENY_OTHER_SESSIONS);
 
 	DO_CHECKBOX(DENY_SERVICES);
+
+	DO_CHECKBOX(MULTITHREADED);
 
 	SetControls(CryptSetting::SetType::Current);  
 	
@@ -438,4 +406,11 @@ void CSettingsPropertyPage::OnClickedDenyOtherSessions()
 void CSettingsPropertyPage::OnClickedDenyServices()
 {
 	SetControlChanged(IDC_DENY_SERVICES);	
+}
+
+
+void CSettingsPropertyPage::OnClickedMultithreaded()
+{
+	// TODO: Add your control notification handler code here
+	SetControlChanged(IDC_MULTITHREADED);
 }

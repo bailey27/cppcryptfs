@@ -52,7 +52,7 @@ CryptSettings::CryptSettings()
 #define INIT_SETTINGS_REGISTRY_MAP_ENTRY(key, val) \
 	m_settings_registry_map[key] = CryptSettingConsts(L#val, key##_DEFAULT, key##_RECOMMENDED)
 
-	INIT_SETTINGS_REGISTRY_MAP_ENTRY(PER_FILESYSTEM_THREADS, Threads);
+	INIT_SETTINGS_REGISTRY_MAP_ENTRY(MULTITHREADED, MultiThreaded);
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(BUFFERBLOCKS, BufferBlocks);
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(CACHETTL, CacheTTL);
 	INIT_SETTINGS_REGISTRY_MAP_ENTRY(CASEINSENSITIVE, CaseInsensitive);
@@ -153,7 +153,7 @@ bool CryptSettings::GetSettingCurrent(CryptSettingsRegistryValuesKeys key, bool&
 void CryptSettings::GetSettings(CryptMountOptions &opts)
 {
 		
-	VERIFY(GetSettingCurrent(PER_FILESYSTEM_THREADS, opts.numthreads));
+	VERIFY(GetSettingCurrent(MULTITHREADED, opts.multithreaded));
 
 	VERIFY(GetSettingCurrent(BUFFERBLOCKS, opts.numbufferblocks));
 	

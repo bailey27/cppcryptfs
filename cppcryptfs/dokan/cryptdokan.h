@@ -48,8 +48,7 @@ struct FlushAfterWriteOptions {
     bool sparse_files_not_supported = 0;
 };
 
-struct CryptMountOptions {
-  int numthreads = 0;
+struct CryptMountOptions {  
   int numbufferblocks = 0;
   int cachettl = 0; 
   bool caseinsensitive = 0;
@@ -61,6 +60,7 @@ struct CryptMountOptions {
   bool fastmounting = 0;
   bool denyothersessions = 0;
   bool denyservices = 0;
+  bool multithreaded = 0;
   FlushAfterWriteOptions flushafterwrite;
 };
 

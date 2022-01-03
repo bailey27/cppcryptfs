@@ -97,4 +97,5 @@ public:
 	afx_msg void OnClickedDenyServices();
 
 
+	afx_msg void OnClickedMultithreaded();
 };
