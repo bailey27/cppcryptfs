@@ -160,7 +160,7 @@ const WCHAR *FileNameEnc::Convert()
 						}
 
 						if (CryptFindStreamsInternal(
-							file_without_stream.c_str(), NULL, m_dokan_file_info,
+							file_without_stream.c_str(), NULL, NULL, m_dokan_file_info,
 							CryptCaseStreamsCallback, &streams_map) == 0) {
 
 							wstring uc_stream;

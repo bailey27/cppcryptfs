@@ -309,11 +309,11 @@ BOOL CcppcryptfsApp::InitInstance()
 	// Upon app closing:
 	if (hAppMutex) {
 		ReleaseMutex(hAppMutex); // Explicitly release mutex
-		CloseHandle(hAppMutex); // close handle before terminating
-
-		// any at app exit cleanup of the encryted filesystems occurs here
-		crypt_at_exit();		
+		CloseHandle(hAppMutex); // close handle before terminating		
 	}
+
+	// any at app exit cleanup of the encryted filesystems occurs here
+	crypt_at_exit();
 
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.

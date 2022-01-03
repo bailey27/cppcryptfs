@@ -35,7 +35,7 @@ typedef int(WINAPI *PCryptStoreStreamName)(
 
 NTSTATUS DOKAN_CALLBACK CryptFindStreamsInternal(
 	LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
-	PDOKAN_FILE_INFO DokanFileInfo, PCryptStoreStreamName StoreStreamName,
+	PVOID FindStreamsContext, PDOKAN_FILE_INFO DokanFileInfo, PCryptStoreStreamName StoreStreamName,
 	unordered_map<wstring, wstring> *pmap);
 
 int WINAPI

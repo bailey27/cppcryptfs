@@ -1294,7 +1294,7 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
                     compare_names(GetContext(), stream.c_str(), L"::$DATA");
       }
       if (!is_stream)
-        CryptFindStreamsInternal(FileName, NULL, DokanFileInfo,
+        CryptFindStreamsInternal(FileName, NULL, NULL, DokanFileInfo,
                                  StoreRenameStreamCallback,
                                  &rename_streams_map);
     }
@@ -1830,13 +1830,15 @@ NTSYSCALLAPI NTSTATUS NTAPI NtQueryInformationFile(
 
 NTSTATUS DOKAN_CALLBACK CryptFindStreamsInternal(
     LPCWSTR FileName, PFillFindStreamData FillFindStreamData,
-    PDOKAN_FILE_INFO DokanFileInfo, PCryptStoreStreamName StoreStreamName,
+    PVOID FindStreamsContext, PDOKAN_FILE_INFO DokanFileInfo, PCryptStoreStreamName StoreStreamName,
     unordered_map<wstring, wstring> *pmap) {
   FileNameEnc filePath(DokanFileInfo, FileName);
   HANDLE hFind;
   WIN32_FIND_STREAM_DATA findData;
   DWORD error;
   int count = 0;
+
+  BOOL bFillOk = TRUE;
 
   DbgPrint(L"FindStreams :%s\n", FileName);
 
@@ -1866,11 +1868,10 @@ NTSTATUS DOKAN_CALLBACK CryptFindStreamsInternal(
       return ToNtStatus(ERROR_PATH_NOT_FOUND);
     }
     if (FillFindStreamData)
-      FillFindStreamData(&findData, DokanFileInfo);
-
+        bFillOk = FillFindStreamData(&findData, FindStreamsContext);       
+    
     DbgPrint(L"FindStreams on virtual file\n");
-    return STATUS_SUCCESS;
-    ;
+    return bFillOk ? STATUS_SUCCESS : STATUS_BUFFER_OVERFLOW;   
   }
 
   wstring encrypted_name;
@@ -1898,13 +1899,13 @@ NTSTATUS DOKAN_CALLBACK CryptFindStreamsInternal(
   DbgPrint(L"Stream %s size = %lld\n", findData.cStreamName,
            findData.StreamSize.QuadPart);
   if (FillFindStreamData)
-    FillFindStreamData(&findData, DokanFileInfo);
+    bFillOk = FillFindStreamData(&findData, FindStreamsContext);
   if (StoreStreamName && pmap) {
     StoreStreamName(&findData, encrypted_name.c_str(), pmap);
   }
   count++;
 
-  while (FindNextStreamW(hFind, &findData) != 0) {
+  while (bFillOk && FindNextStreamW(hFind, &findData) != 0) {
     DbgPrint(L"found stream %s\n", findData.cStreamName);
     encrypted_name = findData.cStreamName;
     if (!convert_find_stream_data(GetContext(), FileName, filePath, findData)) {
@@ -1919,8 +1920,10 @@ NTSTATUS DOKAN_CALLBACK CryptFindStreamsInternal(
     }
     DbgPrint(L"Stream %s size = %lld\n", findData.cStreamName,
              findData.StreamSize.QuadPart);
-    if (FillFindStreamData && DokanFileInfo)
-      FillFindStreamData(&findData, DokanFileInfo);
+    if (FillFindStreamData && FindStreamsContext)
+      bFillOk = FillFindStreamData(&findData, FindStreamsContext);
+    if (!bFillOk)
+        break;
     if (StoreStreamName && pmap) {
       StoreStreamName(&findData, encrypted_name.c_str(), pmap);
     }
@@ -1932,23 +1935,24 @@ NTSTATUS DOKAN_CALLBACK CryptFindStreamsInternal(
 
   if (error != ERROR_HANDLE_EOF) {
     DbgPrint(L"\tFindNextStreamW error. Error is %u\n\n", error);
-    return ToNtStatus(error);
+    return bFillOk ? ToNtStatus(error) : STATUS_BUFFER_OVERFLOW;
   }
 
   DbgPrint(L"\tFindStreams return %d entries in %s\n\n", count, FileName);
 
-  return STATUS_SUCCESS;
+  return bFillOk ? STATUS_SUCCESS : STATUS_BUFFER_OVERFLOW;
 }
 
 NTSTATUS DOKAN_CALLBACK CryptFindStreams(LPCWSTR FileName,
                                          PFillFindStreamData FillFindStreamData,
+                                         PVOID FindStreamsContext,
                                          PDOKAN_FILE_INFO DokanFileInfo) {
 
-  return CryptFindStreamsInternal(FileName, FillFindStreamData, DokanFileInfo,
+  return CryptFindStreamsInternal(FileName, FillFindStreamData, FindStreamsContext, DokanFileInfo,
                                   NULL, NULL);
 }
 
-static NTSTATUS DOKAN_CALLBACK CryptMounted(PDOKAN_FILE_INFO DokanFileInfo) {
+static NTSTATUS DOKAN_CALLBACK CryptMounted(LPCWSTR MountPoint, PDOKAN_FILE_INFO DokanFileInfo) {
 
   CryptContext *con = GetContext();
   CryptConfig *config = con->GetConfig();
@@ -2135,7 +2139,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     ZeroMemory(dokanOptions, sizeof(DOKAN_OPTIONS));
     dokanOptions->Version = DOKAN_VERSION;
 
-    dokanOptions->ThreadCount = opts.numthreads;
+    dokanOptions->SingleThread = opts.numthreads == 1;
 
 #ifdef _DEBUG
     dokanOptions->Timeout = 900000;
@@ -2706,7 +2710,7 @@ bool get_dokany_version(wstring& ver, vector<int>& v)
 
 	v.clear();
 
-	HMODULE hDok = GetModuleHandle(L"dokan1.dll");
+	HMODULE hDok = GetModuleHandle(L"dokan2.dll");
 	if (!hDok)
 		return false;
 	WCHAR dokPath[MAX_PATH+1];
@@ -2745,8 +2749,8 @@ bool get_dokany_version(wstring& ver, vector<int>& v)
 // returns true with message if there will maybe be a problem
 bool check_dokany_version(wstring& mes)
 {
-	constexpr int required_major = 1;
-	constexpr int required_middle = 5;
+	constexpr int required_major = 2;
+	constexpr int required_middle = 0;
     const wstring required_ver =  to_wstring(required_major) + L"." + to_wstring(required_middle) +  L".x.x";
 	
 	mes = L"";
@@ -2805,6 +2809,8 @@ bool get_fs_info(const wchar_t *mountpoint, FsInfo& info)
 void crypt_at_exit()
 {
     KeyCache::GetInstance()->StopClearThread();
+
+    DokanShutdown();
 
     if (g_DebugLogFile) {      
         FILE* fl = g_DebugLogFile;
@@ -2875,6 +2881,9 @@ void crypt_at_start()
     }
           
     SetDbgVars(g_DebugMode, g_UseStdErr, g_UseLogFile, g_DebugLogFile);
+
+
+    DokanInit();
 }
 
 bool have_sessionid() noexcept
