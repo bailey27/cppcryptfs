@@ -2,7 +2,7 @@
 
 Changelog
 ------------
-v1.4.3.11, Dec 29 2021
+vNext
 * Add support for longnamemax.
 * Add settings for flush after write to work around timeout problem
   when using exFAT drives.
@@ -11,6 +11,8 @@ v1.4.3.11, Dec 29 2021
   if long names are not enabled.
 * Fix incorrect disk space reported when using reverse mode filesystem
   of whole drive.
+* Add --transform (-M) option for converting full paths from encrypted
+  to unencrypted and vice versa.
 
 v1.4.3.10, Sep 3 2021
 * Noticed previous release was compiled with AES-NI instructions
