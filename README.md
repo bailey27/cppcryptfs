@@ -70,7 +70,7 @@ Build Requirements
 
 There are detailed build instructions in [INSTALL.md](INSTALL.md).
 
-cppcryptfs is currently up-to-date with Dokany 1.5.0.3000
+cppcryptfs is currently up-to-date with Dokany 2.0.0.2000
 
 
 Use
@@ -181,12 +181,6 @@ The current settings are stored in the Windows registry and will be used the nex
 
 The settings tab has the following setings:
 
-**Per-filesystem threads**
-
-Using more than one thread to process requests for each filesystem may result in improved performance.
-
-Using "Dokany default" will cause Dokany to choose an appropriate number of threads.  It currently uses five threads.
-
 **I/O buffer size (KB)**
 
 This setting controls the maximum size of reads and writes that cppcryptfs does on the underlying fileystem.
@@ -211,6 +205,12 @@ if the filesystem is modified on the other computer.
 
 If you are not syncing the filesystem between two concurrently running instances of cppcryptfs or between an instance of cppcryptfs and an instance of gocryptfs, then there is no
 reason to not set the cache time to live to a high value or to infinite.
+
+**Multi-threaded**
+
+If this option is on, then more than one thread can process requests for each filesystem.  This may result in improved performance.  Dokany automatically chooses the number of threads it will use.
+
+If this option is disabled, then only one thread per-filesystem will be used to process requests.
 
 **Case insensitive**
 
