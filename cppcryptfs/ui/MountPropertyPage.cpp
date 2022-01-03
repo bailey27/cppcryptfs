@@ -1976,7 +1976,7 @@ void CMountPropertyPage::PrintInfo(OutputHandler& output_handler, LPCWSTR mountp
 	output_handler.print(CMD_PIPE_SUCCESS, L"Case Insensitive:      %s\n", info.caseInsensitive ? yes : no);
 	output_handler.print(CMD_PIPE_SUCCESS, L"Long File Names:       %s\n", info.longFileNames ? yes : no);
 	output_handler.print(CMD_PIPE_SUCCESS, L"Recycle Bin:           %s\n", info.mountManager ? yes : no);
-	output_handler.print(CMD_PIPE_SUCCESS, L"Threads                %d\n", info.fsThreads);
+	output_handler.print(CMD_PIPE_SUCCESS, L"Multi-threaded:        %s\n", info.multhreaded ? yes : no);
 	output_handler.print(CMD_PIPE_SUCCESS, L"I/O Buffer Size:       %dKB\n", info.ioBufferSize);
 	output_handler.print(CMD_PIPE_SUCCESS, L"Cache TTL:             %d sec\n", info.cacheTTL);
 	WCHAR buf[32];

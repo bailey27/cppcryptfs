@@ -58,7 +58,7 @@ CryptContext::CryptContext()
 
 	m_bufferblocks = 1;
 
-	m_threads = 0;
+	m_multithreaded = true;
 
 	if (!m_mountEvent)
 		throw((int)GetLastError());
@@ -192,7 +192,7 @@ void CryptContext::GetFsInfo(FsInfo & info)
 	info.configPath = GetConfig()->m_configPath;
 	info.dataEncryption = GetConfig()->m_AESSIV ? L"AES256-SIV" : L"AES256-GCM";
 	info.fileNameEncryption = GetConfig()->m_PlaintextNames ? L"none" : L"AES256-EME";
-	info.fsThreads = m_threads ? m_threads : CRYPT_DOKANY_DEFAULT_NUM_THREADS;
+	info.multhreaded = m_multithreaded;
 	info.ioBufferSize = m_bufferblocks * 4;
 	info.longFileNames = GetConfig()->m_LongNames;
 	info.mountManager = m_recycle_bin;

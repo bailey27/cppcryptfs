@@ -40,9 +40,9 @@ public:
 	float dirIvCacheHitRatio;
 	float lfnCacheHitRatio;
 	float caseCacheHitRatio;
-	int ioBufferSize;
-	int fsThreads;
+	int ioBufferSize;	
 	int cacheTTL;
+	bool multhreaded;
 	bool readOnly;
 	bool reverse;
 	bool mountManager;

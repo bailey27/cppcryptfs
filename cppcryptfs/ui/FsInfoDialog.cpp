@@ -115,7 +115,7 @@ BOOL CFsInfoDialog::OnInitDialog()
 	txt = to_wstring(m_info.ioBufferSize);
 	txt += L" KB";
 	SetDlgItemText(IDC_IO_BUF_SIZE, txt.c_str());
-	txt = to_wstring(m_info.fsThreads);
+	txt = m_info.multhreaded ? yes : no;
 	SetDlgItemText(IDC_THREADS, txt.c_str());
 	if (m_info.cacheTTL > 0) {
 		txt = to_wstring(m_info.cacheTTL);

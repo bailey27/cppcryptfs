@@ -94,7 +94,7 @@ public:
 	SivContext m_siv;
 	int m_bufferblocks;
 	int m_cache_ttl;
-	int m_threads;
+	bool m_multithreaded;
 	bool m_recycle_bin;
 	bool m_read_only;
 	bool m_delete_spurrious_files;

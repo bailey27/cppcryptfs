@@ -35,7 +35,7 @@ FsInfo::FsInfo()
 	this->caseCacheHitRatio = 0.0f;
 	this->caseInsensitive = false;
 	this->dirIvCacheHitRatio = 0.0f;
-	this->fsThreads = 0;
+	this->multhreaded = 0;
 	this->ioBufferSize = 0;
 	this->lfnCacheHitRatio = 0.0f;
 	this->longFileNames = false;
