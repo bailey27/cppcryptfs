@@ -2,10 +2,11 @@
 
 Changelog
 ------------
-vNext
-* Add support for longnamemax.
+v1.4.3.11, Jan 3 2022
+* Works with Dokany 2.0.x
+* Add support for longnamemax filesystem flag from gocryptfs.
 * Add settings for flush after write to work around timeout problem
-  when using exFAT drives.
+  when using exFAT.
 * Fix crash when using reverse mode and encountering long filenames
   without long filenames enabled. Files with too-long names are now ignored
   if long names are not enabled.

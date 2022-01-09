@@ -5,7 +5,7 @@
 //  cppcryptfs
 //
 //  Created by Bailey Brown on 12/8/16.
-//  Copyright © 2016-2021 Bailey Brown. All rights reserved.
+//  Copyright © 2016-2022 Bailey Brown. All rights reserved.
 //
 
 #ifndef wintypes_h
