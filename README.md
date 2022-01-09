@@ -372,7 +372,7 @@ More Settings
 ---------
 There is also a settings tab.  
 
-![Alt text](/screenshots/screenshot_settings.png?raw=true "Settings tab")  
+![Alt text](/screenshots/screenshot_more_settings.png?raw=true "Settings tab")  
 *Recommended settings shown*
 
 The more settings tab has these additional settings:
