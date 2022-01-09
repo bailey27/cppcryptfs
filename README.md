@@ -491,7 +491,7 @@ Misc:
   -ld:\p, --list=d:\p         list plaintext and encrypted filenames
   -C, --csv                   file list is comma-delimited
   -D, --dir                   file list dirs first and w/ trailing \
-  -Mpath, --transform=path        transform full path (encrypt or decrypt)
+  -Mpath, --transform=path    transform full path (encrypt or decrypt)
   -i, --info=D                show information about mounted filesystem
   -v, --version               print ver (use --init -v for cppcryptfsctl ver)
   -h, --help                  display this help message
