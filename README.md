@@ -378,6 +378,7 @@ There is also a settings tab.
 The more settings tab has these additional settings:
 
 **Enable Flush After Write**
+
 A user reported that they were getting timeouts when copying lots of data to an external drive that was formatted using the exFAT filesystem.
 
 The problem seems to be specific to exFAT.
