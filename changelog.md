@@ -14,6 +14,8 @@ v1.4.3.11, Jan 3 2022
   of whole drive.
 * Add --transform (-M) option for converting full paths from encrypted
   to unencrypted and vice versa.
+* Display error if user attempts to create filesystem without specifying
+  a password instead of doing nothing.
 
 v1.4.3.10, Sep 3 2021
 * Noticed previous release was compiled with AES-NI instructions
