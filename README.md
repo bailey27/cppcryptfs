@@ -187,10 +187,7 @@ This setting controls the maximum size of reads and writes that cppcryptfs does 
 
 cppcryptfs actually does I/O in multiples of the encrypted block size, which is 4,128 bytes.  So when you specify 4KB, the buffer size is really 4,128 bytes, and when you specify 1024KB, the buffer size is really 1,056,768 bytes.
 
-Increasing the I/O buffer size may result in improved performance, especially when the underlying filesystem is a remote network filesystem.
-
-For remote filesystems, good values to try are "Dokany default (5)" for per-filesystem threads and 64KB for I/O buffer size.
-
+Increasing the I/O buffer size may result in improved performance.
 
 **Cache time to live**
 
