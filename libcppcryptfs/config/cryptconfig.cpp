@@ -396,17 +396,22 @@ bool CryptConfig::init_serial(CryptContext *con)
 bool CryptConfig::write_updated_config_file(const char *base64key, const char *scryptSalt)
 {
 	bool bret = true;
-
+	
 	try {
+		
 		wstring vol = m_VolumeName;
 
 		string volume_name_utf8_enc;
 
-		if (vol.size() > 0) {
-			if (vol.size() > MAX_VOLUME_NAME_LENGTH)
-				vol.erase(MAX_VOLUME_NAME_LENGTH, wstring::npos);
-			if (!encrypt_string_gcm(vol, GetGcmContentKey(), volume_name_utf8_enc)) {
-				throw(-1);
+		// if we're recovering a filesystem then base64key isn't null, and we can't decrypt the volume name.
+		// so ignore the volume name.
+		if (!base64key) {
+			if (vol.size() > 0) {
+				if (vol.size() > MAX_VOLUME_NAME_LENGTH)
+					vol.erase(MAX_VOLUME_NAME_LENGTH, wstring::npos);
+				if (!encrypt_string_gcm(vol, GetGcmContentKey(), volume_name_utf8_enc)) {
+					throw(-1);
+				}
 			}
 		}
 
@@ -453,6 +458,11 @@ bool CryptConfig::write_updated_config_file(const char *base64key, const char *s
 		d.Parse(&buf[0]);
 
 		if (base64key) {
+			// if we're recovering a filesystem then base64key isn't null, and we can't decrypt the volume name.
+			// so ignore the volume name.
+			if (d.HasMember("VolumeName")) {
+				d.EraseMember("VolumeName");
+			}
 			rapidjson::Value enckey(base64key, d.GetAllocator());
 			if (d.HasMember("EncryptedKey")) {
 				d["EncryptedKey"] = enckey;

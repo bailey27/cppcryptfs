@@ -441,6 +441,9 @@ static int do_self_args(int argc, wchar_t* const argv[])
             return 1;
         }
 
+        if (config.m_VolumeName.length() > 0) {
+            wcerr << L"warning: ignoring volume name in recovery config file." << endl;           
+        }
         if (!config.write_updated_config_file(base64key.c_str(), scryptSalt.c_str())) {
             wcerr << L"failed to update encrypted key" << endl;
             return 1;
