@@ -2,6 +2,12 @@
 
 Changelog
 ------------
+v1.4.3.12 18 Apr 2022
+* Fix problem with revcovering filesystems that had volume names
+  by ignoring volume name when recovering a filesystem.
+* Fix problem when re-mounting fs when using an empty NTFS directory
+  as the mount point instead of a drive letter.
+
 v1.4.3.11, Jan 3 2022
 * Works with Dokany 2.0.x
 * Add support for longnamemax filesystem flag from gocryptfs.
