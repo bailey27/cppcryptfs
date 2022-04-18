@@ -1032,8 +1032,40 @@ convert_find_stream_data(CryptContext *con, LPCWSTR pt_path, LPCWSTR path, WIN32
 bool is_suitable_mountpoint(LPCWSTR path)
 {
 	if (!is_empty_directory(path, TRUE))
-		return false;
+	{
+		// is_empty_directory can return false if we have previously mounted the directory.
+		// it seems be be transormed into a junction point or somethig and the usual means
+		// of determining if it is empty fail.
 
+		// However, we can check if it is a directory and if so then does file first file fail with
+		// LastError = 3 (path not found) or 433 (no such device).  If that is the case, then we can proceed.
+
+		if (!::PathIsDirectory(path))
+			return false;
+
+		wstring path_str = path;
+
+		if (path_str[path_str.size() - 1] != '\\')
+			path_str.push_back('\\');
+
+		path_str.push_back('*');
+
+		WIN32_FIND_DATA fd = {};
+
+		auto h = FindFirstFile(path_str.c_str(), &fd);
+
+		if (h != INVALID_HANDLE_VALUE) {			
+			::FindClose(h);
+			return false;
+		}
+
+		auto lastErr = ::GetLastError();
+		
+		if (lastErr != ERROR_PATH_NOT_FOUND && lastErr != ERROR_NO_SUCH_DEVICE) {						
+			return false;
+		}
+	}
+		
 	WCHAR rpath[4];
 
 	rpath[0] = *path;
@@ -1047,12 +1079,16 @@ bool is_suitable_mountpoint(LPCWSTR path)
 		0, NULL, NULL,
 		NULL, fsnamebuf, sizeof(fsnamebuf) / sizeof(fsnamebuf[0]) - 1)) {
 		DWORD error = GetLastError();
-		//DbgPrint(L"get fs name error = %u\n", error);
+		DbgPrintAlways(L"get fs name error = %u\n", error);
 		return false;
 	}
 
-	return !lstrcmpi(fsnamebuf, L"NTFS");
+	auto result = !lstrcmpi(fsnamebuf, L"NTFS");
 
+	if (!result) {
+		DbgPrintAlways(L"%S:%d\n", __FILE__, __LINE__);
+	}
+	return result;
 }
 
 bool is_mountpoint_a_dir(LPCWSTR mountpoint)

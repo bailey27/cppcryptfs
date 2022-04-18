@@ -57,7 +57,7 @@ Note: It appears that Windows 10 Version 1909 (OS Build 18363.1016) allows cppcr
 Build Requirements
 -----
 	
-	Microsoft Visual Studio 2019 Community Edition, perl, nasm, and git (all free)
+	Microsoft Visual Studio 2022 Community Edition, perl, nasm, and git (all free)
 	OpenSSL - https://github.com/openssl/openssl (static build required)
 	RapidJSON - https://github.com/miloyip/rapidjson (for parsing gocryptfs.conf)
 	Dokany - https://github.com/dokan-dev/dokany
@@ -70,7 +70,7 @@ Build Requirements
 
 There are detailed build instructions in [INSTALL.md](INSTALL.md).
 
-cppcryptfs is currently up-to-date with Dokany 2.0.0.2000
+cppcryptfs is currently up-to-date with Dokany 2.0.3.1000
 
 
 Use
