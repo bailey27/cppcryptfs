@@ -39,7 +39,7 @@ v1.4.3.8, Jun 5 2021
   from accessing mounted filesystems.
 
 v1.4.3.7, May 31 2021
-* Close any left over open file or dirctory handles when dismounting a 
+* Close any left over open file or directory handles when dismounting a 
   filesystem (issue #126).
 * Add setting to prompt user when dismounting a filesystem that is still
   in use (has open file or directory handles).
