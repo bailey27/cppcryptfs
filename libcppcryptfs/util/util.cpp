@@ -731,6 +731,7 @@ Initializing (cppcryptfsctl only):
   -I, --init=PATH             Initialize encrypted filesystem located at PATH
   -V, --volumename=NAME       specify volume name for filesystem
   -T, --plaintext             use plaintext filenames (default is AES256-EME)
+  --deterministicnames        disable creation of gocryptfs.diriv files.
   -S, --siv                   use AES256-SIV for data encr (default is GCM)
   -L, --longnames [1|0]       enable/disable LFNs. defaults to enabled (1)
   -b, --streams   [1|0]       enable/disable streams. defaults to enabled (1)

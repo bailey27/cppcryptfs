@@ -96,7 +96,7 @@ static int get_password(LockZeroBuffer<wchar_t>& password, const wchar_t *passwo
         }
     } else {
         // we have stdin redirected, so read password from stdin         
-        wcout << L"Reading password from stdin" << endl;
+        std::wcout << L"Reading password from stdin" << endl;
         if (!fgetws(password.m_buf, password.m_len, stdin)) {
             wcerr << "unable to read password from stdin\n";
             return 1;
@@ -162,6 +162,8 @@ static int do_self_args(int argc, wchar_t* const argv[])
 
     bool do_recover = false;
 
+    bool deterministicnames = false;
+
     wstring fs_path;
     wstring change_password_path;
     wstring print_masterkey_path;
@@ -173,7 +175,8 @@ static int do_self_args(int argc, wchar_t* const argv[])
 
     static struct option long_options[] =
     {
-        {L"init",   required_argument,  0, 'I'},        
+        {L"init",   required_argument,  0, 'I'},  
+        {L"deterministicnames",   no_argument,  0, 'd'},
         {L"config", required_argument, 0, 'c' },      
         {L"reverse",  no_argument, 0, 's' },
         {L"plaintextnames",  no_argument, 0, 'T' },
@@ -190,10 +193,8 @@ static int do_self_args(int argc, wchar_t* const argv[])
         {0, 0, 0, 0}
     };
 
-
-
     while (true) {
-        c = getopt_long(argc, argv, L"I:c:sTL:b:V:Svh0:1:2:3:", long_options, &option_index);
+        c = getopt_long(argc, argv, L"dI:c:sTL:b:V:Svh0:1:2:3:", long_options, &option_index);
 
         if (c == -1)
             break;
@@ -226,6 +227,9 @@ static int do_self_args(int argc, wchar_t* const argv[])
                 do_init = true;
                 fs_path = optarg;
             }
+            break;
+        case 'd':
+            deterministicnames = true;
             break;
         case 'c':
             config_path = optarg;
@@ -279,6 +283,17 @@ static int do_self_args(int argc, wchar_t* const argv[])
         return 1;
     }    
 
+    if (deterministicnames) {
+        if (plaintext_names) {
+            wcerr << L"Using deterministic names and plaintext names together doesn't make sense." << endl;
+            return 1;
+        }
+        if (!do_init) {
+            wcerr << L"Deterministic names makes sense only when combined with --init." << endl;
+            return 1;
+        }
+    }
+
     if (do_version) {
         wstring prod, ver, copyright;
         GetProductVersionInfo(prod, ver, copyright);
@@ -319,7 +334,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
             return 1;
         }               
 
-        wcout << L"Choose a password for protecting your files." << endl;
+        std::wcout << L"Choose a password for protecting your files." << endl;
 
         auto pw_res = get_password(password, L"Password:", L"Repeat:");
 
@@ -335,13 +350,13 @@ static int do_self_args(int argc, wchar_t* const argv[])
             wcerr << L"password too long.  max length is " << MAX_PASSWORD_LEN << endl;
         }        
     
-        bool result = config.create(fs_path.c_str(), config_path.c_str(), password.m_buf, !plaintext_names, plaintext_names, longnames, reverse || siv, reverse, volume_name.c_str(), !streams, longnamemax, mes);
+        bool result = config.create(fs_path.c_str(), config_path.c_str(), password.m_buf, !plaintext_names, plaintext_names, longnames, reverse || siv, reverse, volume_name.c_str(), !streams, longnamemax, deterministicnames, mes);
 
         if (!result) {
             wcerr << mes << endl;
             return 1;
         } else {
-            wcout << L"The gocryptfs" << (reverse ? L"-reverse" : L"") <<  L" filesystem has been created successfully." << endl;
+            std::wcout << L"The gocryptfs" << (reverse ? L"-reverse" : L"") <<  L" filesystem has been created successfully." << endl;
         }
     }
 
@@ -375,7 +390,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
             return 1;
         }
 
-        wcout << L"Enter/paste master key all on one line, with or without dashes." << endl;
+        std::wcout << L"Enter/paste master key all on one line, with or without dashes." << endl;
 
         auto get_res = get_password(masterkey, L"Master Key:");
         if (get_res) {
@@ -449,8 +464,8 @@ static int do_self_args(int argc, wchar_t* const argv[])
             return 1;
         }
 
-        wcout << L"key encrypted with new password written to " << recover_path << endl;
-        wcout << L"after mounting and testing, please delete or move the backup file " << bak << L" out of the way." << endl;
+        std::wcout << L"key encrypted with new password written to " << recover_path << endl;
+        std::wcout << L"after mounting and testing, please delete or move the backup file " << bak << L" out of the way." << endl;
 
     }
 
@@ -491,20 +506,20 @@ static int do_self_args(int argc, wchar_t* const argv[])
 
         const unsigned char* key = config.GetMasterKey();
 
-        wcout << endl << L"Your master key is as follows.  Keep it in a safe place." << endl << endl << "    ";
+        std::wcout << endl << L"Your master key is as follows.  Keep it in a safe place." << endl << endl << "    ";
 
         for (size_t i = 0; i < config.GetMasterKeyLength(); ++i) {
             if (i && (i % 4) == 0) {
-                wcout << L"-";
+                std::wcout << L"-";
             }
             if (i && (i % 16) == 0) {
-                wcout << endl << L"    ";
+                std::wcout << endl << L"    ";
             }
             wchar_t buf[3];
             swprintf_s(buf, L"%02x", key[i]);    
-            wcout << buf;
+            std::wcout << buf;
         }
-        wcout << endl;
+        std::wcout << endl;
 
     }
 
@@ -517,7 +532,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
         
         GetConfigPath(change_password_path);
 
-        wcout << L"changing password in " << change_password_path << endl;
+        std::wcout << L"changing password in " << change_password_path << endl;
 
         CryptConfig config;
 
@@ -578,7 +593,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
             return 1;
         }
 
-        wcout << L"password changed" << endl;
+        std::wcout << L"password changed" << endl;
     }
 
     return 0;
@@ -639,7 +654,7 @@ int wmain(int argc, wchar_t * const argv[])
 
     if (result.length() >= CMD_PIPE_RESPONSE_LENGTH) {
         if (wcsncmp(result.c_str(), CMD_PIPE_SUCCESS_STR, CMD_PIPE_RESPONSE_LENGTH) == 0) {
-            wcout << wstring(result.c_str() + CMD_PIPE_RESPONSE_LENGTH);
+            std::wcout << wstring(result.c_str() + CMD_PIPE_RESPONSE_LENGTH);
             return 0;
         } else {
             wcerr << wstring(result.c_str() + CMD_PIPE_RESPONSE_LENGTH);

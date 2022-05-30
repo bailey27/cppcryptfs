@@ -91,6 +91,7 @@ BEGIN_MESSAGE_MAP(CCreatePropertyPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_SELECT_CONFIG_PATH, &CCreatePropertyPage::OnClickedSelectConfigPath)
 	ON_CBN_SELCHANGE(IDC_LONGNAMEMAX, &CCreatePropertyPage::OnSelchangeLongnamemax)
 	ON_BN_CLICKED(IDC_LONG_FILE_NAMES, &CCreatePropertyPage::OnClickedLongFileNames)
+	ON_BN_CLICKED(IDC_DETERMINISTIC_NAMES, &CCreatePropertyPage::OnClickedDeterministicNames)
 END_MESSAGE_MAP()
 
 void CCreatePropertyPage::DefaultAction()
@@ -188,6 +189,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	int longnamemax = MAX_LONGNAMEMAX;
 	bool reverse = false;
 	bool disablestreams = false;
+	bool deterministicnames = false;
 
 	CComboBox *pBox = (CComboBox *)GetDlgItem(IDC_FILENAME_ENCRYPTION);
 
@@ -214,6 +216,8 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	disablestreams = IsDlgButtonChecked(IDC_DISABLE_STREAMS) != 0;
 
+	deterministicnames = IsDlgButtonChecked(IDC_DETERMINISTIC_NAMES) != 0;
+
 	reverse = IsDlgButtonChecked(IDC_REVERSE) != 0;
 
 	pBox = (CComboBox *)GetDlgItem(IDC_DATA_ENCRYPTION);
@@ -232,7 +236,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	GetDlgItemText(IDC_VOLUME_NAME, volume_name);
 
 	theApp.DoWaitCursor(1);
-	bool bResult = config.create(cpath, config_path, password.m_buf, eme, plaintext, longfilenames, siv, reverse, volume_name, disablestreams, longnamemax, error_mes);
+	bool bResult = config.create(cpath, config_path, password.m_buf, eme, plaintext, longfilenames, siv, reverse, volume_name, disablestreams, longnamemax, deterministicnames, error_mes);
 	theApp.DoWaitCursor(-1);
 
 	if (!bResult) {
@@ -253,6 +257,10 @@ void CCreatePropertyPage::CreateCryptfs()
 	CString clfns = IsDlgButtonChecked(IDC_LONG_FILE_NAMES) ? L"1" : L"0";
 
 	theApp.WriteProfileStringW(L"CreateOptions", L"LongFileNames", clfns);
+
+	CString detnames = IsDlgButtonChecked(IDC_DETERMINISTIC_NAMES) ? L"1" : L"0";
+
+	theApp.WriteProfileStringW(L"CreateOptions", L"DeterministicNames", detnames);
 
 	theApp.WriteProfileInt(L"CreateOptions", L"LongNameMax", longnamemax);
 
@@ -351,6 +359,8 @@ BOOL CCreatePropertyPage::OnInitDialog()
 
 	CString clfns = theApp.GetProfileStringW(L"CreateOptions", L"LongFileNames", L"1");
 
+	CString detnames = theApp.GetProfileStringW(L"CreateOptions", L"DeterministicNames", L"0");
+
 	int longnamemax = theApp.GetProfileIntW(L"CreateOptions", L"LongNameMax", MAX_LONGNAMEMAX);
 
 	CString cdisablestreams = theApp.GetProfileStringW(L"CreateOptions", L"DisableStreams", L"0");
@@ -362,6 +372,8 @@ BOOL CCreatePropertyPage::OnInitDialog()
 	CString cdataenc = theApp.GetProfileStringW(L"CreateOptions", L"DataEncryption", L"AES256-GCM");
 
 	CheckDlgButton(IDC_LONG_FILE_NAMES, clfns == L"1");
+
+	CheckDlgButton(IDC_DETERMINISTIC_NAMES, detnames == L"1");
 
 	CheckDlgButton(IDC_DISABLE_STREAMS, cdisablestreams == L"1");
 
@@ -520,4 +532,11 @@ void CCreatePropertyPage::OnClickedLongFileNames()
 	if (pLbox) {
 		pLbox->EnableWindow(IsDlgButtonChecked(IDC_LONG_FILE_NAMES));
 	}
+}
+
+
+void CCreatePropertyPage::OnClickedDeterministicNames()
+{
+	// TODO: Add your control notification handler code here
+
 }

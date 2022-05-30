@@ -592,9 +592,6 @@ bool CryptConfig::check_config(wstring& mes)
 
 	if (m_Version != 2)
 		mes += L"Only version 2 is supported\n";
-	
-	if (!m_DirIV && !m_PlaintextNames) 
-		mes += L"DirIV is required unless PlaintextNames is specified\n";
 
 	if (!m_EMENames && !m_PlaintextNames)
 		mes += L"EMENames is required unless PlaintextNames is specified\n";
@@ -841,7 +838,7 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 }
 
 
-bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, bool disablestreams, int longnamemax, wstring& error_mes)
+bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, bool disablestreams, int longnamemax, bool deterministicnames, wstring& error_mes)
 {
 
 	if (specified_config_file_path && *specified_config_file_path == '\0')
@@ -931,7 +928,12 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 		m_keybuf_manager.RegisterBuf(m_pKeyBuf);
 		
 		m_Version = 2;
-		m_DirIV = !m_PlaintextNames;
+
+		if (m_PlaintextNames || deterministicnames) {
+			m_DirIV = false;
+		} else {
+			m_DirIV = true;
+		}
 
 		string base64key;
 		string scryptSalt;

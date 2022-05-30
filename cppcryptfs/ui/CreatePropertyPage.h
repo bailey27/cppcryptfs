@@ -78,4 +78,5 @@ public:
 	afx_msg void OnClickedSelectConfigPath();
 	afx_msg void OnSelchangeLongnamemax();
 	afx_msg void OnClickedLongFileNames();
+	afx_msg void OnClickedDeterministicNames();
 };
