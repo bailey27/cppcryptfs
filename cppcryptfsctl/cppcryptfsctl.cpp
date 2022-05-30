@@ -164,6 +164,13 @@ static int do_self_args(int argc, wchar_t* const argv[])
 
     bool deterministicnames = false;
 
+    LockZeroBuffer<wchar_t> password(PASSWORD_BUFLEN, false);
+
+    if (!password.IsLocked()) {
+        wcerr << L"unable to lock password buffer\n";
+        return 1;
+    }
+
     wstring fs_path;
     wstring change_password_path;
     wstring print_masterkey_path;
@@ -186,6 +193,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
         {L"siv",  no_argument, 0, 'S'},        
         {L"version",  no_argument, 0, 'v' },
         {L"help",  no_argument, 0, 'h'},
+        {L"password", required_argument, 0, 'p'},
         {L"changepassword",   required_argument,  0, '0'},
         {L"printmasterkey",   required_argument,  0, '1'},
         {L"recover",   required_argument,  0, '2'},
@@ -194,7 +202,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
     };
 
     while (true) {
-        c = getopt_long(argc, argv, L"dI:c:sTL:b:V:Svh0:1:2:3:", long_options, &option_index);
+        c = getopt_long(argc, argv, L"p:dI:c:sTL:b:V:Svh0:1:2:3:", long_options, &option_index);
 
         if (c == -1)
             break;
@@ -217,6 +225,13 @@ static int do_self_args(int argc, wchar_t* const argv[])
             break;
         case '3':
             longnamemax = _wtoi(optarg);
+            break;
+        case 'p':
+            if (wcslen(optarg) > MAX_PASSWORD_LEN) {
+                wcerr << L"password too long.  max length is " << MAX_PASSWORD_LEN << endl;
+                return 1;
+            }
+            wcscpy_s(password.m_buf, MAX_PASSWORD_LEN + 1, optarg);
             break;
         case 'I':
             if (wcscmp(optarg, L"-v") == 0) {
@@ -316,14 +331,6 @@ static int do_self_args(int argc, wchar_t* const argv[])
 
     if (do_init) {
 
-        LockZeroBuffer<wchar_t> password(PASSWORD_BUFLEN, false);
-        LockZeroBuffer<wchar_t> password2(PASSWORD_BUFLEN, false);
-
-        if (!password.IsLocked()) {
-            wcerr << L"unable to lock password buffer\n";
-            return 1;
-        }
-
         if (!::PathFileExists(fs_path.c_str())) {
             wcerr << L"the path to the file system does not exist." << endl;
             return 1;
@@ -334,20 +341,24 @@ static int do_self_args(int argc, wchar_t* const argv[])
             return 1;
         }               
 
-        std::wcout << L"Choose a password for protecting your files." << endl;
+        if (wcslen(password.m_buf) < 1) {
+            std::wcout << L"Choose a password for protecting your files." << endl;
 
-        auto pw_res = get_password(password, L"Password:", L"Repeat:");
+            auto pw_res = get_password(password, L"Password:", L"Repeat:");
 
-        if (pw_res) {
-            return pw_res;
+            if (pw_res) {
+                return pw_res;
+            }
         }
 
         if (wcslen(password.m_buf) < 1) {
             wcerr << L"password cannot be empty" << endl;
+            return 1;
         }
 
         if (wcslen(password.m_buf) > MAX_PASSWORD_LEN) {
             wcerr << L"password too long.  max length is " << MAX_PASSWORD_LEN << endl;
+            return 1;
         }        
     
         bool result = config.create(fs_path.c_str(), config_path.c_str(), password.m_buf, !plaintext_names, plaintext_names, longnames, reverse || siv, reverse, volume_name.c_str(), !streams, longnamemax, deterministicnames, mes);
@@ -487,12 +498,6 @@ static int do_self_args(int argc, wchar_t* const argv[])
             return 1;
         }
 
-        LockZeroBuffer<wchar_t> password(PASSWORD_BUFLEN, false);
-        if (!password.IsLocked()) {
-            wcerr << L"unable to lock password buffer\n";
-            return 1;
-        }
-
         auto get_pw_res = get_password(password, L"Password:");
 
         if (get_pw_res) {
@@ -548,12 +553,6 @@ static int do_self_args(int argc, wchar_t* const argv[])
             return 1;
         }
 
-        LockZeroBuffer<wchar_t> password(PASSWORD_BUFLEN, false);
-        if (!password.IsLocked()) {
-            wcerr << L"unable to lock password buffer\n";
-            return 1;
-        }
-
         LockZeroBuffer<wchar_t> newpassword(PASSWORD_BUFLEN, false);
         if (!newpassword.IsLocked()) {
             wcerr << L"unable to lock new password buffer\n";
@@ -599,6 +598,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
     return 0;
 }
 
+
 int wmain(int argc, wchar_t * const argv[])
 {
     if (argc < 2)
@@ -617,14 +617,63 @@ int wmain(int argc, wchar_t * const argv[])
     self_args.push_back(L"-2");
     self_args.push_back(L"--recover");
 
+    vector<wstring> mounting_args;
+
+    mounting_args.push_back(L"-m");
+    mounting_args.push_back(L"--mount");
+
+    vector<wstring> password_args;
+
+    password_args.push_back(L"-p");
+    password_args.push_back(L"--password");
+
     // if we are doing certain things like initializing a filesystem then we handle
     // it in cppcryptfsctl instead of passing the command line to cppcryptfs
+
+    bool have_mounting_arg = false;
+
+    bool have_password_arg = false;
+
     for (int i = 1; i < argc; ++i) {
         for (const auto& self_arg : self_args) {
             if (wcsncmp(argv[i], self_arg.c_str(), self_arg.length()) == 0) {
                 return do_self_args(argc, argv);
             }
+        }    
+        if (!have_mounting_arg) {        
+            for (const auto& arg : mounting_args) {
+                if (wcsncmp(argv[i], arg.c_str(), arg.length()) == 0) {
+                    have_mounting_arg = true;
+                    break;
+                }
+            }
         }
+        if (!have_password_arg) {
+            for (const auto& arg : password_args) {
+                if (wcsncmp(argv[i], arg.c_str(), arg.length()) == 0) {
+                    have_password_arg = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    LockZeroBuffer<wchar_t> password(PASSWORD_BUFLEN, false);
+
+    if (!password.IsLocked()) {
+        wcerr << L"unable to lock password buffer\n";
+        return 1;
+    }
+
+    // if we're trying to mount and don't have -p or --password then read pw from stdin
+    if (have_mounting_arg && !have_password_arg) {
+        
+        auto pw_res = get_password(password, L"Password:", nullptr);
+
+        if (pw_res) {
+            return pw_res;
+        }
+
     }
 
     wstring result;
@@ -643,8 +692,24 @@ int wmain(int argc, wchar_t * const argv[])
     }
 
     const WCHAR* args = GetCommandLine();
+
+    auto cmd_len = static_cast<DWORD>(wcslen(args) + wcslen(L" --password=") + wcslen(password.m_buf) + 1);
+
+    LockZeroBuffer<wchar_t> cmd(cmd_len, false);
+
+    if (!cmd.IsLocked()) {
+        wcerr << L"unable to lock cmd buffer" << endl;
+        return 1;
+    }
+
+    wcscpy_s(cmd.m_buf, cmd_len, args);
+
+    if (wcslen(password.m_buf) > 0) {
+        wcscat_s(cmd.m_buf, cmd_len, L" --password=");
+        wcscat_s(cmd.m_buf, cmd_len, password.m_buf);
+    }
     
-    if (auto ret = SendArgsToRunningInstance(args, result, err)) {
+    if (auto ret = SendArgsToRunningInstance(cmd.m_buf, result, err)) {
         if (err.length() > 0)
             wcerr << err << endl;
         else
