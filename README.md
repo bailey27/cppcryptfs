@@ -8,7 +8,7 @@ cppcryptfs is based on the design of [gocryptfs](https://github.com/rfjakob/gocr
 
 cppcryptfs is an implementation of the gocryptfs filesystem in C++ for Windows.  cppcryptfs is compatible with gocryptfs.  Filesystems created with one can generally be mounted (and synced) with the other.   Please see the statement on compatibility near the end of this document.
 
-cppcrypts provides on-the-fly, at-rest and in-the-cloud encryption of files and file names in a virtual filesystem.  It uses the [Dokany](https://github.com/dokan-dev/dokany) driver and library to provide a virtual fileystem in user mode under Windows.
+cppcrypts provides on-the-fly, at-rest and in-the-cloud encryption of files and file names in a virtual filesystem.  It uses the [Dokany](https://github.com/dokan-dev/dokany) driver and library to provide a virtual filesystem in user mode under Windows.
 
 
 You can use cppcryptfs to create an encrypted filesystem in a folder.  The encrypted filesystem is protected with a password that you choose.  
@@ -84,7 +84,7 @@ needed for some operations performed by the Windows API functions SetFileSecurit
 cppcryptfs seems to work without SE_SECURITY_NAME.  If you do
 run into problems, then you can try running cppcryptfs as adminstrator and see if that helps.
 
-To make a new encrypted virtual fileystem, first click the "Create" tab.
+To make a new encrypted virtual filesystem, first click the "Create" tab.
 
 ![Alt text](/screenshots/screenshot_create.png?raw=true "Create tab")
 
@@ -154,7 +154,7 @@ For an explanation of how saved passwords work in cppcryptfs, please see the sec
 
 If you check "Auto mount" (which needs a saved password to work), then the next time you start cppcryptfs, that path will be mounted to that mount point upon startup.  You must have saved the password for that mount for this to work.  
 
-The path will continue to automount until you manually mount it wwith "Auto mount" unchecked.
+The path will continue to automount until you manually mount it with "Auto mount" unchecked.
 
 For technical details of the cryptographic design of gocryptfs, please visit
 the [gocryptfs project page](https://github.com/rfjakob/gocryptfs).
@@ -183,7 +183,7 @@ The settings tab has the following setings:
 
 **I/O buffer size (KB)**
 
-This setting controls the maximum size of reads and writes that cppcryptfs does on the underlying fileystem.
+This setting controls the maximum size of reads and writes that cppcryptfs does on the underlying filesystem.
 
 cppcryptfs actually does I/O in multiples of the encrypted block size, which is 4,128 bytes.  So when you specify 4KB, the buffer size is really 4,128 bytes, and when you specify 1024KB, the buffer size is really 1,056,768 bytes.
 
@@ -418,9 +418,9 @@ the cppcryptfs drive letter provides an on-the-fly encrypted view of these files
 
 Reverse mode also gives a view of the config file (as gocryptfs.conf), and if encrypted file names are used, a gocryptfs.diriv file in each directory.  And if long file names are used with encrypted file names, then the special long file name files are also presented.
 
-Reverse mode fileystems are always mounted read-only.
+Reverse mode filesystems are always mounted read-only.
 
-When you create a reverse mode fileystem, the root directory of the filesystem doesn't have to be empty (unlike in the case of creating a normal forward
+When you create a reverse mode filesystem, the root directory of the filesystem doesn't have to be empty (unlike in the case of creating a normal forward
 mode filesystem).  cppcryptfs will create the config file 
 in the root directory of the filesystem.  This is a hidden file named .gocryptfs.reverse.conf (instead of an unhidden gocryptfs.conf which is used in 
 normal/forward mode).
@@ -680,13 +680,13 @@ And see if that works.
 File name and path length limits
 ------
 
-If "Long file names" (the default) is specfied when creating the fileystem, or if plain text file names are used, and if the underlying filesystem is reasonably modern (e.g. NTFS/exFAT/FAT32), then a file or directory name can be up to 255 characters long, and a full path can be approximately 32,000 characters long.
+If "Long file names" (the default) is specfied when creating the filesystem, or if plain text file names are used, and if the underlying filesystem is reasonably modern (e.g. NTFS/exFAT/FAT32), then a file or directory name can be up to 255 characters long, and a full path can be approximately 32,000 characters long.
 
 If "Long file names" is not specified and plain text file names aren't used, then the maximum length of a file or directory name is 160 characters.  But the full path limit is still approximately 32,000 characters (assuming NTFS/exFAT/FAT32).
 
 When a file name is encrypted, it is converted from UNICODE-16 to UTF-8 which, depending the language, might cause the number of characters to increase.  Then it is encrypted, which causes it to be padded by up to 16 bytes. Then it is base64 encoded, which typically results in a 33% increase in length.  The encrypted file names can therefore be signifcantly longer than the unencrypted names.
 
-Also, the path to the directory in which the encrypted fileystem resides must be pre-pended to the path of the encrypted file names.
+Also, the path to the directory in which the encrypted filesystem resides must be pre-pended to the path of the encrypted file names.
 
 Older filesystems, such as FAT16, will limit the total path length to 259 characters.
 
