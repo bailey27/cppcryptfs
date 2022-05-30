@@ -12,9 +12,9 @@ You will need to download the source code for the OpenSSL and RapidJSON projects
 
 Only OpenSSL needs to be built separately.  cppcryptfs uses only header files from RapidJSON, so you don't need to build RapidJSON.
 
-You will also need Microsoft Visual Studio 2019.
+You will also need Microsoft Visual Studio 2022.
 
-The Community Edition of Microsoft Visual Studio 2019 will work, and it is free.
+The Community Edition of Microsoft Visual Studio 2022 will work, and it is free.
 
 https://www.visualstudio.com/vs/community/
 
@@ -22,14 +22,14 @@ The professional edition or the enterprise edition should be fine if you already
 
 You need to install Visual Studio in such a way that you can compile C++ applications with support for Microsoft Foundation Classes (MFC).  
 
-When installing Visual Studio 2019, select "Desktop development with C++", and be sure that both ATL and MFC support are selected.
+When installing Visual Studio 2022, select "Desktop development with C++", and be sure that both ATL and MFC support are selected.
 
 Here is a screenshot that shows what to select when installing Visual Studio.
 
 [Visual Studio install screenshot](/screenshots/visual_studio_2019_install.png?raw=true) 
 
 Also, the Visual Studio projects that make up cppcryptfs all use the /Qspectre
-flag for Spectre mitigation.  For this to be effective (and for the build to work starting with Visual Studio 2019), you will need to install the Spectre-mitigated libraries from Microsoft. These can be selected when you instal Visual Studio 2019 or installed later by running the Visual Studio 2019 installation program again. 
+flag for Spectre mitigation.  For this to be effective (and for the build to work starting with Visual Studio 2022), you will need to install the Spectre-mitigated libraries from Microsoft. These can be selected when you instal Visual Studio 2022 or installed later by running the Visual Studio 2022 installation program again. 
 
 
 [Visual Studio install Spectre-mitigated libraries screenshot 1](/screenshots/visual_studio_2019_spectre_libs1.png?raw=true) 
@@ -102,13 +102,14 @@ set PATH=%LOCALAPPDATA%\bin\NASM;%PATH%
 Then run the batch file that comes with Visual Studio that sets up the environment variables for compiling from the command line.
 
 ```
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
+
+"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
 
 ```
 
 Use "x86" in place of "amd64" if you are doing a 32-bit build.
 
-The vcvarsall.bat from Visual Studio 2019 must be run in a Windows cmd.exe command shell.  It doesn't like being run in third-party command shells.
+The vcvarsall.bat from Visual Studio 2022 must be run in a Windows cmd.exe command shell.  It doesn't like being run in third-party command shells.
 
 
 Then run (ActiveState) perl to configure OpenSSL for a Visual Studio AMD64/X86_64 static build.  
@@ -206,6 +207,6 @@ Here are links to screenshots:
 
 [Visual Studio library paths screenshot](/screenshots/library_paths.png?raw=true) 
 
-The screenshots were made with Visual Studio 2015 when Dokany 1.0.2 was the Dokany version that cppcryptfs was expecting to use, but Dokany 1.0.3 was installed.  The UI for changing these things in Visual Studio 2019 is the same.
+The screenshots were made with Visual Studio 2015 when Dokany 1.0.2 was the Dokany version that cppcryptfs was expecting to use, but Dokany 1.0.3 was installed.  The UI for changing these things in Visual Studio 2022 is the same.
 
 
