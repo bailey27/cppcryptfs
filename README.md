@@ -108,6 +108,16 @@ If "Long file names" is checked, then the names of files and directories can be 
 
 If a "Long name max" value that is less than 255 is selected (minimum value is 62), then cppcryptfs will limit filename length.  Even when 62 is selected, file names created will be up to 67 characters long.  This option is useful when using cloud services that have problems with filenames that are above a certain length.
 
+If "Deterministic names" is checked, then cppcryptfs will not use DirIV files. The folowing explanation is lifted from the gocryptfs man page:
+
+```
+
+Disable file name randomisation and creation of gocryptfs.diriv files. This can prevent sync conflicts conflicts when synchronising files, but leaks information about identical file names across directories ("Identical names leak" in https://nuetzlich.net/gocryptfs/comparison/#file-names ).
+
+The resulting gocryptfs.conf has "DirIV" missing from "FeatureFlags".
+
+```
+
 You can choose between AES256-GCM or AES256-SIV (RFC 5297) for file data encryption.  The default is AES256-GCM which is recommended. GCM is about twice as fast as SIV for streaming reads and writes.  SIV was implemented in order to support reverse mode. 
 
 Note: In the gocryptfs documentation, the SIV mode is referred to as AES-512-SIV, which is the proper name for this mode of operation. However, it is called AES256-SIV in cppcryptfs because the 512-bit SIV key is derived from the 256-bit master key (as is the case with gocryptfs).  Also, the developer of cppcryptfs doesn't want to call it AES512-SIV in the user interface because that might cause users to think that it is more secure than AES256-GCM.
