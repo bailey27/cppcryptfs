@@ -2,6 +2,11 @@
 
 Changelog
 ------------
+v1.4.4.0 30 May 2022
+* Implement deterministic file names from gocryptfs.
+* Make both init and mount from command line take password from either -p arg
+  or from stdin if no -p arg specified.
+
 v1.4.3.12 18 Apr 2022
 * Fix problem with revcovering filesystems that had volume names
   by ignoring volume name when recovering a filesystem.
