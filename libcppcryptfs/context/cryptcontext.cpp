@@ -226,9 +226,13 @@ void CryptContext::GetFsInfo(FsInfo & info)
 		info.caseCacheHitRatio = -1.0f;
 	}
 
-	hits = m_dir_iv_cache.hits();
-	lookups = m_dir_iv_cache.lookups();
-	info.dirIvCacheHitRatio = lookups ? (float)hits / (float)lookups : 0.0f;
+	if (GetConfig()->DirIV()) {
+		hits = m_dir_iv_cache.hits();
+		lookups = m_dir_iv_cache.lookups();
+		info.dirIvCacheHitRatio = lookups ? (float)hits / (float)lookups : 0.0f;
+	} else {
+		info.dirIvCacheHitRatio = -1.0f;
+	}
 
 	info.longNameMax = m_config->m_LongNameMax;
 }
