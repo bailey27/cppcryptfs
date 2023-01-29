@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2022 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2023 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -30,6 +30,7 @@ THE SOFTWARE.
 
 #include "crypt/cryptdefs.h"
 
+#include <string>
 #include <unordered_map>
 #include <list>
 
@@ -54,7 +55,7 @@ class LongFilenameCacheNode {
 
 public:
 	wstring m_key;
-	wstring  m_path;
+	wstring m_path;
 	string m_actual_encrypted;
 	list<LongFilenameCacheNode*>::iterator m_list_it;  // holds position in lru list
 #ifndef LFN_CACHE_NOTTL

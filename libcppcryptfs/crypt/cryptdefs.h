@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2022 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2023 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -65,6 +65,10 @@ THE SOFTWARE.
 #define MAX_LONGNAMEMAX MAX_FILENAME_LEN
 #define MIN_LONGNAMEMAX 62
 #define SHORT_NAME_MAX_DEFAULT 175 // for when longname max is MAX_FILENAME_LEN
+
+#define MIN_SCRYPTN 10
+#define MAX_SCRYPTN 28
+#define DEFAULT_SCRYPTN 16
 
 #define MAX_PASSWORD_LEN 255
 

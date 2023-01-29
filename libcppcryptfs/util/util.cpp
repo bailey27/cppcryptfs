@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2022 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2023 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -736,9 +736,10 @@ Initializing (cppcryptfsctl only):
   -L, --longnames [1|0]       enable/disable LFNs. defaults to enabled (1)
   -b, --streams   [1|0]       enable/disable streams. defaults to enabled (1)
   --longnamemax N             limit filenames to at most N characters
+  --scryptn N                 sets memory required for Scrypt hashing of pw.
 
 Recovery/Maintenance (cppcryptfsctl only):
-  --changepassword=PATH       Change password used to protect master key
+  --changepassword=PATH       Change password used to protect master key  
   --printmasterkey=PATH       Print master key in human-readable format
   --recover=PATH              Prompt for master key and new password to recover
 )";

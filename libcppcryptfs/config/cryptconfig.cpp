@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2022 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2023 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -64,8 +64,6 @@ THE SOFTWARE.
 #include "util/LockZeroBuffer.h"
 #include "filename/cryptfilename.h"
 #include "../libcommonutil/commonutil.h"
-
-#define SCRYPT_MB 72 // 65 seems to be enough, but allow more just in case
 
 CryptConfig::CryptConfig()
 {
@@ -393,7 +391,7 @@ bool CryptConfig::init_serial(CryptContext *con)
 	return true;
 }
 
-bool CryptConfig::write_updated_config_file(const char *base64key, const char *scryptSalt)
+bool CryptConfig::write_updated_config_file(const char *base64key, const char *scryptSalt, int scryptn)
 {
 	bool bret = true;
 	
@@ -456,6 +454,18 @@ bool CryptConfig::write_updated_config_file(const char *base64key, const char *s
 		rapidjson::Document d;
 
 		d.Parse(&buf[0]);
+
+		if (scryptn != 0) {
+			if (d.HasMember("ScryptObject")) {
+				rapidjson::Value& scryptobject = d["ScryptObject"];
+				if (scryptobject.HasMember("N")) {
+					rapidjson::Value salt(scryptSalt, d.GetAllocator());
+					scryptobject["N"] = 1 << scryptn;
+				} else {
+					throw(-1);
+				}
+			}
+		}
 
 		if (base64key) {
 			// if we're recovering a filesystem then base64key isn't null, and we can't decrypt the volume name.
@@ -636,9 +646,9 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 
 		if (m_HKDF && !pwkeyHKDF.IsLocked())
 			throw(-1);
-
+	
 		int result = EVP_PBE_scrypt(pass, strlen(pass), &m_encrypted_key_salt[0], 
-			m_encrypted_key_salt.size(), m_N, m_R, m_P, SCRYPT_MB * 1024 * 1024, pwkey.m_buf,
+			m_encrypted_key_salt.size(), m_N, m_R, m_P, scrypt_mem(), pwkey.m_buf,
 			GetMasterKeyLength());
 
 		if (result != 1)
@@ -760,7 +770,7 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 
 
 		int result = EVP_PBE_scrypt(utf8pass.m_buf, strlen(utf8pass.m_buf), &m_encrypted_key_salt[0],
-			m_encrypted_key_salt.size(), m_N, m_R, m_P, SCRYPT_MB * 1024 * 1024, pwkey.m_buf,
+			m_encrypted_key_salt.size(), m_N, m_R, m_P, scrypt_mem(), pwkey.m_buf,
 			GetMasterKeyLength());
 
 		if (result != 1) {
@@ -838,7 +848,7 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 }
 
 
-bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, const WCHAR *volume_name, bool disablestreams, int longnamemax, bool deterministicnames, wstring& error_mes)
+bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, int scryptN, const WCHAR *volume_name, bool disablestreams, int longnamemax, bool deterministicnames, wstring& error_mes)
 {
 
 	if (specified_config_file_path && *specified_config_file_path == '\0')
@@ -909,7 +919,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 			}
 		}			
 
-		m_N = 65536;
+		m_N = 1<<scryptN;
 		m_R = 8;
 		m_P = 1;
 

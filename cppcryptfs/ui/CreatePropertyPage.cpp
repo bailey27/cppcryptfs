@@ -2,7 +2,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2022 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2023 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -92,6 +92,7 @@ BEGIN_MESSAGE_MAP(CCreatePropertyPage, CPropertyPage)
 	ON_CBN_SELCHANGE(IDC_LONGNAMEMAX, &CCreatePropertyPage::OnSelchangeLongnamemax)
 	ON_BN_CLICKED(IDC_LONG_FILE_NAMES, &CCreatePropertyPage::OnClickedLongFileNames)
 	ON_BN_CLICKED(IDC_DETERMINISTIC_NAMES, &CCreatePropertyPage::OnClickedDeterministicNames)
+	ON_CBN_SELCHANGE(IDC_SCRYPTN, &CCreatePropertyPage::OnSelchangeScryptn)
 END_MESSAGE_MAP()
 
 void CCreatePropertyPage::DefaultAction()
@@ -235,8 +236,18 @@ void CCreatePropertyPage::CreateCryptfs()
 	CString volume_name;
 	GetDlgItemText(IDC_VOLUME_NAME, volume_name);
 
+	auto pScryptN = (CComboBox*)GetDlgItem(IDC_SCRYPTN);
+	if (!pScryptN)
+		return;
+
+	int nSel = pScryptN->GetCurSel();
+	CString sel;
+	pScryptN->GetLBText(nSel, sel);
+
+	const int scryptN = stoi((LPCTSTR)sel);	
+
 	theApp.DoWaitCursor(1);
-	bool bResult = config.create(cpath, config_path, password.m_buf, eme, plaintext, longfilenames, siv, reverse, volume_name, disablestreams, longnamemax, deterministicnames, error_mes);
+	bool bResult = config.create(cpath, config_path, password.m_buf, eme, plaintext, longfilenames, siv, reverse, scryptN, volume_name, disablestreams, longnamemax, deterministicnames, error_mes);
 	theApp.DoWaitCursor(-1);
 
 	if (!bResult) {
@@ -253,6 +264,8 @@ void CCreatePropertyPage::CreateCryptfs()
 	MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
 
 	SetDlgItemText(IDC_VOLUME_NAME, L"");
+
+	theApp.WriteProfileInt(L"CreateOptions", L"ScryptN", scryptN);
 
 	CString clfns = IsDlgButtonChecked(IDC_LONG_FILE_NAMES) ? L"1" : L"0";
 
@@ -442,6 +455,20 @@ BOOL CCreatePropertyPage::OnInitDialog()
 		MessageBox(L"unable to lock password buffers", L"cppcryptfs", MB_OK | MB_ICONERROR);
 	}
 
+	const auto scryptN = theApp.GetProfileIntW(L"CreateOptions", L"ScryptN", DEFAULT_SCRYPTN);
+	auto pScryptN = (CComboBox*)GetDlgItem(IDC_SCRYPTN);	
+
+	if (pScryptN) {
+		const int scryptN_min = 10;
+		const int scryptN_max = 28;
+		for (int i = scryptN_min; i <= scryptN_max; ++i) {
+			pScryptN->InsertString(i - 10, std::to_wstring(i).c_str());
+		}
+		pScryptN->SelectString(-1, std::to_wstring(scryptN).c_str());
+	}
+
+	OnSelchangeScryptn();
+	
 	// limit input lengths
 
 	m_password.SetLimitText(MAX_PASSWORD_LEN);
@@ -539,4 +566,34 @@ void CCreatePropertyPage::OnClickedDeterministicNames()
 {
 	// TODO: Add your control notification handler code here
 
+}
+
+
+void CCreatePropertyPage::OnSelchangeScryptn()
+{
+	// TODO: Add your control notification handler code here
+
+	auto pScryptN = (CComboBox*)GetDlgItem(IDC_SCRYPTN);
+	if (!pScryptN)
+		return;
+
+	int nSel = pScryptN->GetCurSel();
+	CString sel;
+	pScryptN->GetLBText(nSel, sel);
+
+	int scryptN = stoi((LPCTSTR)sel);
+
+	int mem = (1<<scryptN)/1024;
+
+	auto suffix = L" MiB required";
+	if (mem >= 1024)
+	{
+		suffix = L" GiB required";
+		mem /= 1024;
+	}
+
+	auto pScryptMemReq = (CStatic*)GetDlgItem(IDC_SCRYPTMEMREQ);
+	if (pScryptMemReq) {
+		pScryptMemReq->SetWindowText((std::to_wstring(mem) + suffix).c_str());
+	}
 }

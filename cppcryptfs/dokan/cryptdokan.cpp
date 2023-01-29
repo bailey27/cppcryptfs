@@ -2,7 +2,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2022 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2023 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -2449,7 +2449,7 @@ BOOL write_volume_name_if_changed(WCHAR dl, wstring& mes) {
 
   if (con->GetConfig()->m_VolumeName != volbuf) {
     con->GetConfig()->m_VolumeName = volbuf;
-    bool res = con->GetConfig()->write_updated_config_file();
+    bool res = con->GetConfig()->write_updated_config_file(nullptr, nullptr, 0);
 	if (!res) {
 		mes += L"unable to write new volume name to config file";
 		return FALSE;

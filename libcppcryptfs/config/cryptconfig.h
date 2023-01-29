@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2022 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2023 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -54,6 +54,11 @@ private:
 	LockZeroBuffer<unsigned char> *m_pKeyBuf;
 	LockZeroBuffer<BYTE> *m_pGcmContentKey;
 	bool m_DirIV;	
+	unsigned long long scrypt_mem()
+	{
+        // e.g. N = 131072 requires 128MB of memory.  Add 8MB extra just to be safe.
+        return static_cast<unsigned long long>(m_N) * 1024ULL + (8ULL * 1024 * 1024);
+	}
 public:
 	wstring m_configPath;
 	bool DirIV() { return m_DirIV; };
@@ -96,12 +101,12 @@ public:
 	bool decrypt_key(LPCTSTR password);
 
 	bool create(const WCHAR* path, const WCHAR* specified_config_path, const WCHAR* password, bool eme, bool plaintext, bool longfilenames,
-		bool siv, bool reverse, const WCHAR* volume_name, bool disablestreams, int longnamemax, bool deterministicnames, wstring& error_mes		
+		bool siv, bool reverse, int scryptN, const WCHAR* volume_name, bool disablestreams, int longnamemax, bool deterministicnames, wstring& error_mes		
 	);
 
 	bool check_config(wstring& mes);
 
-	bool write_updated_config_file(const char *base64key = nullptr, const char *scryptSalt = nullptr);
+	bool write_updated_config_file(const char *base64key, const char *scryptSalt, int scryptn);
 
 	bool init_serial(CryptContext *con);
 

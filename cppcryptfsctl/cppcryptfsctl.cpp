@@ -1,7 +1,7 @@
 /*
 cppcryptfs : user-mode cryptographic virtual overlay filesystem.
 
-Copyright (C) 2016-2022 Bailey Brown (github.com/bailey27/cppcryptfs)
+Copyright (C) 2016-2023 Bailey Brown (github.com/bailey27/cppcryptfs)
 
 cppcryptfs is based on the design of gocryptfs (github.com/rfjakob/gocryptfs)
 
@@ -164,6 +164,8 @@ static int do_self_args(int argc, wchar_t* const argv[])
 
     bool deterministicnames = false;
 
+    int scryptn = 0;
+
     LockZeroBuffer<wchar_t> password(PASSWORD_BUFLEN, false);
 
     if (!password.IsLocked()) {
@@ -198,11 +200,12 @@ static int do_self_args(int argc, wchar_t* const argv[])
         {L"printmasterkey",   required_argument,  0, '1'},
         {L"recover",   required_argument,  0, '2'},
         {L"longnamemax",  required_argument, 0, '3' },
+        {L"scryptn",  required_argument, 0, '4' },
         {0, 0, 0, 0}
     };
 
     while (true) {
-        c = getopt_long(argc, argv, L"p:dI:c:sTL:b:V:Svh0:1:2:3:", long_options, &option_index);
+        c = getopt_long(argc, argv, L"p:dI:c:sTL:b:V:Svh0:1:2:3:4:", long_options, &option_index);
 
         if (c == -1)
             break;
@@ -225,6 +228,9 @@ static int do_self_args(int argc, wchar_t* const argv[])
             break;
         case '3':
             longnamemax = _wtoi(optarg);
+            break;
+        case '4':
+            scryptn = _wtoi(optarg);
             break;
         case 'p':
             if (wcslen(optarg) > MAX_PASSWORD_LEN) {
@@ -276,11 +282,14 @@ static int do_self_args(int argc, wchar_t* const argv[])
             do_help = true;
             break;      
         }
-    }
+    }    
 
-    if (longnamemax < MIN_LONGNAMEMAX || longnamemax > MAX_LONGNAMEMAX) {
-        wcerr << L"Invalid longnamemax specified.  Valid range is 62 to 255\n";
-        return 1;
+    if (scryptn != 0)
+    {
+        if (scryptn < MIN_SCRYPTN || scryptn > MAX_SCRYPTN) {
+            wcerr << L"Invalid scryptn specified.  Valid range is 10 to 28\n";
+            return 1;
+        }
     }
 
     if (longnamemax != MAX_LONGNAMEMAX && plaintext_names) {
@@ -361,7 +370,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
             return 1;
         }        
     
-        bool result = config.create(fs_path.c_str(), config_path.c_str(), password.m_buf, !plaintext_names, plaintext_names, longnames, reverse || siv, reverse, volume_name.c_str(), !streams, longnamemax, deterministicnames, mes);
+        bool result = config.create(fs_path.c_str(), config_path.c_str(), password.m_buf, !plaintext_names, plaintext_names, longnames, reverse || siv, reverse, scryptn ? scryptn : DEFAULT_SCRYPTN, volume_name.c_str(), !streams, longnamemax, deterministicnames, mes);
 
         if (!result) {
             wcerr << mes << endl;
@@ -453,7 +462,10 @@ static int do_self_args(int argc, wchar_t* const argv[])
 
         CryptConfig dummyConfig;
 
-        dummyConfig.CopyKeyParams(config);
+        dummyConfig.CopyKeyParams(config);     
+
+        if (scryptn != 0)
+            dummyConfig.m_N = 1 << scryptn;
 
         string base64key;
         string scryptSalt;
@@ -470,7 +482,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
         if (config.m_VolumeName.length() > 0) {
             wcerr << L"warning: ignoring volume name in recovery config file." << endl;           
         }
-        if (!config.write_updated_config_file(base64key.c_str(), scryptSalt.c_str())) {
+        if (!config.write_updated_config_file(base64key.c_str(), scryptSalt.c_str(), scryptn)) {
             wcerr << L"failed to update encrypted key" << endl;
             return 1;
         }
@@ -579,15 +591,21 @@ static int do_self_args(int argc, wchar_t* const argv[])
 
         dummyConfig.CopyKeyParams(config);
 
+        if (scryptn != 0)
+            dummyConfig.m_N = 1 << scryptn;
+
         string base64key;
         string scryptSalt;
+
+        if (scryptn != 0)
+            dummyConfig.m_N = 1 << scryptn;
         
         if (!dummyConfig.encrypt_key(newpassword.m_buf, config.GetMasterKey(), base64key, scryptSalt, mes)) {
             wcerr << mes << endl;
             return 1;
         }   
 
-        if (!config.write_updated_config_file(base64key.c_str(), scryptSalt.c_str())) {
+        if (!config.write_updated_config_file(base64key.c_str(), scryptSalt.c_str(), scryptn)) {
             wcerr << "failed to update encrypted key" << endl;
             return 1;
         }
