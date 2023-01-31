@@ -4,6 +4,8 @@
 cppcryptfs
 ------
 
+**Warning**: As per [this](https://github.com/rfjakob/gocryptfs/issues/50) discussion, you should only store the created .gocryptfs.conf if your password is strong.
+
 cppcryptfs is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs), an encrypted overlay filesystem written in Go.
 
 cppcryptfs is an implementation of the gocryptfs filesystem in C++ for Windows.  cppcryptfs is compatible with gocryptfs.  Filesystems created with one can generally be mounted (and synced) with the other.   Please see the statement on compatibility near the end of this document.
