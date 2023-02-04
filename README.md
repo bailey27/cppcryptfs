@@ -4,6 +4,8 @@
 cppcryptfs
 ------
 
+**Warning**: As per [this](https://github.com/rfjakob/gocryptfs/issues/50) discussion, you should only store the created .gocryptfs.conf if your password is strong.
+
 cppcryptfs is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs), an encrypted overlay filesystem written in Go.
 
 cppcryptfs is an implementation of the gocryptfs filesystem in C++ for Windows.  cppcryptfs is compatible with gocryptfs.  Filesystems created with one can generally be mounted (and synced) with the other.   Please see the statement on compatibility near the end of this document.
@@ -83,6 +85,8 @@ needed for some operations performed by the Windows API functions SetFileSecurit
 
 cppcryptfs seems to work without SE_SECURITY_NAME.  If you do
 run into problems, then you can try running cppcryptfs as adminstrator and see if that helps.
+
+On Windows, you should encrypt the pagefile to avoid leaking sensitive data on disk. Run the following command in CMD.exe as administrator: `fsutil behavior set EncryptPagingFile 1` first.
 
 To make a new encrypted virtual filesystem, first click the "Create" tab.
 
