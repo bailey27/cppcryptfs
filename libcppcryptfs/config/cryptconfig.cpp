@@ -1055,6 +1055,12 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 	return bret;
 }
 
+unsigned long long CryptConfig::scrypt_mem()
+{
+	// e.g. N = 131072 requires 128MB of memory.  Add 8MB extra just to be safe.
+	return static_cast<unsigned long long>((m_N * 1024ULL) + (8ULL * 1024 * 1024));
+}
+
 bool CryptConfig::InitGCMContentKey(const BYTE *key)
 {
 	if (!m_HKDF)

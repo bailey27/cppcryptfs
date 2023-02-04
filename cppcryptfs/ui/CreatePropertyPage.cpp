@@ -565,9 +565,7 @@ void CCreatePropertyPage::OnClickedLongFileNames()
 void CCreatePropertyPage::OnClickedDeterministicNames()
 {
 	// TODO: Add your control notification handler code here
-
 }
-
 
 void CCreatePropertyPage::OnSelchangeScryptn()
 {
@@ -585,10 +583,10 @@ void CCreatePropertyPage::OnSelchangeScryptn()
 
 	int mem = (1<<scryptN)/1024;
 
-	auto suffix = L" MiB required";
+	auto suffix = L" MB required";
 	if (mem >= 1024)
 	{
-		suffix = L" GiB required";
+		suffix = L" GB required";
 		mem /= 1024;
 	}
 

@@ -54,11 +54,7 @@ private:
 	LockZeroBuffer<unsigned char> *m_pKeyBuf;
 	LockZeroBuffer<BYTE> *m_pGcmContentKey;
 	bool m_DirIV;	
-	unsigned long long scrypt_mem()
-	{
-        // e.g. N = 131072 requires 128MB of memory.  Add 8MB extra just to be safe.
-        return static_cast<unsigned long long>(m_N) * 1024ULL + (8ULL * 1024 * 1024);
-	}
+	unsigned long long scrypt_mem();
 public:
 	wstring m_configPath;
 	bool DirIV() { return m_DirIV; };
