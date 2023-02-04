@@ -287,7 +287,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
     if (scryptn != 0)
     {
         if (scryptn < MIN_SCRYPTN || scryptn > MAX_SCRYPTN) {
-            wcerr << L"Invalid scryptn specified.  Valid range is 10 to 28\n";
+            wcerr << L"Invalid scryptn specified.  Valid range is " << to_wstring(MIN_SCRYPTN) << " to " << to_wstring(MAX_SCRYPTN) << "." << endl;
             return 1;
         }
     }

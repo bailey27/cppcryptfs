@@ -67,7 +67,7 @@ THE SOFTWARE.
 #define SHORT_NAME_MAX_DEFAULT 175 // for when longname max is MAX_FILENAME_LEN
 
 #define MIN_SCRYPTN 10
-#define MAX_SCRYPTN 28
+#define MAX_SCRYPTN 20
 #define DEFAULT_SCRYPTN 16
 
 #define MAX_PASSWORD_LEN 255

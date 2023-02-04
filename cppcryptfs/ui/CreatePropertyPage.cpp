@@ -458,11 +458,9 @@ BOOL CCreatePropertyPage::OnInitDialog()
 	const auto scryptN = theApp.GetProfileIntW(L"CreateOptions", L"ScryptN", DEFAULT_SCRYPTN);
 	auto pScryptN = (CComboBox*)GetDlgItem(IDC_SCRYPTN);	
 
-	if (pScryptN) {
-		const int scryptN_min = 10;
-		const int scryptN_max = 28;
-		for (int i = scryptN_min; i <= scryptN_max; ++i) {
-			pScryptN->InsertString(i - 10, std::to_wstring(i).c_str());
+	if (pScryptN) {		
+		for (int i = MIN_SCRYPTN; i <= MAX_SCRYPTN; ++i) {
+			pScryptN->InsertString(i - MIN_SCRYPTN, std::to_wstring(i).c_str());
 		}
 		pScryptN->SelectString(-1, std::to_wstring(scryptN).c_str());
 	}
