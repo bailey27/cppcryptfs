@@ -3,17 +3,15 @@
 
 cppcryptfs
 ------
-
-**IMPORTANT**: As per [this](https://github.com/rfjakob/gocryptfs/issues/50) discussion, you should only store the created gocryptfs.conf in the cloud if your password is strong. 
-If an attacker obtains your .gocryptfs.conf, then they will be able to throw whatever resources they have at a brute force attack on your encrypted password.  Increasing scryptn will slow 
-them down (see below)  The developer keeps his .gocryptfs.conf in the cloud and uses a very strong password.
-
 cppcryptfs is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs), an encrypted overlay filesystem written in Go.
 
 cppcryptfs is an implementation of the gocryptfs filesystem in C++ for Windows.  cppcryptfs is compatible with gocryptfs.  Filesystems created with one can generally be mounted (and synced) with the other.   Please see the statement on compatibility near the end of this document.
 
 cppcrypts provides on-the-fly, at-rest and in-the-cloud encryption of files and file names in a virtual filesystem.  It uses the [Dokany](https://github.com/dokan-dev/dokany) driver and library to provide a virtual filesystem in user mode under Windows.
 
+**IMPORTANT**: As per [this](https://github.com/rfjakob/gocryptfs/issues/50) discussion, you should only store the created gocryptfs.conf in the cloud if your password is strong. 
+If an attacker obtains your gocryptfs.conf, then they will be able to throw whatever resources they have at a brute force attack on your encrypted password.  Increasing scryptn will slow 
+them down (see below)  The developer keeps his gocryptfs.conf in the cloud and uses a very strong password.
 
 You can use cppcryptfs to create an encrypted filesystem in a folder.  The encrypted filesystem is protected with a password that you choose.  
 

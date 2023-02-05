@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.4.1 5 Feb 2023
+* Implement --scryptn option from gocryptfs for controlling memory requirement
+  for Scrypt hashing of passwords.
+
 v1.4.4.0 30 May 2022
 * Implement deterministic file names from gocryptfs.
 * Make both init and mount from command line take password from either -p arg
