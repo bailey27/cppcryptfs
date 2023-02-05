@@ -643,6 +643,8 @@ If you think your password has been compromised, and if you think somebody might
 filesystem with a new password, mount it, mount the old filesystem, and copy your data from the unencrypted view of the old filesytem to the unencrypted 
 view of the new filesystem.
 
+If you specify --scryptn, then scryptn can be changed at the same time you change the password.
+
 Recovery of Lost Password
 -----------
 Recovering from a lost password is possible only if you have printed and saved the
@@ -662,6 +664,7 @@ It will prompt for you to enter the master key, and then it will prompt for you 
 
 This operation overrwrites the master key in the target config file.  It makes a backup of the config file before doing this. The backup is named by appending .bak to the name of the config file. If the .bak file already exists, it asks for you to delete the existing .bak file or move it out of the way.
 
+If you specify --scryptn, then scryptn can be changed at the same time you recover the filesystem.
 
 Recovery of Lost or Corrupted Config File
 -----------
