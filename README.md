@@ -161,6 +161,7 @@ If you specified a custom path for the config file, you must also select "revers
 
 Note:  cppcryptfs uses the path to the encrypted filesystem as a key for rembering the custom path to the config file (if there is one) and other settings like reverse and read only.  So when you select a path to mount, be sure to verify that these settings are what you wish to use this time.
 
+For information about "scryptn" see the documentation for the --scryptn parameter for cppcryptfsctl.
 
 After you mount the filesystem, you will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is encrypted and saved in files in the folder you specified.
 
