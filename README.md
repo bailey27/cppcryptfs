@@ -4,7 +4,9 @@
 cppcryptfs
 ------
 
-**Warning**: As per [this](https://github.com/rfjakob/gocryptfs/issues/50) discussion, you should only store the created .gocryptfs.conf if your password is strong.
+**IMPORTANT**: As per [this](https://github.com/rfjakob/gocryptfs/issues/50) discussion, you should only store the created gocryptfs.conf in the cloud if your password is strong. 
+If an attacker obtains your .gocryptfs.conf, then they will be able to throw whatever resources they have at a brute force attack on your encrypted password.  Increasing scryptn will slow 
+them down (see below)  The developer keeps his .gocryptfs.conf in the cloud and uses a very strong password.
 
 cppcryptfs is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs), an encrypted overlay filesystem written in Go.
 
@@ -517,6 +519,7 @@ Initializing (cppcryptfsctl only):
   -L, --longnames [1|0]       enable/disable LFNs. defaults to enabled (1)
   -b, --streams   [1|0]       enable/disable streams. defaults to enabled (1)
   --longnamemax N             limit filenames to at most N characters
+  --scryptn N                 sets memory required for Scrypt hashing of pw
 
 Recovery/Maintenance (cppcryptfsctl only):
   --changepassword=PATH       Change password used to protect master key
@@ -617,6 +620,14 @@ rsync .....
 /cygdrive/c/bin/cppcryptfs -u all -x
 
 ```
+
+scryptn
+------
+--scryptn controls how much RAM is needed to decrypt your password stored in gocryptfs.conf. The default is 16 which requires approximately 2^16*1024 = 64 megabytes of RAM to decrypt.  
+
+OWASP.org currently recommends using a value of 17 (128MB) to slow down attackers more.  16 is still the default because that's the default for gocryptfs.
+
+The values supported for scryptin are from 10 (1MB) to 20 (1GB).  gocryptfs allows up to 28, but anything above 20 fails on the developers Windows PC with 16GB RAM installed.
 
 Change Password
 ------

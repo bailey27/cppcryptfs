@@ -736,7 +736,7 @@ Initializing (cppcryptfsctl only):
   -L, --longnames [1|0]       enable/disable LFNs. defaults to enabled (1)
   -b, --streams   [1|0]       enable/disable streams. defaults to enabled (1)
   --longnamemax N             limit filenames to at most N characters
-  --scryptn N                 sets memory required for Scrypt hashing of pw.
+  --scryptn N                 sets memory required for Scrypt hashing of pw
 
 Recovery/Maintenance (cppcryptfsctl only):
   --changepassword=PATH       Change password used to protect master key  
