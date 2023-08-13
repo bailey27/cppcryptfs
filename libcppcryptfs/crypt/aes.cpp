@@ -73,8 +73,12 @@ void AES::initialize_keys(const unsigned char *key, int keylen /* in bits */,
 	} else
 #endif
 	{
+// low-level AES functions are deprecated in Openssl 3.0
+#pragma warning( push )
+#pragma warning(disable : 4996)
 		AES_set_encrypt_key(key, keylen, encrypt_key);
 		AES_set_decrypt_key(key, keylen, decrypt_key);
+#pragma warning( pop )
 	}
 }
 
@@ -105,7 +109,11 @@ void AES::encrypt(const unsigned char* plain, unsigned char *cipher) const
 	} else
 #endif
 	{
+// low-level AES functions are deprecated in Openssl 3.0
+#pragma warning( push )
+#pragma warning(disable : 4996)
 		AES_encrypt(plain, cipher, m_key_encrypt);
+#pragma warning( pop )
 	}
 }
 
@@ -118,7 +126,11 @@ void AES::decrypt(const unsigned char *cipher, unsigned char *plain) const
 	} else
 #endif
 	{
+// low-level AES functions are deprecated in Openssl 3.0
+#pragma warning( push )
+#pragma warning(disable : 4996)
 		AES_decrypt(cipher, plain, m_key_decrypt);
+#pragma warning( pop )
 	}
 }
 

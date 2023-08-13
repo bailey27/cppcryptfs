@@ -438,7 +438,7 @@ bool hkdfDerive(const BYTE *masterKey, int masterKeyLen, BYTE *newKey, int newKe
 #endif
 		if (EVP_PKEY_CTX_set1_hkdf_key(pctx, masterKey, masterKeyLen) <= 0)
 			throw(-1);
-		if (EVP_PKEY_CTX_add1_hkdf_info(pctx, info, (int)strlen(info)) <= 0)
+		if (EVP_PKEY_CTX_add1_hkdf_info(pctx, reinterpret_cast<const unsigned char *>(info), (int)strlen(info)) <= 0)
 			throw(-1);
 		if (EVP_PKEY_derive(pctx, newKey, &outLen) <= 0)
 			throw(-1);
