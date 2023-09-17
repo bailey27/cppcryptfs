@@ -2,6 +2,9 @@
 
 Changelog
 ------------
+v1.4.4.2 17 Sept 2023
+* Use Openssl 3.0 LTS
+
 v1.4.4.1 5 Feb 2023
 * Implement --scryptn option from gocryptfs for controlling memory requirement
   for Scrypt hashing of passwords.
