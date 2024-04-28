@@ -2,6 +2,9 @@
 
 Changelog
 ------------
+v1.4.4.3 28 Apr 2024
+* Use Dokany 2.1 (2.1.0.1000)
+
 v1.4.4.2 17 Sept 2023
 * Use Openssl 3.0 LTS
 

@@ -2750,7 +2750,7 @@ bool get_dokany_version(wstring& ver, vector<int>& v)
 bool check_dokany_version(wstring& mes)
 {
 	constexpr int required_major = 2;
-	constexpr int required_middle = 0;
+	constexpr int required_middle = 1;
     const wstring required_ver =  to_wstring(required_major) + L"." + to_wstring(required_middle) +  L".x.x";
 	
 	mes = L"";
