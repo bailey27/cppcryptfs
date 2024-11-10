@@ -39,6 +39,7 @@ THE SOFTWARE.
 #include "dokan/cryptdokan.h"
 #include "util/LockZeroBuffer.h"
 #include "util/util.h"
+#include "../libcommonutil/commonutil.h"
 #include "dokan/MountPointManager.h"
 #include "ui/uiutil.h"
 #include "ui/CryptSettings.h"
@@ -47,6 +48,9 @@ THE SOFTWARE.
 #include "cryptdefaults.h"
 
 // CryptPropertySheet
+
+static const int kSysTrayiTimerId = 1;
+static const int kSysTrayTimerInterval = 2000; // milliseconds
 
 IMPLEMENT_DYNAMIC(CCryptPropertySheet, CPropertySheet)
 
@@ -106,6 +110,7 @@ BOOL CCryptPropertySheet::CanClose()
 	}
 }
 
+UINT CCryptPropertySheet::WM_TASKBARCREATED = ::RegisterWindowMessage(_T("TaskbarCreated"));
 
 BEGIN_MESSAGE_MAP(CCryptPropertySheet, CPropertySheet)
 	ON_WM_NCCREATE()
@@ -119,11 +124,21 @@ BEGIN_MESSAGE_MAP(CCryptPropertySheet, CPropertySheet)
 //	ON_WM_QUERYENDSESSION()
 ON_WM_ENDSESSION()
 ON_WM_POWERBROADCAST()
+// custom messages
+ON_REGISTERED_MESSAGE(WM_TASKBARCREATED, OnTaskbarCreated)
+ON_WM_TIMER()
+ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
 // CryptPropertySheet message handlers
 
+
+LRESULT CCryptPropertySheet::OnTaskbarCreated(WPARAM wParam, LPARAM lParam)
+{
+	theApp.RecreateSystemTrayIcon();
+	return 0;
+}
 
 BOOL CCryptPropertySheet::OnInitDialog()
 {
@@ -144,6 +159,14 @@ BOOL CCryptPropertySheet::OnInitDialog()
 	if (pWnd)
 		pWnd->ShowWindow(SW_HIDE);
 
+	if (theApp.IsRunningAsAdministrator()) {
+
+		// We want to know if explorer gets restarted so we can re-create our system tray icon.
+		// However, if we're running as administrator, we never get any TaskbarCreated messages,
+		// so we need to poll using a timer.
+
+		SetTimer(kSysTrayiTimerId, kSysTrayTimerInterval, nullptr);
+	}
 
 	return bResult;
 }
@@ -400,4 +423,44 @@ BOOL CCryptPropertySheet::PreTranslateMessage(MSG* pMsg)
 	}
 
 	return CPropertySheet::PreTranslateMessage(pMsg);
+}
+
+
+void CCryptPropertySheet::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO: Add your message handler code here and/or call default
+	
+	if (nIDEvent == kSysTrayiTimerId) {
+		const HWND hWnd = ::FindWindow(L"Shell_TrayWnd", NULL);
+
+		if (hWnd)
+		{
+			if (m_bDoRecreateSysTrayIcon)
+			{
+				m_bDoRecreateSysTrayIcon = false;
+				theApp.RecreateSystemTrayIcon();
+			} 
+			else if (hWnd != m_hSysTrayWnd) 
+			{
+				m_hSysTrayWnd = hWnd;
+				// We seem to need some sort of delay before recreating it.
+				m_bDoRecreateSysTrayIcon = true;				
+			}
+		}
+	}
+
+	CPropertySheet::OnTimer(nIDEvent);
+}
+
+
+void CCryptPropertySheet::OnDestroy()
+{
+	CPropertySheet::OnDestroy();
+
+	// TODO: Add your message handler code here
+
+	if (theApp.IsRunningAsAdministrator())
+	{
+		KillTimer(kSysTrayiTimerId);
+	}
 }

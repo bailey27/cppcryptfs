@@ -168,3 +168,60 @@ wstring GetWindowsErrorString(DWORD dwLastErr)
 	return mes;
 }
 
+static bool IsProcessElevated()
+{
+	HANDLE hToken = NULL;
+	TOKEN_ELEVATION elevation;
+	DWORD size;
+
+	if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+	{
+		if (GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &size))
+		{
+			CloseHandle(hToken);
+			return elevation.TokenIsElevated != 0;
+		}
+		CloseHandle(hToken);
+	}
+	return false;
+}
+
+bool IsRunningAsAdministrator(bool *pIsReallyAdmin)
+{
+	BOOL isAdmin = FALSE;
+	HANDLE hToken = NULL;
+
+	if (pIsReallyAdmin)
+		*pIsReallyAdmin = false;
+
+	// Open the process token
+	if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+	{
+		// Create a SID for the Administrators group
+		PSID administratorsGroup = NULL;
+		SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
+		if (AllocateAndInitializeSid(&ntAuthority, 2,
+			SECURITY_BUILTIN_DOMAIN_RID,
+			DOMAIN_ALIAS_RID_ADMINS,
+			0, 0, 0, 0, 0, 0,
+			&administratorsGroup))
+		{
+			// Check if the token has the Administrators group SID
+			CheckTokenMembership(hToken, administratorsGroup, &isAdmin);
+			FreeSid(administratorsGroup);
+		}
+		CloseHandle(hToken);
+	}
+
+	if (isAdmin)
+	{
+		if (pIsReallyAdmin)
+			*pIsReallyAdmin = true;
+
+		return true;
+	}
+	else
+	{
+		return IsProcessElevated();
+	}
+}

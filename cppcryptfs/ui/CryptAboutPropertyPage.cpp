@@ -651,10 +651,13 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
  
 	SetDlgItemText(IDC_LINKAGES, L"linked with " + openssl_ver + dokany_version);
 
+	bool is_admin = theApp.IsRunningAsAdministrator();
+
 	CString prod_ver = prod.c_str();
-	prod_ver += L", Version ";
-	prod_ver += &ver[0];
+	prod_ver += L" ";
+	prod_ver += ver.c_str();	
 	prod_ver += sizeof(void*) == 8 ? L" 64-bit" : L" 32-bit";
+	prod_ver += (is_admin ? L" (admin)" : L"");
 
 	SetDlgItemText(IDC_PROD_VERSION, prod_ver + CString(aes_ni.c_str()));
 	SetDlgItemText(IDC_COPYRIGHT, copyright.c_str());

@@ -31,6 +31,8 @@ THE SOFTWARE.
 
 #pragma once
 
+#include "stdafx.h"
+
 #ifndef __AFXWIN_H__
 	#error "include 'stdafx.h' before including this file for PCH"
 #endif
@@ -39,6 +41,7 @@ THE SOFTWARE.
 
 #include <unordered_map>
 #include <string>
+#include <memory>
 #include "crypt/cryptdefs.h"
 
 using namespace std;
@@ -63,18 +66,21 @@ typedef struct struct_CopyDataCmdLine {
 // See cppcryptfs.cpp for the implementation of this class
 //
 
+class CMenuTrayIcon;
+
 class CcppcryptfsApp : public CWinApp
 {
+private:
+	bool m_bIsRunningAsAdministrator = false;
+	bool m_bIsReallyAdministrator = false;
 public:
 	void SendCmdArgsToSelf(HANDLE hPipe);
 public:
 	CcppcryptfsApp();
-#if 0
-	unordered_map<wstring, wstring> m_mountedMountPoints; // used for tracking all mounted mountpoints (dirs and drive letters)
-																		 // drive letters are stored with colon e.g drive M as L"M:"
-#endif
-	DWORD m_mountedLetters;        // used for tracking mounted (by cpppcryptfs) drive letters
-// Overrides
+	HICON m_hIcon = NULL;
+	DWORD m_mountedLetters = 0; // used for tracking mounted (by cpppcryptfs) drive letters
+	std::shared_ptr<CMenuTrayIcon> m_system_tray_icon;
+	// Overrides
 public:
 	virtual BOOL InitInstance() override;
 
@@ -82,6 +88,10 @@ public:
 	virtual BOOL WriteProfileString(LPCWSTR section, LPCWSTR entry, LPCWSTR val) override;
 	virtual BOOL WriteProfileBinary(LPCWSTR section, LPCWSTR entry, LPBYTE pData, UINT nBytes) override;
 
+	void RecreateSystemTrayIcon();
+
+	bool IsRunningAsAdministrator() { return m_bIsRunningAsAdministrator; }
+	bool IsReallyAdministrator() { return m_bIsReallyAdministrator; }
 // Implementation
 
 	DECLARE_MESSAGE_MAP()

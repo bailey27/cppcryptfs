@@ -2,6 +2,9 @@
 
 Changelog
 ------------
+v1.4.4.5 11 Nov 2024
+* Re-create system tray icon if explorer is restarted.
+
 v1.4.4.4 31 Aug 2024
 * Use Dokany 2.2 (2.2.0.1000)
 

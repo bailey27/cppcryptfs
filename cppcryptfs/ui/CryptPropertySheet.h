@@ -36,8 +36,7 @@ class CCryptPropertySheet : public CPropertySheet
 {
 	DECLARE_DYNAMIC(CCryptPropertySheet)
 
-public:
-
+public:	
 	// disallow copying
 	CCryptPropertySheet(CCryptPropertySheet const&) = delete;
 	void operator=(CCryptPropertySheet const&) = delete;
@@ -52,8 +51,15 @@ public:
 
 	int m_nMountPageIndex;	
 
+	HWND m_hSysTrayWnd = NULL;
+
+	bool m_bDoRecreateSysTrayIcon = false;
+
 protected:
 	DECLARE_MESSAGE_MAP()
+
+	static UINT WM_TASKBARCREATED;
+	afx_msg LRESULT OnTaskbarCreated(WPARAM wParam, LPARAM lParam);
 public:
 	virtual BOOL OnInitDialog();
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
@@ -68,6 +74,8 @@ public:
 	afx_msg void OnEndSession(BOOL bEnding);
 	afx_msg UINT OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnDestroy();
 };
 
 

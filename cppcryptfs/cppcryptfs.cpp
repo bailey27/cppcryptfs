@@ -47,6 +47,7 @@ THE SOFTWARE.
 #include "dokan/cryptdokan.h"
 #include "util/getopt.h"
 #include "util/LockZeroBuffer.h"
+#include "../libcommonutil/commonutil.h"
 #include "util/util.h"
 #include "crypt/crypt.h"
 #include "ui/uiutil.h"
@@ -70,13 +71,13 @@ END_MESSAGE_MAP()
 
 CcppcryptfsApp::CcppcryptfsApp()
 {
+	m_bIsRunningAsAdministrator = ::IsRunningAsAdministrator(&m_bIsReallyAdministrator);
+
 	// support Restart Manager
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
 
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
-
-	m_mountedLetters = 0;
 
 	// get a shared ptr to an OpenSSL EVP context to force detection of AES-NI instructions
 	// so we can use AES-NI even if EVP is never used
@@ -277,13 +278,16 @@ BOOL CcppcryptfsApp::InitInstance()
 
 	m_pMainWnd = &dlg;
 
-	HICON hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
-	CMenuTrayIcon TI(L"cppcryptfs", hIcon, IDR_PopUps, ID_IDR_SHOWCPPCRYPTFS);
+	RecreateSystemTrayIcon();
 
 	crypt_at_start();
 
 	INT_PTR nResponse = dlg.DoModal();
+
+	m_system_tray_icon = nullptr;
+
 	if (nResponse == IDOK)
 	{
 		// TODO: Place code here to handle when the dialog is
@@ -319,6 +323,15 @@ BOOL CcppcryptfsApp::InitInstance()
 	//  application, rather than start the application's message pump.
 
 	return FALSE;
+}
+
+void CcppcryptfsApp::RecreateSystemTrayIcon()
+{
+	// Destroy it first in case there's any singleton behavior with the CMenuTrayIcon class or anything that
+	// replaces it in the future.
+	m_system_tray_icon.reset(); 
+
+	m_system_tray_icon = make_shared<CMenuTrayIcon>(L"cppcryptfs", m_hIcon, IDR_PopUps, ID_IDR_SHOWCPPCRYPTFS);
 }
 
 BOOL CcppcryptfsApp::WriteProfileInt(LPCWSTR section, LPCWSTR entry, INT val)

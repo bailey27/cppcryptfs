@@ -41,6 +41,8 @@ bool GetProductVersionInfo(wstring& strProductName, wstring& strProductVersion,
 
 wstring GetWindowsErrorString(DWORD dwLastErr);
 
+bool IsRunningAsAdministrator(bool *pIsReallyAdmin = nullptr);
+
 namespace cppcryptfs
 {
 	/*
@@ -137,5 +139,5 @@ namespace cppcryptfs
 			std::forward<Deleter>(deleter),
 			std::forward<Function>(function),
 			std::forward<Arguments>(args)...);
-	}
+	}	
 }

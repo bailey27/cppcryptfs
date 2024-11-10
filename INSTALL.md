@@ -102,9 +102,7 @@ set PATH=%LOCALAPPDATA%\bin\NASM;%PATH%
 Then run the batch file that comes with Visual Studio that sets up the environment variables for compiling from the command line.
 
 ```
-
 "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
-
 ```
 
 Use "x86" in place of "amd64" if you are doing a 32-bit build.
