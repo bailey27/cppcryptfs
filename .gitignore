@@ -23,3 +23,5 @@ libipc/libipc.vcxproj.user
 libcommonutil/libcommonutil.vcxproj.filters
 libcommonutil/libcommonutil.vcxproj.user
 libcppcryptfs/libcppcryptfs.vcxproj.user
+cppcryptfs/gitversion.rc2
+cppcryptfsctl/gitversion.rc2
