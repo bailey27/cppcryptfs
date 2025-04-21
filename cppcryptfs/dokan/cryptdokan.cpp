@@ -755,7 +755,7 @@ static void DOKAN_CALLBACK CryptCleanup(LPCWSTR FileName,
     DbgPrint(L"Cleanup: %s\n\tinvalid handle\n\n", FileName);
   }
 
-  if (DokanFileInfo->DeleteOnClose) {
+  if (DokanFileInfo->DeletePending) {
     DbgPrint(L"\tDeleteOnClose\n");
     if (DokanFileInfo->IsDirectory) {
       DbgPrint(L"  DeleteDirectory ");
@@ -1048,7 +1048,7 @@ static NTSTATUS DOKAN_CALLBACK CryptDeleteFile(LPCWSTR FileName,
   FileNameEnc filePath(DokanFileInfo, FileName);
   HANDLE handle = (HANDLE)DokanFileInfo->Context;
 
-  DbgPrint(L"DeleteFile %s - %d\n", FileName, DokanFileInfo->DeleteOnClose);
+  DbgPrint(L"DeleteFile %s - %d\n", FileName, DokanFileInfo->DeletePending);
 
   if (can_delete_file(filePath)) {
 
@@ -1060,7 +1060,7 @@ static NTSTATUS DOKAN_CALLBACK CryptDeleteFile(LPCWSTR FileName,
 
     if (handle && handle != INVALID_HANDLE_VALUE) {
       FILE_DISPOSITION_INFO fdi;
-      fdi.DeleteFile = DokanFileInfo->DeleteOnClose;
+      fdi.DeleteFile = DokanFileInfo->DeletePending;
       if (!SetFileInformationByHandle(handle, FileDispositionInfo, &fdi,
                                       sizeof(FILE_DISPOSITION_INFO)))
         return DokanNtStatusFromWin32(GetLastError());
@@ -1082,9 +1082,9 @@ CryptDeleteDirectory(LPCWSTR FileName, PDOKAN_FILE_INFO DokanFileInfo) {
   FileNameEnc filePath(DokanFileInfo, FileName);
 
   DbgPrint(L"DeleteDirectory %s - %d\n", FileName,
-           DokanFileInfo->DeleteOnClose);
+           DokanFileInfo->DeletePending);
 
-  if (!DokanFileInfo->DeleteOnClose) {
+  if (!DokanFileInfo->DeletePending) {
     //Dokan notify that the file is requested not to be deleted.
     return STATUS_SUCCESS;
   }
@@ -2750,7 +2750,7 @@ bool get_dokany_version(wstring& ver, vector<int>& v)
 bool check_dokany_version(wstring& mes)
 {
 	constexpr int required_major = 2;
-	constexpr int required_middle = 2;
+	constexpr int required_middle = 3;
     const wstring required_ver =  to_wstring(required_major) + L"." + to_wstring(required_middle) +  L".x.x";
 	
 	mes = L"";
