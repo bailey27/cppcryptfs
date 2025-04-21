@@ -28,6 +28,7 @@ THE SOFTWARE.
 
 #include <windows.h>
 #include <Shlwapi.h>
+#include <fcntl.h>
 #include <iostream>
 #include <io.h>
 #include <string>
@@ -621,6 +622,10 @@ int wmain(int argc, wchar_t * const argv[])
 {
     if (argc < 2)
         return 0;
+
+    // Set output mode of stdout and stderr to UTF-16
+    _setmode(_fileno(stdout), _O_U16TEXT);
+    _setmode(_fileno(stderr), _O_U16TEXT);
 
     vector<wstring> self_args;
    
