@@ -90,6 +90,7 @@ the .tar.gz and extract it into a directory.  You can build it with the same ins
 
 Microsoft has announced a compiler-based mitigation for one variant of the Spectre vulnerability.  To use it, you need to have version 15.5 or higher of Visual Studio.  To use the mitigation with OpenSSL, you need to add the /Qspectre flag to the compiler optimization flags.  OpenSSL currently does not use this flag.  Also, to be extra safe, add the /guard:cf (Control Flow Guard) flag.  To use these, you need to edit c:\\git\openssl\\Configurations\\10-main.conf and change "/O2" to "/O2 /Qspectre /guard:cf".  
 
+You need to make the above changes to 10-main.conf BEFORE running the perl command that generates the makefile.
 
 Run this command to put nasm in your path (assuming you used the nasm installer).
 
