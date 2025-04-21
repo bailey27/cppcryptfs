@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.4.6 21 Apr 2025
+* Use Dokany 2.3 (2.3.0.1000)
+* Fix big with cppcryptfsctl and Unicode file names.
+
 v1.4.4.5 11 Nov 2024
 * Re-create system tray icon if explorer is restarted.
 
