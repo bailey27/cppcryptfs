@@ -144,6 +144,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(OutputPath)\libcppcryptfs.lib;$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);C:\Program Files (X86)\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>for /f %%i in ('git rev-parse --short HEAD') do (echo VALUE "FileDescription", "cppcryptfsctl build %%i" &gt; "$(ProjectDir)gitversion.rc2")</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -167,6 +170,9 @@
       <AdditionalDependencies>$(OutputPath)\libcppcryptfs.lib;$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);C:\Program Files\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
       <AdditionalOptions>/HIGHENTROPYVA %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PreBuildEvent>
+      <Command>for /f %%i in ('git rev-parse --short HEAD') do (echo VALUE "FileDescription", "cppcryptfsctl build %%i" &gt; "$(ProjectDir)gitversion.rc2")</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="cppcryptfsctl.cpp" />

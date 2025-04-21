@@ -68,7 +68,7 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName", "Bailey Brown"
-            VALUE "FileDescription", "cppcryptfsctl"
+            #include "gitversion.rc2"
             VALUE "FileVersion", "1.4.4.6"
             VALUE "InternalName", "cppcryptfsctl.exe"
             VALUE "LegalCopyright", "Copyright (C) 2020-2025 Bailey Brown. All rights reserved."
