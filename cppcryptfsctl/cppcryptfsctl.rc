@@ -71,7 +71,7 @@ BEGIN
             VALUE "FileDescription", "cppcryptfsctl"
             VALUE "FileVersion", "1.4.4.5"
             VALUE "InternalName", "cppcryptfsctl.exe"
-            VALUE "LegalCopyright", "Copyright (C) 2020-2024 Bailey Brown. All rights reserved."
+            VALUE "LegalCopyright", "Copyright (C) 2020-2025 Bailey Brown. All rights reserved."
             VALUE "OriginalFilename", "cppcryptfsctl.exe"
             VALUE "ProductName", "cppcryptfsctl"
             VALUE "ProductVersion", "1.4.4.5"
