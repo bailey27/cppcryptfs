@@ -1,6 +1,8 @@
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 ==============
 
+<a href='./README.md'>EN</a> | <a href='./README_zh-CN.md'>中文</a>
+
 cppcryptfs
 ------
 cppcryptfs is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs), an encrypted overlay filesystem written in Go.
