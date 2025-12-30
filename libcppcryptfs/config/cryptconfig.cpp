@@ -872,8 +872,11 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 	if (siv)
 		m_AESSIV = true;
 
-	// Raw64 and HKDF default to true
-	m_Raw64 = true;
+	// Raw64 defaults to true, but must be disabled if PlaintextNames is active
+    // (PlaintextNames implies filenames are not encrypted, so Base64 encoding is conflicting)
+    m_Raw64 = !m_PlaintextNames;
+
+	// HKDF default to true
 	m_HKDF = true;
 
 	if (reverse)
