@@ -80,8 +80,11 @@ CCryptPropertySheet::~CCryptPropertySheet()
 BOOL CCryptPropertySheet::CanClose()
 {
 	if (!MountPointManager::getInstance().empty()) {
+
+		CString strMessage;
+		strMessage.LoadString(IDS_DISMOUNT_ALL_ON_EXIT);
 		
-		if (MessageBox(L"All mounted cppcryptfs filesystems will be dismounted. Do you really wish to exit?", L"cppcryptfs",
+		if (MessageBox(strMessage, L"cppcryptfs",
 			MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
 
 			CString open_handles_mes = CheckOpenHandles(m_hWnd, nullptr, true, false).c_str();
