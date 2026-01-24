@@ -476,7 +476,7 @@ BOOL CCreatePropertyPage::OnInitDialog()
 
 	if (!m_password.ArePasswordBuffersLocked() || !m_password2.ArePasswordBuffersLocked()) {
 		CString strMessage;
-		if (strMessage.LoadString(IDS_UNABLE_LOCK_BUFFER)) {
+		if (strMessage.LoadString(IDS_UNABLE_LOCK_BUFFERS)) {
 			MessageBox(strMessage, L"cppcryptfs", MB_OK | MB_ICONERROR);
 		}
 	}
