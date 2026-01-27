@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "cppcryptfs.h"
 #include "FsInfoDialog.h"
 #include "afxdialogex.h"
+#include "locutils.h"
 
 
 #ifdef _DEBUG
@@ -88,15 +89,13 @@ BOOL CFsInfoDialog::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	CString strMsgYes, strMsgNo, strMsgNA, strMsgReverse, strMsgForward, strMsgKB, strMsgSec, strMsgInfinite, strMsgNone;
-	strMsgYes.LoadString(IDS_FSINFO_YES);
-	strMsgNo.LoadString(IDS_FSINFO_NO);
-	strMsgNA.LoadString(IDS_FSINFO_NA);
-	strMsgReverse.LoadString(IDS_FSINFO_REVERSE);
-	strMsgForward.LoadString(IDS_FSINFO_FORWARD);
-	strMsgKB.LoadString(IDS_FSINFO_KB);
-	strMsgSec.LoadString(IDS_FSINFO_SEC);
-	strMsgInfinite.LoadString(IDS_FSINFO_INFINITE);
-	strMsgNone.LoadString(IDS_FSINFO_NAME_ENCRYPTION_NO);
+	strMsgYes = LocUtils::GetStringFromResources(IDS_FSINFO_YES);
+	strMsgNo = LocUtils::GetStringFromResources(IDS_FSINFO_NO);
+	strMsgNA = LocUtils::GetStringFromResources(IDS_FSINFO_NA);
+	strMsgReverse = LocUtils::GetStringFromResources(IDS_FSINFO_REVERSE);
+	strMsgForward = LocUtils::GetStringFromResources(IDS_FSINFO_FORWARD);
+	strMsgInfinite = LocUtils::GetStringFromResources(IDS_FSINFO_INFINITE);
+	strMsgNone = LocUtils::GetStringFromResources(IDS_FSINFO_NAME_ENCRYPTION_NO);
 
 	LPCWSTR yes = strMsgYes;
 	LPCWSTR no = strMsgNo;
@@ -132,17 +131,18 @@ BOOL CFsInfoDialog::OnInitDialog()
 
 	wstring txt;
 	txt = to_wstring(m_info.ioBufferSize);
-	txt += strMsgKB;
-	SetDlgItemText(IDC_IO_BUF_SIZE, txt.c_str());
+	strMsgKB.Format(LocUtils::GetStringFromResources(IDS_FSINFO_KB), txt);
+	SetDlgItemText(IDC_IO_BUF_SIZE, strMsgKB);
 	txt = m_info.multhreaded ? yes : no;
 	SetDlgItemText(IDC_THREADS, txt.c_str());
 	if (m_info.cacheTTL > 0) {
 		txt = to_wstring(m_info.cacheTTL);
-		txt += strMsgSec;
+		strMsgSec.Format(LocUtils::GetStringFromResources(IDS_FSINFO_SEC), txt);
+		SetDlgItemText(IDC_CACHE_TTL, strMsgSec);
 	} else {
-		txt = strMsgInfinite;
+		SetDlgItemText(IDC_CACHE_TTL, strMsgInfinite);
 	}
-	SetDlgItemText(IDC_CACHE_TTL, txt.c_str());
+	
 	WCHAR buf[32];
 	*buf = '\0';
 	float r;

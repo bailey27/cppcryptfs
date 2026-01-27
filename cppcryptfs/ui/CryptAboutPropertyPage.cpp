@@ -40,6 +40,7 @@ THE SOFTWARE.
 #include "crypt/aes.h"
 #include "openssl/crypto.h"
 #include "../libcommonutil/commonutil.h"
+#include "locutils.h"
 
 
 // CCryptAboutPropertyPage dialog
@@ -68,17 +69,24 @@ BEGIN_MESSAGE_MAP(CCryptAboutPropertyPage, CCryptPropertyPage)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_COMPONENTS_LIST, &CCryptAboutPropertyPage::OnItemchangedComponentsList)
 END_MESSAGE_MAP()
 
+CString strMsgCppcryptfs = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_CPPCRYPTFS);
+CString strMsgOpenSSL = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_OPENSSL);
+CString strMsgRapidJSON = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_RAPIDJSON);
+CString strMsgDokanyMir = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_MIR);
+CString strMsgDokanyLib = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_LIB);
+CString strMsgSecuryEdit = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_SECURE_EDIT);
+CString strMsgGetOpt = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_GETOPT_PORT);
+CString strMsgAESSIV = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_AES_SIV);
 
-
-static const WCHAR * components[] = {
-	L"cppcryptfs - Copyright (C) 2016-2025 Bailey Brown. All Rights Reserved.",
-	L"OpenSSL - Copyright (c) 1998-2019 The OpenSSL Project.  All rights reserved.",
-	L"RapidJSON - Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip. All rights reserved.",
-	L"Dokany (mirror) - Copyright (C) 2020 - 2021 Google, Inc.; Copyright (C) 2015 - 2019 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
-	L"Dokany (library) - Copyright (C) 2020 - 2021 Google, Inc.; Copyright (C) 2015 - 2019 Adrien J., Maxime C.; Copyright (C) 2007 - 2011 Hiroki Asakawa",
-	L"100% free Secure Edit control MFC class - Copyright (c) 2003 Dominik Reichl",
-	L"getopt_port - Copyright (c) 2012-2017, Kim Grasman <kim.grasman@gmail.com>. All rights reserved.",
-	L"aes-siv - Copyright (c) 2015 ARKconcepts / Sasha Kotlyar",
+static const WCHAR* components[] = {
+	strMsgCppcryptfs,
+	strMsgOpenSSL,
+	strMsgRapidJSON,
+	strMsgDokanyMir,
+	strMsgDokanyLib,
+	strMsgSecuryEdit,
+	strMsgGetOpt,
+	strMsgAESSIV,
 	NULL
 };
 

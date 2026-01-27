@@ -5,7 +5,9 @@
 // from http://www.codeguru.com/cpp/w-d/dislog/dialogforselectingfolders/article.php/c1941/MFC-Wrapper-for-SHBrowseForFolder.htm
 
 #include "stdafx.h"
+#include "cppcryptfs.h"
 #include "FolderDialog.h"
+#include "locutils.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -44,10 +46,13 @@ CFolderDialog::CFolderDialog(LPCTSTR lpszFolderName, DWORD dwFlags, CWnd* pParen
 	else
 		m_bi.hwndOwner = pParentWnd->GetSafeHwnd();
 
+	static CString strMessageSelDir;
+	strMessageSelDir = LocUtils::GetStringFromResources(IDS_SELECT_DIRECTORY);
+
 	// Fill in the rest of the structure
 	m_bi.pidlRoot = NULL;
 	m_bi.pszDisplayName = m_szDisplayName;
-	m_bi.lpszTitle = _T("Select a directory");
+	m_bi.lpszTitle = (LPCTSTR)strMessageSelDir;
 	m_bi.ulFlags = dwFlags | BIF_NEWDIALOGSTYLE;
 	m_bi.lpfn = BrowseDirectoryCallback;
 	m_bi.lParam = (LPARAM)this;

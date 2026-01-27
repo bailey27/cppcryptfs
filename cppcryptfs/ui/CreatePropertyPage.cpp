@@ -41,6 +41,7 @@ THE SOFTWARE.
 #include "crypt/cryptdefs.h"
 #include "util/LockZeroBuffer.h"
 #include "util/util.h"
+#include "locutils.h"
 
 static const WCHAR *filename_encryption_types[] = {
 	L"AES256-EME",
@@ -110,11 +111,8 @@ void CCreatePropertyPage::CreateCryptfs()
 	LockZeroBuffer<WCHAR> password2(MAX_PASSWORD_LEN + 1, false);
 
 	if (!password.IsLocked() || !password2.IsLocked()) {
-		CString strMessage;
-		if (strMessage.LoadString(IDS_COULD_NOT_LOCK_BUFFER)) {
-			MessageBox(strMessage, L"cppcryptefs", MB_OK | MB_ICONERROR);
-			return;
-		}
+		MessageBox(LocUtils::GetStringFromResources(IDS_COULD_NOT_LOCK_BUFFER), L"cppcryptefs", MB_OK | MB_ICONERROR);
+		return;
 	}
 
 	CSecureEdit *pPass = &m_password;
@@ -123,11 +121,8 @@ void CCreatePropertyPage::CreateCryptfs()
 		return;
 
 	if (wcslen(password.m_buf) < 1) {
-		CString strMessage;
-		if (strMessage.LoadString(IDS_PASSWORD_EMPTY))	{
-			MessageBox(strMessage, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
-			return;
-		}
+		MessageBox(LocUtils::GetStringFromResources(IDS_PASSWORD_EMPTY), L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		return;
 	}
 
 	CSecureEdit *pPass2 = &m_password2;
@@ -136,19 +131,13 @@ void CCreatePropertyPage::CreateCryptfs()
 		return;
 
 	if (wcslen(password2.m_buf) < 1) {
-		CString strMessage;
-		if (strMessage.LoadString(IDS_PASSWORD_REPEAT_EMPTY))	{
-			MessageBox(strMessage, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
-			return;
-		}
+		MessageBox(LocUtils::GetStringFromResources(IDS_PASSWORD_REPEAT_EMPTY), L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		return;
 	}
 
 	if (wcscmp(password.m_buf, password2.m_buf)) {
-		CString strMessage;
-		if (strMessage.LoadString(IDS_PASSWORD_DO_NOT_MATCH))	{
-			MessageBox(strMessage, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
-			return;
-		}
+		MessageBox(LocUtils::GetStringFromResources(IDS_PASSWORD_DO_NOT_MATCH), L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		return;
 	}
 
 	pPass->SetRealText(L"");
@@ -159,27 +148,20 @@ void CCreatePropertyPage::CreateCryptfs()
 	pWnd->GetWindowTextW(cpath);
 
 	if (cpath.GetLength() < 1) {
-		CString strMessage;
-		if (strMessage.LoadString(IDS_PATH_EMPTY))	{
-			MessageBox(strMessage, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
-			return;
-		}
+		MessageBox(LocUtils::GetStringFromResources(IDS_PATH_EMPTY), L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		return;
 	}
 
 	if (!PathFileExists(cpath)) {
-		CString mes, strMessage;
-		mes += cpath;
-		strMessage.LoadString(IDS_PATH_DOES_NOT_EXIST);
-		mes += strMessage;
+		CString mes;
+		mes.Format(LocUtils::GetStringFromResources(IDS_PATH_DOES_NOT_EXIST), cpath);
 		
 		if (MessageBox(mes, L"cppcryptfs", MB_YESNO | MB_ICONINFORMATION) == IDYES) {
-				if (!CreateDirectory(cpath, NULL)) {
-					strMessage.LoadString(IDS_PATH_COULD_NOT_CREATE);
-					mes = strMessage;
-					mes += cpath;
-					MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
-					return;
-				}
+			if (!CreateDirectory(cpath, NULL)) {
+				mes.Format(LocUtils::GetStringFromResources(IDS_PATH_COULD_NOT_CREATE), cpath);
+				MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+				return;
+			}
 		} else {
 			return;
 		}
@@ -273,13 +255,9 @@ void CCreatePropertyPage::CreateCryptfs()
 		return;
 	}
 
-	CString mes, strMsgReverse, strMsgForward;
-	strMsgReverse.LoadString(IDS_CREATED_REVERSE_FS);
-	strMsgForward.LoadString(IDS_CREATED_FORWARD_FS);
+	CString mes;
 
-	mes = reverse ? strMsgReverse : strMsgForward;
-
-	mes.Append(cpath);
+	reverse ? mes.Format(LocUtils::GetStringFromResources(IDS_CREATED_REVERSE_FS), cpath) : mes.Format(LocUtils::GetStringFromResources(IDS_CREATED_FORWARD_FS), cpath);
 
 	MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
 
@@ -365,11 +343,8 @@ void CCreatePropertyPage::OnClickedSelect()
 		return;
 
 	if (!IsDlgButtonChecked(IDC_REVERSE) && !can_delete_directory(cpath, TRUE)) {
-		CString strMessage;
-		if (strMessage.LoadString(IDS_DIRECTORY_NOT_EMPTY)) {
-			MessageBox(strMessage, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
-			return;
-		}
+		MessageBox(LocUtils::GetStringFromResources(IDS_DIRECTORY_NOT_EMPTY), L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		return;
 	}
 
 	CWnd *pWnd = GetDlgItem(IDC_PATH);
@@ -475,10 +450,7 @@ BOOL CCreatePropertyPage::OnInitDialog()
 	pLbox->EnableWindow(IsDlgButtonChecked(IDC_LONG_FILE_NAMES));
 
 	if (!m_password.ArePasswordBuffersLocked() || !m_password2.ArePasswordBuffersLocked()) {
-		CString strMessage;
-		if (strMessage.LoadString(IDS_UNABLE_LOCK_BUFFERS)) {
-			MessageBox(strMessage, L"cppcryptfs", MB_OK | MB_ICONERROR);
-		}
+		MessageBox(LocUtils::GetStringFromResources(IDS_UNABLE_LOCK_BUFFERS), L"cppcryptfs", MB_OK | MB_ICONERROR);
 	}
 
 	const auto scryptN = theApp.GetProfileIntW(L"CreateOptions", L"ScryptN", DEFAULT_SCRYPTN);
@@ -606,19 +578,17 @@ void CCreatePropertyPage::OnSelchangeScryptn()
 	int scryptN = stoi((LPCTSTR)sel);
 
 	int mem = (1<<scryptN)/1024;
-	CString strMsgMB, strMsgGB;
-	strMsgMB.LoadString(IDS_MB_REQUIRED);
-	strMsgGB.LoadString(IDS_GB_REQUIRED);
 
-	auto suffix = strMsgMB;
-	if (mem >= 1024)
-	{
-		suffix = strMsgGB;
+	CString suffix;
+	suffix.Format(LocUtils::GetStringFromResources(IDS_MB_REQUIRED), mem);
+
+	if (mem >= 1024)	{
 		mem /= 1024;
+		suffix.Format(LocUtils::GetStringFromResources(IDS_GB_REQUIRED), mem);
 	}
 
 	auto pScryptMemReq = (CStatic*)GetDlgItem(IDC_SCRYPTMEMREQ);
 	if (pScryptMemReq) {
-		pScryptMemReq->SetWindowText((std::to_wstring(mem) + (LPCTSTR)suffix).c_str());
+		pScryptMemReq->SetWindowText(suffix);
 	}
 }

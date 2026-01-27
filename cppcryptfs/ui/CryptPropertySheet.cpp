@@ -46,6 +46,7 @@ THE SOFTWARE.
 #include "../libcppcryptfs/util/KeyCache.h"
 #include "crypt/crypt.h"
 #include "cryptdefaults.h"
+#include "locutils.h"
 
 // CryptPropertySheet
 
@@ -81,10 +82,7 @@ BOOL CCryptPropertySheet::CanClose()
 {
 	if (!MountPointManager::getInstance().empty()) {
 
-		CString strMessage;
-		strMessage.LoadString(IDS_DISMOUNT_ALL_ON_EXIT);
-		
-		if (MessageBox(strMessage, L"cppcryptfs",
+		if (MessageBox(LocUtils::GetStringFromResources(IDS_DISMOUNT_ALL_ON_EXIT), L"cppcryptfs",
 			MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
 
 			CString open_handles_mes = CheckOpenHandles(m_hWnd, nullptr, true, false).c_str();
