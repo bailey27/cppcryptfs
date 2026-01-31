@@ -104,14 +104,14 @@ BEGIN_MESSAGE_MAP(CCryptAboutPropertyPage, CCryptPropertyPage)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_COMPONENTS_LIST, &CCryptAboutPropertyPage::OnItemchangedComponentsList)
 END_MESSAGE_MAP()
 
-CString strMsgCppcryptfs = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_CPPCRYPTFS);
-CString strMsgOpenSSL = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_OPENSSL);
-CString strMsgRapidJSON = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_RAPIDJSON);
-CString strMsgDokanyMir = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_MIR);
-CString strMsgDokanyLib = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_LIB);
-CString strMsgSecuryEdit = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_SECURE_EDIT);
-CString strMsgGetOpt = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_GETOPT_PORT);
-CString strMsgAESSIV = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_AES_SIV);
+static const CString strMsgCppcryptfs = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_CPPCRYPTFS);
+static const CString strMsgOpenSSL = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_OPENSSL);
+static const CString strMsgRapidJSON = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_RAPIDJSON);
+static const CString strMsgDokanyMir = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_MIR);
+static const CString strMsgDokanyLib = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_LIB);
+static const CString strMsgSecuryEdit = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_SECURE_EDIT);
+static const CString strMsgGetOpt = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_GETOPT_PORT);
+static const CString strMsgAESSIV = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_AES_SIV);
 
 static const WCHAR* components[] = {
 	strMsgCppcryptfs,
