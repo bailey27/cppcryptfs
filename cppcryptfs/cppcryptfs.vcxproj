@@ -326,7 +326,7 @@
     <Text Include="res\lic\en_getopt.txt" />
     <Text Include="res\lic\en_openssl.txt" />
     <Text Include="res\lic\en_rapidjson.txt" />
-    <Text Include="res\lic\en_secuty_edit.txt" />
+    <Text Include="res\lic\en_secure_edit.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
