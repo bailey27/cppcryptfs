@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 #include "stdafx.h"
 #include "uiutil.h"
-
+#include <cppcryptfs.h>
 #include <list>
 
 #include "ui/MountMangerDialog.h"
@@ -36,6 +36,7 @@ THE SOFTWARE.
 #include "ui/certutil.h"
 #include "ui/CryptSettings.h"
 #include "dokan/cryptdokan.h"
+#include "locutils.h"
 
 using namespace std;
 
@@ -118,9 +119,9 @@ wstring CheckOpenHandles(HWND hWnd, const wchar_t* mp, bool interactive, bool fo
 	}
 	else if (open_handle_count > 0) {
 		if (interactive) {
-			auto res = ::MessageBox(hWnd, mp ? (wstring(mp) + L" is still in use.  Do you wish to continue dismounting?").c_str() :
-				L"Filesystem(s) are still in use.  Do you wish to continue dismounting?",
-				L"cppcryptfs", MB_YESNO | MB_ICONHAND);
+			CString strMsg;
+			strMsg.Format(LocUtils::GetStringFromResources(IDS_IS_STILL_IN_USE), mp);
+			auto res = ::MessageBox(hWnd, mp ? strMsg :	LocUtils::GetStringFromResources(IDS_FS_IS_STILL_IN_USE), L"cppcryptfs", MB_YESNO | MB_ICONHAND);
 			if (res == IDYES)
 				return L"";
 			else

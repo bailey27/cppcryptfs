@@ -98,6 +98,8 @@ THE SOFTWARE.
 #include "MountPointManager.h"
 
 #include "../libcommonutil/commonutil.h"
+#include "resource.h"
+#include "ui/locutilsalt.h"
 
 static DWORD g_SessionId;
 static BOOL  g_GotSessionId = FALSE;
@@ -2022,7 +2024,8 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     config_path = NULL;
 
   if (mountpoint == NULL) {
-	  mes = L"invalid mountpoint";
+      CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_INVALID_MPOINT);
+      mes = strMsg;
 	  return -1;
   }
 
@@ -2030,9 +2033,11 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 
   if (mount_point_is_a_dir && !is_suitable_mountpoint(mountpoint)) {
 	  if (!PathFileExists(mountpoint)) {
-		  mes = L"the mount point directory does not exist";
+          CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_MPOINT_DIR_NOT_EXIST);
+          mes = strMsg;
 	  } else {
-		  mes = L"mount point directory must be empty and reside on NTFS volume";
+          CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_MPOINT_DIR_EMPTY_NTFS);
+          mes = strMsg;
 	  }
 	  return -1;
   }
@@ -2041,7 +2046,8 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
   bool already_mounted = MountPointManager::getInstance().find(mountpoint, dummy);
 
   if (already_mounted) {
-    mes = L"drive letter/mount point already in use\n";
+    CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_LETTER_MPOINT_ALREADY_USE);
+    mes = strMsg;
     return -1;
   }
 
@@ -2059,7 +2065,8 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     }
 
     if (!tdata) {
-      mes = L"Failed to allocate tdata\n";
+      CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_FAILED_ALLOCATE_TDATA);
+      mes = strMsg;
       throw(-1);
     }
 
@@ -2155,8 +2162,10 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     dokanOptions->MountPoint = tdata->mountpoint.c_str();
 
     if (!config->read(mes, config_path, reverse)) {
-      if (mes.length() < 1)
-        mes = L"unable to load config\n";
+      if (mes.length() < 1) {
+        CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_UNABLE_LOAD_CONF);
+        mes = strMsg;
+      }
       throw(-1);
     }
 
@@ -2183,7 +2192,8 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 #endif
 	
     if (!config->decrypt_key(password)) {
-      mes = L"password incorrect\n";
+      CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_PASS_INCORRECT);
+      mes = strMsg;
       throw(-1);
     }
 
@@ -2193,7 +2203,8 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
           throw(-1);
         }
       } catch (...) {
-        mes = L"unable to initialize eme context";
+        CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_UNABLE_INIT_EME);
+        mes = strMsg;
         throw(-1);
       }
     }
@@ -2202,7 +2213,8 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
       try {
         con->m_siv.SetKey(config->GetMasterKey(), 32, config->m_HKDF, config);
       } catch (...) {
-        mes = L"unable to intialize AESSIV context";
+        CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_UNABLE_INIT_AESSIV);
+        mes = strMsg;
         throw(-1);
       }
     }
@@ -2284,7 +2296,8 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
         && !con->GetConfig()->m_reverse;
 
 	if (!con->FinalInitBeforeMounting(opts.cachekeysinmemory)) {
-      mes = L"context final init failed";
+      CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_FINAL_INIT_FAILED);
+      mes = strMsg;
       throw(-1);
 	}
 
@@ -2294,7 +2307,8 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     hThread = CreateThread(NULL, 0, CryptThreadProc, tdata, 0, NULL);
 
     if (!hThread) {
-      mes = L"unable to create thread for drive letter/mount point\n";
+      CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_UNABLE_CREATE_TREAD);
+      mes = strMsg;
       throw(-1);
     }
 
@@ -2303,7 +2317,8 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
 	// MountPointManager owns tdata from this point on, even if it fails to add (will delete it)
 
 	if (!MountPointManager::getInstance().add(mountpoint, tdata)) {
-		mes = L"unable to add mount point to MountPointManager\n";
+        CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_UNABLE_ADD_MPOINT);
+        mes = strMsg;
 		throw(-1);
 	}
 
@@ -2345,12 +2360,15 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     if (wait_result != WAIT_OBJECT_0) {
       if (wait_result == (WAIT_OBJECT_0 + 1)) {
         // thread exited without mounting
-        mes = L"mount operation failed\n";
+        CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_MOUNT_FAILED);
+        mes = strMsg;
       } else if (wait_result == WAIT_TIMEOUT) {
-        mes = L"mount operation timed out\n";
+        CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_MOUNT_TIMED_OUT);
+        mes = strMsg;
         tdata = NULL; // deleting it would probably cause crash
       } else {
-        mes = L"error waiting for mount operation\n";
+        CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_MOUNT_ERROR_WAITING);
+        mes = strMsg;
         tdata = NULL; // deleting it would probably cause crash
       }
       throw(-1);
@@ -2372,8 +2390,9 @@ BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait, wstring& mes) {
 
   wstring mpstr;
   if (!MountPointManager::getInstance().find(mountpoint, mpstr)) {
-	  mes += L"unable to find mount point";
-	  return FALSE;
+      CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_UNABLE_FIND_MPOINT);
+      mes += strMsg;
+      return FALSE;
   }
   if (!DokanRemoveMountPoint(mpstr.c_str())) {
 	  mes += GetWindowsErrorString(GetLastError());
@@ -2383,7 +2402,9 @@ BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait, wstring& mes) {
   if (wait) {
 	  bool res = MountPointManager::getInstance().wait_and_destroy(mpstr.c_str());
 	  if (!res) {
-		  mes += L"wait on umount returned an error " + GetWindowsErrorString(GetLastError());
+          CString strMsg;
+          strMsg.Format(LocUtilsAlt::GetStringFromResources(IDS_WAIT_UNMOUNT_ERROR), GetWindowsErrorString(GetLastError()));
+          mes += strMsg;
 	  }
 	  return res;
   } else {
@@ -2421,7 +2442,8 @@ BOOL write_volume_name_if_changed(WCHAR dl, wstring& mes) {
   CryptThreadData *tdata = MountPointManager::getInstance().get(fs_root.c_str());
 
   if (!tdata) {
-	  mes += L"mount point not found";
+      CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_MPOINT_NOT_FOUND);
+      mes += strMsg;
 	  return FALSE;
   }
 
@@ -2430,7 +2452,8 @@ BOOL write_volume_name_if_changed(WCHAR dl, wstring& mes) {
   CryptContext *con = &tdata->con;
 
   if (!con) {
-	  mes += L"mount point has null context";
+      CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_MPOINT_NULL);
+      mes += strMsg;
 	  return FALSE;
   }
 
@@ -2443,7 +2466,9 @@ BOOL write_volume_name_if_changed(WCHAR dl, wstring& mes) {
                              NULL, NULL, 0)) {
     DWORD error = GetLastError();
     DbgPrint(L"update volume name error = %u\n", error);
-	mes += L"Unable to get volume information, " + GetWindowsErrorString(error);
+    CString strMsg;
+    strMsg.Format(LocUtilsAlt::GetStringFromResources(IDS_UNABLE_GET_VOLUME_INFO), GetWindowsErrorString(error));
+    mes += strMsg;
     return FALSE;
   }
 
@@ -2451,7 +2476,8 @@ BOOL write_volume_name_if_changed(WCHAR dl, wstring& mes) {
     con->GetConfig()->m_VolumeName = volbuf;
     bool res = con->GetConfig()->write_updated_config_file(nullptr, nullptr, 0);
 	if (!res) {
-		mes += L"unable to write new volume name to config file";
+        CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_UNABLE_WRITE_NEW_VOL_NAME);
+        mes += strMsg;
 		return FALSE;
 	}
   }
@@ -2504,7 +2530,8 @@ wstring transform_path(const wchar_t* path, wstring& mes)
     _locale_t locale = _create_locale(LC_ALL, "");
 
     if (locale == NULL) {
-        mes = L"cannot create locale";
+        CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_CANNOT_CREATE_LOCALE);
+        mes = strMsg;
         return nullptr;
     }
 
@@ -2527,7 +2554,8 @@ wstring transform_path(const wchar_t* path, wstring& mes)
     _free_locale(locale);
 
     if (!tdata) {
-        mes = L"could not found mount point or base dir";
+        CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_NOT_FOUND_MPOINT_BASE_DIR);
+        mes = strMsg;
         return L"";
     }
 
@@ -2537,12 +2565,14 @@ wstring transform_path(const wchar_t* path, wstring& mes)
 
         if (tdata->con.GetConfig()->m_reverse) {
             if (!encrypt_path(&tdata->con, p, storage)) {
-                mes = L"failed to convert path";
+                CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_FAILED_CONVERT_PATH);
+                mes = strMsg;
                 return L"";
             }          
         } else {
             if (!unencrypt_path(&tdata->con, p, storage)) {
-                mes = L"failed to unencrypt path";
+                CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_FAILED_UNENCRYPT_PATH);
+                mes = strMsg;
                 return L"";
             }
         }
@@ -2556,7 +2586,8 @@ wstring transform_path(const wchar_t* path, wstring& mes)
         FileNameEnc enc(&dfi, p, nullptr, false);      
         auto pconv = static_cast<LPCWSTR>(enc);
         if (!pconv) {
-            mes = L"failed to encrypt path";
+            CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_FAILED_ENCRYPT_PATH);
+            mes = strMsg;
             return L"";
         }
         return pconv + std::size(L"\\\\?\\") - 1;
@@ -2569,19 +2600,22 @@ BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
   err_mes = L"";
 
   if (!path) {
-    err_mes = L"path is null";
+    CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_PATH_NULL);
+    err_mes = strMsg;
     return FALSE;
   }
 
   if (wcslen(path) > MAX_PATH - 1) {
-    err_mes = L"path is too long";
+    CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_PATH_TOO_LONG);
+    err_mes = strMsg;
     return FALSE;
   }
 
   WCHAR newpath[MAX_PATH + 1];
 
   if (!PathCanonicalize(newpath, path)) {
-    err_mes = L"failed to canonicalize path";
+    CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_FAILED_CANONICALIZE_PATH);
+    err_mes = strMsg;
     return FALSE;
   }
 
@@ -2590,17 +2624,20 @@ BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
   int dl = *path;
 
   if (dl < 'A' || dl > 'Z') {
-    err_mes = L"invalid drive letter";
+    CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_INVALID_DRIVE_LETTER);
+    err_mes = strMsg;
     return FALSE;
   }
 
   if (wcslen(path) < 3) {
-    err_mes = L"path is too short";
+    CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_PATH_TOO_SHORT);
+    err_mes = strMsg;
     return FALSE;
   }
 
   if (path[1] != ':' || path[2] != '\\') {
-    err_mes = L"invalid path";
+    CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_INVALID_PATH);
+    err_mes = strMsg;
     return FALSE;
   }
 
@@ -2614,7 +2651,8 @@ BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
   _locale_t locale = _create_locale(LC_ALL, ""); 
 
   if (locale == NULL) {
-	  err_mes = L"cannot create locale";
+      CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_CANNOT_CREATE_LOCALE);
+      err_mes = strMsg;
 	  return FALSE;
   }
 
@@ -2640,7 +2678,8 @@ BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
   _free_locale(locale);
 
   if (!tdata) {
-    err_mes = L"drive not mounted";
+    CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_DRIVE_NOT_MOUNTED);
+    err_mes = strMsg;
     return FALSE;
   }
 
@@ -2670,7 +2709,8 @@ BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
 
     if (find_files(con, filePath.CorrectCasePath(), filePath,
                    crypt_fill_find_data_list, NULL, &findDatas) != 0) {
-      err_mes = L"error listing files";
+      CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_ERROR_LISTING_FILES);
+      err_mes = strMsg;
       return FALSE;
     }
   } else if (PathFileExists(filePath)) {
@@ -2697,7 +2737,8 @@ BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
 
   } else {
 
-    err_mes = L"path does not exist";
+    CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_PATH_NOT_EXIST);
+    err_mes = strMsg;
     return FALSE;
   }
 
@@ -2759,7 +2800,8 @@ bool check_dokany_version(wstring& mes)
 
 	vector<int> v;
 	if (!get_dokany_version(ver, v)) {
-		mes = L"unable to get dokany version";
+        CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_UNABLE_GET_DOKANY_VERSION);
+        mes = strMsg;
 		return false;
 	}
 
@@ -2775,17 +2817,23 @@ bool check_dokany_version(wstring& mes)
 	}
 	
 	if (major != required_major) {
-		mes = L"The installed Dokany version " + ver + L" is not compatible.  Please install Dokany " + required_ver;
+        CString strMsg;
+        strMsg.Format(LocUtilsAlt::GetStringFromResources(IDS_DOKANY_VER_NOT_COMPATIBLE), ver, required_ver);
+        mes = strMsg;
 		return false; // error
 	}
 	
 	if (major == required_major && middle < required_middle) {
-		mes = L"The installed Dokany version " + ver + L" is not compatible.  Please install Dokany " + required_ver;
+        CString strMsg;
+        strMsg.Format(LocUtilsAlt::GetStringFromResources(IDS_DOKANY_VER_NOT_COMPATIBLE), ver, required_ver);
+        mes = strMsg;
 		return false; // error
 	}
 
 	if (major == required_major && middle > required_middle) {
-		mes = L"The installed Dokany version is " + ver + L", and it has not been tested with cppcryptfs.  Please install Dokany " + required_ver;
+        CString strMsg;
+        strMsg.Format(LocUtilsAlt::GetStringFromResources(IDS_DOKANY_VER_NOT_TESTED), ver, required_ver);
+        mes = strMsg;
 		return true; // warning
 	}
 
@@ -2826,7 +2874,9 @@ static void InitLogging()
     const WCHAR* logdir = L"C:\\cppcryptfslogs";
 
     if (!PathFileExists(logdir)) {
-        ::MessageBox(NULL, (wstring(L"Unable to init logging.  Please create ") + logdir).c_str(), L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+        CString strMsg;
+        strMsg.Format(LocUtilsAlt::GetStringFromResources(IDS_UNABLE_INIT_LOGGING), logdir);
+        ::MessageBox(NULL, strMsg, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
         return;
     }    
 
@@ -2862,9 +2912,13 @@ static void InitLogging()
     const int result = _wfopen_s(&g_DebugLogFile, logname.c_str(), L"at+");
 
     if (result == 0) {
-        ::MessageBox(NULL, (wstring(L"Logging to ") + logname).c_str(), L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
+        CString strMsg;
+        strMsg.Format(LocUtilsAlt::GetStringFromResources(IDS_LOGGING_TO_LOGNAME), logname);
+        ::MessageBox(NULL, strMsg, L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
     } else {
-        ::MessageBox(NULL, (wstring(L"Unable to open ") + logname.c_str()).c_str(), L"cppcryptfs", MB_OK | MB_ICONERROR);
+        CString strMsg;
+        strMsg.Format(LocUtilsAlt::GetStringFromResources(IDS_UNABLE_OPEN_LOGNAME), logname);
+        ::MessageBox(NULL, strMsg, L"cppcryptfs", MB_OK | MB_ICONERROR);
     }
 
 }
