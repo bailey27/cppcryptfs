@@ -2272,7 +2272,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
       if (opts.mountmanagerwarn && !have_security_name_privilege()) {
 
         if (!mountmanager_continue_mounting()) {
-          mes = L"operation cancelled by user";
+          mes = LocUtilsAlt::GetStringFromResources(IDS_CANCELED_BY_USER);
           throw(-1);
         }
       }
@@ -2622,8 +2622,7 @@ BOOL list_files(const WCHAR *path, list<FindDataPair> &findDatas,
   _locale_t locale = _create_locale(LC_ALL, ""); 
 
   if (locale == NULL) {
-      CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_CANNOT_CREATE_LOCALE);
-      err_mes = strMsg;
+      err_mes = LocUtilsAlt::GetStringFromResources(IDS_CANNOT_CREATE_LOCALE);
 	  return FALSE;
   }
 

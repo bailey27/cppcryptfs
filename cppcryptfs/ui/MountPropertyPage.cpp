@@ -154,7 +154,7 @@ void CMountPropertyPage::DefaultAction()
 {
 	CString mes = Mount();
 
-	if (mes.GetLength() > 0 && mes != L"password cannot be empty")
+	if (mes.GetLength() > 0 && mes != LocUtils::GetStringFromResources(IDS_PASS_CANNOT_BE_EMPTY))
 		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 }
 
@@ -183,12 +183,12 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
 	if (!pList)
-		return CString(L"unable to get list control");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_LIST);
 
 	pos = pList->GetFirstSelectedItemPosition();
 
 	if (!pos)
-		return CString(L"unable to get selected entry");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_SELECTED);
 
 	int nItem = -1;
 
@@ -222,14 +222,14 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 	}
 
 	if (nItem < 0)
-		return CString(L"unable to find item");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_FIND_ITEM);
 
 	CString cmp = argMountPoint && wcslen(argMountPoint) > 0 ? 
 		(wcslen(argMountPoint) == 1 ? CString(*argMountPoint) + L":" : argMountPoint) 
 		: pList->GetItemText(nItem, DL_INDEX);
 
 	if (cmp.GetLength() < 1)
-		return CString(L"unable to get drive letter");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_LETTER);
 
 	BOOL dlInUse = is_mountpoint_a_drive(cmp) && !IsDriveLetterAvailable(*(LPCWSTR)cmp);
 
@@ -247,7 +247,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 	CWnd *pWnd = GetDlgItem(IDC_PATH);
 
 	if (!pWnd)
-		return CString(L"unable to get window");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_WINDOW);
 
 	CString cpath;
 
@@ -267,7 +267,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 	} else {
 		pWnd = GetDlgItem(IDC_CONFIG_PATH);
 		if (!pWnd)
-			return CString(L"unable to get window for config path");
+			return LocUtils::GetStringFromResources(IDS_UNABLE_GET_CONF_WINDOW);
 		pWnd->GetWindowTextW(config_path);
 	}
 
@@ -750,7 +750,7 @@ void CMountPropertyPage::OnClickedMount()
 void CMountPropertyPage::OnClickedDismount()
 {
 	CString mes = Dismount(nullptr, true, false);
-	if (mes.GetLength() > 0 && mes != L"operation cancelled by user")
+	if (mes.GetLength() > 0 && mes != LocUtils::GetStringFromResources(IDS_CANCELED_BY_USER))
 		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 }
 
@@ -760,12 +760,12 @@ CString CMountPropertyPage::Dismount(LPCWSTR argMountPoint, bool interactive, bo
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
 	if (!pList)
-		return CString(L"unable to get list");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_LIST);
 
 	POSITION pos = pList->GetFirstSelectedItemPosition();
 
 	if (!pos)
-		return CString(L"unable to get selection");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_SELECTED);
 
 	int nItem;
 	
@@ -786,12 +786,12 @@ CString CMountPropertyPage::Dismount(LPCWSTR argMountPoint, bool interactive, bo
 	}
 
 	if (nItem < 0)
-		return CString(L"unable to find item");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_FIND_ITEM);
 
 	CString cmp = pList->GetItemText(nItem, DL_INDEX);
 
 	if (cmp.GetLength() < 1)
-		return CString(L"unable to get drive letter");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_LETTER);
 
 	CString cpath = pList->GetItemText(nItem, PATH_INDEX);
 
@@ -856,7 +856,7 @@ CString CMountPropertyPage::DismountAll(bool interactive, bool forceDismount)
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
 	if (!pList)
-		return CString(L"unable to get list");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_LIST);
 
 	int count = pList->GetItemCount();
 

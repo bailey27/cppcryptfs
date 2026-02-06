@@ -43,9 +43,11 @@ THE SOFTWARE.
 #include "util/util.h"
 #include "locutils.h"
 
+static const CString strMsgPlainText = LocUtils::GetStringFromResources(IDS_PLAIN_TEXT);
+
 static const WCHAR *filename_encryption_types[] = {
 	L"AES256-EME",
-	L"Plain text"
+	strMsgPlainText
 };
 
 #define NUM_FN_ENC_TYPES (sizeof(filename_encryption_types)/sizeof(filename_encryption_types[0]))
@@ -203,7 +205,7 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	if (cfenc == L"AES256-EME")
 		eme = true;
-	else if (cfenc == "Plain text")
+	else if (cfenc == strMsgPlainText)
 		plaintext = true;
 
 	if (!plaintext) {

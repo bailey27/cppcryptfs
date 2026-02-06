@@ -8,4 +8,3 @@ CString LocUtilsAlt::GetStringFromResources(UINT nID) {
     }
     return str;
 }
-

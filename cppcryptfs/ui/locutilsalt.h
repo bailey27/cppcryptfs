@@ -4,6 +4,6 @@
 
 class LocUtilsAlt {
 public:
-    static CString GetStringFromResources(UINT nID);
+    // »спользуем €вное указание пространства имен
+    static ATL::CString GetStringFromResources(UINT nID);
 };
-

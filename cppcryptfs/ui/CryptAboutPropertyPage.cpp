@@ -181,7 +181,7 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 	wstring openssl_ver_w;
 
 	if (!utf8_to_unicode(openssl_ver_s.c_str(), openssl_ver_w))
-		openssl_ver_w = L"error getting openssl version";
+		openssl_ver_w = LocUtils::GetStringFromResources(IDS_ERR_GET_OPENSSL_VERSION);
 
 	CString openssl_ver = openssl_ver_w.c_str();
 
@@ -189,29 +189,28 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 	std::wstring dok_ver;
 	CString dokany_version;
 	if (get_dokany_version(dok_ver, dv)) {
-		dokany_version.Format(LocUtils::GetStringFromResources(IDS_DOKANY_VERSION), dok_ver.c_str());
+		dokany_version = dok_ver.c_str();
 	}
 
-	wstring aes_ni;
+	CString aes_ni;
 	if (AES::use_aes_ni()) {
 		aes_ni = LocUtils::GetStringFromResources(IDS_AESNI_DETECTED);
 	} else {
 		aes_ni = LocUtils::GetStringFromResources(IDS_AESNI_NOT_DETECTED);
 	}
  
-	CString strMsgOpenSSLVersion;
-	strMsgOpenSSLVersion.Format(LocUtils::GetStringFromResources(IDS_OPENSSL_VERSION), openssl_ver);
-	SetDlgItemText(IDC_LINKAGES, strMsgOpenSSLVersion + dokany_version);
+	CString strMsgLibraryVersions;
+	strMsgLibraryVersions.Format(LocUtils::GetStringFromResources(IDS_LIBRARY_VERSIONS), openssl_ver, dokany_version);
+	SetDlgItemText(IDC_LINKAGES, strMsgLibraryVersions);
 
 	bool is_admin = theApp.IsRunningAsAdministrator();
 
-	CString prod_ver = prod.c_str();
-	prod_ver += L" ";
-	prod_ver += ver.c_str();	
-	prod_ver += sizeof(void*) == 8 ? LocUtils::GetStringFromResources(IDS_64BIT) : LocUtils::GetStringFromResources(IDS_32BIT);
-	prod_ver += (is_admin ? LocUtils::GetStringFromResources(IDS_ADMIN) : L"");
+	int prod_bit_depth = sizeof(void*) == 8 ? 64 : 32;
+	CString prod_admin = (is_admin ? L" " + LocUtils::GetStringFromResources(IDS_ADMIN) : L"");
+	CString strMsgCopyright;
+	strMsgCopyright.Format(LocUtils::GetStringFromResources(IDS_ABOUT_COPYRIGHT), ver.c_str(), prod_bit_depth, prod_admin, aes_ni);
 
-	SetDlgItemText(IDC_PROD_VERSION, prod_ver + CString(aes_ni.c_str()));
+	SetDlgItemText(IDC_PROD_VERSION, strMsgCopyright);
 	SetDlgItemText(IDC_COPYRIGHT, copyright.c_str());
 
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_COMPONENTS_LIST);
