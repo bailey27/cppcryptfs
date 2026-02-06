@@ -5,9 +5,9 @@
 // from http://www.codeguru.com/cpp/w-d/dislog/dialogforselectingfolders/article.php/c1941/MFC-Wrapper-for-SHBrowseForFolder.htm
 
 #include "stdafx.h"
-#include "cppcryptfs.h"
 #include "FolderDialog.h"
 #include "locutils.h"
+#include "resource.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE

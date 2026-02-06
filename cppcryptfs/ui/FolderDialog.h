@@ -9,6 +9,7 @@
 #define _CFolderDialog_
 
 #include <shlobj.h>
+#include <afxwin.h>
 
 class CFolderDialog  
 {

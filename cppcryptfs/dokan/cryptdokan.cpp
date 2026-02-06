@@ -2563,8 +2563,7 @@ wstring transform_path(const wchar_t* path, wstring& mes)
         FileNameEnc enc(&dfi, p, nullptr, false);      
         auto pconv = static_cast<LPCWSTR>(enc);
         if (!pconv) {
-            CString strMsg = LocUtilsAlt::GetStringFromResources(IDS_FAILED_ENCRYPT_PATH);
-            mes = strMsg;
+            mes = LocUtilsAlt::GetStringFromResources(IDS_FAILED_ENCRYPT_PATH);
             return L"";
         }
         return pconv + std::size(L"\\\\?\\") - 1;
