@@ -53,6 +53,7 @@ THE SOFTWARE.
 #include "ui/uiutil.h"
 #include "../libipc/server.h"
 #include "../libipc/client.h"
+#include "ui/locutils.h"
 
 
 #ifdef _DEBUG
@@ -186,7 +187,7 @@ BOOL CcppcryptfsApp::InitInstance()
 				ShowWindow(hWnd, SW_SHOWNORMAL);
 			}
 		} else {
-			::MessageBox(NULL, L"cppcryptfs is already running, but window not found!", L"cppcryptfs", MB_OK | MB_ICONERROR);
+			::MessageBox(NULL, LocUtils::GetStringFromResources(IDS_RUN_WINDOW_NOT_FOUND), L"cppcryptfs", MB_OK | MB_ICONERROR);
 		}
 		
 		return FALSE;
@@ -194,7 +195,7 @@ BOOL CcppcryptfsApp::InitInstance()
 		wstring mes;
 		bool dokVerCheck = check_dokany_version(mes);
 		if (!dokVerCheck && mes.length() < 1) {
-			mes = L"problem with Dokany version";
+			mes = LocUtils::GetStringFromResources(IDS_PROBLEM_DOKANY_VERSION);
 		}
 		if (mes.length()) {
 			::MessageBox(NULL, mes.c_str(), L"cppcryptfs", MB_OK | (dokVerCheck ? MB_ICONEXCLAMATION :  MB_ICONERROR));

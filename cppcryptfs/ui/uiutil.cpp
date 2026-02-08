@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 #include "stdafx.h"
 #include "uiutil.h"
-
+#include "cppcryptfs.h"
 #include <list>
 
 #include "ui/MountMangerDialog.h"
