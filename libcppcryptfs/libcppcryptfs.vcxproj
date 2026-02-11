@@ -169,6 +169,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\cppcryptfs\ui\locutils.h" />
     <ClInclude Include="config\cryptconfig.h" />
     <ClInclude Include="context\cryptcontext.h" />
     <ClInclude Include="context\FsInfo.h" />
@@ -202,6 +203,10 @@
     <ClInclude Include="util\wintypes.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\cppcryptfs\ui\locutils.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="config\cryptconfig.cpp" />
     <ClCompile Include="context\cryptcontext.cpp" />
     <ClCompile Include="context\FsInfo.cpp" />

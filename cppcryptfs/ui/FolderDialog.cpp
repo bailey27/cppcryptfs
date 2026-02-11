@@ -46,13 +46,12 @@ CFolderDialog::CFolderDialog(LPCTSTR lpszFolderName, DWORD dwFlags, CWnd* pParen
 	else
 		m_bi.hwndOwner = pParentWnd->GetSafeHwnd();
 
-	static CString strMessageSelDir;
-	strMessageSelDir = LocUtils::GetStringFromResources(IDS_SELECT_DIRECTORY);
+	m_strTitleHolder = LocUtils::GetStringFromResources(IDS_SELECT_DIRECTORY).c_str();
 
 	// Fill in the rest of the structure
 	m_bi.pidlRoot = NULL;
 	m_bi.pszDisplayName = m_szDisplayName;
-	m_bi.lpszTitle = (LPCTSTR)strMessageSelDir;
+	m_bi.lpszTitle = m_strTitleHolder;
 	m_bi.ulFlags = dwFlags | BIF_NEWDIALOGSTYLE;
 	m_bi.lpfn = BrowseDirectoryCallback;
 	m_bi.lParam = (LPARAM)this;

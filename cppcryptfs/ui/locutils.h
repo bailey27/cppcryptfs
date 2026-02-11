@@ -1,7 +1,7 @@
 #pragma once
-#include <afxwin.h>
+#include <string>
 
 class LocUtils {
 public:
-    static CString GetStringFromResources(UINT nID);
+    static std::wstring GetStringFromResources(unsigned int nID);
 };

@@ -89,13 +89,13 @@ BOOL CFsInfoDialog::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	CString strMsgYes, strMsgNo, strMsgNA, strMsgReverse, strMsgForward, strMsgKB, strMsgSec, strMsgInfinite, strMsgNone;
-	strMsgYes = LocUtils::GetStringFromResources(IDS_FSINFO_YES);
-	strMsgNo = LocUtils::GetStringFromResources(IDS_FSINFO_NO);
-	strMsgNA = LocUtils::GetStringFromResources(IDS_FSINFO_NA);
-	strMsgReverse = LocUtils::GetStringFromResources(IDS_FSINFO_REVERSE);
-	strMsgForward = LocUtils::GetStringFromResources(IDS_FSINFO_FORWARD);
-	strMsgInfinite = LocUtils::GetStringFromResources(IDS_FSINFO_INFINITE);
-	strMsgNone = LocUtils::GetStringFromResources(IDS_FSINFO_NAME_ENCRYPTION_NO);
+	strMsgYes = LocUtils::GetStringFromResources(IDS_FSINFO_YES).c_str();
+	strMsgNo = LocUtils::GetStringFromResources(IDS_FSINFO_NO).c_str();
+	strMsgNA = LocUtils::GetStringFromResources(IDS_FSINFO_NA).c_str();
+	strMsgReverse = LocUtils::GetStringFromResources(IDS_FSINFO_REVERSE).c_str();
+	strMsgForward = LocUtils::GetStringFromResources(IDS_FSINFO_FORWARD).c_str();
+	strMsgInfinite = LocUtils::GetStringFromResources(IDS_FSINFO_INFINITE).c_str();
+	strMsgNone = LocUtils::GetStringFromResources(IDS_FSINFO_NAME_ENCRYPTION_NO).c_str();
 
 	LPCWSTR yes = strMsgYes;
 	LPCWSTR no = strMsgNo;
@@ -131,13 +131,13 @@ BOOL CFsInfoDialog::OnInitDialog()
 
 	wstring txt;
 	txt = to_wstring(m_info.ioBufferSize);
-	strMsgKB.Format(LocUtils::GetStringFromResources(IDS_FSINFO_KB), txt);
+	strMsgKB.Format(LocUtils::GetStringFromResources(IDS_FSINFO_KB).c_str(), txt);
 	SetDlgItemText(IDC_IO_BUF_SIZE, strMsgKB);
 	txt = m_info.multhreaded ? yes : no;
 	SetDlgItemText(IDC_THREADS, txt.c_str());
 	if (m_info.cacheTTL > 0) {
 		txt = to_wstring(m_info.cacheTTL);
-		strMsgSec.Format(LocUtils::GetStringFromResources(IDS_FSINFO_SEC), txt);
+		strMsgSec.Format(LocUtils::GetStringFromResources(IDS_FSINFO_SEC).c_str(), txt);
 		SetDlgItemText(IDC_CACHE_TTL, strMsgSec);
 	} else {
 		SetDlgItemText(IDC_CACHE_TTL, strMsgInfinite);

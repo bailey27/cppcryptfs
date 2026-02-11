@@ -187,7 +187,7 @@ BOOL CcppcryptfsApp::InitInstance()
 				ShowWindow(hWnd, SW_SHOWNORMAL);
 			}
 		} else {
-			::MessageBox(NULL, LocUtils::GetStringFromResources(IDS_RUN_WINDOW_NOT_FOUND), L"cppcryptfs", MB_OK | MB_ICONERROR);
+			::MessageBox(NULL, LocUtils::GetStringFromResources(IDS_RUN_WINDOW_NOT_FOUND).c_str(), L"cppcryptfs", MB_OK | MB_ICONERROR);
 		}
 		
 		return FALSE;

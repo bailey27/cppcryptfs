@@ -51,6 +51,8 @@ protected:
 
 	HWND m_hDialogBox;
 
+	CString m_strTitleHolder;
+
 
 };
 

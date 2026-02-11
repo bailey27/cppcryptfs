@@ -1,11 +1,11 @@
-#include "stdafx.h"
 #include "locutils.h"
+#define VC_EXTRALEAN
+#include <atlstr.h>
 
-CString LocUtils::GetStringFromResources(UINT nID) {
-    CString str;
-    static HINSTANCE hExe = GetModuleHandle(NULL);
-    if (hExe == NULL || !str.LoadString(hExe, nID)) {
-        return _T("Error: String not found");
+std::wstring LocUtils::GetStringFromResources(unsigned int nID) {
+    ATL::CStringW str;
+    if (str.LoadString(nID)) {
+        return std::wstring((LPCWSTR)str);
     }
-    return str;
+    return L"";
 }

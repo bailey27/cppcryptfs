@@ -228,7 +228,6 @@
     <ClInclude Include="ui\CryptSetting.h" />
     <ClInclude Include="ui\CryptSettings.h" />
     <ClInclude Include="ui\locutils.h" />
-    <ClInclude Include="ui\locutilsalt.h" />
     <ClInclude Include="ui\MoreSettingsPropertyPage.h" />
     <ClInclude Include="config\cryptconfig.h" />
     <ClInclude Include="context\cryptcontext.h" />
@@ -262,9 +261,7 @@
   <ItemGroup>
     <ClCompile Include="ui\CryptSetting.cpp" />
     <ClCompile Include="ui\CryptSettings.cpp" />
-    <ClCompile Include="ui\locutils.cpp" />
-    <ClCompile Include="ui\locutilsalt.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    <ClCompile Include="ui\locutils.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>

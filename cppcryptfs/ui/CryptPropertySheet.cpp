@@ -82,7 +82,7 @@ BOOL CCryptPropertySheet::CanClose()
 {
 	if (!MountPointManager::getInstance().empty()) {
 
-		if (MessageBox(LocUtils::GetStringFromResources(IDS_DISMOUNT_ALL_ON_EXIT), L"cppcryptfs",
+		if (MessageBox(LocUtils::GetStringFromResources(IDS_DISMOUNT_ALL_ON_EXIT).c_str(), L"cppcryptfs",
 			MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
 
 			CString open_handles_mes = CheckOpenHandles(m_hWnd, nullptr, true, false).c_str();

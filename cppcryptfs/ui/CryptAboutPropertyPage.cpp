@@ -104,14 +104,14 @@ BEGIN_MESSAGE_MAP(CCryptAboutPropertyPage, CCryptPropertyPage)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_COMPONENTS_LIST, &CCryptAboutPropertyPage::OnItemchangedComponentsList)
 END_MESSAGE_MAP()
 
-static const CString strMsgCppcryptfs = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_CPPCRYPTFS);
-static const CString strMsgOpenSSL = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_OPENSSL);
-static const CString strMsgRapidJSON = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_RAPIDJSON);
-static const CString strMsgDokanyMir = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_MIR);
-static const CString strMsgDokanyLib = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_LIB);
-static const CString strMsgSecuryEdit = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_SECURE_EDIT);
-static const CString strMsgGetOpt = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_GETOPT_PORT);
-static const CString strMsgAESSIV = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_AES_SIV);
+static CString strMsgCppcryptfs = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_CPPCRYPTFS).c_str();
+static CString strMsgOpenSSL = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_OPENSSL).c_str();
+static CString strMsgRapidJSON = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_RAPIDJSON).c_str();
+static CString strMsgDokanyMir = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_MIR).c_str();
+static CString strMsgDokanyLib = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_LIB).c_str();
+static CString strMsgSecuryEdit = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_SECURE_EDIT).c_str();
+static CString strMsgGetOpt = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_GETOPT_PORT).c_str();
+static CString strMsgAESSIV = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_AES_SIV).c_str();
 
 static const WCHAR* components[] = {
 	strMsgCppcryptfs,
@@ -194,21 +194,21 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 
 	CString aes_ni;
 	if (AES::use_aes_ni()) {
-		aes_ni = LocUtils::GetStringFromResources(IDS_AESNI_DETECTED);
+		aes_ni = LocUtils::GetStringFromResources(IDS_AESNI_DETECTED).c_str();
 	} else {
-		aes_ni = LocUtils::GetStringFromResources(IDS_AESNI_NOT_DETECTED);
+		aes_ni = LocUtils::GetStringFromResources(IDS_AESNI_NOT_DETECTED).c_str();
 	}
  
 	CString strMsgLibraryVersions;
-	strMsgLibraryVersions.Format(LocUtils::GetStringFromResources(IDS_LIBRARY_VERSIONS), openssl_ver, dokany_version);
+	strMsgLibraryVersions.Format(LocUtils::GetStringFromResources(IDS_LIBRARY_VERSIONS).c_str(), openssl_ver, dokany_version);
 	SetDlgItemText(IDC_LINKAGES, strMsgLibraryVersions);
 
 	bool is_admin = theApp.IsRunningAsAdministrator();
 
 	int prod_bit_depth = sizeof(void*) == 8 ? 64 : 32;
-	CString prod_admin = (is_admin ? L" " + LocUtils::GetStringFromResources(IDS_ADMIN) : L"");
+	CString prod_admin = (is_admin ? CString(L" ") + LocUtils::GetStringFromResources(IDS_ADMIN).c_str() : CString(L""));
 	CString strMsgCopyright;
-	strMsgCopyright.Format(LocUtils::GetStringFromResources(IDS_ABOUT_COPYRIGHT), ver.c_str(), prod_bit_depth, prod_admin, aes_ni);
+	strMsgCopyright.Format(LocUtils::GetStringFromResources(IDS_ABOUT_COPYRIGHT).c_str(), ver.c_str(), prod_bit_depth, prod_admin, aes_ni);
 
 	SetDlgItemText(IDC_PROD_VERSION, strMsgCopyright);
 	SetDlgItemText(IDC_COPYRIGHT, copyright.c_str());
