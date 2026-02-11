@@ -2388,10 +2388,7 @@ BOOL unmount_crypt_fs(const WCHAR* mountpoint, bool wait, wstring& mes) {
 	  bool res = MountPointManager::getInstance().wait_and_destroy(mpstr.c_str());
 	  if (!res) {
           CString strMsg;
-            strMsg.Format(
-                LocUtils::GetStringFromResources(IDS_WAIT_UNMOUNT_ERROR)
-                    .c_str(),
-                GetWindowsErrorString(GetLastError()));
+            strMsg.Format(LocUtils::GetStringFromResources(IDS_WAIT_UNMOUNT_ERROR).c_str(), GetWindowsErrorString(GetLastError()));
           mes += strMsg;
 	  }
 	  return res;
