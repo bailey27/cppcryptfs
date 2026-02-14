@@ -294,7 +294,15 @@ void CCreatePropertyPage::CreateCryptfs()
 	if (nenc < 0 || nenc >= NUM_FN_ENC_TYPES)
 		return;
 
-	theApp.WriteProfileStringW(L"CreateOptions", L"FilenameEncryption", filename_encryption_types[nenc]);
+	//To save localization-independent text in the registry
+	CString filename_encryption_type_for_registry;
+	if (filename_encryption_types[nenc] == strMsgPlainText) {
+		filename_encryption_type_for_registry = L"Plain text";
+	} else {
+		filename_encryption_type_for_registry = filename_encryption_types[nenc];
+	}
+
+	theApp.WriteProfileStringW(L"CreateOptions", L"FilenameEncryption", filename_encryption_type_for_registry);
 
 	pLbox = (CComboBox*)GetDlgItem(IDC_DATA_ENCRYPTION);
 	if (!pLbox)
@@ -380,7 +388,14 @@ BOOL CCreatePropertyPage::OnInitDialog()
 
 	CString creverse = theApp.GetProfileStringW(L"CreateOptions", L"Reverse", L"0");
 
-	CString cfnenc = theApp.GetProfileStringW(L"CreateOptions", L"FilenameEncryption", L"AES256-EME");
+	//To extract localization-independent text from the registry
+	CString cfnenc;
+	CString cfnenc_tmp = theApp.GetProfileStringW(L"CreateOptions", L"FilenameEncryption", L"AES256-EME");
+	if (cfnenc_tmp == L"Plain text") {
+		cfnenc = strMsgPlainText;
+	} else { 
+		cfnenc = cfnenc_tmp; 
+	}
 
 	CString cdataenc = theApp.GetProfileStringW(L"CreateOptions", L"DataEncryption", L"AES256-GCM");
 

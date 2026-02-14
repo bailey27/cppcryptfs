@@ -108,6 +108,7 @@ BOOL CFsInfoDialog::OnInitDialog()
 	SetDlgItemText(IDC_MOUNT_POINT, m_mountPoint);
 	SetDlgItemText(IDC_CONFIG_PATH, m_info.configPath.c_str());
 
+	//To display localized text in the GUI
 	LPCWSTR none = strMsgNone;
 	if (m_info.fileNameEncryption == L"none") {
 		SetDlgItemText(IDC_FILE_NAME_ENCRYPTION, none);
