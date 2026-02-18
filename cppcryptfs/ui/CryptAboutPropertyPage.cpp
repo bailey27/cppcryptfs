@@ -104,24 +104,24 @@ BEGIN_MESSAGE_MAP(CCryptAboutPropertyPage, CCryptPropertyPage)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_COMPONENTS_LIST, &CCryptAboutPropertyPage::OnItemchangedComponentsList)
 END_MESSAGE_MAP()
 
-static CString listBoxStringCppcryptfs = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_CPPCRYPTFS).c_str();
-static CString listBoxStringOpenSSL = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_OPENSSL).c_str();
-static CString listBoxStringRapidJSON = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_RAPIDJSON).c_str();
-static CString listBoxStringDokanyMir = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_MIR).c_str();
-static CString listBoxStringDokanyLib = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_LIB).c_str();
-static CString listBoxStringSecuryEdit = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_SECURE_EDIT).c_str();
-static CString listBoxStringGetOpt = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_GETOPT_PORT).c_str();
-static CString listBoxStringAESSIV = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_AES_SIV).c_str();
+static CString listViewStringCppcryptfs = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_CPPCRYPTFS).c_str();
+static CString listViewStringOpenSSL = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_OPENSSL).c_str();
+static CString listViewStringRapidJSON = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_RAPIDJSON).c_str();
+static CString listViewStringDokanyMir = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_MIR).c_str();
+static CString listViewStringDokanyLib = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_LIB).c_str();
+static CString listViewStringSecuryEdit = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_SECURE_EDIT).c_str();
+static CString listViewStringGetOpt = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_GETOPT_PORT).c_str();
+static CString listViewStringAESSIV = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_AES_SIV).c_str();
 
 static const WCHAR* components[] = {
-	listBoxStringCppcryptfs,
-	listBoxStringOpenSSL,
-	listBoxStringRapidJSON,
-	listBoxStringDokanyMir,
-	listBoxStringDokanyLib,
-	listBoxStringSecuryEdit,
-	listBoxStringGetOpt,
-	listBoxStringAESSIV,
+	listViewStringCppcryptfs,
+	listViewStringOpenSSL,
+	listViewStringRapidJSON,
+	listViewStringDokanyMir,
+	listViewStringDokanyLib,
+	listViewStringSecuryEdit,
+	listViewStringGetOpt,
+	listViewStringAESSIV,
 	NULL
 };
 
