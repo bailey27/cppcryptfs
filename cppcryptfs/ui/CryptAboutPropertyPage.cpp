@@ -104,24 +104,24 @@ BEGIN_MESSAGE_MAP(CCryptAboutPropertyPage, CCryptPropertyPage)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_COMPONENTS_LIST, &CCryptAboutPropertyPage::OnItemchangedComponentsList)
 END_MESSAGE_MAP()
 
-static CString strMsgCppcryptfs = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_CPPCRYPTFS).c_str();
-static CString strMsgOpenSSL = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_OPENSSL).c_str();
-static CString strMsgRapidJSON = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_RAPIDJSON).c_str();
-static CString strMsgDokanyMir = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_MIR).c_str();
-static CString strMsgDokanyLib = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_LIB).c_str();
-static CString strMsgSecuryEdit = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_SECURE_EDIT).c_str();
-static CString strMsgGetOpt = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_GETOPT_PORT).c_str();
-static CString strMsgAESSIV = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_AES_SIV).c_str();
+static CString listBoxStringCppcryptfs = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_CPPCRYPTFS).c_str();
+static CString listBoxStringOpenSSL = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_OPENSSL).c_str();
+static CString listBoxStringRapidJSON = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_RAPIDJSON).c_str();
+static CString listBoxStringDokanyMir = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_MIR).c_str();
+static CString listBoxStringDokanyLib = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_LIB).c_str();
+static CString listBoxStringSecuryEdit = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_SECURE_EDIT).c_str();
+static CString listBoxStringGetOpt = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_GETOPT_PORT).c_str();
+static CString listBoxStringAESSIV = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_AES_SIV).c_str();
 
 static const WCHAR* components[] = {
-	strMsgCppcryptfs,
-	strMsgOpenSSL,
-	strMsgRapidJSON,
-	strMsgDokanyMir,
-	strMsgDokanyLib,
-	strMsgSecuryEdit,
-	strMsgGetOpt,
-	strMsgAESSIV,
+	listBoxStringCppcryptfs,
+	listBoxStringOpenSSL,
+	listBoxStringRapidJSON,
+	listBoxStringDokanyMir,
+	listBoxStringDokanyLib,
+	listBoxStringSecuryEdit,
+	listBoxStringGetOpt,
+	listBoxStringAESSIV,
 	NULL
 };
 

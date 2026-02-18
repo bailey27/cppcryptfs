@@ -43,11 +43,11 @@ THE SOFTWARE.
 #include "util/util.h"
 #include "locutils.h"
 
-static CString strMsgPlainText = LocUtils::GetStringFromResources(IDS_PLAIN_TEXT).c_str();
+static CString listBoxStringPlainText = LocUtils::GetStringFromResources(IDS_PLAIN_TEXT).c_str();
 
 static const WCHAR *filename_encryption_types[] = {
 	L"AES256-EME",
-	strMsgPlainText
+	listBoxStringPlainText
 };
 
 #define NUM_FN_ENC_TYPES (sizeof(filename_encryption_types)/sizeof(filename_encryption_types[0]))
@@ -205,7 +205,7 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	if (cfenc == L"AES256-EME")
 		eme = true;
-	else if (cfenc == strMsgPlainText)
+	else if (cfenc == listBoxStringPlainText)
 		plaintext = true;
 
 	if (!plaintext) {
@@ -296,7 +296,7 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	//To save localization-independent text in the registry
 	CString filename_encryption_type_for_registry;
-	if (filename_encryption_types[nenc] == strMsgPlainText) {
+	if (filename_encryption_types[nenc] == listBoxStringPlainText) {
 		filename_encryption_type_for_registry = L"Plain text";
 	} else {
 		filename_encryption_type_for_registry = filename_encryption_types[nenc];
@@ -392,7 +392,7 @@ BOOL CCreatePropertyPage::OnInitDialog()
 	CString cfnenc;
 	CString cfnenc_tmp = theApp.GetProfileStringW(L"CreateOptions", L"FilenameEncryption", L"AES256-EME");
 	if (cfnenc_tmp == L"Plain text") {
-		cfnenc = strMsgPlainText;
+		cfnenc = listBoxStringPlainText;
 	} else { 
 		cfnenc = cfnenc_tmp; 
 	}
