@@ -2298,7 +2298,7 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     hThread = CreateThread(NULL, 0, CryptThreadProc, tdata, 0, NULL);
 
     if (!hThread) {
-      mes = LocUtils::GetStringFromResources(IDS_UNABLE_CREATE_TREAD);
+      mes = LocUtils::GetStringFromResources(IDS_UNABLE_CREATE_THREAD);
       throw(-1);
     }
 
