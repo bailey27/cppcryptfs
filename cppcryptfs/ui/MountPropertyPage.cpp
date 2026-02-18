@@ -1760,7 +1760,7 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 				menu.AppendMenu(MF_ENABLED, DismountV, LocUtils::GetStringFromResources(IDS_MENU_DISMOUNT).c_str());
 			}
 			if (is_mountpoint_a_dir(cmp)) {
-				menu.AppendMenu(mounted ? MF_DISABLED : MF_ENABLED, DeleteMountPointV, LocUtils::GetStringFromResources(IDS_DELETE_MOUNT_POINT).c_str());
+				menu.AppendMenu(mounted ? MF_DISABLED : MF_ENABLED, DeleteMountPointV, LocUtils::GetStringFromResources(IDS_MENU_DELETE_MPOINT).c_str());
 			}
 
 		}

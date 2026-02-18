@@ -96,27 +96,27 @@ static buffer_size_t buffer_sizes[] = { 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2
 
 static int ttls[] = { 0, 1, 2, 5, 10, 15, 30, 45, 60, 90, 120, 300, 600, 900, 1800, 3600};
 
-static CString ttl_0 = LocUtils::GetStringFromResources(IDS_TTL_INFINITE).c_str();
-static CString ttl_1 = LocUtils::GetStringFromResources(IDS_TTL_SEC_1).c_str();
-static CString ttl_2 = LocUtils::GetStringFromResources(IDS_TTL_SEC_2).c_str();
-static CString ttl_5 = LocUtils::GetStringFromResources(IDS_TTL_SEC_5).c_str();
-static CString ttl_10 = LocUtils::GetStringFromResources(IDS_TTL_SEC_10).c_str();
-static CString ttl_15 = LocUtils::GetStringFromResources(IDS_TTL_SEC_15).c_str();
-static CString ttl_30 = LocUtils::GetStringFromResources(IDS_TTL_SEC_30).c_str();
-static CString ttl_45 = LocUtils::GetStringFromResources(IDS_TTL_SEC_45).c_str();
-static CString ttl_60 = LocUtils::GetStringFromResources(IDS_TTL_SEC_60).c_str();
-static CString ttl_90 = LocUtils::GetStringFromResources(IDS_TTL_SEC_90).c_str();
-static CString ttl_120 = LocUtils::GetStringFromResources(IDS_TTL_MIN_2).c_str();
-static CString ttl_300 = LocUtils::GetStringFromResources(IDS_TTL_MIN_5).c_str();
-static CString ttl_600 = LocUtils::GetStringFromResources(IDS_TTL_MIN_10).c_str();
-static CString ttl_900 = LocUtils::GetStringFromResources(IDS_TTL_MIN_15).c_str();
-static CString ttl_1800 = LocUtils::GetStringFromResources(IDS_TTL_MIN_30).c_str();
-static CString ttl_3600 = LocUtils::GetStringFromResources(IDS_TTL_HOUR_1).c_str();
+static CString listBoxStringInfinite = LocUtils::GetStringFromResources(IDS_TTL_INFINITE).c_str();
+static CString listBoxStringSec1 = LocUtils::GetStringFromResources(IDS_TTL_SEC_1).c_str();
+static CString listBoxStringSec2 = LocUtils::GetStringFromResources(IDS_TTL_SEC_2).c_str();
+static CString listBoxStringSec5 = LocUtils::GetStringFromResources(IDS_TTL_SEC_5).c_str();
+static CString listBoxStringSec10 = LocUtils::GetStringFromResources(IDS_TTL_SEC_10).c_str();
+static CString listBoxStringSec15 = LocUtils::GetStringFromResources(IDS_TTL_SEC_15).c_str();
+static CString listBoxStringSec30 = LocUtils::GetStringFromResources(IDS_TTL_SEC_30).c_str();
+static CString listBoxStringSec45 = LocUtils::GetStringFromResources(IDS_TTL_SEC_45).c_str();
+static CString listBoxStringSec60 = LocUtils::GetStringFromResources(IDS_TTL_SEC_60).c_str();
+static CString listBoxStringSec90 = LocUtils::GetStringFromResources(IDS_TTL_SEC_90).c_str();
+static CString listBoxStringMin2 = LocUtils::GetStringFromResources(IDS_TTL_MIN_2).c_str();
+static CString listBoxStringMin5 = LocUtils::GetStringFromResources(IDS_TTL_MIN_5).c_str();
+static CString listBoxStringMin10 = LocUtils::GetStringFromResources(IDS_TTL_MIN_10).c_str();
+static CString listBoxStringMin15 = LocUtils::GetStringFromResources(IDS_TTL_MIN_15).c_str();
+static CString listBoxStringMin30 = LocUtils::GetStringFromResources(IDS_TTL_MIN_30).c_str();
+static CString listBoxStringHour1 = LocUtils::GetStringFromResources(IDS_TTL_HOUR_1).c_str();
 
-static const WCHAR* ttl_strings[] = { ttl_0, ttl_1, ttl_2, ttl_5,
-									  ttl_10, ttl_15, ttl_30, ttl_45,
-									  ttl_60, ttl_90, ttl_120, ttl_300,
-									  ttl_600, ttl_900, ttl_1800, ttl_3600 };
+static const WCHAR* ttl_strings[] = { listBoxStringInfinite, listBoxStringSec1, listBoxStringSec2, listBoxStringSec5,
+									  listBoxStringSec10, listBoxStringSec15, listBoxStringSec30, listBoxStringSec45,
+									  listBoxStringSec60, listBoxStringSec90, listBoxStringMin2, listBoxStringMin5,
+									  listBoxStringMin10, listBoxStringMin15, listBoxStringMin30, listBoxStringHour1 };
 
 BOOL CSettingsPropertyPage::OnInitDialog()
 {
