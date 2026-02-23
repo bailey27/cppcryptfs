@@ -117,7 +117,7 @@
     <ResourceCompile>
       <Culture>0x0409</Culture>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(IntDir);$(ProjectDir);$(ProjectDir)res\en;$(ProjectDir)res\ru;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -148,7 +148,7 @@
     <ResourceCompile>
       <Culture>0x0409</Culture>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(IntDir);$(ProjectDir);$(ProjectDir)res\en;$(ProjectDir)res\ru;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -181,7 +181,7 @@
     <ResourceCompile>
       <Culture>0x0409</Culture>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(IntDir);$(ProjectDir);$(ProjectDir)res\en;$(ProjectDir)res\ru;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PreBuildEvent>
       <Command>for /f %%i in ('git rev-parse --short HEAD') do (echo VALUE "FileDescription", "cppcryptfs build %%i" &gt; "$(ProjectDir)gitversion.rc2")</Command>
@@ -218,7 +218,7 @@
     <ResourceCompile>
       <Culture>0x0409</Culture>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(IntDir);$(ProjectDir);$(ProjectDir)res\en;$(ProjectDir)res\ru;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PreBuildEvent>
       <Command>for /f %%i in ('git rev-parse --short HEAD') do (echo VALUE "FileDescription", "cppcryptfs build %%i" &gt; "$(ProjectDir)gitversion.rc2")</Command>
@@ -313,6 +313,18 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="cppcryptfs.rc" />
+    <ResourceCompile Include="res\en\Resources_EN.rc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ResourceCompile>
+    <ResourceCompile Include="res\ru\Resources_RU.rc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\cppcryptfs.rc2" />
@@ -322,14 +334,22 @@
     <Image Include="res\drive.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="res\lic\en\aessiv.txt" />
-    <Text Include="res\lic\en\cppcryptfs.txt" />
-    <Text Include="res\lic\en\dokany_lib.txt" />
-    <Text Include="res\lic\en\dokany_mir.txt" />
-    <Text Include="res\lic\en\getopt.txt" />
-    <Text Include="res\lic\en\openssl.txt" />
-    <Text Include="res\lic\en\rapidjson.txt" />
-    <Text Include="res\lic\en\secure_edit.txt" />
+    <Text Include="res\en\lic\aessiv_en.txt" />
+    <Text Include="res\en\lic\cppcryptfs_en.txt" />
+    <Text Include="res\en\lic\dokany_lib_en.txt" />
+    <Text Include="res\en\lic\dokany_mir_en.txt" />
+    <Text Include="res\en\lic\getopt_en.txt" />
+    <Text Include="res\en\lic\openssl_en.txt" />
+    <Text Include="res\en\lic\rapidjson_en.txt" />
+    <Text Include="res\en\lic\secure_edit_en.txt" />
+    <Text Include="res\ru\lic\aessiv_ru.txt" />
+    <Text Include="res\ru\lic\cppcryptfs_ru.txt" />
+    <Text Include="res\ru\lic\dokany_lib_ru.txt" />
+    <Text Include="res\ru\lic\dokany_mir_ru.txt" />
+    <Text Include="res\ru\lic\getopt_ru.txt" />
+    <Text Include="res\ru\lic\openssl_ru.txt" />
+    <Text Include="res\ru\lic\rapidjson_ru.txt" />
+    <Text Include="res\ru\lic\secure_edit_ru.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
