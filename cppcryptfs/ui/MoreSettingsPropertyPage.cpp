@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include "ui/cryptdefaults.h"
 #include "MoreSettingsPropertyPage.h"
 #include "afxdialogex.h"
+#include "locutils.h"
 
 
 // CMoreSettingsPropertyPage dialog
@@ -54,6 +55,8 @@ CMoreSettingsPropertyPage::~CMoreSettingsPropertyPage()
 void CMoreSettingsPropertyPage::DoDataExchange(CDataExchange* pDX)
 {
 	CCryptPropertyPage::DoDataExchange(pDX);
+	// This line links the ID from the resources to a variable in C++
+	DDX_Control(pDX, IDC_LANGUAGE, m_ctrlComboBox);
 }
 
 
@@ -65,6 +68,10 @@ BEGIN_MESSAGE_MAP(CMoreSettingsPropertyPage, CCryptPropertyPage)
 	ON_BN_CLICKED(IDC_FLUSH_AFTER_WRITE_NTFS, &CMoreSettingsPropertyPage::OnClickedNtfs)
 	ON_BN_CLICKED(IDC_FLUSH_AFTER_WRITE_NOT_NTFS, &CMoreSettingsPropertyPage::OnClickedNotntfs)
 	ON_BN_CLICKED(IDC_FLUSH_AFTER_WRITE_NO_SPARSE_FILES, &CMoreSettingsPropertyPage::OnClickedNosparsefiles)
+	// List selection event (activates the button)
+	ON_CBN_SELCHANGE(IDC_LANGUAGE, &CMoreSettingsPropertyPage::OnCbnSelchangeLanguage)
+	// Clicking on the button itself
+	ON_BN_CLICKED(IDC_APPLY, &CMoreSettingsPropertyPage::OnBnClickedApply)
 END_MESSAGE_MAP()
 
 
@@ -76,6 +83,23 @@ END_MESSAGE_MAP()
 BOOL CMoreSettingsPropertyPage::OnInitDialog()
 {
 	CCryptPropertyPage::OnInitDialog();
+
+	if (::IsWindow(m_ctrlComboBox.GetSafeHwnd())) {
+		m_ctrlComboBox.ResetContent();
+
+		// Fill in from a pre-prepared vector in theApp
+		for (const auto& lang : theApp.m_vAvailableLangs) {
+			int nIdx = m_ctrlComboBox.AddString(lang.name);
+			m_ctrlComboBox.SetItemData(nIdx, (DWORD_PTR)lang.langID);
+
+			// Select the language in which the interface is currently running
+			if (lang.langID == GetThreadUILanguage()) {
+				m_ctrlComboBox.SetCurSel(nIdx);
+			}
+		}
+		// Make the "Apply" button grayed out on startup
+		GetDlgItem(IDC_APPLY)->EnableWindow(FALSE);
+	}
 
 #define DO_CHECKBOX(tok) \
 	m_controls.emplace(IDC_##tok, make_unique<CryptCheckBoxSetting>(*this, IDC_##tok, tok));
@@ -90,7 +114,7 @@ BOOL CMoreSettingsPropertyPage::OnInitDialog()
 
 	DO_CHECKBOX(FLUSH_AFTER_WRITE_NO_SPARSE_FILES);
 	
-	SetControls(CryptSetting::SetType::Current);  
+	SetControls(CryptSetting::SetType::Current);
 	
 	// return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
@@ -158,3 +182,25 @@ void CMoreSettingsPropertyPage::OnClickedNosparsefiles()
 {
 	SetControlChanged(IDC_FLUSH_AFTER_WRITE_NO_SPARSE_FILES);
 }
+
+void CMoreSettingsPropertyPage::OnCbnSelchangeLanguage() {
+	// The user has selected something — the button becomes active
+	GetDlgItem(IDC_APPLY)->EnableWindow(TRUE);
+}
+
+
+void CMoreSettingsPropertyPage::OnBnClickedApply() {
+	int nIdx = m_ctrlComboBox.GetCurSel();
+	if (nIdx != CB_ERR) {
+		WORD selectedLangID = (WORD)m_ctrlComboBox.GetItemData(nIdx);
+		if (selectedLangID != (WORD)GetThreadUILanguage()) {
+			theApp.SaveLanguageToRegistry(selectedLangID);
+			AfxMessageBox(LocUtils::GetStringFromResources(IDS_APLLY_LANGUAGE_RESTART).c_str(), MB_OK | MB_ICONINFORMATION);
+
+			// Settings applied, button turns gray until next change
+			GetDlgItem(IDC_APPLY)->EnableWindow(FALSE);
+		}
+	}
+}
+
+

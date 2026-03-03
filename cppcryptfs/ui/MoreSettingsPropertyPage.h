@@ -53,11 +53,17 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
+	// Variable for our ComboBox
+	CComboBox m_ctrlComboBox;
+	// Handler for changing the selection in the list (so that the Apply button becomes active)
+	afx_msg void OnCbnSelchangeLanguage();
+	// Apply button handler
+	afx_msg void OnBnClickedApply();
+
 	std::unordered_map<int, std::unique_ptr<CryptSetting>> m_controls;
 	void SetControlChanged(int id);
 	void SetControls(CryptSetting::SetType set_type);
 
-	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnClickedExfat();
 	virtual BOOL OnInitDialog();
@@ -71,4 +77,6 @@ public:
 	afx_msg void OnClickedNtfs();
 	afx_msg void OnClickedNotntfs();
 	afx_msg void OnClickedNosparsefiles();
+
+	DECLARE_MESSAGE_MAP()
 };

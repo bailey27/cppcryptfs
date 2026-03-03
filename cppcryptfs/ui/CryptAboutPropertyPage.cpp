@@ -104,27 +104,6 @@ BEGIN_MESSAGE_MAP(CCryptAboutPropertyPage, CCryptPropertyPage)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_COMPONENTS_LIST, &CCryptAboutPropertyPage::OnItemchangedComponentsList)
 END_MESSAGE_MAP()
 
-static CString listViewStringCppcryptfs = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_CPPCRYPTFS).c_str();
-static CString listViewStringOpenSSL = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_OPENSSL).c_str();
-static CString listViewStringRapidJSON = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_RAPIDJSON).c_str();
-static CString listViewStringDokanyMir = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_MIR).c_str();
-static CString listViewStringDokanyLib = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_LIB).c_str();
-static CString listViewStringSecuryEdit = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_SECURE_EDIT).c_str();
-static CString listViewStringGetOpt = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_GETOPT_PORT).c_str();
-static CString listViewStringAESSIV = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_AES_SIV).c_str();
-
-static const WCHAR* components[] = {
-	listViewStringCppcryptfs,
-	listViewStringOpenSSL,
-	listViewStringRapidJSON,
-	listViewStringDokanyMir,
-	listViewStringDokanyLib,
-	listViewStringSecuryEdit,
-	listViewStringGetOpt,
-	listViewStringAESSIV,
-	NULL
-};
-
 static CString lf_to_crlf(const wchar_t* txt)
 {
 	CString fixed;
@@ -155,6 +134,27 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 	CCryptPropertyPage::OnInitDialog();
 
 	// TODO:  Add extra initialization here
+	//Moved, otherwise the array will be loaded before we determine the GUI language at program startup.
+	static CString listViewStringCppcryptfs = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_CPPCRYPTFS).c_str();
+	static CString listViewStringOpenSSL = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_OPENSSL).c_str();
+	static CString listViewStringRapidJSON = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_RAPIDJSON).c_str();
+	static CString listViewStringDokanyMir = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_MIR).c_str();
+	static CString listViewStringDokanyLib = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_LIB).c_str();
+	static CString listViewStringSecuryEdit = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_SECURE_EDIT).c_str();
+	static CString listViewStringGetOpt = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_GETOPT_PORT).c_str();
+	static CString listViewStringAESSIV = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_AES_SIV).c_str();
+
+	static const WCHAR* components[] = {
+		listViewStringCppcryptfs,
+		listViewStringOpenSSL,
+		listViewStringRapidJSON,
+		listViewStringDokanyMir,
+		listViewStringDokanyLib,
+		listViewStringSecuryEdit,
+		listViewStringGetOpt,
+		listViewStringAESSIV,
+		NULL
+	};
 
 	wstring prod = L"cppryptfs";
 	wstring ver = L"1.0";

@@ -43,6 +43,7 @@ THE SOFTWARE.
 #include <string>
 #include <memory>
 #include "crypt/cryptdefs.h"
+#include <vector>
 
 using namespace std;
 
@@ -68,8 +69,27 @@ typedef struct struct_CopyDataCmdLine {
 
 class CMenuTrayIcon;
 
+// Structure for linking the system language ID and its text name
+struct LanguageOption {
+	WORD    langID;
+	CString name;
+};
+
 class CcppcryptfsApp : public CWinApp
 {
+public:
+	// List of all languages ​​found in EXE resources
+	std::vector<LanguageOption> m_vAvailableLangs;
+
+	// Localization management methods
+	void ScanResourcesForLanguages();
+	bool IsLanguageAvailable(WORD wLangID);
+	CString GetStringForLang(HMODULE hInst, UINT nID, WORD wLang);
+
+	// Working with the registry
+	void SaveLanguageToRegistry(WORD wLangID);
+	WORD LoadLanguageFromRegistry();
+
 private:
 	bool m_bIsRunningAsAdministrator = false;
 	bool m_bIsReallyAdministrator = false;
