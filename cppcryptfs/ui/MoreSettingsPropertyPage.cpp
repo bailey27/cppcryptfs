@@ -183,24 +183,42 @@ void CMoreSettingsPropertyPage::OnClickedNosparsefiles()
 	SetControlChanged(IDC_FLUSH_AFTER_WRITE_NO_SPARSE_FILES);
 }
 
-void CMoreSettingsPropertyPage::OnCbnSelchangeLanguage() {
-	// The user has selected something — the button becomes active
-	GetDlgItem(IDC_APPLY)->EnableWindow(TRUE);
-}
-
-
-void CMoreSettingsPropertyPage::OnBnClickedApply() {
+void CMoreSettingsPropertyPage::OnCbnSelchangeLanguage()
+{
 	int nIdx = m_ctrlComboBox.GetCurSel();
-	if (nIdx != CB_ERR) {
+	if (nIdx != CB_ERR)
+	{
 		WORD selectedLangID = (WORD)m_ctrlComboBox.GetItemData(nIdx);
-		if (selectedLangID != (WORD)GetThreadUILanguage()) {
-			theApp.SaveLanguageToRegistry(selectedLangID);
-			AfxMessageBox(LocUtils::GetStringFromResources(IDS_APLLY_LANGUAGE_RESTART).c_str(), MB_OK | MB_ICONINFORMATION);
+		WORD lastSavedID = theApp.LoadLanguageFromRegistry();
+		if (lastSavedID == 0) lastSavedID = (WORD)GetThreadUILanguage();
 
-			// Settings applied, button turns gray until next change
-			GetDlgItem(IDC_APPLY)->EnableWindow(FALSE);
-		}
+		// The button is activated only if the selection in the list is different from that in the registry.
+		GetDlgItem(IDC_APPLY)->EnableWindow(selectedLangID != lastSavedID);
 	}
 }
 
+void CMoreSettingsPropertyPage::OnBnClickedApply()
+{
+	int nIdx = m_ctrlComboBox.GetCurSel();
+	if (nIdx != CB_ERR)
+	{
+		WORD selectedLangID = (WORD)m_ctrlComboBox.GetItemData(nIdx);
 
+		// Read what is currently stored in the registry (last save)
+		// If it is 0 (first launch), compare it with the current thread language
+		WORD lastSavedID = theApp.LoadLanguageFromRegistry();
+		if (lastSavedID == 0) lastSavedID = (WORD)GetThreadUILanguage();
+
+		// Compare the new selection with the last saved selection in the registry
+		if (selectedLangID != lastSavedID)
+		{
+			theApp.SaveLanguageToRegistry(selectedLangID);
+
+			// The message will always appear when the value in the registry changes
+			AfxMessageBox(LocUtils::GetStringFromResources(IDS_APLLY_LANGUAGE_RESTART).c_str(), MB_OK | MB_ICONINFORMATION);
+		}
+
+		// In any case, we turn off the button (since the selection in the list is synchronous with the registry)
+		if (GetDlgItem(IDC_APPLY)) GetDlgItem(IDC_APPLY)->EnableWindow(FALSE);
+	}
+}
