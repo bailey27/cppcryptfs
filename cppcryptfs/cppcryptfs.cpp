@@ -115,35 +115,65 @@ void CcppcryptfsApp::ScanResourcesForLanguages() {
 }
 
 // Direct reading of a string from a specific language section (bypassing the current thread locale)
-CString CcppcryptfsApp::GetStringForLang(HMODULE hInst, UINT nID, WORD wLang) {
-	HRSRC hRes = FindResourceEx(hInst, RT_STRING, MAKEINTRESOURCE((nID >> 4) + 1), wLang);
-	if (!hRes) return _T("");
+CString CcppcryptfsApp::GetStringForLang(HMODULE hInst, UINT nID, WORD wLang)
+{
+	HRSRC hRes = ::FindResourceExW(
+		hInst,
+		RT_STRING,
+		MAKEINTRESOURCEW((nID >> 4) + 1),
+		wLang);
 
-	HGLOBAL hGlobal = LoadResource(hInst, hRes);
-	DWORD resourceSize = SizeofResource(hInst, hRes);
+	if (!hRes)
+		return CString();
 
-	LPWSTR pData = (LPWSTR)LockResource(hGlobal);
-	LPWSTR pResourceEnd = (LPWSTR)((LPBYTE)pData + resourceSize);
+	HGLOBAL hGlobal = ::LoadResource(hInst, hRes);
+	if (!hGlobal)
+		return CString();
 
-	if (!pData || resourceSize < sizeof(WCHAR)) return _T("");
+	DWORD resourceSizeBytes = ::SizeofResource(hInst, hRes);
+	if (resourceSizeBytes < sizeof(WORD) || (resourceSizeBytes % sizeof(WORD)) != 0)
+		return CString();
 
-	int nIndex = nID & 0x000F;
-	for (int i = 0; i < nIndex; i++) {
-		if (pData >= pResourceEnd) return _T("");  // Out of bounds
+	const WORD* pWords = static_cast<const WORD*>(::LockResource(hGlobal));
+	if (!pWords)
+		return CString();
 
-		DWORD stringLen = *pData;
-		if (stringLen > 0xFFFF) return _T("");     // Unreasonable length
-		if ((LPBYTE)pData + (stringLen + 1) * sizeof(WCHAR) > (LPBYTE)pResourceEnd)
-			return _T("");                         // Exceeds boundary
+	const size_t wordCount = resourceSizeBytes / sizeof(WORD);
+	size_t pos = 0;
 
-		pData += stringLen + 1;
+	const int index = nID & 0x000F;
+
+	for (int i = 0; i < index; ++i)
+	{
+		if (pos >= wordCount)
+			return CString();
+
+		const size_t len = pWords[pos];
+		++pos; // skip length word
+
+		if (len > wordCount - pos)
+			return CString();
+
+		pos += len; // skip string data
 	}
 
-	if (pData >= pResourceEnd) return _T("");
-	DWORD finalLen = *pData;
-	if (finalLen == 0) return _T("");
+	if (pos >= wordCount)
+		return CString();
 
-	return CString(pData + 1, (int)min(finalLen, MAXINT));
+	const size_t finalLen = pWords[pos];
+	++pos; // move to first character
+
+	if (finalLen == 0)
+		return CString();
+
+	if (finalLen > wordCount - pos)
+		return CString();
+
+	if (finalLen > static_cast<size_t>(INT_MAX))
+		return CString();
+
+	return CString(reinterpret_cast<const WCHAR*>(pWords + pos),
+		static_cast<int>(finalLen));
 }
 
 // Check: does this language exist in the resources (protection against outdated registry entries)
