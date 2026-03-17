@@ -78,7 +78,7 @@ struct LanguageOption {
 class CcppcryptfsApp : public CWinApp
 {
 public:
-	// List of all languages ​​found in EXE resources
+	// List of all languages found in EXE resources
 	std::vector<LanguageOption> m_vAvailableLangs;
 
 	// Localization management methods

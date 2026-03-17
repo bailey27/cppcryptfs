@@ -63,13 +63,19 @@ void LoadLicensesFromResource() {
 		DWORD size = SizeofResource(AfxGetResourceHandle(), hRes);
 		const void* pData = LockResource(hData);
 
-		if (pData && size > 0) {
-			int charCount = size / sizeof(WCHAR);
+		if (pData && size >= sizeof(WCHAR) && (size % sizeof(WCHAR)) == 0) {
+			const WCHAR* pSrc = static_cast<const WCHAR*>(pData);
+			int charCount = static_cast<int>(size / sizeof(WCHAR));
 
-			LPWSTR pBuf = storage[i].GetBufferSetLength(charCount);
-			memcpy(pBuf, pData, size);
-			storage[i].ReleaseBuffer(charCount);
+			if (charCount > 0 && pSrc[0] == 0xFEFF) {
+				++pSrc;
+				--charCount;
+			}
 
+			if (charCount > 0 && pSrc[charCount - 1] == L'\0')
+				--charCount;
+
+			storage[i].SetString(pSrc, charCount);
 			licenses[i] = (const WCHAR*)storage[i];
 		}
 	}

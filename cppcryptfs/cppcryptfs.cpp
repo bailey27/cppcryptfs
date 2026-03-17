@@ -109,7 +109,7 @@ BOOL CALLBACK EnumLangsCallback(HMODULE hModule, LPCTSTR lpType, LPCTSTR lpName,
 // Scan EXE resources for translated sections
 void CcppcryptfsApp::ScanResourcesForLanguages() {
 	m_vAvailableLangs.clear();
-	// (IDS_LANGUAGE_NAME >> 4) + 1 — formula for calculating the block number in String Table
+	// (IDS_LANGUAGE_NAME >> 4) + 1 - formula for calculating the block number in String Table
 	EnumResourceLanguages(NULL, RT_STRING, MAKEINTRESOURCE((IDS_LANGUAGE_NAME >> 4) + 1),
 		EnumLangsCallback, (LONG_PTR)&m_vAvailableLangs);
 }
@@ -118,15 +118,32 @@ void CcppcryptfsApp::ScanResourcesForLanguages() {
 CString CcppcryptfsApp::GetStringForLang(HMODULE hInst, UINT nID, WORD wLang) {
 	HRSRC hRes = FindResourceEx(hInst, RT_STRING, MAKEINTRESOURCE((nID >> 4) + 1), wLang);
 	if (!hRes) return _T("");
-	HGLOBAL hGlobal = LoadResource(hInst, hRes);
-	LPWSTR pData = (LPWSTR)LockResource(hGlobal);
-	if (!pData) return _T("");
 
-	int nIndex = nID & 0x000F; // Remainder from division by 16 (index inside the block)
+	HGLOBAL hGlobal = LoadResource(hInst, hRes);
+	DWORD resourceSize = SizeofResource(hInst, hRes);
+
+	LPWSTR pData = (LPWSTR)LockResource(hGlobal);
+	LPWSTR pResourceEnd = (LPWSTR)((LPBYTE)pData + resourceSize);
+
+	if (!pData || resourceSize < sizeof(WCHAR)) return _T("");
+
+	int nIndex = nID & 0x000F;
 	for (int i = 0; i < nIndex; i++) {
-		pData += *pData + 1; // Skip previous strings of the block
+		if (pData >= pResourceEnd) return _T("");  // Out of bounds
+
+		DWORD stringLen = *pData;
+		if (stringLen > 0xFFFF) return _T("");     // Unreasonable length
+		if ((LPBYTE)pData + (stringLen + 1) * sizeof(WCHAR) > (LPBYTE)pResourceEnd)
+			return _T("");                         // Exceeds boundary
+
+		pData += stringLen + 1;
 	}
-	return CString(pData + 1, (int)*pData);
+
+	if (pData >= pResourceEnd) return _T("");
+	DWORD finalLen = *pData;
+	if (finalLen == 0) return _T("");
+
+	return CString(pData + 1, (int)min(finalLen, MAXINT));
 }
 
 // Check: does this language exist in the resources (protection against outdated registry entries)
@@ -142,7 +159,7 @@ void CcppcryptfsApp::SaveLanguageToRegistry(WORD wLangID) {
 	WriteProfileInt(_T("Settings"), _T("LanguageID"), (int)wLangID);
 }
 
-// Reading the selection from the registry (0 — if the entry does not exist)
+// Reading the selection from the registry (0 - if the entry does not exist)
 WORD CcppcryptfsApp::LoadLanguageFromRegistry() {
 	return (WORD)GetProfileInt(_T("Settings"), _T("LanguageID"), 0);
 }
@@ -301,7 +318,7 @@ BOOL CcppcryptfsApp::InitInstance()
 	ScanResourcesForLanguages();
 	WORD wSavedID = LoadLanguageFromRegistry();
 
-	// Apply the language only if it is found in the EXE (protection against “junk” in the registry)
+	// Apply the language only if it is found in the EXE (protection against "junk" in the registry)
 	if (wSavedID != 0 && IsLanguageAvailable(wSavedID)) {
 		SetThreadUILanguage(wSavedID);
 		SetThreadLocale(MAKELCID(wSavedID, SORT_DEFAULT));
