@@ -103,22 +103,22 @@ BOOL CSettingsPropertyPage::OnInitDialog()
 	CCryptPropertyPage::OnInitDialog();	
 
 	//Moved, otherwise the array will be loaded before we determine the GUI language at program startup.
-	static CString listBoxStringInfinite = LocUtils::GetStringFromResources(IDS_TTL_INFINITE).c_str();
-	static CString listBoxStringSec1 = LocUtils::GetStringFromResources(IDS_TTL_SEC_1).c_str();
-	static CString listBoxStringSec2 = LocUtils::GetStringFromResources(IDS_TTL_SEC_2).c_str();
-	static CString listBoxStringSec5 = LocUtils::GetStringFromResources(IDS_TTL_SEC_5).c_str();
-	static CString listBoxStringSec10 = LocUtils::GetStringFromResources(IDS_TTL_SEC_10).c_str();
-	static CString listBoxStringSec15 = LocUtils::GetStringFromResources(IDS_TTL_SEC_15).c_str();
-	static CString listBoxStringSec30 = LocUtils::GetStringFromResources(IDS_TTL_SEC_30).c_str();
-	static CString listBoxStringSec45 = LocUtils::GetStringFromResources(IDS_TTL_SEC_45).c_str();
-	static CString listBoxStringSec60 = LocUtils::GetStringFromResources(IDS_TTL_SEC_60).c_str();
-	static CString listBoxStringSec90 = LocUtils::GetStringFromResources(IDS_TTL_SEC_90).c_str();
-	static CString listBoxStringMin2 = LocUtils::GetStringFromResources(IDS_TTL_MIN_2).c_str();
-	static CString listBoxStringMin5 = LocUtils::GetStringFromResources(IDS_TTL_MIN_5).c_str();
-	static CString listBoxStringMin10 = LocUtils::GetStringFromResources(IDS_TTL_MIN_10).c_str();
-	static CString listBoxStringMin15 = LocUtils::GetStringFromResources(IDS_TTL_MIN_15).c_str();
-	static CString listBoxStringMin30 = LocUtils::GetStringFromResources(IDS_TTL_MIN_30).c_str();
-	static CString listBoxStringHour1 = LocUtils::GetStringFromResources(IDS_TTL_HOUR_1).c_str();
+	static const CString listBoxStringInfinite = LocUtils::GetStringFromResources(IDS_TTL_INFINITE).c_str();
+	static const CString listBoxStringSec1 = LocUtils::GetStringFromResources(IDS_TTL_SEC_1).c_str();
+	static const CString listBoxStringSec2 = LocUtils::GetStringFromResources(IDS_TTL_SEC_2).c_str();
+	static const CString listBoxStringSec5 = LocUtils::GetStringFromResources(IDS_TTL_SEC_5).c_str();
+	static const CString listBoxStringSec10 = LocUtils::GetStringFromResources(IDS_TTL_SEC_10).c_str();
+	static const CString listBoxStringSec15 = LocUtils::GetStringFromResources(IDS_TTL_SEC_15).c_str();
+	static const CString listBoxStringSec30 = LocUtils::GetStringFromResources(IDS_TTL_SEC_30).c_str();
+	static const CString listBoxStringSec45 = LocUtils::GetStringFromResources(IDS_TTL_SEC_45).c_str();
+	static const CString listBoxStringSec60 = LocUtils::GetStringFromResources(IDS_TTL_SEC_60).c_str();
+	static const CString listBoxStringSec90 = LocUtils::GetStringFromResources(IDS_TTL_SEC_90).c_str();
+	static const CString listBoxStringMin2 = LocUtils::GetStringFromResources(IDS_TTL_MIN_2).c_str();
+	static const CString listBoxStringMin5 = LocUtils::GetStringFromResources(IDS_TTL_MIN_5).c_str();
+	static const CString listBoxStringMin10 = LocUtils::GetStringFromResources(IDS_TTL_MIN_10).c_str();
+	static const CString listBoxStringMin15 = LocUtils::GetStringFromResources(IDS_TTL_MIN_15).c_str();
+	static const CString listBoxStringMin30 = LocUtils::GetStringFromResources(IDS_TTL_MIN_30).c_str();
+	static const CString listBoxStringHour1 = LocUtils::GetStringFromResources(IDS_TTL_HOUR_1).c_str();
 
 	static const WCHAR* ttl_strings[] = { listBoxStringInfinite, listBoxStringSec1, listBoxStringSec2, listBoxStringSec5,
 										  listBoxStringSec10, listBoxStringSec15, listBoxStringSec30, listBoxStringSec45,

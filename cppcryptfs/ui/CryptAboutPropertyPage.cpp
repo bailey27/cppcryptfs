@@ -141,14 +141,14 @@ BOOL CCryptAboutPropertyPage::OnInitDialog()
 
 	// TODO:  Add extra initialization here
 	//Moved, otherwise the array will be loaded before we determine the GUI language at program startup.
-	static CString listViewStringCppcryptfs = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_CPPCRYPTFS).c_str();
-	static CString listViewStringOpenSSL = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_OPENSSL).c_str();
-	static CString listViewStringRapidJSON = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_RAPIDJSON).c_str();
-	static CString listViewStringDokanyMir = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_MIR).c_str();
-	static CString listViewStringDokanyLib = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_LIB).c_str();
-	static CString listViewStringSecuryEdit = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_SECURE_EDIT).c_str();
-	static CString listViewStringGetOpt = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_GETOPT_PORT).c_str();
-	static CString listViewStringAESSIV = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_AES_SIV).c_str();
+	static const CString listViewStringCppcryptfs = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_CPPCRYPTFS).c_str();
+	static const CString listViewStringOpenSSL = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_OPENSSL).c_str();
+	static const CString listViewStringRapidJSON = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_RAPIDJSON).c_str();
+	static const CString listViewStringDokanyMir = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_MIR).c_str();
+	static const CString listViewStringDokanyLib = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_DOKANY_LIB).c_str();
+	static const CString listViewStringSecuryEdit = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_SECURE_EDIT).c_str();
+	static const CString listViewStringGetOpt = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_GETOPT_PORT).c_str();
+	static const CString listViewStringAESSIV = LocUtils::GetStringFromResources(IDS_LVIEW_COPYRIGHT_AES_SIV).c_str();
 
 	static const WCHAR* components[] = {
 		listViewStringCppcryptfs,

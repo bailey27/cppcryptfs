@@ -97,7 +97,7 @@ void CCreatePropertyPage::DefaultAction()
 void CCreatePropertyPage::CreateCryptfs()
 {
 	//Moved to both methods, otherwise the array will be loaded before we determine the GUI language at program startup.
-	static CString sPlainText = LocUtils::GetStringFromResources(IDS_PLAIN_TEXT).c_str();
+	static const CString sPlainText = LocUtils::GetStringFromResources(IDS_PLAIN_TEXT).c_str();
 	static const WCHAR* filename_encryption_types[] = { L"AES256-EME", sPlainText };
 	const int NUM_FN_ENC_TYPES = sizeof(filename_encryption_types) / sizeof(filename_encryption_types[0]);
 
@@ -373,7 +373,7 @@ BOOL CCreatePropertyPage::OnInitDialog()
 	CPropertyPage::OnInitDialog();
 
 	//Moved to both methods, otherwise the array will be loaded before we determine the GUI language at program startup.
-	static CString sPlainText = LocUtils::GetStringFromResources(IDS_PLAIN_TEXT).c_str();
+	static const CString sPlainText = LocUtils::GetStringFromResources(IDS_PLAIN_TEXT).c_str();
 	static const WCHAR* filename_encryption_types[] = { L"AES256-EME", sPlainText };
 	const int NUM_FN_ENC_TYPES = sizeof(filename_encryption_types) / sizeof(filename_encryption_types[0]);
 
