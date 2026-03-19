@@ -334,22 +334,14 @@
     <Image Include="res\drive.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="res\en\lic\aessiv_en.txt" />
-    <Text Include="res\en\lic\cppcryptfs_en.txt" />
-    <Text Include="res\en\lic\dokany_lib_en.txt" />
-    <Text Include="res\en\lic\dokany_mir_en.txt" />
-    <Text Include="res\en\lic\getopt_en.txt" />
-    <Text Include="res\en\lic\openssl_en.txt" />
-    <Text Include="res\en\lic\rapidjson_en.txt" />
-    <Text Include="res\en\lic\secure_edit_en.txt" />
-    <Text Include="res\ru\lic\aessiv_ru.txt" />
-    <Text Include="res\ru\lic\cppcryptfs_ru.txt" />
-    <Text Include="res\ru\lic\dokany_lib_ru.txt" />
-    <Text Include="res\ru\lic\dokany_mir_ru.txt" />
-    <Text Include="res\ru\lic\getopt_ru.txt" />
-    <Text Include="res\ru\lic\openssl_ru.txt" />
-    <Text Include="res\ru\lic\rapidjson_ru.txt" />
-    <Text Include="res\ru\lic\secure_edit_ru.txt" />
+    <Text Include="res\lic\aessiv_en.txt" />
+    <Text Include="res\lic\cppcryptfs_en.txt" />
+    <Text Include="res\lic\dokany_lib_en.txt" />
+    <Text Include="res\lic\dokany_mir_en.txt" />
+    <Text Include="res\lic\getopt_en.txt" />
+    <Text Include="res\lic\openssl_en.txt" />
+    <Text Include="res\lic\rapidjson_en.txt" />
+    <Text Include="res\lic\secure_edit_en.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
