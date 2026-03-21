@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 #include "stdafx.h"
 #include "uiutil.h"
-
+#include "cppcryptfs.h"
 #include <list>
 
 #include "ui/MountMangerDialog.h"
@@ -36,6 +36,8 @@ THE SOFTWARE.
 #include "ui/certutil.h"
 #include "ui/CryptSettings.h"
 #include "dokan/cryptdokan.h"
+#include "resource.h"
+#include "locutils.h"
 
 using namespace std;
 
@@ -56,7 +58,7 @@ bool DeleteAllRegisteryValues(LPCWSTR regPath, wstring& mes)
 	LSTATUS status = ::RegOpenKeyEx(HKEY_CURRENT_USER, regPath, 0, KEY_ALL_ACCESS, &hkey);
 	if (status != ERROR_SUCCESS) {
 		if (status != ERROR_FILE_NOT_FOUND) {
-			mes = L"unable to open history";
+			mes = LocUtils::GetStringFromResources(IDS_UNABLE_OPEN_HISTORY);
 		}
 		return false;
 	}
@@ -73,7 +75,7 @@ bool DeleteAllRegisteryValues(LPCWSTR regPath, wstring& mes)
 
 	if (status != ERROR_NO_MORE_ITEMS) {
 		::RegCloseKey(hkey);
-		mes = L"error while deleting history";
+		mes = LocUtils::GetStringFromResources(IDS_ERR_DELETING_HISTORY);
 		return false;
 	}
 
@@ -81,7 +83,7 @@ bool DeleteAllRegisteryValues(LPCWSTR regPath, wstring& mes)
 		status = RegDeleteValue(hkey, it.c_str());
 		if (status != ERROR_SUCCESS) {
 			::RegCloseKey(hkey);
-			mes = L"error while deleting registry value";
+			mes = LocUtils::GetStringFromResources(IDS_ERR_DELETING_REG_VALUE);
 			return false;
 		}
 	}
@@ -118,13 +120,15 @@ wstring CheckOpenHandles(HWND hWnd, const wchar_t* mp, bool interactive, bool fo
 	}
 	else if (open_handle_count > 0) {
 		if (interactive) {
-			auto res = ::MessageBox(hWnd, mp ? (wstring(mp) + L" is still in use.  Do you wish to continue dismounting?").c_str() :
-				L"Filesystem(s) are still in use.  Do you wish to continue dismounting?",
-				L"cppcryptfs", MB_YESNO | MB_ICONHAND);
+			CString strMsg;
+			strMsg.Format(LocUtils::GetStringFromResources(IDS_IS_STILL_IN_USE).c_str(), mp);
+			auto res = ::MessageBox(hWnd, mp ? strMsg :	LocUtils::GetStringFromResources(IDS_FS_IS_STILL_IN_USE).c_str(), L"cppcryptfs", MB_YESNO | MB_ICONHAND);
 			if (res == IDYES)
 				return L"";
-			else
-				return L"operation cancelled by user";
+			else {
+				std::wstring strMsgCanceledByUser = LocUtils::GetStringFromResources(IDS_CANCELED_BY_USER);
+				return strMsgCanceledByUser;
+			}
 		}
 		else {
 			return mp ? wstring(mp) + L" is still in use.  Use --force to force dismounting." :

@@ -52,7 +52,7 @@ THE SOFTWARE.
 #include "dokan/MountPointManager.h"
 #include "../libipc/server.h"
 #include "../libcommonutil/commonutil.h"
-
+#include "locutils.h"
 #include <algorithm>
 
 // CMountPropertyPage dialog
@@ -154,7 +154,7 @@ void CMountPropertyPage::DefaultAction()
 {
 	CString mes = Mount();
 
-	if (mes.GetLength() > 0 && mes != L"password cannot be empty")
+	if (mes.GetLength() > 0 && mes != LocUtils::GetStringFromResources(IDS_PASS_CANNOT_BE_EMPTY).c_str())
 		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 }
 
@@ -169,24 +169,26 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 	LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, false);
 
 	if (!password.IsLocked()) {
-		return CString(L"unable to lock password buffer");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_LOCK_BUFFER).c_str();
 	}
 
-	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN + 1, argPassword ? argPassword : pPass->m_strRealText))
-		return CString(L"unable to get password");
+	if (wcscpy_s(password.m_buf, MAX_PASSWORD_LEN + 1, argPassword ? argPassword : pPass->m_strRealText)) {
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_PASS).c_str();
+	}
 
-	if (wcslen(password.m_buf) < 1)
-		return CString(L"password cannot be empty");
+	if (wcslen(password.m_buf) < 1) {
+		return LocUtils::GetStringFromResources(IDS_PASS_CANNOT_BE_EMPTY).c_str();
+	}
 
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
 	if (!pList)
-		return CString(L"unable to get list control");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_LIST).c_str();
 
 	pos = pList->GetFirstSelectedItemPosition();
 
 	if (!pos)
-		return CString(L"unable to get selected entry");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_SELECTED).c_str();
 
 	int nItem = -1;
 
@@ -199,7 +201,9 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 		nItem = pList->FindItem(&fi);
 		if (nItem < 0) {
 			if (is_mountpoint_a_drive(str)) {
-				return CString(L"Mount point ") + str + CString(L" is already in use.");
+				CString strMsg;
+				strMsg.Format(LocUtils::GetStringFromResources(IDS_MPOINT_ALREADY_USED).c_str(), str);
+				return strMsg;
 			} else {
 				int i = pList->GetItemCount();
 				nItem = pList->InsertItem(LVIF_TEXT | (m_imageIndex >= 0 ? LVIF_IMAGE : 0) | LVIF_STATE, i, str,
@@ -218,14 +222,14 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 	}
 
 	if (nItem < 0)
-		return CString(L"unable to find item");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_FIND_ITEM).c_str();
 
 	CString cmp = argMountPoint && wcslen(argMountPoint) > 0 ? 
 		(wcslen(argMountPoint) == 1 ? CString(*argMountPoint) + L":" : argMountPoint) 
 		: pList->GetItemText(nItem, DL_INDEX);
 
 	if (cmp.GetLength() < 1)
-		return CString(L"unable to get drive letter");;
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_LETTER).c_str();
 
 	BOOL dlInUse = is_mountpoint_a_drive(cmp) && !IsDriveLetterAvailable(*(LPCWSTR)cmp);
 
@@ -235,16 +239,15 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 		dlInUse = true;
 
 	if (dlInUse) {
-		CString mes = L"Mount point ";
-		mes += cmp;
-		mes += L" is already being used.";
+		CString mes;
+		mes.Format(LocUtils::GetStringFromResources(IDS_MPOINT_ALREADY_USED).c_str(), cmp);
 		return mes;
 	}
 
 	CWnd *pWnd = GetDlgItem(IDC_PATH);
 
 	if (!pWnd)
-		return CString(L"unable to get window");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_WINDOW).c_str();
 
 	CString cpath;
 
@@ -253,8 +256,9 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 	else
 		pWnd->GetWindowTextW(cpath);
 
-	if (cpath.GetLength() < 1)
-		return CString(L"path length is zero");
+	if (cpath.GetLength() < 1) {
+		return LocUtils::GetStringFromResources(IDS_PATH_ZERO).c_str();
+	}
 
 	CString config_path;
 
@@ -263,7 +267,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 	} else {
 		pWnd = GetDlgItem(IDC_CONFIG_PATH);
 		if (!pWnd)
-			return CString(L"unable to get window for config path");
+			return LocUtils::GetStringFromResources(IDS_UNABLE_GET_CONF_WINDOW).c_str();
 		pWnd->GetWindowTextW(config_path);
 	}
 
@@ -292,10 +296,8 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 	}
 
 	if (pathInUse) {
-		CString mes = L"";
-		mes += cpath;
-		mes += L" is already mounted on ";
-		mes += mdl;
+		CString mes;
+		mes.Format(LocUtils::GetStringFromResources(IDS_ALREADY_MOUNTED).c_str(), cpath, mdl);
 		return mes;
 	}
 
@@ -323,14 +325,14 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 	CryptSettings::getInstance().GetSettings(opts);
 
 	if (opts.denyothersessions || opts.denyservices) {		
-		if (!CanGetSessionIdOk()) {			
-			return CString(L"Unable to get session id.  Deny other sessions/Deny services setting will not work and must be disabled.");			
+		if (!CanGetSessionIdOk()) {
+			return LocUtils::GetStringFromResources(IDS_UNABLE_GET_SESSION_ID).c_str();
 		}		
 		if (!have_sessionid()) {
-			return CString(L"Unable to get current process session id.  Deny other sessions/Deny services setting will not work and must be disabled.");
+			return LocUtils::GetStringFromResources(IDS_UNABLE_GET_PROCESS_SESSION_ID).c_str();
 		}
 		if (get_sessionid() == 0) {
-			return CString(L"Current session id is 0.  Deny other sessions/Deny services setting will not work and must be disabled.");
+			return LocUtils::GetStringFromResources(IDS_SESSION_ID_ZERO).c_str();
 		}
 	}
 	
@@ -358,7 +360,7 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 
 		if (IsDlgButtonChecked(IDC_SAVE_PASSWORD)) {
 			if (!SavedPasswords::SavePassword(cpath, password.m_buf)) {
-				MessageBox(L"unable to save password", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
+				MessageBox(LocUtils::GetStringFromResources(IDS_UNABLE_SAVE_PASS).c_str(), L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
 			}
 		}
 
@@ -492,7 +494,7 @@ BOOL CMountPropertyPage::OnInitDialog()
 		// or using the string table resource
 		CWnd *pWnd = GetDlgItem(IDC_SAVE_PASSWORD);
 		if (pWnd) {
-			m_ToolTip.AddTool(pWnd, _T("To enable \"Save password\", turn on \"Enable saved passwords\" in the Settings tab."));
+			m_ToolTip.AddTool(pWnd, LocUtils::GetStringFromResources(IDS_TOOLTIP_ENABLE_SAVE_PASS).c_str());
 		}
 	}
 
@@ -531,9 +533,9 @@ BOOL CMountPropertyPage::OnInitDialog()
 		mountPointColumnWidth = 79;
 	}
 
-	pList->InsertColumn(DL_INDEX, L"Mount Point", LVCFMT_LEFT, mountPointColumnWidth);
+	pList->InsertColumn(DL_INDEX, LocUtils::GetStringFromResources(IDS_COLUMN_HEADER_MOUNT_POINT).c_str(), LVCFMT_LEFT, mountPointColumnWidth);
 
-	pList->InsertColumn(PATH_INDEX, L"Path", LVCFMT_LEFT, 454-mountPointColumnWidth);
+	pList->InsertColumn(PATH_INDEX, LocUtils::GetStringFromResources(IDS_COLUMN_HEADER_PATH).c_str(), LVCFMT_LEFT, 454-mountPointColumnWidth);
 
 	CString lastMountPoint = theApp.GetProfileString(L"MountPoints", L"LastMountPoint", L"");
 
@@ -619,8 +621,9 @@ BOOL CMountPropertyPage::OnInitDialog()
 	if (pCombo)
 		pCombo->LimitText(MAX_PATH);
 
-	if (!m_password.ArePasswordBuffersLocked())
-		MessageBox(L"unable to lock password buffer", L"cppcryptfs", MB_OK | MB_ICONERROR);
+	if (!m_password.ArePasswordBuffersLocked()) {
+		MessageBox(LocUtils::GetStringFromResources(IDS_UNABLE_LOCK_BUFFER).c_str(), L"cppcryptfs", MB_OK | MB_ICONERROR);
+	}
 
 	ProcessCommandLine(GetCommandLine(), TRUE);
 
@@ -747,7 +750,7 @@ void CMountPropertyPage::OnClickedMount()
 void CMountPropertyPage::OnClickedDismount()
 {
 	CString mes = Dismount(nullptr, true, false);
-	if (mes.GetLength() > 0 && mes != L"operation cancelled by user")
+	if (mes.GetLength() > 0 && mes != LocUtils::GetStringFromResources(IDS_CANCELED_BY_USER).c_str())
 		MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 }
 
@@ -757,12 +760,12 @@ CString CMountPropertyPage::Dismount(LPCWSTR argMountPoint, bool interactive, bo
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
 	if (!pList)
-		return CString(L"unable to get list");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_LIST).c_str();
 
 	POSITION pos = pList->GetFirstSelectedItemPosition();
 
 	if (!pos)
-		return CString(L"unable to get selection");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_SELECTED).c_str();
 
 	int nItem;
 	
@@ -773,24 +776,30 @@ CString CMountPropertyPage::Dismount(LPCWSTR argMountPoint, bool interactive, bo
 		CString str = wcslen(argMountPoint) == 1 ? CString(*argMountPoint) + L":" : argMountPoint;
 		fi.psz = str;
 		nItem = pList->FindItem(&fi);
-		if (nItem < 0)
-			return CString(L"Drive ") + str + CString(L" does not have a mounted cppcryptfs filesystem.");
+		if (nItem < 0) {
+			CString msg;
+			msg.Format(LocUtils::GetStringFromResources(IDS_DRIVE_WITHOUT_MOUNTED_FS).c_str(), str);
+			return msg;
+		}
 	} else {
 		nItem = pList->GetNextSelectedItem(pos);
 	}
 
 	if (nItem < 0)
-		return CString(L"unable to find item");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_FIND_ITEM).c_str();
 
 	CString cmp = pList->GetItemText(nItem, DL_INDEX);
 
 	if (cmp.GetLength() < 1)
-		return CString(L"unable to get drive letter");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_LETTER).c_str();
 
 	CString cpath = pList->GetItemText(nItem, PATH_INDEX);
 
-	if (cpath.GetLength() < 1)
-		return CString(L"Drive ") + cmp + CString(L" does not have a mounted cppcryptfs filesystem.");
+	if (cpath.GetLength() < 1) {
+		CString msg;
+		msg.Format(LocUtils::GetStringFromResources(IDS_DRIVE_WITHOUT_MOUNTED_FS).c_str(), cmp);
+		return msg;
+	}
 
 	CString mes;
 
@@ -811,10 +820,12 @@ CString CMountPropertyPage::Dismount(LPCWSTR argMountPoint, bool interactive, bo
 	theApp.DoWaitCursor(-1);
 
 	if (!bresult) {
-		if (mes.GetLength() > 0)
+		if (mes.GetLength() > 0) {
 			mes += L". ";
-		mes += L"cannot unmount ";
-		mes.Append(cmp);
+		}
+		CString strMessage;
+		strMessage.Format(LocUtils::GetStringFromResources(IDS_CANNOT_UNMOUNT).c_str(), cmp);
+		mes += strMessage;
 		if (wmes.length() > 0) {
 			mes += L" ";
 			mes += wmes.c_str();
@@ -845,7 +856,7 @@ CString CMountPropertyPage::DismountAll(bool interactive, bool forceDismount)
 	CListCtrl *pList = (CListCtrl*)GetDlgItem(IDC_DRIVE_LETTERS);
 
 	if (!pList)
-		return CString(L"unable to get list");
+		return LocUtils::GetStringFromResources(IDS_UNABLE_GET_LIST).c_str();
 
 	int count = pList->GetItemCount();
 
@@ -902,16 +913,16 @@ CString CMountPropertyPage::DismountAll(bool interactive, bool forceDismount)
 
 	if (hadFailure) {
 		if (hadSuccess) {
-			mes = L"Some of the drives could not be dismounted";
+			mes = LocUtils::GetStringFromResources(IDS_SOME_DRV_NOT_DISMOUNTED).c_str();
 		} else {
-			mes = L"Unable to dismount";
+			mes = LocUtils::GetStringFromResources(IDS_UNABLE_DISMOUNT).c_str();
 		}
 	}
 
 	if (volnameFailure) {
 		if (mes.GetLength() > 0)
 			mes += L". ";
-		mes += L"unable to update one or more volume labels";
+		mes += LocUtils::GetStringFromResources(IDS_UNABLE_UPDATE_LABELS).c_str();
 	}
 
 	return mes;
@@ -961,14 +972,18 @@ BOOL CMountPropertyPage::OnSetActive()
 						if (flags & AUTO_MOUNT_FLAG) {
 							CString mountPoint = theApp.GetProfileString(L"MountPoints", path_hash, NULL);
 							if (mountPoint.GetLength() == 0) {
-								MessageBox(L"Fail to retrive MountPoint for " + m_lastDirs[i], L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+								CString strMessage;
+								strMessage.Format(LocUtils::GetStringFromResources(IDS_FAIL_RETRIVE_MPOINT).c_str(), m_lastDirs[i]);
+								MessageBox(strMessage, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 								continue;
 							}
 
 							LockZeroBuffer<WCHAR> password(MAX_PASSWORD_LEN + 1, true);
 
 							if (!SavedPasswords::RetrievePassword(m_lastDirs[i], password.m_buf, password.m_len)) {
-								MessageBox(L"Fail to retrive password for " + m_lastDirs[i], L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+								CString strMessage;
+								strMessage.Format(LocUtils::GetStringFromResources(IDS_FAIL_RETRIVE_PASS).c_str(), m_lastDirs[i]);
+								MessageBox(strMessage, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 								continue;
 							}
 
@@ -1723,7 +1738,7 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 		if (!menu.CreatePopupMenu())
 			return;
 
-		menu.AppendMenu(MF_ENABLED, AddMountPointV, L"&Add Mount Point...");
+		menu.AppendMenu(MF_ENABLED, AddMountPointV, LocUtils::GetStringFromResources(IDS_MENU_ADD_MOUNT_POINT).c_str());
 
 		int item = -1;
 
@@ -1740,12 +1755,12 @@ void CMountPropertyPage::OnContextMenu(CWnd* pWnd, CPoint point)
 			wstring mpstr;
 			bool mounted = MountPointManager::getInstance().find(cmp, mpstr);
 			if (mounted) {
-				menu.AppendMenu(MF_ENABLED, OpenV, L"Open...\tdouble-click");
-				menu.AppendMenu(MF_ENABLED, PropertiesV, L"&Properties...");
-				menu.AppendMenu(MF_ENABLED, DismountV, L"&Dismount");
+				menu.AppendMenu(MF_ENABLED, OpenV, LocUtils::GetStringFromResources(IDS_MENU_OPEN).c_str());
+				menu.AppendMenu(MF_ENABLED, PropertiesV, LocUtils::GetStringFromResources(IDS_MENU_PROPERTIES).c_str());
+				menu.AppendMenu(MF_ENABLED, DismountV, LocUtils::GetStringFromResources(IDS_MENU_DISMOUNT).c_str());
 			}
 			if (is_mountpoint_a_dir(cmp)) {
-				menu.AppendMenu(mounted ? MF_DISABLED : MF_ENABLED, DeleteMountPointV, L"Dele&te Mount Point");
+				menu.AppendMenu(mounted ? MF_DISABLED : MF_ENABLED, DeleteMountPointV, LocUtils::GetStringFromResources(IDS_MENU_DELETE_MPOINT).c_str());
 			}
 
 		}
@@ -1806,8 +1821,7 @@ void CMountPropertyPage::AddMountPoint(const CString & path)
 		return;
 
 	if (!is_suitable_mountpoint(path)) {
-		MessageBox(L"The path is not suitable for use as a mount point.  The folder must be empty, and it must reside on an NTFS filesystem",
-			L"cppcyrptfs", MB_OK | MB_ICONEXCLAMATION);
+		MessageBox(LocUtils::GetStringFromResources(IDS_PATH_NOT_SUITABLE_MPOINT).c_str(), L"cppcyrptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
 	}
 
@@ -1816,7 +1830,7 @@ void CMountPropertyPage::AddMountPoint(const CString & path)
 	int i = 0;
 	for (CString mp = mountPointsStr.Tokenize(L"|", i); i >= 0; mp = mountPointsStr.Tokenize(L"|", i)) {
 		if (!lstrcmpi(path, mp)) {
-			MessageBox(L"Mount point has already been added.", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+			MessageBox(LocUtils::GetStringFromResources(IDS_MPOINT_ALREADY_ADDED).c_str(), L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 			return;
 		}
 	}

@@ -41,13 +41,7 @@ THE SOFTWARE.
 #include "crypt/cryptdefs.h"
 #include "util/LockZeroBuffer.h"
 #include "util/util.h"
-
-static const WCHAR *filename_encryption_types[] = {
-	L"AES256-EME",
-	L"Plain text"
-};
-
-#define NUM_FN_ENC_TYPES (sizeof(filename_encryption_types)/sizeof(filename_encryption_types[0]))
+#include "locutils.h"
 
 static const WCHAR *data_encryption_types[] = {
 	L"AES256-GCM",
@@ -102,6 +96,11 @@ void CCreatePropertyPage::DefaultAction()
 
 void CCreatePropertyPage::CreateCryptfs()
 {
+	//Moved to both methods, otherwise the array will be loaded before we determine the GUI language at program startup.
+	static const CString sPlainText = LocUtils::GetStringFromResources(IDS_PLAIN_TEXT).c_str();
+	static const WCHAR* filename_encryption_types[] = { L"AES256-EME", sPlainText };
+	const int NUM_FN_ENC_TYPES = sizeof(filename_encryption_types) / sizeof(filename_encryption_types[0]);
+
 	CWnd *pWnd = GetDlgItem(IDC_PATH);
 	if (!pWnd)
 		return;
@@ -110,7 +109,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	LockZeroBuffer<WCHAR> password2(MAX_PASSWORD_LEN + 1, false);
 
 	if (!password.IsLocked() || !password2.IsLocked()) {
-		MessageBox(L"could not lock password buffers", L"cppcryptefs", MB_OK | MB_ICONERROR);
+		MessageBox(LocUtils::GetStringFromResources(IDS_COULD_NOT_LOCK_BUFFER).c_str(), L"cppcryptefs", MB_OK | MB_ICONERROR);
 		return;
 	}
 
@@ -120,7 +119,7 @@ void CCreatePropertyPage::CreateCryptfs()
 		return;
 
 	if (wcslen(password.m_buf) < 1) {
-		MessageBox(L"please enter a password", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		MessageBox(LocUtils::GetStringFromResources(IDS_PASSWORD_EMPTY).c_str(), L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
 	}
 
@@ -130,12 +129,12 @@ void CCreatePropertyPage::CreateCryptfs()
 		return;
 
 	if (wcslen(password2.m_buf) < 1) {
-		MessageBox(L"please repeat the password", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		MessageBox(LocUtils::GetStringFromResources(IDS_PASSWORD_REPEAT_EMPTY).c_str(), L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
 	}
 
 	if (wcscmp(password.m_buf, password2.m_buf)) {
-		MessageBox(L"passwords do not match", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		MessageBox(LocUtils::GetStringFromResources(IDS_PASSWORD_DO_NOT_MATCH).c_str(), L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
 	}
 
@@ -147,21 +146,20 @@ void CCreatePropertyPage::CreateCryptfs()
 	pWnd->GetWindowTextW(cpath);
 
 	if (cpath.GetLength() < 1) {
-		MessageBox(L"please enter a path", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		MessageBox(LocUtils::GetStringFromResources(IDS_PATH_EMPTY).c_str(), L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
 	}
 
 	if (!PathFileExists(cpath)) {
 		CString mes;
-		mes += cpath;
-		mes += L" does not exist.  Do you want to create it?";
+		mes.Format(LocUtils::GetStringFromResources(IDS_PATH_DOES_NOT_EXIST).c_str(), cpath);
+		
 		if (MessageBox(mes, L"cppcryptfs", MB_YESNO | MB_ICONINFORMATION) == IDYES) {
-				if (!CreateDirectory(cpath, NULL)) {
-					mes = L"Could not create ";
-					mes += cpath;
-					MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
-					return;
-				}
+			if (!CreateDirectory(cpath, NULL)) {
+				mes.Format(LocUtils::GetStringFromResources(IDS_PATH_COULD_NOT_CREATE).c_str(), cpath);
+				MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+				return;
+			}
 		} else {
 			return;
 		}
@@ -203,7 +201,7 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	if (cfenc == L"AES256-EME")
 		eme = true;
-	else if (cfenc == "Plain text")
+	else if (cfenc == sPlainText)
 		plaintext = true;
 
 	if (!plaintext) {
@@ -257,9 +255,7 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	CString mes;
 
-	mes = reverse ? L"Created reverse encrypted filesystem in " : L"Created encrypted filesystem in ";
-
-	mes.Append(cpath);
+	reverse ? mes.Format(LocUtils::GetStringFromResources(IDS_CREATED_REVERSE_FS).c_str(), cpath) : mes.Format(LocUtils::GetStringFromResources(IDS_CREATED_FORWARD_FS).c_str(), cpath);
 
 	MessageBox(mes, L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
 
@@ -294,7 +290,15 @@ void CCreatePropertyPage::CreateCryptfs()
 	if (nenc < 0 || nenc >= NUM_FN_ENC_TYPES)
 		return;
 
-	theApp.WriteProfileStringW(L"CreateOptions", L"FilenameEncryption", filename_encryption_types[nenc]);
+	//To save localization-independent text in the registry
+	CString filename_encryption_type_for_registry;
+	if (filename_encryption_types[nenc] == sPlainText) {
+		filename_encryption_type_for_registry = L"Plain text";
+	} else {
+		filename_encryption_type_for_registry = filename_encryption_types[nenc];
+	}
+
+	theApp.WriteProfileStringW(L"CreateOptions", L"FilenameEncryption", filename_encryption_type_for_registry);
 
 	pLbox = (CComboBox*)GetDlgItem(IDC_DATA_ENCRYPTION);
 	if (!pLbox)
@@ -345,7 +349,7 @@ void CCreatePropertyPage::OnClickedSelect()
 		return;
 
 	if (!IsDlgButtonChecked(IDC_REVERSE) && !can_delete_directory(cpath, TRUE)) {
-		MessageBox(L"directory must be empty", L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
+		MessageBox(LocUtils::GetStringFromResources(IDS_DIRECTORY_NOT_EMPTY).c_str(), L"cppcryptfs", MB_OK | MB_ICONEXCLAMATION);
 		return;
 	}
 
@@ -368,6 +372,11 @@ BOOL CCreatePropertyPage::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
+	//Moved to both methods, otherwise the array will be loaded before we determine the GUI language at program startup.
+	static const CString sPlainText = LocUtils::GetStringFromResources(IDS_PLAIN_TEXT).c_str();
+	static const WCHAR* filename_encryption_types[] = { L"AES256-EME", sPlainText };
+	const int NUM_FN_ENC_TYPES = sizeof(filename_encryption_types) / sizeof(filename_encryption_types[0]);
+
 	// TODO:  Add extra initialization here
 
 	CString clfns = theApp.GetProfileStringW(L"CreateOptions", L"LongFileNames", L"1");
@@ -380,7 +389,14 @@ BOOL CCreatePropertyPage::OnInitDialog()
 
 	CString creverse = theApp.GetProfileStringW(L"CreateOptions", L"Reverse", L"0");
 
-	CString cfnenc = theApp.GetProfileStringW(L"CreateOptions", L"FilenameEncryption", L"AES256-EME");
+	//To extract localization-independent text from the registry
+	CString cfnenc;
+	CString cfnenc_tmp = theApp.GetProfileStringW(L"CreateOptions", L"FilenameEncryption", L"AES256-EME");
+	if (cfnenc_tmp == L"Plain text") {
+		cfnenc = sPlainText;
+	} else { 
+		cfnenc = cfnenc_tmp; 
+	}
 
 	CString cdataenc = theApp.GetProfileStringW(L"CreateOptions", L"DataEncryption", L"AES256-GCM");
 
@@ -452,7 +468,7 @@ BOOL CCreatePropertyPage::OnInitDialog()
 	pLbox->EnableWindow(IsDlgButtonChecked(IDC_LONG_FILE_NAMES));
 
 	if (!m_password.ArePasswordBuffersLocked() || !m_password2.ArePasswordBuffersLocked()) {
-		MessageBox(L"unable to lock password buffers", L"cppcryptfs", MB_OK | MB_ICONERROR);
+		MessageBox(LocUtils::GetStringFromResources(IDS_UNABLE_LOCK_BUFFERS).c_str(), L"cppcryptfs", MB_OK | MB_ICONERROR);
 	}
 
 	const auto scryptN = theApp.GetProfileIntW(L"CreateOptions", L"ScryptN", DEFAULT_SCRYPTN);
@@ -581,15 +597,16 @@ void CCreatePropertyPage::OnSelchangeScryptn()
 
 	int mem = (1<<scryptN)/1024;
 
-	auto suffix = L" MB required";
-	if (mem >= 1024)
-	{
-		suffix = L" GB required";
+	CString suffix;
+	suffix.Format(LocUtils::GetStringFromResources(IDS_MB_REQUIRED).c_str(), mem);
+
+	if (mem >= 1024)	{
 		mem /= 1024;
+		suffix.Format(LocUtils::GetStringFromResources(IDS_GB_REQUIRED).c_str(), mem);
 	}
 
 	auto pScryptMemReq = (CStatic*)GetDlgItem(IDC_SCRYPTMEMREQ);
 	if (pScryptMemReq) {
-		pScryptMemReq->SetWindowText((std::to_wstring(mem) + suffix).c_str());
+		pScryptMemReq->SetWindowText(suffix);
 	}
 }

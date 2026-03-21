@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "cppcryptfs.h"
 #include "FsInfoDialog.h"
 #include "afxdialogex.h"
+#include "locutils.h"
 
 
 #ifdef _DEBUG
@@ -87,9 +88,18 @@ BOOL CFsInfoDialog::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	LPCWSTR yes = L"Yes";
-	LPCWSTR no = L"No";
-	LPCWSTR na = L"n/a";
+	CString strMsgYes, strMsgNo, strMsgNA, strMsgReverse, strMsgForward, strMsgKB, strMsgSec, strMsgInfinite, strMsgNone;
+	strMsgYes = LocUtils::GetStringFromResources(IDS_FSINFO_YES).c_str();
+	strMsgNo = LocUtils::GetStringFromResources(IDS_FSINFO_NO).c_str();
+	strMsgNA = LocUtils::GetStringFromResources(IDS_FSINFO_NA).c_str();
+	strMsgReverse = LocUtils::GetStringFromResources(IDS_FSINFO_REVERSE).c_str();
+	strMsgForward = LocUtils::GetStringFromResources(IDS_FSINFO_FORWARD).c_str();
+	strMsgInfinite = LocUtils::GetStringFromResources(IDS_FSINFO_INFINITE).c_str();
+	strMsgNone = LocUtils::GetStringFromResources(IDS_FSINFO_NAME_ENCRYPTION_NO).c_str();
+
+	LPCWSTR yes = strMsgYes;
+	LPCWSTR no = strMsgNo;
+	LPCWSTR na = strMsgNA;
 	LPCWSTR path = m_info.path.c_str();
 	if (!wcsncmp(path, L"\\\\?\\", wcslen(L"\\\\?\\"))) {
 		path += wcslen(L"\\\\?\\");
@@ -97,10 +107,19 @@ BOOL CFsInfoDialog::OnInitDialog()
 	SetDlgItemText(IDC_PATH, m_info.path.c_str());
 	SetDlgItemText(IDC_MOUNT_POINT, m_mountPoint);
 	SetDlgItemText(IDC_CONFIG_PATH, m_info.configPath.c_str());
-	SetDlgItemText(IDC_FILE_NAME_ENCRYPTION, m_info.fileNameEncryption.c_str());
+
+	//To display localized text in the GUI
+	LPCWSTR none = strMsgNone;
+	if (m_info.fileNameEncryption == L"none") {
+		SetDlgItemText(IDC_FILE_NAME_ENCRYPTION, none);
+	}
+	else	{
+		SetDlgItemText(IDC_FILE_NAME_ENCRYPTION, m_info.fileNameEncryption.c_str());
+	}
+	
 	SetDlgItemText(IDC_DATA_ENCRYPTION, m_info.dataEncryption.c_str());
 	SetDlgItemText(IDC_READ_ONLY, m_info.readOnly ? yes : no);
-	SetDlgItemText(IDC_MODE, m_info.reverse ? L"Reverse" : L"Forward");
+	SetDlgItemText(IDC_MODE, m_info.reverse ? strMsgReverse : strMsgForward);
 	SetDlgItemText(IDC_MOUNT_MANAGER, m_info.mountManager ? yes : no);
 	SetDlgItemText(IDC_CASE_INSENSITIVE, m_info.caseInsensitive ? yes : no);
 	SetDlgItemText(IDC_LONG_FILE_NAMES, m_info.longFileNames ? yes : no);	
@@ -113,17 +132,18 @@ BOOL CFsInfoDialog::OnInitDialog()
 
 	wstring txt;
 	txt = to_wstring(m_info.ioBufferSize);
-	txt += L" KB";
-	SetDlgItemText(IDC_IO_BUF_SIZE, txt.c_str());
+	strMsgKB.Format(LocUtils::GetStringFromResources(IDS_FSINFO_KB).c_str(), txt);
+	SetDlgItemText(IDC_IO_BUF_SIZE, strMsgKB);
 	txt = m_info.multhreaded ? yes : no;
 	SetDlgItemText(IDC_THREADS, txt.c_str());
 	if (m_info.cacheTTL > 0) {
 		txt = to_wstring(m_info.cacheTTL);
-		txt += L" sec";
+		strMsgSec.Format(LocUtils::GetStringFromResources(IDS_FSINFO_SEC).c_str(), txt);
+		SetDlgItemText(IDC_CACHE_TTL, strMsgSec);
 	} else {
-		txt = L"infinite";
+		SetDlgItemText(IDC_CACHE_TTL, strMsgInfinite);
 	}
-	SetDlgItemText(IDC_CACHE_TTL, txt.c_str());
+	
 	WCHAR buf[32];
 	*buf = '\0';
 	float r;
@@ -138,7 +158,7 @@ BOOL CFsInfoDialog::OnInitDialog()
 	SetDlgItemText(IDC_CASE_CACHE_HR, txt.c_str());
 	r = m_info.lfnCacheHitRatio;
 	if (r < 0.0f) {
-		txt = L"n/a";
+		txt = strMsgNA;
 	} else {
 		_snwprintf_s(buf, _TRUNCATE, L"%.2f", r*100.0f);
 		txt = buf;
@@ -147,7 +167,7 @@ BOOL CFsInfoDialog::OnInitDialog()
 	SetDlgItemText(IDC_LFN_CACHE_HR, txt.c_str());
 	r = m_info.dirIvCacheHitRatio;
 	if (r < 0.0f) {
-		txt = L"n/a";
+		txt = strMsgNA;
 	} else {
 		_snwprintf_s(buf, _TRUNCATE, L"%.2f", r*100.0f);
 		txt = buf;

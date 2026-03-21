@@ -46,6 +46,7 @@ THE SOFTWARE.
 #include "../libcppcryptfs/util/KeyCache.h"
 #include "crypt/crypt.h"
 #include "cryptdefaults.h"
+#include "locutils.h"
 
 // CryptPropertySheet
 
@@ -80,8 +81,8 @@ CCryptPropertySheet::~CCryptPropertySheet()
 BOOL CCryptPropertySheet::CanClose()
 {
 	if (!MountPointManager::getInstance().empty()) {
-		
-		if (MessageBox(L"All mounted cppcryptfs filesystems will be dismounted. Do you really wish to exit?", L"cppcryptfs",
+
+		if (MessageBox(LocUtils::GetStringFromResources(IDS_DISMOUNT_ALL_ON_EXIT).c_str(), L"cppcryptfs",
 			MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
 
 			CString open_handles_mes = CheckOpenHandles(m_hWnd, nullptr, true, false).c_str();

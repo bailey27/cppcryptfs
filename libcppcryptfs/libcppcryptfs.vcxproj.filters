@@ -28,6 +28,7 @@
     <ClCompile Include="util\util.cpp" />
     <ClCompile Include="util\KeybufManager.cpp" />
     <ClCompile Include="util\KeyCache.cpp" />
+    <ClCompile Include="..\cppcryptfs\ui\locutils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config\cryptconfig.h" />
@@ -61,5 +62,6 @@
     <ClInclude Include="util\wintypes.h" />
     <ClInclude Include="util\KeybufManager.h" />
     <ClInclude Include="util\KeyCache.h" />
+    <ClInclude Include="..\cppcryptfs\ui\locutils.h" />
   </ItemGroup>
 </Project>

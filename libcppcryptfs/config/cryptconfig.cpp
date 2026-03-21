@@ -64,6 +64,9 @@ THE SOFTWARE.
 #include "util/LockZeroBuffer.h"
 #include "filename/cryptfilename.h"
 #include "../libcommonutil/commonutil.h"
+#include "../cppcryptfs/resource.h"
+#include "../cppcryptfs/ui/locutils.h"
+#include <atlstr.h>
 
 CryptConfig::CryptConfig()
 {
@@ -114,7 +117,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 	if (config_file_path) {
 		
 		if (_wfopen_s(&fl, config_file_path, L"rb")) {
-			mes = L"failed to open config file";
+			mes = LocUtils::GetStringFromResources(IDS_FAILED_OPEN_CONF);
 			return false;
 		}
 		m_configPath = config_file_path;
@@ -124,7 +127,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 		wstring config_path;
 
 		if (m_basedir.size() < 1) {
-			mes = L"cannot read config because base dir is empty";
+			mes = LocUtils::GetStringFromResources(IDS_NOT_CONF_DIR_EMPTY);
 			return false;
 		}
 
@@ -138,7 +141,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 		if (_wfopen_s(&fl, &config_file[0], L"rb")) {
 			config_file = config_path + CONFIG_NAME;
 			if (_wfopen_s(&fl, &config_file[0], L"rb")) {
-				mes = L"failed to open config file";
+				mes = LocUtils::GetStringFromResources(IDS_FAILED_OPEN_CONF);
 				return false;
 			}
 			m_reverse = false;
@@ -152,24 +155,24 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 	File.reset(fl);
 
 	if (fseek(fl, 0, SEEK_END)) {
-		mes = L"unable to seek to end of config file";
+		mes = LocUtils::GetStringFromResources(IDS_NOT_FOUND_END_CONF);
 		return false;
 	}
 
 	long filesize = ftell(fl);
 
 	if (filesize > MAX_CONFIG_FILE_SIZE) {
-		mes = L"config file is too big";
+		mes = LocUtils::GetStringFromResources(IDS_CONF_TOO_BIG);
 		return false;
 	}
 
 	if (filesize < 1) {
-		mes = L"config file is empty";
+		mes = LocUtils::GetStringFromResources(IDS_CONF_EMPTY);
 		return false;
 	}
 
 	if (fseek(fl, 0, SEEK_SET)) {
-		mes = L"unable to seek to beginning of config file";
+		mes = LocUtils::GetStringFromResources(IDS_NOT_FOUND_BEGINNING_CONF);
 		return false;
 	}
 
@@ -178,14 +181,14 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 	char* buf = buf_rsc.get();	
 
 	if (!buf) {
-		mes = L"cannot allocate buffer for reading config file";
+		mes = LocUtils::GetStringFromResources(IDS_CANNOT_ALLOCATE_BUFFER_CONF);
 		return false;
 	}
 
 	size_t len = fread(buf, 1, filesize, fl);
 
 	if (len < 0) {
-		mes = L"read error when reading config file";
+		mes = LocUtils::GetStringFromResources(IDS_RAED_ERR_CONF);
 		return false;
 	}
 
@@ -196,7 +199,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 	d.Parse(buf);
 
 	if (!d.IsObject()) {
-		mes = L"config file is not valid JSON";
+		mes = LocUtils::GetStringFromResources(IDS_CONF_NOT_VALID_JSON);
 		return false;
 	}
 
@@ -205,19 +208,19 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 	try {
 
 		if (!d.HasMember("EncryptedKey") || !d["EncryptedKey"].IsString()) {
-			mes = L"key missing in config file";
+			mes = LocUtils::GetStringFromResources(IDS_KEY_MISSING_IN_CONF);
 			throw (-1);
 		}
 
 		rapidjson::Value& v = d["EncryptedKey"];
 
 		if (!base64_decode(v.GetString(), m_encrypted_key, false, true)) {
-			mes = L"failed to base64 decode key in config file";
+			mes = LocUtils::GetStringFromResources(IDS_FAILED_BASE64_DECODE_KEY);
 			throw (-1);
 		}
 
 		if (!d.HasMember("ScryptObject") || !d["ScryptObject"].IsObject()) {
-			mes = L"ScryptObject missing in config file";
+			mes = LocUtils::GetStringFromResources(IDS_SCRYPTOBJECT_MISSING_IN_CONF);
 			throw (-1);
 		}
 
@@ -225,7 +228,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 
 
 		if (!base64_decode(scryptobject["Salt"].GetString(), m_encrypted_key_salt, false, true)) {
-			mes = L"failed to base64 decode Scrypt Salt in config file";
+			mes = LocUtils::GetStringFromResources(IDS_FAILED_BASE64_DECODE_SALT);
 			throw (-1);
 		}
 
@@ -235,7 +238,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 
 		for (i = 0; i < sizeof(sstuff) / sizeof(sstuff[0]); i++) {
 			if (scryptobject[sstuff[i]].IsNull() || !scryptobject[sstuff[i]].IsInt()) {
-				mes = L"invalid Scrypt object in config file";
+				mes = LocUtils::GetStringFromResources(IDS_INVALID_SCRYPTOBJECT);
 				throw (-1);
 			}
 		}
@@ -246,21 +249,21 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 		int keyLen = scryptobject["KeyLen"].GetInt();
 
 		if (keyLen != 32) {
-			mes = L"invalid KeyLen in config file";
+			mes = LocUtils::GetStringFromResources(IDS_INVALID_KEYLEN);
 			throw(-1);
 		}
 
 		m_pKeyBuf = new LockZeroBuffer<unsigned char>(keyLen, false);
 
 		if (!m_pKeyBuf->IsLocked()) {
-			mes = L"failed to lock key buffer while reading config file";
+			mes = LocUtils::GetStringFromResources(IDS_FAILED_LOCK_BUFFER_READ_CONF);
 			throw(-1);
 		}
 
 		m_keybuf_manager.RegisterBuf(m_pKeyBuf);
 
 		if (d["Version"].IsNull() || !d["Version"].IsInt()) {
-			mes = L"invalid Version in config file";
+			mes = LocUtils::GetStringFromResources(IDS_INVALID_VERSION_IN_CONF);
 			throw (-1);
 		}
 
@@ -284,7 +287,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 			try {
 				m_fs_feature_disable_mask = stoul(fs_str, nullptr, 16);
 			} catch (std::invalid_argument&) {
-				mes = L"invalid FsFeatureDisableMask in config file";
+				mes = LocUtils::GetStringFromResources(IDS_INVALID_FSFEATUREDISABLEMASK);
 				throw(-1);
 			}
 		}
@@ -318,10 +321,11 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 					} else {
 						wstring wflag;
 						if (utf8_to_unicode(itr->GetString(), wflag)) {
-							mes = L"unkown feature flag in config file: ";
-							mes += wflag;
+							CString strMsg;
+							strMsg.Format(LocUtils::GetStringFromResources(IDS_UNKNOWN_FEATURE_FLAG).c_str(), wflag);
+							mes = strMsg;
 						} else {
-							mes = L"unable to convert unkown flag in config file to unicode";
+							mes = LocUtils::GetStringFromResources(IDS_UNABLE_CONVERT_UNKNOWN_FLAG);
 						}
 						throw(-1);
 					}
@@ -338,11 +342,11 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 						}
 						m_LongNameMax = lnm;
 					} catch (std::invalid_argument&) {
-						mes = L"invalid LongNameMax in config file";
+						mes = LocUtils::GetStringFromResources(IDS_INVALID_LONGNAMEMAX);
 						throw(-1);
 					}
 				} else {
-					mes = L"LongNameMax feature flag specified but no LongNameMax value provided";
+					mes = LocUtils::GetStringFromResources(IDS_NO_VALUE_LONGNAMEMAX);
 					throw(-1);
 				}
 			}
@@ -601,16 +605,16 @@ bool CryptConfig::check_config(wstring& mes)
 	mes = L"";
 
 	if (m_Version != 2)
-		mes += L"Only version 2 is supported\n";
+		mes += LocUtils::GetStringFromResources(IDS_ONLY_VERSION_2_SUPPORT);
 
 	if (!m_EMENames && !m_PlaintextNames)
-		mes += L"EMENames is required unless PlaintextNames is specified\n";
+		mes += LocUtils::GetStringFromResources(IDS_EMENAMES_REQUIRED);
 	
 	if (!m_GCMIV128) 
-		mes += L"GCMIV128 must be specified\n";
+		mes += LocUtils::GetStringFromResources(IDS_GCMIV128_NOT_SPECIFIED);
 
 	if (m_reverse && !m_AESSIV)
-		mes += L"reverse mode is being used but AESSIV not specfied\n";
+		mes += LocUtils::GetStringFromResources(IDS_REVERSE_MODE_WITHOUT_AESSIV);
 		
 	return mes.size() == 0;
 }
@@ -726,7 +730,7 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 	LockZeroBuffer<unsigned char> pwkeyHKDF(MASTER_KEY_LEN, false);
 
 	if (!pwkey.IsLocked() || !pwkeyHKDF.IsLocked()) {
-		error_mes = L"pw key not locked";
+		error_mes = LocUtils::GetStringFromResources(IDS_PWKEY_NOT_LOCKED);
 		return false;
 	}
 
@@ -734,14 +738,14 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 
 		if (masterkey) {
 			if (m_pKeyBuf) {
-				error_mes = L"master key is already set";
+				error_mes = LocUtils::GetStringFromResources(IDS_MASTER_KEY_ALREADY_SET);
 				return false;
 			}
 
 			m_pKeyBuf = new LockZeroBuffer<unsigned char>(DEFAULT_KEY_LEN, false);
 
 			if (!m_pKeyBuf->IsLocked()) {
-				error_mes = L"cannot lock key buffer\n";
+				error_mes = LocUtils::GetStringFromResources(IDS_CANNOT_LOCK_KEY_BUFFER);
 				throw(-1);
 			}
 
@@ -753,18 +757,18 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 		m_encrypted_key_salt.resize(SALT_LEN);
 
 		if (!get_sys_random_bytes(&m_encrypted_key_salt[0], SALT_LEN)) {
-			error_mes = L"get random bytes for salt failed\n";
+			error_mes = LocUtils::GetStringFromResources(IDS_FAILED_GET_RANDOM);
 			throw(-1);
 		}
 
 		LockZeroBuffer<char> utf8pass(256, false);
 		if (!utf8pass.IsLocked()) {
-			error_mes = L"utf8 pass is not locked";
+			error_mes = LocUtils::GetStringFromResources(IDS_UTF8PASS_NOT_LOCKED);
 			return false;
 		}
 
 		if (!unicode_to_utf8(password, utf8pass.m_buf, utf8pass.m_len - 1)) {
-			error_mes = L"cannot convert password to utf-8\n";
+			error_mes = LocUtils::GetStringFromResources(IDS_CANNOT_CONVERT_PASS_UTF8);
 			throw(-1);
 		}
 
@@ -774,13 +778,13 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 			GetMasterKeyLength());
 
 		if (result != 1) {
-			error_mes = L"key derivation failed\n";
+			error_mes = LocUtils::GetStringFromResources(IDS_KEY_DERIVATION_FAILED);
 			throw(-1);
 		}
 
 		if (m_HKDF) {
 			if (!hkdfDerive(pwkey.m_buf, pwkey.m_len, pwkeyHKDF.m_buf, pwkeyHKDF.m_len, hkdfInfoGCMContent)) {
-				error_mes = L"unable to perform hkdf on pw key";
+				error_mes = LocUtils::GetStringFromResources(IDS_UNABLE_HKDF_ON_PWKEY);
 				throw(-1);
 			}
 		}
@@ -790,7 +794,7 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 		int iv_len = m_HKDF ? HKDF_MASTER_IV_LEN : ORIG_MASTER_IV_LEN;
 
 		if (!get_sys_random_bytes(iv, iv_len)) {
-			error_mes = L"unable to generate iv\n";
+			error_mes = LocUtils::GetStringFromResources(IDS_UNABLE_GENERATE_IV);
 			throw(-1);
 		}
 
@@ -801,14 +805,14 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 		memset(adata, 0, adata_len);
 
 		if (!InitGCMContentKey(GetMasterKey())) {
-			error_mes = L"unable to init gcm content key for volume name";
+			error_mes = LocUtils::GetStringFromResources(IDS_UNABLE_INIT_GCM);
 			throw(-1);
 		}
 		
 		context = get_crypt_context(iv_len, AES_MODE_GCM);
 
 		if (!context) {
-			error_mes = L"unable to get gcm context\n";
+			error_mes = LocUtils::GetStringFromResources(IDS_UNABLE_GET_GCM);
 			throw(-1);
 		}
 		
@@ -820,19 +824,19 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 							iv, (encrypted_key + iv_len), encrypted_key + iv_len + GetMasterKeyLength(), context.get());
 
 		if (ctlen < 1) {
-			error_mes = L"unable to encrypt master key\n";
+			error_mes = LocUtils::GetStringFromResources(IDS_UNABLE_ENCRYPT_MASTER_KEY);
 			throw(-1);
 		}
 		
 		const char* base64_key = base64_encode(encrypted_key, GetMasterKeyLength() + iv_len + BLOCK_TAG_LEN, base64encryptedmasterkey, false, true);
 
 		if (!base64_key) {
-			error_mes = L"unable to base64 encode key\n";
+			error_mes = LocUtils::GetStringFromResources(IDS_UNABLE_BASE64_ENCODE_KEY);
 			throw(-1);
 		}
 
 		if (!base64_encode(&m_encrypted_key_salt[0], (DWORD)m_encrypted_key_salt.size(), scryptSalt, false, true)) {
-			error_mes = L"unable to base64 encode salt\n";
+			error_mes = LocUtils::GetStringFromResources(IDS_UNABLE_BASE64_ENCODE_SALT);
 			throw(-1);
 		}
 	}
@@ -902,22 +906,26 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 		}
 
 		if (m_reverse && !m_AESSIV) {
-			error_mes = L"AES256-SIV must be used with Reverse\n";
+			error_mes = LocUtils::GetStringFromResources(IDS_ONLY_AES256SIV_WITH_REVERSE);
 			throw(-1);
 		}
 
 		if (m_reverse) {
 			if (PathFileExists(&config_path[0])) {
 				if (specified_config_file_path) {
-					error_mes = config_path + L" already exists.  Please remove it and try again.";
+					CString strMsg;
+					strMsg.Format(LocUtils::GetStringFromResources(IDS_CONF_PATH_ALREADY_EXIST).c_str(), config_path);
+					error_mes = strMsg;
 				} else {
-					error_mes = config_path + L" (normally a hidden file) already exists.  Please remove it and try again.";
+					CString strMsg;
+					strMsg.Format(LocUtils::GetStringFromResources(IDS_CONF_PATH_HIDDEN_EXIST).c_str(), config_path);
+					error_mes = strMsg;
 				}
 				throw(-1);
 			}
 		} else {
 			if (!can_delete_directory(&m_basedir[0], TRUE)) {
-				error_mes = L"the directory is not empty\n";
+				error_mes = LocUtils::GetStringFromResources(IDS_DIR_NOT_EMPTY);
 				throw(-1);
 			}
 		}			
@@ -929,12 +937,12 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 		m_pKeyBuf = new LockZeroBuffer<unsigned char>(DEFAULT_KEY_LEN, false);
 
 		if (!m_pKeyBuf->IsLocked()) {
-			error_mes = L"cannot lock key buffer\n";
+			error_mes = LocUtils::GetStringFromResources(IDS_CANNOT_LOCK_KEY_BUFFER);
 			throw(-1);
 		}
 
 		if (!get_sys_random_bytes(m_pKeyBuf->m_buf, GetMasterKeyLength())) {
-			error_mes = L"unable to generate master key\n";
+			error_mes = LocUtils::GetStringFromResources(IDS_UNABLE_GENERATE_MASTER_KEY);
 			throw(-1);
 		}
 
@@ -963,7 +971,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 			if (vol.size() > MAX_VOLUME_NAME_LENGTH)
 				vol.erase(MAX_VOLUME_NAME_LENGTH, wstring::npos);
 			if (!encrypt_string_gcm(vol, GetGcmContentKey(), volume_name_utf8)) {
-				error_mes = L"cannot encrypt volume name\n";
+				error_mes = LocUtils::GetStringFromResources(IDS_CANNOT_ENCRYPT_VOLUME_NAME);
 				throw(-1);
 			}
 		}
@@ -972,12 +980,12 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 		auto fl = File.get();
 
 		if (!fl) {
-			error_mes = L"cannot create config file\n";
+			error_mes = LocUtils::GetStringFromResources(IDS_CANNOT_CREATE_CONF);
 			throw(-1);
 		}
 
 		if (!fl) {
-			error_mes = L"unable to open config file for writing\n";
+			error_mes = LocUtils::GetStringFromResources(IDS_UNABLE_OPEN_WRITE_CONF);
 			throw(-1);
 		}
 
@@ -1040,7 +1048,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 
 		if (m_DirIV && !m_reverse) {
 			if (!create_dir_iv(NULL, &m_basedir[0])) {
-				error_mes = L"cannot create diriv file\n";
+				error_mes = LocUtils::GetStringFromResources(IDS_CANNOT_CREATE_DIRIV);
 				throw(-1);
 			}
 		}
@@ -1048,7 +1056,7 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 	} catch (...) {
 
 		if (error_mes.size() < 1)
-			error_mes = L"memory allocation failure\n";
+			error_mes = LocUtils::GetStringFromResources(IDS_MEMORY_ALLOCATION_FAILURE);
 
 		bret = false;
 	}

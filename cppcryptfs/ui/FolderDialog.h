@@ -9,6 +9,7 @@
 #define _CFolderDialog_
 
 #include <shlobj.h>
+#include <afxwin.h>
 
 class CFolderDialog  
 {
@@ -49,6 +50,8 @@ protected:
 	TCHAR m_szPath[MAX_PATH];
 
 	HWND m_hDialogBox;
+
+	CString m_strTitleHolder;
 
 
 };

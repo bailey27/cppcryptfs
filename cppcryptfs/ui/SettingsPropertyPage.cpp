@@ -38,6 +38,7 @@ THE SOFTWARE.
 #include "ui/cryptdefaults.h"
 #include "ui/savedpasswords.h"
 #include "ui/uiutil.h"
+#include "locutils.h"
 
 // CSettingsPropertyPage dialog
 
@@ -95,14 +96,34 @@ static buffer_size_t buffer_sizes[] = { 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2
 
 static int ttls[] = { 0, 1, 2, 5, 10, 15, 30, 45, 60, 90, 120, 300, 600, 900, 1800, 3600};
 
-static const WCHAR* ttl_strings[] = { L"infinite", L"1 second", L"2 seconds", L"5 seconds", 
-									  L"10 seconds", L"15 seconds", L"30 seconds", L"45 seconds", 
-									  L"60 seconds", L"90 seconds", L"2 minutes", L"5 minutes", 
-									  L"10 minutes", L"15 minutes", L"30 minutes", L"1 hour" };
+
 
 BOOL CSettingsPropertyPage::OnInitDialog()
 {
 	CCryptPropertyPage::OnInitDialog();	
+
+	//Moved, otherwise the array will be loaded before we determine the GUI language at program startup.
+	static const CString listBoxStringInfinite = LocUtils::GetStringFromResources(IDS_TTL_INFINITE).c_str();
+	static const CString listBoxStringSec1 = LocUtils::GetStringFromResources(IDS_TTL_SEC_1).c_str();
+	static const CString listBoxStringSec2 = LocUtils::GetStringFromResources(IDS_TTL_SEC_2).c_str();
+	static const CString listBoxStringSec5 = LocUtils::GetStringFromResources(IDS_TTL_SEC_5).c_str();
+	static const CString listBoxStringSec10 = LocUtils::GetStringFromResources(IDS_TTL_SEC_10).c_str();
+	static const CString listBoxStringSec15 = LocUtils::GetStringFromResources(IDS_TTL_SEC_15).c_str();
+	static const CString listBoxStringSec30 = LocUtils::GetStringFromResources(IDS_TTL_SEC_30).c_str();
+	static const CString listBoxStringSec45 = LocUtils::GetStringFromResources(IDS_TTL_SEC_45).c_str();
+	static const CString listBoxStringSec60 = LocUtils::GetStringFromResources(IDS_TTL_SEC_60).c_str();
+	static const CString listBoxStringSec90 = LocUtils::GetStringFromResources(IDS_TTL_SEC_90).c_str();
+	static const CString listBoxStringMin2 = LocUtils::GetStringFromResources(IDS_TTL_MIN_2).c_str();
+	static const CString listBoxStringMin5 = LocUtils::GetStringFromResources(IDS_TTL_MIN_5).c_str();
+	static const CString listBoxStringMin10 = LocUtils::GetStringFromResources(IDS_TTL_MIN_10).c_str();
+	static const CString listBoxStringMin15 = LocUtils::GetStringFromResources(IDS_TTL_MIN_15).c_str();
+	static const CString listBoxStringMin30 = LocUtils::GetStringFromResources(IDS_TTL_MIN_30).c_str();
+	static const CString listBoxStringHour1 = LocUtils::GetStringFromResources(IDS_TTL_HOUR_1).c_str();
+
+	static const WCHAR* ttl_strings[] = { listBoxStringInfinite, listBoxStringSec1, listBoxStringSec2, listBoxStringSec5,
+										  listBoxStringSec10, listBoxStringSec15, listBoxStringSec30, listBoxStringSec45,
+										  listBoxStringSec60, listBoxStringSec90, listBoxStringMin2, listBoxStringMin5,
+										  listBoxStringMin10, listBoxStringMin15, listBoxStringMin30, listBoxStringHour1 };
 
 	auto bufferblocks_set_from_registry = [](CComboBox* pBox, int val) {
 
@@ -295,18 +316,18 @@ void CSettingsPropertyPage::OnClickedEnableSavingPasswords()
 		bool neversavehistory = false;
 		CryptSettings::getInstance().GetSettingCurrent(NEVER_SAVE_HISTORY, neversavehistory);
 		if (neversavehistory) {
-			MessageBox(L"Passwords will not be saved if \"Never save history\" is turned on.",
+			MessageBox(LocUtils::GetStringFromResources(IDS_PASS_WILL_NOT_BE_SAVED).c_str(),
 				L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
 		}		
 	} else {		
 		int numSavedPasswords = SavedPasswords::ClearSavedPasswords(FALSE);
 		if (numSavedPasswords < 0) {
-			MessageBox(L"unable to count saved passwords", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
+			MessageBox(LocUtils::GetStringFromResources(IDS_UNABLE_COUNT_SAVED_PASS).c_str(), L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
 		} else if (numSavedPasswords > 0) {
-			int result = MessageBox(L"Delete all saved passwords?", L"cppcryptfs", MB_ICONWARNING | MB_YESNO);
+			int result = MessageBox(LocUtils::GetStringFromResources(IDS_DELETE_ALL_SAVED_PASS).c_str(), L"cppcryptfs", MB_ICONWARNING | MB_YESNO);
 			if (result == IDYES) {
 				if (SavedPasswords::ClearSavedPasswords(TRUE) != numSavedPasswords) {
-					MessageBox(L"unable to delete saved passwords", L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
+					MessageBox(LocUtils::GetStringFromResources(IDS_UNABLE_DELETE_SAVED_PASS).c_str(), L"cppcryptfs", MB_ICONEXCLAMATION | MB_OK);
 				}
 			}
 		}
@@ -329,8 +350,7 @@ void CSettingsPropertyPage::OnClickedNeverSaveHistory()
 		CryptSettings::getInstance().GetSettingCurrent(ENABLE_SAVING_PASSWORDS, enablesavingpasswords);
 
 		if (enablesavingpasswords) {
-			MessageBox(L"If you turn on \"Never save history\", saved passwords will not be deleted, but new passwords will not "
-						   L"be saved.  To delete any saved passwords, uncheck \"Enable saved passwords\".",
+			MessageBox(LocUtils::GetStringFromResources(IDS_NEVER_SAVE_HISTORY_HINT).c_str(),
 				L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
 		}
 		
@@ -354,7 +374,7 @@ void CSettingsPropertyPage::OnClickedNeverSaveHistory()
 		DeleteAllRegisteryValues(CPPCRYPTFS_REG_PATH L"CreateOptions", mes);
 		error += mes;
 		if (!error.empty()) {
-			MessageBox(L"unable to delete history from registry", L"cppcryptfs", 
+			MessageBox(LocUtils::GetStringFromResources(IDS_UNABLE_DELETE_HISTORY).c_str(), L"cppcryptfs",
 							MB_OK | MB_ICONEXCLAMATION);
 		}
 	}

@@ -53,6 +53,7 @@ THE SOFTWARE.
 #include "ui/uiutil.h"
 #include "../libipc/server.h"
 #include "../libipc/client.h"
+#include "ui/locutils.h"
 
 
 #ifdef _DEBUG
@@ -83,6 +84,114 @@ CcppcryptfsApp::CcppcryptfsApp()
 	// so we can use AES-NI even if EVP is never used
 
 	auto context = get_crypt_context(BLOCK_IV_LEN, AES_MODE_GCM);	
+}
+
+// Callback function for searching language sections in the EXE string block
+BOOL CALLBACK EnumLangsCallback(HMODULE hModule, LPCTSTR lpType, LPCTSTR lpName, WORD wLang, LONG_PTR lParam) {
+    auto* pList = reinterpret_cast<std::vector<LanguageOption>*>(lParam);
+    
+	// Exclude duplicates when scanning String Table blocks
+    for (const auto& item : *pList) { 
+        if (item.langID == wLang) return TRUE; 
+    }
+
+    LanguageOption opt;
+    opt.langID = wLang;
+	// Extract language names
+    opt.name = theApp.GetStringForLang(hModule, IDS_LANGUAGE_NAME, wLang);
+
+    if (!opt.name.IsEmpty()) {
+        pList->push_back(opt);
+    }
+    return TRUE;
+}
+
+// Scan EXE resources for translated sections
+void CcppcryptfsApp::ScanResourcesForLanguages() {
+	m_vAvailableLangs.clear();
+	// (IDS_LANGUAGE_NAME >> 4) + 1 - formula for calculating the block number in String Table
+	EnumResourceLanguages(NULL, RT_STRING, MAKEINTRESOURCE((IDS_LANGUAGE_NAME >> 4) + 1),
+		EnumLangsCallback, (LONG_PTR)&m_vAvailableLangs);
+}
+
+// Direct reading of a string from a specific language section (bypassing the current thread locale)
+CString CcppcryptfsApp::GetStringForLang(HMODULE hInst, UINT nID, WORD wLang)
+{
+	HRSRC hRes = ::FindResourceExW(
+		hInst,
+		RT_STRING,
+		MAKEINTRESOURCEW((nID >> 4) + 1),
+		wLang);
+
+	if (!hRes)
+		return CString();
+
+	HGLOBAL hGlobal = ::LoadResource(hInst, hRes);
+	if (!hGlobal)
+		return CString();
+
+	DWORD resourceSizeBytes = ::SizeofResource(hInst, hRes);
+	if (resourceSizeBytes < sizeof(WORD) || (resourceSizeBytes % sizeof(WORD)) != 0)
+		return CString();
+
+	const WORD* pWords = static_cast<const WORD*>(::LockResource(hGlobal));
+	if (!pWords)
+		return CString();
+
+	const size_t wordCount = resourceSizeBytes / sizeof(WORD);
+	size_t pos = 0;
+
+	const int index = nID & 0x000F;
+
+	for (int i = 0; i < index; ++i)
+	{
+		if (pos >= wordCount)
+			return CString();
+
+		const size_t len = pWords[pos];
+		++pos; // skip length word
+
+		if (len > wordCount - pos)
+			return CString();
+
+		pos += len; // skip string data
+	}
+
+	if (pos >= wordCount)
+		return CString();
+
+	const size_t finalLen = pWords[pos];
+	++pos; // move to first character
+
+	if (finalLen == 0)
+		return CString();
+
+	if (finalLen > wordCount - pos)
+		return CString();
+
+	if (finalLen > static_cast<size_t>(INT_MAX))
+		return CString();
+
+	return CString(reinterpret_cast<const WCHAR*>(pWords + pos),
+		static_cast<int>(finalLen));
+}
+
+// Check: does this language exist in the resources (protection against outdated registry entries)
+bool CcppcryptfsApp::IsLanguageAvailable(WORD wLangID) {
+	for (const auto& opt : m_vAvailableLangs) {
+		if (opt.langID == wLangID) return true;
+	}
+	return false;
+}
+
+// Saving user selection to the registry
+void CcppcryptfsApp::SaveLanguageToRegistry(WORD wLangID) {
+	WriteProfileInt(_T("Settings"), _T("LanguageID"), (int)wLangID);
+}
+
+// Reading the selection from the registry (0 - if the entry does not exist)
+WORD CcppcryptfsApp::LoadLanguageFromRegistry() {
+	return (WORD)GetProfileInt(_T("Settings"), _T("LanguageID"), 0);
 }
 
 
@@ -119,7 +228,7 @@ static bool StartNamedPipeServer()
 
 
 BOOL CcppcryptfsApp::InitInstance()
-{	 
+{
 
 	const WCHAR *szUniqueNamedMutex = L"cppcryptfs-A7DDB0CF-A856-4E8A-A4E9-722473FB5E49";
 
@@ -186,7 +295,7 @@ BOOL CcppcryptfsApp::InitInstance()
 				ShowWindow(hWnd, SW_SHOWNORMAL);
 			}
 		} else {
-			::MessageBox(NULL, L"cppcryptfs is already running, but window not found!", L"cppcryptfs", MB_OK | MB_ICONERROR);
+			::MessageBox(NULL, LocUtils::GetStringFromResources(IDS_RUN_WINDOW_NOT_FOUND).c_str(), L"cppcryptfs", MB_OK | MB_ICONERROR);
 		}
 		
 		return FALSE;
@@ -194,7 +303,7 @@ BOOL CcppcryptfsApp::InitInstance()
 		wstring mes;
 		bool dokVerCheck = check_dokany_version(mes);
 		if (!dokVerCheck && mes.length() < 1) {
-			mes = L"problem with Dokany version";
+			mes = LocUtils::GetStringFromResources(IDS_PROBLEM_DOKANY_VERSION);
 		}
 		if (mes.length()) {
 			::MessageBox(NULL, mes.c_str(), L"cppcryptfs", MB_OK | (dokVerCheck ? MB_ICONEXCLAMATION :  MB_ICONERROR));
@@ -235,6 +344,17 @@ BOOL CcppcryptfsApp::InitInstance()
 	// TODO: You should modify this string to be something appropriate
 	// such as the name of your company or organization
 	SetRegistryKey(_T("cppcryptfs"));
+
+	ScanResourcesForLanguages();
+	WORD wSavedID = LoadLanguageFromRegistry();
+
+	// Apply the language only if it is found in the EXE (protection against "junk" in the registry)
+	if (wSavedID != 0 && IsLanguageAvailable(wSavedID)) {
+		SetThreadUILanguage(wSavedID);
+		SetThreadLocale(MAKELCID(wSavedID, SORT_DEFAULT));
+	}
+	// for FindResource to work correctly in MFC
+	AfxSetResourceHandle(GetModuleHandle(NULL));
 
 	CCryptPropertySheet dlg(L"cppcryptfs");
 

@@ -10,6 +10,8 @@ Release/
 cppcryptfs/Debug/
 cppcryptfs/Release/
 cppcryptfs/cppcryptfs.aps
+cppcryptfs/res/ru/Resources_RU.aps
+cppcryptfs/res/en/Resources_EN.aps
 Report*.vspx
 Report*.diagsession
 enc_temp_folder/
