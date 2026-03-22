@@ -71,7 +71,7 @@ BEGIN
             VALUE "CompanyName", "Bailey Brown"
             VALUE "FileVersion", VER_FILEVERSION_STR "\0"
             VALUE "InternalName", "cppcryptfsctl.exe"
-            VALUE "LegalCopyright", "Copyright (C) 2020-2025 Bailey Brown. All rights reserved."
+            VALUE "LegalCopyright", "Copyright (C) 2020-2026 Bailey Brown. All rights reserved."
             VALUE "OriginalFilename", "cppcryptfsctl.exe"
             VALUE "ProductName", "cppcryptfsctl"
             VALUE "ProductVersion", VER_PRODUCTVERSION_STR "\0"
