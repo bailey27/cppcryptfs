@@ -3,7 +3,7 @@ cppcryptfs Build and Installation
 
 You will need the following software, **all available for free**, to build cppcryptfs:
 
-Microsoft Visual Studio 2026 Community Edition, perl, nasm, and git. git is optional.
+Microsoft Visual Studio 2026 Community Edition, perl, nasm, python, and git. git is optional.
 
 
 You will also need to install Dokany.
@@ -47,6 +47,8 @@ http://www.activestate.com/activeperl/downloads
 nasm (The Netwide Assembler) is available from here http://www.nasm.us/.  There should be a link to the latest stable version in the middle of page.  Using the nasm installer is recommended if you want to be able to follow these build instructions verbatim. 
 
 Note: You should run the nasm installer as your normal user.  When it prompts you to re-run the installer as administrator, just press ok.  This will cause nasm to be installed in the place where these instructions expect it to be installed (under the current user's local appdata directory).
+
+Python is available from the Microsoft Store. Python is used only so that the program version can be edited in one place (version.txt) and so the hash of the latest git commit can be included in the product version.
 
 Git is available from https://git-scm.com/downloads
 
