@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.4.8 22 Mar 2026
+* nbb1967 convereted cppcryptfs to use localizable text and provided a Russian translation.
+* monkberry71 fixed a conflict between Raw64 and PlainTextNames flags in the config file when creating a new encrypted volume.
+
 v1.4.4.7 27 Dec 2025
 * Use Dokany 2.3 (2.3.1.1000)
 * Build with Visual Studio 2026 Community Edition 
