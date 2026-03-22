@@ -384,7 +384,7 @@ Pressing the Reset Warnings button will turn back on any warning dialogs which w
 
 More Settings
 ---------
-There is also a settings tab.  
+There is also a more settings tab.  
 
 ![Alt text](/screenshots/screenshot_more_settings.png?raw=true "Settings tab")  
 *Recommended settings shown*
@@ -402,6 +402,10 @@ The workaround is to enable flush after write.  When this setting is on, cppcryp
 This option reduces write performance noticeably. For copying large files, it's about 50% worse.  For lots of small files, it's much worse than that.
 
 The setting is on if any of the condidtions are true, so to enable it always, one could check both the "NTFS" and "Not NTFS" boxes.
+
+**Interface Language**
+
+Here you can change the language of the interface. After changing it, you must go to the mount tab and exit the program and then restart it for the change to take effect.
 
 
 Saved Passwords
