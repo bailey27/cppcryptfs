@@ -225,6 +225,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="res\zh-CN\resource.h" />
     <ClInclude Include="ui\CryptSetting.h" />
     <ClInclude Include="ui\CryptSettings.h" />
     <ClInclude Include="ui\locutils.h" />
@@ -327,6 +328,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ResourceCompile>
+    <ResourceCompile Include="res\zh-CN\Resources_ZH-CN.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\cppcryptfs.rc2" />
