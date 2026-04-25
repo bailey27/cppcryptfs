@@ -1,9 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
@@ -50,7 +58,24 @@
     <UseOfMfc>Static</UseOfMfc>
     <SpectreMitigation>Spectre</SpectreMitigation>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+    <SpectreMitigation>Spectre</SpectreMitigation>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+    <SpectreMitigation>Spectre</SpectreMitigation>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v145</PlatformToolset>
@@ -73,7 +98,13 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -85,10 +116,18 @@
     <CodeAnalysisRuleSet>cppcryptfs.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <LinkIncremental>true</LinkIncremental>
+    <CodeAnalysisRuleSet>cppcryptfs.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -98,7 +137,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-2.3.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-2.3.1\include;$(ProjectDir);c:\git\rapidjson\include;c:\git\openssl-x86-static\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>false</ControlFlowGuard>
@@ -106,7 +145,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;$(OutputPath)libcppcryptfs.lib;C:\Program Files\Dokan\Dokan Library-2.3.1\x86\lib\dokan2.lib;version.lib;C:\Program Files (X86)\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;$(OutputPath)libcppcryptfs.lib;C:\Program Files\Dokan\Dokan Library-2.3.1\x86\lib\dokan2.lib;version.lib;c:\git\openssl-x86-static\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib</AdditionalDependencies>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
     <Midl>
@@ -127,7 +166,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-2.3.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-2.3.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\git\openssl-amd64-static\include</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -136,7 +175,38 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;$(OutputPath)libcppcryptfs.lib;C:\Program Files\Dokan\Dokan Library-2.3.1\lib\dokan2.lib;version.lib;C:\Program Files\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;$(OutputPath)libcppcryptfs.lib;C:\Program Files\Dokan\Dokan Library-2.3.1\lib\dokan2.lib;version.lib;c:\git\openssl-amd64-static\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4099 /HIGHENTROPYVA %(AdditionalOptions)</AdditionalOptions>
+      <UACExecutionLevel>AsInvoker</UACExecutionLevel>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);$(ProjectDir);$(ProjectDir)res\en;$(ProjectDir)res\ru;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-2.3.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\git\openssl-arm64-static\include</AdditionalIncludeDirectories>
+      <EnablePREfast>false</EnablePREfast>
+      <AdditionalOptions>/Qspectre</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ControlFlowGuard>false</ControlFlowGuard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;$(OutputPath)libcppcryptfs.lib;C:\Program Files\Dokan\Dokan Library-2.3.1\arm64\lib\dokan2.lib;version.lib;C:\git\openssl-arm64-static\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 /HIGHENTROPYVA %(AdditionalOptions)</AdditionalOptions>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
@@ -160,7 +230,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-2.3.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files (X86)\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-2.3.1\include;$(ProjectDir);c:\git\rapidjson\include;c:\git\openssl-x86-static\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>Guard</ControlFlowGuard>
@@ -170,7 +240,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;$(OutputPath)libcppcryptfs.lib;C:\Program Files\Dokan\Dokan Library-2.3.1\x86\lib\dokan2.lib;version.lib;C:\Program Files (X86)\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;$(OutputPath)libcppcryptfs.lib;C:\Program Files\Dokan\Dokan Library-2.3.1\x86\lib\dokan2.lib;version.lib;c:\git\openssl-x86-static\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib</AdditionalDependencies>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
     <Midl>
@@ -196,7 +266,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-2.3.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\Program Files\OpenSSL\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-2.3.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\git\openssl-amd64-static\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>Guard</ControlFlowGuard>
@@ -206,7 +276,44 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;$(OutputPath)libcppcryptfs.lib;C:\Program Files\Dokan\Dokan Library-2.3.1\lib\dokan2.lib;version.lib;C:\Program Files\OpenSSL\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;$(OutputPath)libcppcryptfs.lib;C:\Program Files\Dokan\Dokan Library-2.3.1\lib\dokan2.lib;version.lib;c:\git\openssl-amd64-static\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4099 /HIGHENTROPYVA %(AdditionalOptions)</AdditionalOptions>
+      <UACExecutionLevel>AsInvoker</UACExecutionLevel>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);$(ProjectDir);$(ProjectDir)res\en;$(ProjectDir)res\ru;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <PreBuildEvent>
+      <Command>python "$(ProjectDir)\..\build_scripts\make_version_header.py" "$(ProjectDir)</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-2.3.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\git\openssl-arm64-static\include</AdditionalIncludeDirectories>
+      <AdditionalOptions>/Qspectre</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;$(OutputPath)libcppcryptfs.lib;C:\Program Files\Dokan\Dokan Library-2.3.1\arm64\lib\dokan2.lib;version.lib;C:\git\openssl-arm64-static\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 /HIGHENTROPYVA %(AdditionalOptions)</AdditionalOptions>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
@@ -264,7 +371,9 @@
     <ClCompile Include="ui\CryptSettings.cpp" />
     <ClCompile Include="ui\locutils.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -272,7 +381,9 @@
     <ClCompile Include="cppcryptfs.cpp" />
     <ClCompile Include="dokan\cryptdokan.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -280,25 +391,33 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="dokan\FileNameEnc.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="dokan\MountPointManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ui\CreatePropertyPage.cpp" />
     <ClCompile Include="ui\CryptAboutPropertyPage.cpp" />
@@ -320,13 +439,17 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
     </ResourceCompile>
     <ResourceCompile Include="res\ru\Resources_RU.rc">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
     </ResourceCompile>
     <ResourceCompile Include="res\zh-CN\Resources_ZH-CN.rc" />
   </ItemGroup>

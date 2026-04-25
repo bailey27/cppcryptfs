@@ -108,19 +108,21 @@ Then run the batch file that comes with Visual Studio that sets up the environme
 "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
 ```
 
-Use "x86" in place of "amd64" if you are doing a 32-bit build.
+Use "x86" in place of "amd64" if you are doing a 32-bit build. If cross compiling ARM64 on Intel, use x64_arm64 instead of amd64.
 
 The vcvarsall.bat from Visual Studio 2026 must be run in a Windows cmd.exe command shell.  It doesn't like being run in third-party command shells.
 
 
 Then run (ActiveState) perl to configure OpenSSL for a Visual Studio AMD64/X86_64 static build.  
 
-Use "VC-WIN32" instead of  "VC-WIN64A" if you're doing a 32-bit build.
+Use "VC-WIN32" instead of  "VC-WIN64A" if you're doing a 32-bit build. Use "VC-WIN64-ARM" if doing an arm build.
 
 
 ```
-perl Configure VC-WIN64A no-shared
+perl Configure VC-WIN64A no-shared no-tests --prefix=C:\git\openssl-amd64-static  --openssldir=C:\git\openssl-amd64-static
 ```
+
+This will cause the output of the build to be placed under C:\git\openssl-amd64-static. Shange amd64 to x86 or arm64 if doing 32-bit intel or ARM64 builds.
 
 Then run "nmake" to build OpenSSL.
 
@@ -129,11 +131,11 @@ Then run "nmake" to build OpenSSL.
 nmake
 ```
 
-Then run "nmake install" to install it.  
+Then run "nmake install_sw" to install into those directories specified above.  
 
 
 ```
-nmake install
+nmake install_sw
 ```
 
 nmake install must be run from an elevated (administrator) command prompt in order for it to work.  If you built OpenSSL from a non-elevated command prompt, then start an elevated one, cd to c:\git\openssl, and be sure to invoke vcvarsall.bat as shown above again in the elevated command prompt before running nmake install in it. 

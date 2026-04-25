@@ -30,7 +30,11 @@ THE SOFTWARE.
 
 #include "openssl/aes.h"
 
+#if !defined(_M_ARM64) && !defined(_M_ARM)
 #define USE_AES_NI 1 // aes native instructions (if available)
+#else
+#undef USE_AES_NI
+#endif
 
 // this class is used by aes-siv and eme
 

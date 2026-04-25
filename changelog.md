@@ -2,8 +2,11 @@
 
 Changelog
 ------------
+v1.4.4.10 25 Apr 2026
+* Added ARM64 build.
+
 v1.4.4.9 28 Mar 2026
-* yfdyh000 translate the GUI to Chinese simplified.
+* yfdyh000 translated the GUI to Chinese simplified.
 
 v1.4.4.8 22 Mar 2026
 * nbb1967 convereted cppcryptfs to use localizable text and provided a Russian translation.
