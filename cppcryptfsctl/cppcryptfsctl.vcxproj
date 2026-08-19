@@ -146,7 +146,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ControlFlowGuard>false</ControlFlowGuard>
@@ -199,7 +199,7 @@
       <AdditionalDependencies>$(OutputPath)\libcppcryptfs.lib;$(OutputPath)libcommonutil.lib;$(OutputPath)libipc.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);c:\git\openssl-x86-static\lib\libcrypto.lib;Shlwapi.lib;Crypt32.lib</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>python "$(ProjectDir)\..\build_scripts\make_version_header.py" "$(ProjectDir)</Command>
+      <Command>python "$(ProjectDir)\..\build_scripts\make_version_header.py" "$(ProjectDir)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -225,7 +225,7 @@
       <AdditionalOptions>/HIGHENTROPYVA %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
-      <Command>python "$(ProjectDir)\..\build_scripts\make_version_header.py" "$(ProjectDir)</Command>
+      <Command>python "$(ProjectDir)\..\build_scripts\make_version_header.py" "$(ProjectDir)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -236,7 +236,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ControlFlowGuard>Guard</ControlFlowGuard>
@@ -251,7 +251,7 @@
       <AdditionalOptions>/HIGHENTROPYVA %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
-      <Command>python "$(ProjectDir)\..\build_scripts\make_version_header.py" "$(ProjectDir)</Command>
+      <Command>python "$(ProjectDir)\..\build_scripts\make_version_header.py" "$(ProjectDir)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -53,20 +53,23 @@ get_file_information(CryptContext *con, function<LPCWSTR()> getFileName, LPCWSTR
 bool
 create_dir_iv(CryptContext *con, LPCWSTR path); // path is unencrypted
 
+// overhead is the per-block cipher overhead (IV len + tag len). It must match
+// the volume's content encryption algorithm: 32 for AES-GCM/SIV, 40 for
+// XChaCha20-Poly1305. Pass CryptConfig::GetCipherBlockOverhead() at the call site.
 bool
-adjust_file_offset_down(LARGE_INTEGER& l);
+adjust_file_offset_down(LARGE_INTEGER& l, int overhead);
 
 bool
-adjust_file_offset_up(LARGE_INTEGER& l);
+adjust_file_offset_up(LARGE_INTEGER& l, int overhead);
 
 bool
-adjust_file_size_down(LARGE_INTEGER& l);
+adjust_file_size_down(LARGE_INTEGER& l, int overhead);
 
 bool
-adjust_file_size_up(LARGE_INTEGER& l);
+adjust_file_size_up(LARGE_INTEGER& l, int overhead);
 
 bool
-adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l);
+adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l, int overhead);
 
 bool
 is_empty_directory(LPCWSTR path, BOOL bMustReallyBeEmpty = FALSE, CryptContext *con = nullptr);

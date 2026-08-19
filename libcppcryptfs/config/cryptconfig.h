@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "util/LockZeroBuffer.h"
 #include "util/KeybufManager.h"
 #include "util/KeyCache.h"
+#include "crypt/cryptdefs.h"
 
 #define MAX_CONFIG_FILE_SIZE (16*1024*1024) // 16MB
 
@@ -53,6 +54,7 @@ public:
 private:
 	LockZeroBuffer<unsigned char> *m_pKeyBuf;
 	LockZeroBuffer<BYTE> *m_pGcmContentKey;
+	LockZeroBuffer<BYTE> *m_pChaChaContentKey;
 	bool m_DirIV;	
 	unsigned long long scrypt_mem();
 public:
@@ -62,6 +64,7 @@ public:
 	bool m_GCMIV128;
 	bool m_LongNames;
 	bool m_AESSIV;
+	bool m_ChaChaPoly1305;
 	bool m_Raw64;
 	bool m_HKDF;
 	bool m_DenyAccessToOthers;
@@ -91,13 +94,26 @@ public:
 
 	const BYTE *GetGcmContentKey() { return m_HKDF ? m_pGcmContentKey->m_buf : GetMasterKey(); };
 
+	// Returns the content key for file data blocks (XChaCha or AES-GCM).
+	const BYTE *GetContentKeyForBlock() { return m_ChaChaPoly1305 ? GetChaChaContentKey() : GetGcmContentKey(); };
+
+	// Content encryption layout parameters. XChaCha20-Poly1305 uses a 24-byte
+	// IV, AES-GCM/SIV use a 16-byte IV.
+	int GetContentIVLen() { return m_ChaChaPoly1305 ? CHACHA_BLOCK_IV_LEN : BLOCK_IV_LEN; }
+	int GetCipherBlockOverhead() { return GetContentIVLen() + BLOCK_TAG_LEN; }
+	int GetCipherBS() { return PLAIN_BS + GetCipherBlockOverhead(); }
+	int GetContentMode() { return m_ChaChaPoly1305 ? AES_MODE_CHACHA : AES_MODE_GCM; }
+
+	bool InitChaChaContentKey(const BYTE *key);
+	const BYTE *GetChaChaContentKey() { return m_HKDF ? m_pChaChaContentKey->m_buf : GetMasterKey(); };
+
 	CryptConfig();
 	bool read(wstring& mes, const WCHAR *config_file_path = NULL, bool reverse = false);
 	bool encrypt_key(const wchar_t* password, const BYTE *masterkey, string& base64encryptedmastekey, string& scryptSalt, wstring& error_mes);	
 	bool decrypt_key(LPCTSTR password);
 
 	bool create(const WCHAR* path, const WCHAR* specified_config_path, const WCHAR* password, bool eme, bool plaintext, bool longfilenames,
-		bool siv, bool reverse, int scryptN, const WCHAR* volume_name, bool disablestreams, int longnamemax, bool deterministicnames, wstring& error_mes		
+		bool siv, bool chacha, bool reverse, int scryptN, const WCHAR* volume_name, bool disablestreams, int longnamemax, bool deterministicnames, wstring& error_mes		
 	);
 
 	bool check_config(wstring& mes);
@@ -107,6 +123,11 @@ public:
 	bool init_serial(CryptContext *con);
 
 	DWORD m_fs_feature_disable_mask;
+
+	// Warnings about non-fatal issues (e.g. an unknown feature flag that
+	// cppcryptfs tolerates so the volume can still be mounted).
+	wstring m_warning;
+	const wstring& GetWarning() { return m_warning; }
 
 	WCHAR get_base_drive_letter();
 
