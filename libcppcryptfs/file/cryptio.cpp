@@ -42,7 +42,17 @@ read_block(CryptContext *con, HANDLE hfile, BYTE *inputbuf, int bytesinbuf, int 
 	static_assert(BLOCK_IV_LEN == BLOCK_SIV_LEN, "BLOCK_IV_LEN != BLOCK_SIV_LEN.");
 	static_assert(BLOCK_SIV_LEN == BLOCK_TAG_LEN, "BLOCK_SIV_LEN != BLOCK_TAG_LEN.");
 
-	long long offset = FILE_HEADER_LEN + block*CIPHER_BS;
+	// Content layout depends on the volume's content encryption algorithm.
+	// AES-GCM/SIV use a 16-byte IV, XChaCha20-Poly1305 uses a 24-byte IV.
+	const int ivlen = con->GetConfig()->GetContentIVLen();
+	const int cipherBS = con->GetConfig()->GetCipherBS();
+	const int overhead = con->GetConfig()->GetCipherBlockOverhead();
+
+	// Fixed-size buffer large enough for the largest possible block
+	// (XChaCha20-Poly1305: 24-byte IV + 4096 plaintext + 16-byte tag).
+	unsigned char buf[CHACHA_BLOCK_IV_LEN + PLAIN_BS + BLOCK_TAG_LEN];
+
+	long long offset = FILE_HEADER_LEN + block*cipherBS;
 
 	OVERLAPPED ov;
 
@@ -58,12 +68,10 @@ read_block(CryptContext *con, HANDLE hfile, BYTE *inputbuf, int bytesinbuf, int 
 
 	memcpy(auth_data + sizeof(be_block), fileid, FILE_ID_LEN);
 
-	unsigned char buf[CIPHER_BS];
-
 	DWORD nread = 0;
 
 	if (hfile == INVALID_HANDLE_VALUE && inputbuf) {
-		int to_consume = min(CIPHER_BS, bytesinbuf);
+		int to_consume = min(cipherBS, bytesinbuf);
 		if (bytes_consumed != NULL)
 			*bytes_consumed = to_consume;
 		nread = to_consume;
@@ -81,19 +89,19 @@ read_block(CryptContext *con, HANDLE hfile, BYTE *inputbuf, int bytesinbuf, int 
 	if (nread == 0)
 		return 0;
 
-	if (nread <= CIPHER_BLOCK_OVERHEAD) {
+	if (nread <= (DWORD)overhead) {
 		SetLastError(ERROR_INVALID_DATA);
 		return -1;
 	}
 
 	int ptlen;
-	
+		
 	if (con->GetConfig()->m_AESSIV) {
 		ptlen = decrypt_siv((inputbuf ? inputbuf : buf) + BLOCK_IV_LEN + BLOCK_SIV_LEN, nread - BLOCK_IV_LEN - BLOCK_SIV_LEN, auth_data, sizeof(auth_data), 
 			(inputbuf ? inputbuf : buf) + BLOCK_IV_LEN, (inputbuf ? inputbuf : buf), ptbuf, &con->m_siv);	
 	} else {
-		ptlen = decrypt((inputbuf ? inputbuf : buf) + BLOCK_IV_LEN, nread - BLOCK_IV_LEN - BLOCK_TAG_LEN, auth_data, sizeof(auth_data),
-			(inputbuf ? inputbuf : buf) + nread - BLOCK_TAG_LEN, con->GetConfig()->GetGcmContentKey(), (inputbuf ? inputbuf : buf), ptbuf, openssl_crypt_context);
+		ptlen = decrypt((inputbuf ? inputbuf : buf) + ivlen, nread - ivlen - BLOCK_TAG_LEN, auth_data, sizeof(auth_data),
+			(inputbuf ? inputbuf : buf) + nread - BLOCK_TAG_LEN, con->GetConfig()->GetContentKeyForBlock(), (inputbuf ? inputbuf : buf), ptbuf, openssl_crypt_context, con->GetConfig()->GetContentMode());
 	}
 
 	if (ptlen < 0) {  // return all zeros for un-authenticated blocks (might exist if file was resized without writing)
@@ -101,14 +109,14 @@ read_block(CryptContext *con, HANDLE hfile, BYTE *inputbuf, int bytesinbuf, int 
 		// if we read all zeros, then it is (probably) really from a hole in the file
 
 		if (is_all_zeros(inputbuf ? inputbuf : buf, nread)) {
-			memset(ptbuf, 0, nread - (BLOCK_IV_LEN + BLOCK_TAG_LEN));
-			return nread - (BLOCK_IV_LEN + BLOCK_TAG_LEN);
+			memset(ptbuf, 0, nread - overhead);
+			return nread - overhead;
 		} else {
 			// if there are any non-zero bytes, then there is definitely corrupted data, so return an error
 			SetLastError(ERROR_DATA_CHECKSUM_ERROR);
 			return -1;
 		}
-	
+		
 	}
 
 	return ptlen;
@@ -119,7 +127,11 @@ write_block(CryptContext *con, unsigned char *cipher_buf, HANDLE hfile, const un
 {
 
 
-	long long offset = FILE_HEADER_LEN + block*CIPHER_BS;
+	// Content layout depends on the volume's content encryption algorithm.
+	const int ivlen = con->GetConfig()->GetContentIVLen();
+	const int cipherBS = con->GetConfig()->GetCipherBS();
+
+	long long offset = FILE_HEADER_LEN + block*cipherBS;
 
 	if (!iv)
 		return -1;
@@ -141,13 +153,17 @@ write_block(CryptContext *con, unsigned char *cipher_buf, HANDLE hfile, const un
 	unsigned char tag[BLOCK_TAG_LEN];
 
 	if (!con->GetConfig()->m_reverse) {
-		memcpy(cipher_buf, iv, BLOCK_IV_LEN);
+		memcpy(cipher_buf, iv, ivlen);
 	} else {
 		const unsigned char* block0iv = iv;
 
+		// Copy the whole IV first so that algorithms with a larger IV
+		// keep their upper bytes intact.
+		memcpy(cipher_buf, block0iv, ivlen);
+
 		// On a 128-bit big-endian machine, this would be the low-order 64 bits
-		// hence the name block0IVlow
-		unsigned long long block0IVlow; 
+		// hence the name block0IVlow. Only the first 16 bytes are modified.
+		unsigned long long block0IVlow;
 
 		static_assert(BLOCK_SIV_LEN == 16, "BLOCK_SIV_LEN != 16.");
 		static_assert(sizeof(block0IVlow) == 8, "sizeof(block0IVlow) != 8.");
@@ -159,10 +175,7 @@ write_block(CryptContext *con, unsigned char *cipher_buf, HANDLE hfile, const un
 
 		block0IVlow = MakeBigEndian(block0IVlow);
 
-		memcpy(cipher_buf, block0iv, 8);
 		memcpy(cipher_buf + 8, &block0IVlow, sizeof(block0IVlow));
-		
-		
 	}
 
 	bool siv = con->GetConfig()->m_AESSIV;
@@ -173,30 +186,30 @@ write_block(CryptContext *con, unsigned char *cipher_buf, HANDLE hfile, const un
 		ctlen = encrypt_siv(ptbuf, ptlen, auth_data, sizeof(auth_data), 
 			cipher_buf, cipher_buf + BLOCK_IV_LEN + BLOCK_SIV_LEN, cipher_buf + BLOCK_IV_LEN, &con->m_siv);
 	} else {
-		ctlen = encrypt(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetGcmContentKey(),
-			cipher_buf, cipher_buf + BLOCK_IV_LEN, tag, openssl_crypt_context);
+		ctlen = encrypt(ptbuf, ptlen, auth_data, sizeof(auth_data), con->GetConfig()->GetContentKeyForBlock(),
+			cipher_buf, cipher_buf + ivlen, tag, openssl_crypt_context, con->GetConfig()->GetContentMode());
 	}
 
 	if (ctlen < 0 || ctlen > PLAIN_BS)
 		return -1;
 
 	if (!siv)
-		memcpy(cipher_buf + BLOCK_IV_LEN + ctlen, tag, sizeof(tag));
+		memcpy(cipher_buf + ivlen + ctlen, tag, sizeof(tag));
 
 	if (!con->GetConfig()->m_reverse && hfile != INVALID_HANDLE_VALUE) {
 
 		DWORD nWritten = 0;
 
-		if (!WriteFile(hfile, cipher_buf, BLOCK_IV_LEN + ctlen + sizeof(tag), &nWritten, &ov)) {
+		if (!WriteFile(hfile, cipher_buf, ivlen + ctlen + sizeof(tag), &nWritten, &ov)) {
 			return -1;
 		}
-		
-		if (nWritten == BLOCK_IV_LEN + ctlen + sizeof(tag)) {
+			
+		if (nWritten == ivlen + ctlen + sizeof(tag)) {
 			return ptlen;
 		} else {
 			return -1;
 		}
 	} else {
-		return BLOCK_IV_LEN + ctlen + sizeof(tag);
+		return ivlen + ctlen + sizeof(tag);
 	}
 }

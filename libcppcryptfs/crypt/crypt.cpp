@@ -34,9 +34,12 @@ THE SOFTWARE.
 #include "aes-siv/aes256-siv.h"
 #include "cryptdefs.h"
 #include "crypt.h"
+#include "chacha20.h"
 #include "util/util.h"
 
 #include <string>
+#include <cstring>
+#include <cstdint>
 
 
 static void
@@ -50,6 +53,22 @@ static void free_crypt_context(EVP_CIPHER_CTX* ctx)
 	/* Clean up */
 	if (ctx)
 		EVP_CIPHER_CTX_free(ctx);
+}
+
+/* XChaCha20-Poly1305 uses a 32-bit block counter, so a message can span at
+ * most 2^38 bytes of keystream. Beyond that the counter would wrap.
+ * The limits differ by the 16-byte Poly1305 tag. Same as gocryptfs. */
+#define CHACHA_MAX_PLAINTEXT_LEN  ((UINT64_C(1) << 38) - 64)
+#define CHACHA_MAX_CIPHERTEXT_LEN ((UINT64_C(1) << 38) - 48)
+
+/* Derive the inner ChaCha20-Poly1305 key and 12-byte nonce from the 24-byte
+ * XChaCha nonce via HChaCha20, matching gocryptfs (OpenSSL backend). */
+static void derive_xchacha_inner(const unsigned char *key, const unsigned char *iv,
+	unsigned char derived_key[32], unsigned char inner_iv[12])
+{
+	hchacha20(key, iv, derived_key);
+	memset(inner_iv, 0, 4);
+	memcpy(inner_iv + 4, iv + 16, 8);
 }
 
 shared_ptr<EVP_CIPHER_CTX> get_crypt_context(int ivlen, int mode)
@@ -67,6 +86,9 @@ shared_ptr<EVP_CIPHER_CTX> get_crypt_context(int ivlen, int mode)
 		case AES_MODE_GCM:
 			cipher = EVP_aes_256_gcm();
 			break;
+		case AES_MODE_CHACHA:
+			cipher = EVP_chacha20_poly1305();
+			break;
 		default:
 			handleErrors();
 			break;
@@ -81,6 +103,8 @@ shared_ptr<EVP_CIPHER_CTX> get_crypt_context(int ivlen, int mode)
 			if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, ivlen, NULL))
 				handleErrors();
 		}
+		/* XChaCha20-Poly1305 uses a 12-byte inner nonce derived via HChaCha20,
+		   so no IV length override is needed for the inner cipher. */
 
 	} catch (int) {
 		if (ctx)
@@ -93,7 +117,7 @@ shared_ptr<EVP_CIPHER_CTX> get_crypt_context(int ivlen, int mode)
 
 int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
 	int aad_len, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *ciphertext, unsigned char *tag, EVP_CIPHER_CTX* ctx)
+	unsigned char *ciphertext, unsigned char *tag, EVP_CIPHER_CTX* ctx, int mode)
 {	
 
 	if (!ctx)
@@ -103,10 +127,23 @@ int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aa
 
 	int ciphertext_len;
 
-	try {
+	/* For XChaCha20-Poly1305, derive the inner key and nonce via HChaCha20. */
+	unsigned char derived_key[32];
+	unsigned char inner_iv[12];
+	const unsigned char *use_key = key;
+	const unsigned char *use_iv = iv;
 
-		
-		if (1 != EVP_EncryptInit_ex(ctx, NULL, NULL, key, iv)) handleErrors();
+	if (mode == AES_MODE_CHACHA) {
+		/* Refuse inputs larger than the counter limit (2^38 - 64 bytes). */
+		if ((uint64_t)plaintext_len > CHACHA_MAX_PLAINTEXT_LEN)
+			return -1;
+		derive_xchacha_inner(key, iv, derived_key, inner_iv);
+		use_key = derived_key;
+		use_iv = inner_iv;
+	}
+
+	try {
+		if (1 != EVP_EncryptInit_ex(ctx, NULL, NULL, use_key, use_iv)) handleErrors();
 
 		/* Provide any AAD data. This can be called zero or more times as
 		* required
@@ -129,7 +166,7 @@ int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aa
 
 		/* Get the tag */
 		if (tag) {
-			if (1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, tag))
+			if (1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, 16, tag))
 				handleErrors();
 		}
 
@@ -142,7 +179,7 @@ int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aa
 
 int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
 	int aad_len, unsigned char *tag, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *plaintext, EVP_CIPHER_CTX* ctx)
+	unsigned char *plaintext, EVP_CIPHER_CTX* ctx, int mode)
 {	
 
 	if (!ctx)
@@ -150,15 +187,25 @@ int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *
 
 	int len;
 	int plaintext_len;
-	int ret;
 
-	
+	/* For XChaCha20-Poly1305, derive the inner key and nonce via HChaCha20. */
+	unsigned char derived_key[32];
+	unsigned char inner_iv[12];
+	const unsigned char *use_key = key;
+	const unsigned char *use_iv = iv;
+
+	if (mode == AES_MODE_CHACHA) {
+		/* Refuse inputs larger than the counter limit (2^38 - 48 bytes). */
+		if ((uint64_t)ciphertext_len > CHACHA_MAX_CIPHERTEXT_LEN)
+			return -1;
+		derive_xchacha_inner(key, iv, derived_key, inner_iv);
+		use_key = derived_key;
+		use_iv = inner_iv;
+	}
 
 	try {
-
-		
 		/* Initialise Key and IV */
-		if (!EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv)) handleErrors();
+		if (!EVP_DecryptInit_ex(ctx, NULL, NULL, use_key, use_iv)) handleErrors();
 
 		/* Provide any AAD data. This can be called zero or more times as
 		* required
@@ -175,33 +222,24 @@ int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *
 
 		/* Set expected tag value. Works in OpenSSL 1.0.1d and later */
 		if (tag) {
-			if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, 16, tag))
+			if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, 16, tag))
 				handleErrors();
 		}
 
 		/* Finalise the decryption. A positive return value indicates success,
 		* anything else is a failure - the plaintext is not trustworthy.
 		*/
-		ret = EVP_DecryptFinal_ex(ctx, plaintext + len, &len);
+		if (EVP_DecryptFinal_ex(ctx, plaintext + len, &len) > 0) {
+			plaintext_len += len;
+			return plaintext_len;
+		}
 
-	}
-	catch (int) {
-		ret = -1;
-	}
-
-	
-
-	if (ret > 0)
-	{
-		/* Success */
-		plaintext_len += len;
-		return plaintext_len;
-	}
-	else
-	{
-		/* Verify failed */
+	} catch (int) {
 		return -1;
 	}
+
+	/* Verify failed */
+	return -1;
 }
 
 int encrypt_siv(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
@@ -358,7 +396,7 @@ bool encrypt_string_gcm(const wstring& str, const BYTE *key, string& base64_out)
 
 		memcpy(&encrypted[0], iv, sizeof(iv));
 
-		int ctlen = encrypt((const BYTE*)&utf8[0], (int)utf8.size(), aad, (int)sizeof(aad), key, iv, &encrypted[0] + (int)sizeof(iv), &encrypted[0] + sizeof(iv) + utf8.size(), context.get());
+		int ctlen = encrypt((const BYTE*)&utf8[0], (int)utf8.size(), aad, (int)sizeof(aad), key, iv, &encrypted[0] + (int)sizeof(iv), &encrypted[0] + sizeof(iv) + utf8.size(), context.get(), AES_MODE_GCM);
 
 		if (ctlen != utf8.size())
 			throw(-1);
@@ -392,7 +430,7 @@ bool decrypt_string_gcm(const string& base64_in, const BYTE *key, wstring& str)
 			throw(-1);
 
 		vector<char> plaintext(v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN + 1);
-		int ptlen = decrypt((const BYTE*)(&v[0] + BLOCK_IV_LEN), (int)v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN, adata, sizeof(adata), &v[0] + v.size() - BLOCK_TAG_LEN, key, &v[0], (BYTE*)&plaintext[0], context.get());
+		int ptlen = decrypt((const BYTE*)(&v[0] + BLOCK_IV_LEN), (int)v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN, adata, sizeof(adata), &v[0] + v.size() - BLOCK_TAG_LEN, key, &v[0], (BYTE*)&plaintext[0], context.get(), AES_MODE_GCM);
 
 		if (ptlen != v.size() - BLOCK_IV_LEN - BLOCK_TAG_LEN)
 			throw(-1);
@@ -412,6 +450,7 @@ bool decrypt_string_gcm(const string& base64_in, const BYTE *key, wstring& str)
 const char *hkdfInfoEMENames = "EME filename encryption";
 const char *hkdfInfoGCMContent = "AES-GCM file content encryption";
 const char *hkdfInfoSIVContent = "AES-SIV file content encryption";
+const char *hkdfInfoChaChaContent = "XChaCha20-Poly1305 file content encryption";
 
 bool hkdfDerive(const BYTE *masterKey, int masterKeyLen, BYTE *newKey, int newKeyLen, const char *info)
 {
@@ -432,10 +471,6 @@ bool hkdfDerive(const BYTE *masterKey, int masterKeyLen, BYTE *newKey, int newKe
 			throw(-1);
 		if (EVP_PKEY_CTX_set_hkdf_md(pctx, EVP_sha256()) <= 0)
 			throw(-1);
-#if 0
-		if (EVP_PKEY_CTX_set1_hkdf_salt(pctx, "salt", 4) <= 0)
-			throw(-1);
-#endif
 		if (EVP_PKEY_CTX_set1_hkdf_key(pctx, masterKey, masterKeyLen) <= 0)
 			throw(-1);
 		if (EVP_PKEY_CTX_add1_hkdf_info(pctx, reinterpret_cast<const unsigned char *>(info), (int)strlen(info)) <= 0)

@@ -66,7 +66,6 @@ THE SOFTWARE.
 #include "../libcommonutil/commonutil.h"
 #include "../cppcryptfs/resource.h"
 #include "../cppcryptfs/ui/locutils.h"
-#include <atlstr.h>
 
 CryptConfig::CryptConfig()
 {
@@ -81,6 +80,7 @@ CryptConfig::CryptConfig()
 	m_GCMIV128 = false;
 	m_LongNames = false;
 	m_AESSIV = false;
+	m_ChaChaPoly1305 = false;
 	m_Raw64 = false;
 	m_HKDF = false;
 	m_reverse = false;
@@ -94,6 +94,8 @@ CryptConfig::CryptConfig()
 
 	m_pGcmContentKey = NULL;
 
+	m_pChaChaContentKey = NULL;
+
 	m_fs_feature_disable_mask = 0;
 
 	m_DenyAccessToOthers = false;
@@ -104,6 +106,7 @@ CryptConfig::~CryptConfig()
 {
 	delete m_pKeyBuf;	
 	delete m_pGcmContentKey;	
+	delete m_pChaChaContentKey;	
 }
 
 
@@ -204,6 +207,8 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 	}
 
 	bool bret = true;
+
+	m_warning.clear();
 
 	try {
 
@@ -318,16 +323,26 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 						m_Raw64 = true;
 					} else if (!strcmp(itr->GetString(), "HKDF")) {
 						m_HKDF = true;
+					} else if (!strcmp(itr->GetString(), "XChaCha20Poly1305")) {
+						m_ChaChaPoly1305 = true;
 					} else {
+						// Unknown feature flags are tolerated (recorded as a
+						// warning) instead of being fatal, so that volumes using
+						// algorithms cppcryptfs does not implement (e.g. FIDO2)
+						// can still be mounted when the master key is supplied.
 						wstring wflag;
 						if (utf8_to_unicode(itr->GetString(), wflag)) {
-							CString strMsg;
-							strMsg.Format(LocUtils::GetStringFromResources(IDS_UNKNOWN_FEATURE_FLAG).c_str(), wflag);
-							mes = strMsg;
+							wchar_t buf[1024];
+							swprintf_s(buf, _countof(buf), LocUtils::GetStringFromResources(IDS_UNKNOWN_FEATURE_FLAG).c_str(), wflag.c_str());
+							wstring strMsg(buf);
+							if (!m_warning.empty())
+								m_warning += L" ";
+							m_warning += strMsg;
 						} else {
-							mes = LocUtils::GetStringFromResources(IDS_UNABLE_CONVERT_UNKNOWN_FLAG);
+							if (!m_warning.empty())
+								m_warning += L" ";
+							m_warning += LocUtils::GetStringFromResources(IDS_UNABLE_CONVERT_UNKNOWN_FLAG);
 						}
-						throw(-1);
 					}
 				}
 			}
@@ -464,7 +479,7 @@ bool CryptConfig::write_updated_config_file(const char *base64key, const char *s
 				rapidjson::Value& scryptobject = d["ScryptObject"];
 				if (scryptobject.HasMember("N")) {
 					rapidjson::Value salt(scryptSalt, d.GetAllocator());
-					scryptobject["N"] = 1 << scryptn;
+					scryptobject["N"] = 1LL << scryptn;
 				} else {
 					throw(-1);
 				}
@@ -610,8 +625,14 @@ bool CryptConfig::check_config(wstring& mes)
 	if (!m_EMENames && !m_PlaintextNames)
 		mes += LocUtils::GetStringFromResources(IDS_EMENAMES_REQUIRED);
 	
-	if (!m_GCMIV128) 
+	if (!m_GCMIV128 && !m_ChaChaPoly1305) 
 		mes += LocUtils::GetStringFromResources(IDS_GCMIV128_NOT_SPECIFIED);
+
+	if (m_ChaChaPoly1305 && !m_HKDF)
+		mes += LocUtils::GetStringFromResources(IDS_CHACHA_REQUIRES_HKDF);
+
+	if (m_ChaChaPoly1305 && m_AESSIV)
+		mes += LocUtils::GetStringFromResources(IDS_CHACHA_AESSIV_CONFLICT);
 
 	if (m_reverse && !m_AESSIV)
 		mes += LocUtils::GetStringFromResources(IDS_REVERSE_MODE_WITHOUT_AESSIV);
@@ -687,7 +708,7 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 				throw(-1);
 		}
 
-		int ptlen = decrypt(ciphertext, ciphertext_len, adata, adata_len, tag, m_HKDF ? pwkeyHKDF.m_buf : pwkey.m_buf, iv, m_pKeyBuf->m_buf, context.get());
+		int ptlen = decrypt(ciphertext, ciphertext_len, adata, adata_len, tag, m_HKDF ? pwkeyHKDF.m_buf : pwkey.m_buf, iv, m_pKeyBuf->m_buf, context.get(), AES_MODE_GCM);
 
 		if (ptlen != MASTER_KEY_LEN)
 			throw (-1);
@@ -695,6 +716,13 @@ bool CryptConfig::decrypt_key(LPCTSTR password)
 		// need to do it unconditionally because we use it for other things besides file data
 		if (!this->InitGCMContentKey(this->GetMasterKey())) {
 			throw(-1);
+		}
+
+		// Only derive the XChaCha20-Poly1305 content key when this volume uses it.
+		if (m_ChaChaPoly1305) {
+			if (!this->InitChaChaContentKey(this->GetMasterKey())) {
+				throw(-1);
+			}
 		}
 
 		if (m_VolumeName.size() > 0) {
@@ -821,7 +849,7 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 		memcpy(encrypted_key, iv, iv_len);
 		
 		int ctlen = encrypt(m_pKeyBuf->m_buf, GetMasterKeyLength(), adata, sizeof(adata), m_HKDF ? pwkeyHKDF.m_buf : pwkey.m_buf, 
-							iv, (encrypted_key + iv_len), encrypted_key + iv_len + GetMasterKeyLength(), context.get());
+							iv, (encrypted_key + iv_len), encrypted_key + iv_len + GetMasterKeyLength(), context.get(), AES_MODE_GCM);
 
 		if (ctlen < 1) {
 			error_mes = LocUtils::GetStringFromResources(IDS_UNABLE_ENCRYPT_MASTER_KEY);
@@ -852,7 +880,7 @@ bool CryptConfig::encrypt_key(const wchar_t* password, const BYTE* masterkey, st
 }
 
 
-bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool reverse, int scryptN, const WCHAR *volume_name, bool disablestreams, int longnamemax, bool deterministicnames, wstring& error_mes)
+bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_path, const WCHAR *password, bool eme, bool plaintext, bool longfilenames, bool siv, bool chacha, bool reverse, int scryptN, const WCHAR *volume_name, bool disablestreams, int longnamemax, bool deterministicnames, wstring& error_mes)
 {
 
 	if (specified_config_file_path && *specified_config_file_path == '\0')
@@ -875,6 +903,14 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 
 	if (siv)
 		m_AESSIV = true;
+
+	if (chacha)
+		m_ChaChaPoly1305 = true;
+
+	if (m_AESSIV && m_ChaChaPoly1305) {
+		error_mes = LocUtils::GetStringFromResources(IDS_CHACHA_AESSIV_CONFLICT);
+		throw(-1);
+	}
 
 	// Raw64 defaults to true, but must be disabled if PlaintextNames is active
     // (PlaintextNames implies filenames are not encrypted, so Base64 encoding is conflicting)
@@ -913,13 +949,13 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 		if (m_reverse) {
 			if (PathFileExists(&config_path[0])) {
 				if (specified_config_file_path) {
-					CString strMsg;
-					strMsg.Format(LocUtils::GetStringFromResources(IDS_CONF_PATH_ALREADY_EXIST).c_str(), config_path);
-					error_mes = strMsg;
+					wchar_t buf[1024];
+					swprintf_s(buf, _countof(buf), LocUtils::GetStringFromResources(IDS_CONF_PATH_ALREADY_EXIST).c_str(), config_path.c_str());
+					error_mes = buf;
 				} else {
-					CString strMsg;
-					strMsg.Format(LocUtils::GetStringFromResources(IDS_CONF_PATH_HIDDEN_EXIST).c_str(), config_path);
-					error_mes = strMsg;
+					wchar_t buf[1024];
+					swprintf_s(buf, _countof(buf), LocUtils::GetStringFromResources(IDS_CONF_PATH_HIDDEN_EXIST).c_str(), config_path.c_str());
+					error_mes = buf;
 				}
 				throw(-1);
 			}
@@ -1030,7 +1066,12 @@ bool CryptConfig::create(const WCHAR *path, const WCHAR *specified_config_file_p
 			fprintf(fl, "\t\t\"HKDF\",\n");
 		if (m_Raw64)
 			fprintf(fl, "\t\t\"Raw64\",\n");
-		fprintf(fl, "\t\t\"GCMIV128\"\n");
+		// XChaCha20-Poly1305 and GCMIV128 are mutually exclusive content
+		// encryption flags; output whichever this volume uses.
+		if (m_ChaChaPoly1305)
+			fprintf(fl, "\t\t\"XChaCha20Poly1305\"\n");
+		else
+			fprintf(fl, "\t\t\"GCMIV128\"\n");
 		if (m_LongNames && m_LongNameMax != MAX_LONGNAMEMAX) {
 			fprintf(fl, "\t],\n");
 			string s = "\t\"LongNameMax\": " + to_string(m_LongNameMax) + "\n";
@@ -1088,6 +1129,24 @@ bool CryptConfig::InitGCMContentKey(const BYTE *key)
 	if (!hkdfDerive(key, MASTER_KEY_LEN, m_pGcmContentKey->m_buf, m_pGcmContentKey->m_len, hkdfInfoGCMContent))
 		return false;
 	
+	return true;
+}
+
+bool CryptConfig::InitChaChaContentKey(const BYTE *key)
+{
+	if (!m_HKDF)
+		return true;
+
+	m_pChaChaContentKey = new LockZeroBuffer<BYTE>(MASTER_KEY_LEN, false);
+
+	if (!m_pChaChaContentKey->IsLocked())
+		return false;
+
+	m_keybuf_manager.RegisterBuf(m_pChaChaContentKey);
+
+	if (!hkdfDerive(key, MASTER_KEY_LEN, m_pChaChaContentKey->m_buf, m_pChaChaContentKey->m_len, hkdfInfoChaChaContent))
+		return false;
+
 	return true;
 }
 
