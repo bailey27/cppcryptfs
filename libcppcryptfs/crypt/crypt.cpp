@@ -174,6 +174,8 @@ int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aa
 		ciphertext_len = -1;
 	}
 
+	SecureZeroMemory(derived_key, sizeof(derived_key));
+
 	return ciphertext_len;
 }
 
@@ -184,6 +186,8 @@ int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *
 
 	if (!ctx)
 		return -1;
+
+	int retval = 0;
 
 	int len;
 	int plaintext_len;
@@ -235,11 +239,13 @@ int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *
 		}
 
 	} catch (int) {
-		return -1;
+		retval = -1;
 	}
 
+	SecureZeroMemory(derived_key, sizeof(derived_key));
+
 	/* Verify failed */
-	return -1;
+	return retval;
 }
 
 int encrypt_siv(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
