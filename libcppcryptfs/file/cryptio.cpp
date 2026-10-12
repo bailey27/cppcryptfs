@@ -76,7 +76,7 @@ read_block(CryptContext *con, HANDLE hfile, BYTE *inputbuf, int bytesinbuf, int 
 			*bytes_consumed = to_consume;
 		nread = to_consume;
 	} else {
-		if (!ReadFile(hfile, buf, sizeof(buf), &nread, &ov)) {
+		if (!ReadFile(hfile, buf, cipherBS, &nread, &ov)) {
 			DWORD error = GetLastError();
 			if (error == ERROR_HANDLE_EOF) {
 				return 0;
