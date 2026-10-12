@@ -187,8 +187,6 @@ int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *
 	if (!ctx)
 		return -1;
 
-	int retval = 0;
-
 	int len;
 	int plaintext_len;
 
@@ -235,17 +233,19 @@ int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *
 		*/
 		if (EVP_DecryptFinal_ex(ctx, plaintext + len, &len) > 0) {
 			plaintext_len += len;
+			SecureZeroMemory(derived_key, sizeof(derived_key));
 			return plaintext_len;
 		}
 
 	} catch (int) {
-		retval = -1;
+		SecureZeroMemory(derived_key, sizeof(derived_key));
+		return -1;
 	}
 
 	SecureZeroMemory(derived_key, sizeof(derived_key));
 
 	/* Verify failed */
-	return retval;
+	return -1;
 }
 
 int encrypt_siv(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
