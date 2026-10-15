@@ -190,7 +190,8 @@ void CryptContext::GetFsInfo(FsInfo & info)
 	info.cacheTTL = m_cache_ttl;
 	info.caseInsensitive = IsCaseInsensitive();
 	info.configPath = GetConfig()->m_configPath;
-	info.dataEncryption = GetConfig()->m_AESSIV ? L"AES256-SIV" : L"AES256-GCM";
+	info.dataEncryption = GetConfig()->m_AESSIV ? L"AES256-SIV" :
+		GetConfig()->m_ChaChaPoly1305 ? L"XChaCha20-Poly1305" : L"AES256-GCM";
 	info.fileNameEncryption = GetConfig()->m_PlaintextNames ? L"none" : L"AES256-EME";
 	info.multhreaded = m_multithreaded;
 	info.ioBufferSize = m_bufferblocks * 4;

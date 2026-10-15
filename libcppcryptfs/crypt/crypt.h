@@ -41,11 +41,11 @@ shared_ptr<EVP_CIPHER_CTX> get_crypt_context(int ivlen, int mode);
 
 int encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
 	int aad_len, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *ciphertext, unsigned char *tag, EVP_CIPHER_CTX* ctx);
+	unsigned char *ciphertext, unsigned char *tag, EVP_CIPHER_CTX* ctx, int mode);
 
 int decrypt(const unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
 	int aad_len, unsigned char *tag, const unsigned char *key, const unsigned char *iv, 
-	unsigned char *plaintext, EVP_CIPHER_CTX* ctx);
+	unsigned char *plaintext, EVP_CIPHER_CTX* ctx, int mode);
 
 int encrypt_siv(const unsigned char *plaintext, int plaintext_len, unsigned char *aad,
 	int aad_len, const unsigned char *iv,
@@ -70,3 +70,4 @@ bool hkdfDerive(const BYTE *masterKey, int masterKeyLen, BYTE *newKey, int newKe
 extern const char *hkdfInfoEMENames;
 extern const char *hkdfInfoGCMContent;
 extern const char *hkdfInfoSIVContent;
+extern const char *hkdfInfoChaChaContent;

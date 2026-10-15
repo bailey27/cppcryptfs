@@ -67,7 +67,7 @@ VirtualAttributesNameFile(DWORD attr)
 #endif // _WIN32
 
 bool
-adjust_file_offset_down(LARGE_INTEGER& l)
+adjust_file_offset_down(LARGE_INTEGER& l, int overhead)
 {
 	long long offset = l.QuadPart;
 
@@ -77,8 +77,10 @@ adjust_file_offset_down(LARGE_INTEGER& l)
 	if (offset == 0)
 		return true;
 
-	long long blocks = (offset - CIPHER_FILE_OVERHEAD + CIPHER_BS - 1) / CIPHER_BS;
-	offset -= (blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD);
+	int cipherBS = PLAIN_BS + overhead;
+
+	long long blocks = (offset - CIPHER_FILE_OVERHEAD + cipherBS - 1) / cipherBS;
+	offset -= (blocks*overhead + CIPHER_FILE_OVERHEAD);
 	if (offset < 0)
 		return false;
 
@@ -88,7 +90,7 @@ adjust_file_offset_down(LARGE_INTEGER& l)
 }
 
 bool
-adjust_file_offset_up(LARGE_INTEGER& l)
+adjust_file_offset_up(LARGE_INTEGER& l, int overhead)
 {
 	long long offset = l.QuadPart;
 
@@ -99,25 +101,25 @@ adjust_file_offset_up(LARGE_INTEGER& l)
 		return true;
 
 	long long blocks = (offset + PLAIN_BS - 1) / PLAIN_BS;
-	offset += (blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD);
+	offset += (blocks*overhead + CIPHER_FILE_OVERHEAD);
 	
 	l.QuadPart = offset;
 
 	return true;
 }
 
-bool adjust_file_size_down(LARGE_INTEGER& l)
+bool adjust_file_size_down(LARGE_INTEGER& l, int overhead)
 {
-	return adjust_file_offset_down(l);
+	return adjust_file_offset_down(l, overhead);
 }
 
-bool adjust_file_size_up(LARGE_INTEGER& l)
+bool adjust_file_size_up(LARGE_INTEGER& l, int overhead)
 {
-	return adjust_file_offset_up(l);
+	return adjust_file_offset_up(l, overhead);
 }
 
 bool
-adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l)
+adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l, int overhead)
 {
 	long long offset = l.QuadPart;
 
@@ -128,7 +130,7 @@ adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l)
 		return true;
 
 	long long blocks = (offset + PLAIN_BS - 1) / PLAIN_BS;
-	offset += blocks*CIPHER_BLOCK_OVERHEAD + CIPHER_FILE_OVERHEAD;
+	offset += blocks*overhead + CIPHER_FILE_OVERHEAD;
 
 	l.QuadPart = offset;
 
@@ -243,10 +245,10 @@ convert_fdata(CryptContext *con, BOOL isRoot, const BYTE *dir_iv, const WCHAR *p
 		l.LowPart = fdata.nFileSizeLow;
 		l.HighPart = fdata.nFileSizeHigh;
 		if (con->GetConfig()->m_reverse) {
-			if (!adjust_file_size_up(l))
+			if (!adjust_file_size_up(l, con->GetConfig()->GetCipherBlockOverhead()))
 				return false;
 		} else {
-			if (!adjust_file_size_down(l))
+			if (!adjust_file_size_down(l, con->GetConfig()->GetCipherBlockOverhead()))
 				return false;
 		}
 		fdata.nFileSizeHigh = l.HighPart;
@@ -589,10 +591,10 @@ get_file_information(CryptContext *con, function<LPCWSTR()> getEncPath, LPCWSTR 
 			l.HighPart = pInfo->nFileSizeHigh;
 
 			if (con->GetConfig()->m_reverse) {
-				if (!adjust_file_size_up(l))
+				if (!adjust_file_size_up(l, con->GetConfig()->GetCipherBlockOverhead()))
 					throw((int)ERROR_INVALID_PARAMETER);
 			} else {
-				if (!adjust_file_size_down(l))
+				if (!adjust_file_size_down(l, con->GetConfig()->GetCipherBlockOverhead()))
 					throw((int)ERROR_INVALID_PARAMETER);
 			}
 
@@ -1018,10 +1020,10 @@ convert_find_stream_data(CryptContext *con, LPCWSTR pt_path, LPCWSTR path, WIN32
 	}
 
 	if (reverse) {
-		if (!adjust_file_size_up(fdata.StreamSize))
+		if (!adjust_file_size_up(fdata.StreamSize, con->GetConfig()->GetCipherBlockOverhead()))
 			return false;
 	} else {
-		if (!adjust_file_size_down(fdata.StreamSize))
+		if (!adjust_file_size_down(fdata.StreamSize, con->GetConfig()->GetCipherBlockOverhead()))
 			return false;
 	}
 

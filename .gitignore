@@ -27,3 +27,4 @@ libcommonutil/libcommonutil.vcxproj.user
 libcppcryptfs/libcppcryptfs.vcxproj.user
 cppcryptfs/gitversion.rc2
 cppcryptfsctl/gitversion.rc2
+VersionGenerated.h

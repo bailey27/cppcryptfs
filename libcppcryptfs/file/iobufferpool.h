@@ -68,8 +68,11 @@ private:
 
 public:
 
-	// the size below is to accomodate the maximum i/o buffer size + enough IVs to write up to 64MB
-	static const size_t m_max_pool_buffer_size = ((MAX_IO_BUFFER_KB * 1024) / PLAIN_BS) * CIPHER_BS + ((64 * 1024 * 1024) / PLAIN_BS) * BLOCK_IV_LEN;
+	// the size below is to accomodate the maximum i/o buffer size + enough IVs to write up to 64MB.
+	// The I/O part uses the largest possible block size (XChaCha20-Poly1305: 24-byte IV + 4096 plaintext + 16-byte tag)
+	// and the IV part uses the largest possible IV length, so the pool is large enough for every
+	// supported content-encryption algorithm.
+	static const size_t m_max_pool_buffer_size = ((MAX_IO_BUFFER_KB * 1024) / PLAIN_BS) * (CHACHA_BLOCK_IV_LEN + PLAIN_BS + BLOCK_TAG_LEN) + ((64 * 1024 * 1024) / PLAIN_BS) * CHACHA_BLOCK_IV_LEN;
 
 	static IoBufferPool& getInstance();
 

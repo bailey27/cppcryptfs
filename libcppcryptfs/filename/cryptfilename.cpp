@@ -84,7 +84,7 @@ derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const ch
 	wpath = pathstr;
 
 	if (wpath.length() > 0) {
-		if (wpath[wpath.length() - 1] == '\\' || wpath[wpath.length()] - 1 == '/')
+		if (wpath[wpath.length() - 1] == '\\' || wpath[wpath.length() - 1] == '/')
 			wpath.erase(wpath.length() - 1);
 	}
 

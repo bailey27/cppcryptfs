@@ -43,7 +43,6 @@ THE SOFTWARE.
 #ifdef _WIN32
 #include <wincrypt.h>
 #include <tlhelp32.h>
-#include <atlenc.h>
 #include <shellapi.h>
 #endif
 
@@ -313,13 +312,21 @@ base64_encode(const BYTE *data, DWORD datalen, string& storage, bool urlTransfor
 
 	if (base64str = base64.get()) {		
 
-		// ATL Base64Encode() is supposedly way faster than CryptBinaryToString()
-	
-		bResult = Base64Encode(data, (int)datalen, base64str, &base64len, ATL_BASE64_FLAG_NOCRLF);
-
-		// ATL Base64Encode() doesn't null terminate the string
-		if (bResult)
-			base64str[base64len] = '\0';
+		// CryptBinaryToStringA is a Win32 API (see wincrypt.h) that does
+		// not depend on ATL. Encoding with CRYPT_STRING_BASE64 then stripping
+		// its CR/LF line breaks is equivalent to ATL's ATL_BASE64_FLAG_NOCRLF
+		// (single line, no line breaks).
+		DWORD outlen = (DWORD)base64len;
+		bResult = CryptBinaryToStringA(data, datalen, CRYPT_STRING_BASE64, base64str, &outlen);
+		if (bResult) {
+			char *dst = base64str;
+			for (DWORD i = 0; i < outlen; i++) {
+				if (base64str[i] != '\r' && base64str[i] != '\n')
+					*dst++ = base64str[i];
+			}
+			*dst = '\0';
+			outlen = (DWORD)(dst - base64str);
+		}
 
 	} else {
 		bResult = FALSE;
@@ -733,6 +740,7 @@ Initializing (cppcryptfsctl only):
   -T, --plaintext             use plaintext filenames (default is AES256-EME)
   --deterministicnames        disable creation of gocryptfs.diriv files.
   -S, --siv                   use AES256-SIV for data encr (default is GCM)
+  -X, --chacha                use XChaCha20-Poly1305 for data encr (default is GCM)
   -L, --longnames [1|0]       enable/disable LFNs. defaults to enabled (1)
   -b, --streams   [1|0]       enable/disable streams. defaults to enabled (1)
   --longnamemax N             limit filenames to at most N characters
