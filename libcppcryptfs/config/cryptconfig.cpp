@@ -326,26 +326,20 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 					} else if (!strcmp(itr->GetString(), "XChaCha20Poly1305")) {
 						m_ChaChaPoly1305 = true;
 					} else {
-						// Unknown feature flags could tolerated (recorded as a
-						// warning) instead of being fatal, so that volumes using
-						// algorithms cppcryptfs does not implement (e.g. FIDO2)
-						// can still be mounted when the master key is supplied.
-						// 
-						// However, if the user has specified a feature flag that 
-						// cppcryptfs does not implement, it is likely that the user 
-						// expects that feature to be implemented, so we should generat an err
-						// because it could corrupt data if we just accept it with a warning.
-						//
-						// If you want them to be tolerated, just replace mes with m_warning
-						// and comment out the throw(-1) line below.
+						// Unknown feature flags are fatal: the volume's data layout
+						// may use an algorithm cppcryptfs does not implement, and
+						// mounting anyway could silently misread data.
 						wstring wflag;
 						if (utf8_to_unicode(itr->GetString(), wflag)) {
 							wchar_t buf[1024];
 							swprintf_s(buf, _countof(buf), LocUtils::GetStringFromResources(IDS_UNKNOWN_FEATURE_FLAG).c_str(), wflag.c_str());
 							wstring strMsg(buf);
+							// record the warning so it can be shown to the user
+							m_warning += strMsg;
+							// also report it through the error message shown on failed mount
 							if (!mes.empty())
 								mes += L" ";
-							m_warning += strMsg;
+							mes += strMsg;
 						} else {
 							if (!mes.empty())
 								mes += L" ";
