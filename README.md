@@ -124,7 +124,7 @@ The resulting gocryptfs.conf has "DirIV" missing from "FeatureFlags".
 
 ```
 
-You can choose between AES256-GCM or AES256-SIV (RFC 5297) for file data encryption.  The default is AES256-GCM which is recommended. GCM is about twice as fast as SIV for streaming reads and writes.  SIV was implemented in order to support reverse mode. 
+You can choose between AES256-GCM, AES256-SIV (RFC 5297), or XChaCha20-Poly1305 for file data encryption.  The default is AES256-GCM which is recommended. GCM is about twice as fast as SIV for streaming reads and writes.  SIV was implemented in order to support reverse mode. 
 
 Note: In the gocryptfs documentation, the SIV mode is referred to as AES-512-SIV, which is the proper name for this mode of operation. However, it is called AES256-SIV in cppcryptfs because the 512-bit SIV key is derived from the 256-bit master key (as is the case with gocryptfs).  Also, the developer of cppcryptfs doesn't want to call it AES512-SIV in the user interface because that might cause users to think that it is more secure than AES256-GCM.
 
@@ -521,6 +521,7 @@ Initializing (cppcryptfsctl only):
   -T, --plaintext             use plaintext filenames (default is AES256-EME)
   --deterministicnames        disable creation of gocryptfs.diriv files.
   -S, --siv                   use AES256-SIV for data encr (default is GCM)
+  -X, --chacha                use XChaCha20-Poly1305 for data encr (default is GCM)
   -L, --longnames [1|0]       enable/disable LFNs. defaults to enabled (1)
   -b, --streams   [1|0]       enable/disable streams. defaults to enabled (1)
   --longnamemax N             limit filenames to at most N characters
