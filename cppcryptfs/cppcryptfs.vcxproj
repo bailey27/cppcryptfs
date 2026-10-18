@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|ARM64">
@@ -195,7 +195,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-2.3.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\git\openssl-arm64-static\include</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
@@ -254,7 +254,7 @@
       <AdditionalIncludeDirectories>$(IntDir);$(ProjectDir);$(ProjectDir)res\en;$(ProjectDir)res\ru;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PreBuildEvent>
-      <Command>python "$(ProjectDir)\..\build_scripts\make_version_header.py" "$(ProjectDir)</Command>
+      <Command>python "$(ProjectDir)\..\build_scripts\make_version_header.py" "$(ProjectDir)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -291,7 +291,7 @@
       <AdditionalIncludeDirectories>$(IntDir);$(ProjectDir);$(ProjectDir)res\en;$(ProjectDir)res\ru;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PreBuildEvent>
-      <Command>python "$(ProjectDir)\..\build_scripts\make_version_header.py" "$(ProjectDir)</Command>
+      <Command>python "$(ProjectDir)\..\build_scripts\make_version_header.py" "$(ProjectDir)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -301,7 +301,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(PROJECTDIR)..\libcppcryptfs;C:\Program Files\Dokan\Dokan Library-2.3.1\include;$(ProjectDir);c:\git\rapidjson\include;C:\git\openssl-arm64-static\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/Qspectre</AdditionalOptions>
@@ -328,7 +328,7 @@
       <AdditionalIncludeDirectories>$(IntDir);$(ProjectDir);$(ProjectDir)res\en;$(ProjectDir)res\ru;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PreBuildEvent>
-      <Command>python "$(ProjectDir)\..\build_scripts\make_version_header.py" "$(ProjectDir)</Command>
+      <Command>python "$(ProjectDir)\..\build_scripts\make_version_header.py" "$(ProjectDir)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

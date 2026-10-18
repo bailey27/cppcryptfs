@@ -153,6 +153,8 @@ static int do_self_args(int argc, wchar_t* const argv[])
 
     bool siv = false;
 
+    bool chacha = false;
+
     bool do_version = false;
 
     bool do_help = false;
@@ -194,6 +196,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
         {L"streams",  required_argument, 0, 'b'},
         {L"volumename",  required_argument, 0, 'V'},
         {L"siv",  no_argument, 0, 'S'},        
+        {L"chacha",  no_argument, 0, 'X'},
         {L"version",  no_argument, 0, 'v' },
         {L"help",  no_argument, 0, 'h'},
         {L"password", required_argument, 0, 'p'},
@@ -206,7 +209,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
     };
 
     while (true) {
-        c = getopt_long(argc, argv, L"p:dI:c:sTL:b:V:Svh0:1:2:3:4:", long_options, &option_index);
+        c = getopt_long(argc, argv, L"p:dI:c:sTL:b:V:SXvh0:1:2:3:4:", long_options, &option_index);
 
         if (c == -1)
             break;
@@ -276,6 +279,9 @@ static int do_self_args(int argc, wchar_t* const argv[])
         case 'S':
             siv = true;
             break;
+        case 'X':
+            chacha = true;
+            break;
         case 'v':
             do_version = true;
             break;
@@ -317,6 +323,11 @@ static int do_self_args(int argc, wchar_t* const argv[])
             wcerr << L"Deterministic names makes sense only when combined with --init." << endl;
             return 1;
         }
+    }
+
+    if (chacha && reverse) {
+        wcerr << L"XChaCha20-Poly1305 cannot be used with reverse mode (reverse implies AES256-SIV)." << endl;
+        return 1;
     }
 
     if (do_version) {
@@ -371,7 +382,7 @@ static int do_self_args(int argc, wchar_t* const argv[])
             return 1;
         }        
     
-        bool result = config.create(fs_path.c_str(), config_path.c_str(), password.m_buf, !plaintext_names, plaintext_names, longnames, reverse || siv, reverse, scryptn ? scryptn : DEFAULT_SCRYPTN, volume_name.c_str(), !streams, longnamemax, deterministicnames, mes);
+        bool result = config.create(fs_path.c_str(), config_path.c_str(), password.m_buf, !plaintext_names, plaintext_names, longnames, reverse || siv, chacha, reverse, scryptn ? scryptn : DEFAULT_SCRYPTN, volume_name.c_str(), !streams, longnamemax, deterministicnames, mes);
 
         if (!result) {
             wcerr << mes << endl;

@@ -45,11 +45,13 @@ THE SOFTWARE.
 
 static const WCHAR *data_encryption_types[] = {
 	L"AES256-GCM",
-	L"AES256-SIV"
+	L"AES256-SIV",
+	L"XChaCha20-Poly1305"
 };
 
 #define AES256_GCM_INDEX 0
 #define AES256_SIV_INDEX 1
+#define AES256_CHACHA_INDEX 2
 
 #define NUM_DATA_ENC_TYPES (sizeof(data_encryption_types)/sizeof(data_encryption_types[0]))
 
@@ -182,6 +184,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	
 
 	bool siv = false;
+	bool chacha = false;
 	bool eme = false;
 	bool plaintext = false;
 	bool longfilenames = false;
@@ -230,6 +233,8 @@ void CCreatePropertyPage::CreateCryptfs()
 
 	if (cfenc == L"AES256-SIV")
 		siv = true;
+	else if (cfenc == L"XChaCha20-Poly1305")
+		chacha = true;
 
 	CString volume_name;
 	GetDlgItemText(IDC_VOLUME_NAME, volume_name);
@@ -245,7 +250,7 @@ void CCreatePropertyPage::CreateCryptfs()
 	const int scryptN = stoi((LPCTSTR)sel);	
 
 	theApp.DoWaitCursor(1);
-	bool bResult = config.create(cpath, config_path, password.m_buf, eme, plaintext, longfilenames, siv, reverse, scryptN, volume_name, disablestreams, longnamemax, deterministicnames, error_mes);
+	bool bResult = config.create(cpath, config_path, password.m_buf, eme, plaintext, longfilenames, siv, chacha, reverse, scryptN, volume_name, disablestreams, longnamemax, deterministicnames, error_mes);
 	theApp.DoWaitCursor(-1);
 
 	if (!bResult) {

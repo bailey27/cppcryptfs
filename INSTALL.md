@@ -3,12 +3,14 @@ cppcryptfs Build and Installation
 
 You will need the following software, **all available for free**, to build cppcryptfs:
 
-Microsoft Visual Studio 2026 Community Edition, perl, nasm, python, and git. git is optional.
+Microsoft Visual Studio 2026 Community Edition, perl, python, and git. git is optional.
+
+If you want to make a 32-bit x86 build, then you will also need nasm.
 
 
 You will also need to install Dokany.
 
-You will need to download the source code for the OpenSSL and RapidJSON projects from github.  
+You will need to download the source code for the OpenSSL and RapidJSON projects.  
 
 Only OpenSSL needs to be built separately.  cppcryptfs uses only header files from RapidJSON, so you don't need to build RapidJSON.
 
@@ -38,11 +40,9 @@ flag for Spectre mitigation.  For this to be effective (and for the build to wor
 
 [Visual Studio install Spectre-mitigated libraries screenshot 2](/screenshots/visual_studio_2019_spectre_libs2.png?raw=true) 
 
-In order to build OpenSSL, you will also need perl and nasm.  
+In order to build OpenSSL, you will also need perl, and for a 32-bit x86 build, you will need nasm.  
 
-For Perl, the OpenSSL documentation recommends using the free ActiveState ActivePerl.
-
-http://www.activestate.com/activeperl/downloads
+For Perl, the OpenSSL documentation recommends using the free Strawberry Perl.
 
 nasm (The Netwide Assembler) is available from here http://www.nasm.us/.  There should be a link to the latest stable version in the middle of page.  Using the nasm installer is recommended if you want to be able to follow these build instructions verbatim. 
 
@@ -78,23 +78,20 @@ Please refer to the "INSTALL" file from the OpenSSL distribution if these instru
 
 After installing Visual Studio, nasm, git, and ActiveState perl, open a new Windows command prompt (cmd.exe).
 
-You will need an elevated (administrator) command prompt for running the command that installs OpenSSL.  You can build it in a normal command prompt, though.
-
-To start an elevated command prompt in Windows 10, click on the search (magnifying glass) icon in the lower left of the screen and type "cmd". Then right-click on "Command Prompt" and select "Run as administrator".
-
-[how to start an elevated command prompt screenshot](/screenshots/cmd_as_administrator.png?raw=true)
-
 Whether or not you are using git, everything will go easier if you put everything in c:\git.
 
 Getting OpenSSL from github will get you the latest development version of OpenSSL.  However, the cppcryptfs releases are built using the
-current 3.0.x Long Term Support (LTS) version of OpenSSL (currently openssl-3.0.13).  These are available from https://www.openssl.org/source/.  To use those, you will need to download
+current 3.5.x Long Term Support (LTS) version of OpenSSL (currently openssl-3.5.9).  These are available from https://www.openssl.org/source/.  To use those, you will need to download
 the .tar.gz and extract it into a directory.  You can build it with the same instructions that follow regardless of how you get OpenSSL.
 
-Microsoft has announced a compiler-based mitigation for one variant of the Spectre vulnerability.  To use it, you need to have version 15.5 or higher of Visual Studio.  To use the mitigation with OpenSSL, you need to add the /Qspectre flag to the compiler optimization flags.  OpenSSL currently does not use this flag.  Also, to be extra safe, add the /guard:cf (Control Flow Guard) flag.  To use these, you need to edit c:\\git\openssl\\Configurations\\10-main.conf and change "/O2" to "/O2 /Qspectre /guard:cf" (omit /guard:cf if building for ARM64).
+Microsoft has a compiler-based mitigation for one variant of the Spectre vulnerability.   
+To use the mitigation with OpenSSL, you need to add the /Qspectre flag to the compiler optimization flags.  OpenSSL currently does not use this flag.  
+Also, to be extra safe, add the /guard:cf (Control Flow Guard) flag.  
+To use these, you need to edit c:\\git\openssl\\Configurations\\10-main.conf and change "/O2" to "/O2 /Qspectre /guard:cf".
 
 You need to make the above changes to 10-main.conf BEFORE running the perl command that generates the makefile.
 
-Run this command to put nasm in your path (assuming you used the nasm installer).
+Run this command to put nasm in your path (assuming you used the nasm installer). Again, it is needed only for a 32-bit x86 build.
 
 
 ```
@@ -112,14 +109,13 @@ Use "x86" in place of "amd64" if you are doing a 32-bit build. If cross compilin
 
 The vcvarsall.bat from Visual Studio 2026 must be run in a Windows cmd.exe command shell.  It doesn't like being run in third-party command shells.
 
+Then run perl to configure OpenSSL for a Visual Studio AMD64/X86_64 static build.  
 
-Then run (ActiveState) perl to configure OpenSSL for a Visual Studio AMD64/X86_64 static build.  
-
-Use "VC-WIN32" instead of  "VC-WIN64A" if you're doing a 32-bit build. Use "VC-WIN64-ARM" if doing an arm build.
+Use "VC-WIN32" instead of  "VC-WIN64A-masm" if you're doing a 32-bit build. Use "VC-WIN64-ARM" if doing an arm build.
 
 
 ```
-perl Configure VC-WIN64A no-shared no-tests --prefix=C:\git\openssl-amd64-static  --openssldir=C:\git\openssl-amd64-static
+perl Configure VC-WIN64A-masm no-shared no-tests --prefix=C:\git\openssl-amd64-static  --openssldir=C:\git\openssl-amd64-static
 ```
 
 This will cause the output of the build to be placed under C:\git\openssl-amd64-static. Change amd64 to x86 or arm64 if doing 32-bit intel or ARM64 builds.
@@ -131,13 +127,36 @@ Then run "nmake" to build OpenSSL.
 nmake
 ```
 
-Then run "nmake install_sw" to install into those directories specified above.  
+Then run "nmake install_sw" to install into those directories specified above (e.g. C:\\git\\openssl-amd64-static).  
 
 
 ```
 nmake install_sw
 ```
 
+For 32-bit x86 builds, if you want to use the xchacha20-poly1305 you need to disable the assembly code for poly1305.
+
+Before running perl Configure, edit 
+
+```
+openssl\crypto\poly1305\build.info
+```
+
+and change
+
+```
+$POLY1305ASM_x86=poly1305-x86.S
+```
+to
+```
+$POLY1305ASM_x86=
+```
+
+This is needed because /guard:cf (Control Flow Guard) is not compatible with the nasm configuration of openssl.
+
+For x86-64 this is solved by using masm (which comes with Visual Studio) instead of nasm. Unfortunately, there is no masm configuration in openssl for 32-bit x86 (Win32).
+
+Another solution is to just not use /guard:cf in 10-main.conf.
 
 RapidJSON
 ------

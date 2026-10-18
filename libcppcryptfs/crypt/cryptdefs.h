@@ -35,6 +35,7 @@ THE SOFTWARE.
 #define FILE_ID_LEN 16
 #define PLAIN_BS 4096
 #define BLOCK_IV_LEN 16
+#define CHACHA_BLOCK_IV_LEN 24 // XChaCha20-Poly1305 uses a 192-bit nonce
 #define BLOCK_SIV_LEN 16
 #define ORIG_MASTER_IV_LEN 12
 #define HKDF_MASTER_IV_LEN 16
@@ -46,6 +47,7 @@ THE SOFTWARE.
 #define MASTER_KEY_LEN 32
 
 #define AES_MODE_GCM 1
+#define AES_MODE_CHACHA 2
 
 #define SALT_LEN 32
 
