@@ -154,7 +154,7 @@ $POLY1305ASM_x86=
 
 This is needed because /guard:cf (Control Flow Guard) is not compatible with the nasm configuration of openssl.
 
-For x86-64 this is solved by using masm (which comes with Visual Studio) instead of nasm. Unfortunately, there is no nasm configuration in openssl for 32-bit x86 (Win32).
+For x86-64 this is solved by using masm (which comes with Visual Studio) instead of nasm. Unfortunately, there is no masm configuration in openssl for 32-bit x86 (Win32).
 
 Another solution is to just not use /guard:cf in 10-main.conf.
 
