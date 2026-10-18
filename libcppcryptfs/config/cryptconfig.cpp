@@ -332,7 +332,7 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 						wstring wflag;
 						if (utf8_to_unicode(itr->GetString(), wflag)) {
 							wchar_t buf[1024];
-							swprintf_s(buf, _countof(buf), LocUtils::GetStringFromResources(IDS_UNKNOWN_FEATURE_FLAG).c_str(), wflag.c_str());
+							_snwprintf_s(buf, _countof(buf), _TRUNCATE, LocUtils::GetStringFromResources(IDS_UNKNOWN_FEATURE_FLAG).c_str(), wflag.c_str());
 							wstring strMsg(buf);
 							// record the warning so it can be shown to the user
 							m_warning += strMsg;
