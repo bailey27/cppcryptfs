@@ -2,7 +2,7 @@
 
 Changelog
 ------------
-v1.4.4.11 2 Sep 2026
+v1.4.5.0 18 Oct 2026
 * Added xchacha20-poly1305 cipher algorithm.
 * Fixed a path out-of-bounds bug when checking a trailing path separator.
 * Fixed translations.
