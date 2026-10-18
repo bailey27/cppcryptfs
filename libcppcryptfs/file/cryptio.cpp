@@ -157,6 +157,12 @@ write_block(CryptContext *con, unsigned char *cipher_buf, HANDLE hfile, const un
 	} else {
 		const unsigned char* block0iv = iv;
 
+		// Reverse mode only supports AESSIV, whose IV (SIV) is BLOCK_SIV_LEN bytes,
+		// and m_block0iv only holds BLOCK_SIV_LEN bytes, so a longer IV here
+		// would read past the end of the buffer.
+		if (ivlen > BLOCK_SIV_LEN)
+			return -1;
+
 		// Copy the whole IV first so that algorithms with a larger IV
 		// keep their upper bytes intact.
 		memcpy(cipher_buf, block0iv, ivlen);
