@@ -110,7 +110,7 @@ cppcryptfs 在没有 SE_SECURITY_NAME 权限的情况下似乎也能正常工作
 生成的 gocryptfs.conf 中 “FeatureFlags” 里会缺少 “DirIV”。
 ```
 
-你可以选择 AES256-GCM 或 AES256-SIV（RFC 5297）对文件数据进行加密。默认是 AES256-GCM，推荐使用。对于流式读写，GCM 的速度大约是 SIV 的两倍。实现 SIV 是为了支持反向模式。
+你可以选择使用 AES256-GCM、AES256-SIV（RFC 5297）或 XChaCha20-Poly1305 对文件数据进行加密。默认是 AES256-GCM，推荐使用。对于流式读写，GCM 的速度大约是 SIV 的两倍。实现 SIV 是为了支持反向模式。
 
 注意：在 gocryptfs 文档中，SIV 模式被称为 AES-512-SIV，这是此操作模式的正确名称。然而，在 cppcryptfs 中它被称为 AES256-SIV，因为 512 位的 SIV 密钥是从 256 位的主密钥派生而来的（gocryptfs 也是如此）。此外，cppcryptfs 的开发者不想在用户界面中将其称为 AES512-SIV，因为这可能会让用户认为它比 AES256-GCM 更安全。
 
@@ -469,6 +469,7 @@ cppcryptfsctl 在成功时将 ERRORLEVEL 设置为 0，发生错误时设置为 
   -T, --plaintext             使用明文文件名（默认是 AES256-EME 模式）
   --deterministicnames        禁用创建 gocryptfs.diriv 文件。
   -S, --siv                   使用 AES256-SIV 进行数据加密（默认是 GCM 模式）
+  -X, --chacha                使用 XChaCha20-Poly1305 进行数据加密（默认是 GCM 模式）
   -L, --longnames [1|0]       启用/禁用长文件名。默认启用（1）
   -b, --streams   [1|0]       启用/禁用流。默认启用（1）
   --longnamemax N             将文件名长度限制为最多 N 个字符
