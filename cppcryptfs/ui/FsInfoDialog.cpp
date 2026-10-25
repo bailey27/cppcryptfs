@@ -132,13 +132,13 @@ BOOL CFsInfoDialog::OnInitDialog()
 
 	wstring txt;
 	txt = to_wstring(m_info.ioBufferSize);
-	strMsgKB.Format(LocUtils::GetStringFromResources(IDS_FSINFO_KB).c_str(), txt);
+	strMsgKB.Format(LocUtils::GetStringFromResources(IDS_FSINFO_KB).c_str(), txt.c_str());
 	SetDlgItemText(IDC_IO_BUF_SIZE, strMsgKB);
 	txt = m_info.multhreaded ? yes : no;
 	SetDlgItemText(IDC_THREADS, txt.c_str());
 	if (m_info.cacheTTL > 0) {
 		txt = to_wstring(m_info.cacheTTL);
-		strMsgSec.Format(LocUtils::GetStringFromResources(IDS_FSINFO_SEC).c_str(), txt);
+		strMsgSec.Format(LocUtils::GetStringFromResources(IDS_FSINFO_SEC).c_str(), txt.c_str());
 		SetDlgItemText(IDC_CACHE_TTL, strMsgSec);
 	} else {
 		SetDlgItemText(IDC_CACHE_TTL, strMsgInfinite);
