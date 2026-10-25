@@ -2,6 +2,11 @@
 
 Changelog
 ------------
+v1.4.5.1 25 Oct 2026
+* Fix crash in file system properties dialog box
+* Lengthen encryption option box on the creation interface.
+* Add missing format specifier in resource string in Russian translation
+
 v1.4.5.0 18 Oct 2026
 * Added xchacha20-poly1305 cipher algorithm.
 * Fixed a path out-of-bounds bug when checking a trailing path separator.
