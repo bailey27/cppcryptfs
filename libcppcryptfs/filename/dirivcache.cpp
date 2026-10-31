@@ -299,3 +299,28 @@ void DirIvCache::remove(LPCWSTR path)
 
 	unlock();
 }
+
+void DirIvCache::remove_tree(LPCWSTR path)
+{
+	wstring key = path;
+	normalize_key(key);
+
+	lock();
+
+	for (auto it = m_map.begin(); it != m_map.end(); ) {
+
+		if (it->first.compare(0, key.size(), key) == 0) {
+
+			DirIvCacheNode* node = it->second;
+
+			it = m_map.erase(it);
+
+			m_lru_list.erase(node->m_list_it);
+			m_spare_node_list.push_back(node);
+		} else {
+			++it;
+		}
+	}
+
+	unlock();
+}

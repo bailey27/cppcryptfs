@@ -1390,6 +1390,14 @@ CryptMoveFile(LPCWSTR FileName, // existing file name
     }
   }
 
+  if (status == STATUS_SUCCESS && DokanFileInfo->IsDirectory && 
+      GetContext()->GetConfig()->DirIV())
+  {
+    // remove now stale dir iv cache entries for the moved directory and its children
+    FileNameEnc filePath(DokanFileInfo, FileName);
+    GetContext()->m_dir_iv_cache.remove_tree(filePath);
+  }
+
   return status;
 }
 

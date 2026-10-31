@@ -97,6 +97,8 @@ public:
 
 	void remove(LPCWSTR path);
 
+	void remove_tree(LPCWSTR path);
+
 	long long hits() { long long rval; lock(); rval = m_hits; unlock(); return rval; }
 	long long lookups() { long long rval; lock(); rval = m_lookups; unlock(); return rval; }
 	
