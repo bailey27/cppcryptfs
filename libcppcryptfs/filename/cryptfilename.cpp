@@ -74,6 +74,15 @@ derive_path_iv(CryptContext *con, const WCHAR *path, unsigned char *iv, const ch
 
 	//DbgPrint(L"derive_path_iv path = %s, type = %S\n", path, type);
 
+	const bool type_is_diriv = strcmp(type, TYPE_DIRIV) == 0;
+
+	if (type_is_diriv && !con->GetConfig()->DirIV())
+	{
+		// must be using deterministic names
+		memset(iv, 0, DIR_IV_LEN);
+		return true;
+	}
+
 	wstring wpath;
 
 	const WCHAR *pathstr = path;

@@ -394,7 +394,7 @@ find_files(CryptContext *con, const WCHAR *pt_path, const WCHAR *path, PCryptFil
 		if (err != ERROR_NO_MORE_FILES)
 			throw((int)err);
 
-		if (reverse && !plaintext_names) {
+		if (reverse && !plaintext_names && con->GetConfig()->DirIV()) {
 			fdata_dot.cAlternateFileName[0] = '\0';
 			wcscpy_s(fdata_dot.cFileName, DIR_IV_NAME);
 			fdata_dot.nFileSizeHigh = 0;
