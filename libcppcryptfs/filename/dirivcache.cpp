@@ -276,6 +276,21 @@ bool DirIvCache::store(LPCWSTR path, const unsigned char *dir_iv, const FILETIME
 	return rval;
 }
 
+void DirIvCache::remove_node(MapType::iterator& it)
+{
+	// Lock must already be held when calling remove_node!
+#ifdef _DEBUG
+	assert(m_crit.OwningThread ==
+		reinterpret_cast<HANDLE>(static_cast<ULONG_PTR>(GetCurrentThreadId())));
+#endif
+	DirIvCacheNode* node = it->second;
+
+	it = m_map.erase(it);
+
+	m_lru_list.erase(node->m_list_it);
+	m_spare_node_list.push_back(node);
+}
+
 void DirIvCache::remove(LPCWSTR path)
 {
 	wstring key = path;
@@ -287,14 +302,7 @@ void DirIvCache::remove(LPCWSTR path)
 	auto it = m_map.find(key);
 
 	if (it != m_map.end()) {
-
-		DirIvCacheNode *node = it->second;
-
-		m_map.erase(it);
-
-		m_lru_list.erase(node->m_list_it);
-
-		m_spare_node_list.push_back(node);
+		remove_node(it);
 	}
 
 	unlock();
@@ -310,13 +318,7 @@ void DirIvCache::remove_tree(LPCWSTR path)
 	for (auto it = m_map.begin(); it != m_map.end(); ) {
 
 		if (it->first.compare(0, key.size(), key) == 0) {
-
-			DirIvCacheNode* node = it->second;
-
-			it = m_map.erase(it);
-
-			m_lru_list.erase(node->m_list_it);
-			m_spare_node_list.push_back(node);
+			remove_node(it);
 		} else {
 			++it;
 		}

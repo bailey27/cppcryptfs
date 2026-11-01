@@ -63,6 +63,7 @@ private:
 	ULONGLONG m_ttl;
 
 	unordered_map<wstring, DirIvCacheNode*> m_map;
+	using MapType = unordered_map<wstring, DirIvCacheNode*>;
 
 	list<DirIvCacheNode*> m_lru_list;
 
@@ -80,6 +81,8 @@ private:
 
 	bool check_node_clean(DirIvCacheNode *node, const wstring& path);
 	void update_lru(DirIvCacheNode *node);
+	// Lock must already be held when calling remove_node!
+	void remove_node(MapType::iterator& it);
 public:
 	// disallow copying
 	DirIvCache(DirIvCache const&) = delete;
