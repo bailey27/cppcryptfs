@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.5.2 7 Nov 2026
+* Fixed issue #168 using deterministic file names option in reverse mode.
+* Fixed issue #176 stale diriv cache entries after dir rename.
+
 v1.4.5.1 25 Oct 2026
 * Fix crash in file system properties dialog box
 * Lengthen encryption option box on the creation interface.
