@@ -118,13 +118,16 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 	FILE *fl = NULL;
 
 	if (config_file_path) {
-		
+
+		// set this before trying to open so restore_config_from_bak()
+		// knows where to look even if the config file can't be opened
+		m_configPath = config_file_path;
+		m_reverse = reverse;
+
 		if (_wfopen_s(&fl, config_file_path, L"rb")) {
 			mes = LocUtils::GetStringFromResources(IDS_FAILED_OPEN_CONF);
 			return false;
 		}
-		m_configPath = config_file_path;
-		m_reverse = reverse;
 	} else {
 
 		wstring config_path;
@@ -141,18 +144,19 @@ CryptConfig::read(wstring& mes, const WCHAR *config_file_path, bool reverse)
 
 		wstring config_file = config_path + REVERSE_CONFIG_NAME;
 
+		m_configPath = config_file;
+
 		if (_wfopen_s(&fl, &config_file[0], L"rb")) {
 			config_file = config_path + CONFIG_NAME;
+			m_configPath = config_file;
 			if (_wfopen_s(&fl, &config_file[0], L"rb")) {
 				mes = LocUtils::GetStringFromResources(IDS_FAILED_OPEN_CONF);
 				return false;
 			}
 			m_reverse = false;
-		} else {	
+		} else {
 			m_reverse = true;
 		}
-
-		m_configPath = config_file;
 	}
 
 	File.reset(fl);
@@ -414,6 +418,112 @@ bool CryptConfig::init_serial(CryptContext *con)
 	return true;
 }
 
+// copy the current config file to <config>.bak. best-effort -- returns false
+// if the copy couldn't be made. the .bak is kept read-only and never hidden
+// so it can always be found when looking for it.
+bool CryptConfig::backup_config_file()
+{
+	bool bret = false;
+
+	try {
+
+		if (m_configPath.size() < 1)
+			throw(-1);
+
+		wstring bak_path = m_configPath;
+		bak_path += L".bak";
+
+		DWORD dwAttr = GetFileAttributes(m_configPath.c_str());
+
+		if (dwAttr == INVALID_FILE_ATTRIBUTES)
+			throw(-1);
+
+		// the .bak from a previous run is read-only, and CopyFile cannot
+		// overwrite such a file, so clear that first
+		DWORD dwBakAttr = GetFileAttributes(bak_path.c_str());
+
+		if (dwBakAttr != INVALID_FILE_ATTRIBUTES && (dwBakAttr & (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN))) {
+			SetFileAttributes(bak_path.c_str(), dwBakAttr & ~(FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN));
+		}
+
+		if (!CopyFile(m_configPath.c_str(), bak_path.c_str(), FALSE)) {
+			DbgPrint(L"backup_config_file: unable to back up %s to %s, lasterr = %u\n", m_configPath.c_str(), bak_path.c_str(), GetLastError());
+
+			// leave the old .bak the way we found it
+			if (dwBakAttr != INVALID_FILE_ATTRIBUTES) {
+				SetFileAttributes(bak_path.c_str(), dwBakAttr);
+			}
+			throw(-1);
+		}
+
+		SetFileAttributes(bak_path.c_str(), (dwAttr | FILE_ATTRIBUTE_READONLY) & ~FILE_ATTRIBUTE_HIDDEN);
+
+		bret = true;
+
+	} catch (...) {
+		bret = false;
+	}
+
+	return bret;
+}
+
+// put a .bak copy of the config file back in place. called when the config
+// file itself can't be read (missing or damaged). returns false if there is
+// no usable .bak to restore from.
+bool CryptConfig::restore_config_from_bak()
+{
+	bool bret = false;
+
+	try {
+
+		if (m_configPath.size() < 1)
+			throw(-1);
+
+		wstring bak_path = m_configPath;
+		bak_path += L".bak";
+
+		DWORD dwBakAttr = GetFileAttributes(bak_path.c_str());
+
+		if (dwBakAttr == INVALID_FILE_ATTRIBUTES)
+			throw(-1); // there is no backup to restore from
+
+		// the damaged config is normally read-only (and hidden for reverse
+		// configs) -- clear that or CopyFile can't replace it
+		DWORD dwAttr = GetFileAttributes(m_configPath.c_str());
+
+		if (dwAttr != INVALID_FILE_ATTRIBUTES && (dwAttr & (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN))) {
+			SetFileAttributes(&m_configPath[0], dwAttr & ~(FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN));
+		}
+
+		if (!CopyFile(bak_path.c_str(), m_configPath.c_str(), FALSE)) {
+			DbgPrint(L"restore_config_from_bak: unable to restore %s from %s, lasterr = %u\n", m_configPath.c_str(), bak_path.c_str(), GetLastError());
+			throw(-1);
+		}
+
+		// put the config's attributes back. if the config file was gone
+		// entirely, do what create() would have done (read-only, and hidden
+		// for the default reverse config name)
+		if (dwAttr != INVALID_FILE_ATTRIBUTES) {
+			SetFileAttributes(&m_configPath[0], dwAttr);
+		} else {
+			const size_t rlen = wcslen(REVERSE_CONFIG_NAME);
+			bool is_default_reverse = m_reverse && m_configPath.size() >= rlen
+				&& !lstrcmpi(m_configPath.c_str() + m_configPath.size() - rlen, REVERSE_CONFIG_NAME);
+
+			SetFileAttributes(&m_configPath[0], FILE_ATTRIBUTE_READONLY | (is_default_reverse ? FILE_ATTRIBUTE_HIDDEN : 0));
+		}
+
+		DbgPrint(L"restore_config_from_bak: restored %s from %s\n", m_configPath.c_str(), bak_path.c_str());
+
+		bret = true;
+
+	} catch (...) {
+		bret = false;
+	}
+
+	return bret;
+}
+
 bool CryptConfig::write_updated_config_file(const char *base64key, const char *scryptSalt, int scryptn)
 {
 	bool bret = true;
@@ -469,7 +579,7 @@ bool CryptConfig::write_updated_config_file(const char *base64key, const char *s
 
 		File.reset();
 
-		if (len < 0)
+		if (len != static_cast<size_t>(filesize))
 			throw(-1);
 
 		buf[len] = '\0';
@@ -563,11 +673,15 @@ bool CryptConfig::write_updated_config_file(const char *base64key, const char *s
 			throw (-1);
 		}
 
+		// save a copy of the current config file before it gets replaced.
+		// backing up is best-effort, so a failure here doesn't block the update.
+		backup_config_file();
+
 		bool bWasReadOnly = false;
 
 		if (dwAttr & FILE_ATTRIBUTE_READONLY) {
 
-			bool bWasReadOnly = true;
+			bWasReadOnly = true;
 
 			dwAttr &= ~FILE_ATTRIBUTE_READONLY;
 

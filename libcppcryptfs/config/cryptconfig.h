@@ -120,6 +120,14 @@ public:
 
 	bool write_updated_config_file(const char *base64key, const char *scryptSalt, int scryptn);
 
+	// copy the current config file to <config>.bak (best-effort). used before
+	// the config gets replaced and after a volume has been mounted.
+	bool backup_config_file();
+
+	// when the config file is missing or damaged, put the <config>.bak copy
+	// back in its place so the volume can still be mounted
+	bool restore_config_from_bak();
+
 	bool init_serial(CryptContext *con);
 
 	DWORD m_fs_feature_disable_mask;

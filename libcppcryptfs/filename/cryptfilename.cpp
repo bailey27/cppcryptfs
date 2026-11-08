@@ -934,7 +934,7 @@ rt_is_dir_iv_file(CryptContext *con, LPCWSTR FileName)
 
 	const WCHAR *str = last_slash ? last_slash + 1 : FileName;
 
-	return !lstrcmpi(str, DIR_IV_NAME);
+	return !lstrcmpi(str, DIR_IV_NAME) || !lstrcmpi(str, DIR_IV_NAME_BAK);
 }
 
 bool 

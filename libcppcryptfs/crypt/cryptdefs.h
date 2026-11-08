@@ -63,6 +63,12 @@ THE SOFTWARE.
 
 #define DIR_IV_NAME (L"gocryptfs.diriv")
 
+#define CONFIG_NAME_BAK (L"gocryptfs.conf.bak")
+
+#define REVERSE_CONFIG_NAME_BAK (L".gocryptfs.reverse.conf.bak")
+
+#define DIR_IV_NAME_BAK (L"gocryptfs.diriv.bak")
+
 #define MAX_FILENAME_LEN 255
 #define MAX_LONGNAMEMAX MAX_FILENAME_LEN
 #define MIN_LONGNAMEMAX 62

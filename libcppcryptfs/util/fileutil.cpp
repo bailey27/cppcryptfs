@@ -138,26 +138,17 @@ adjust_file_offset_up_truncate_zero(LARGE_INTEGER& l, int overhead)
 }
 
 #ifdef _WIN32
-static bool
-read_dir_iv(const TCHAR *path, unsigned char *diriv, FILETIME& LastWriteTime)
-{
 
+// open the diriv file at the given full path and read the IV plus its last write time
+static bool
+read_dir_iv_file(const wstring& path_str, unsigned char *diriv, FILETIME& LastWriteTime)
+{
 	HANDLE hfile = INVALID_HANDLE_VALUE;
 	DWORD nRead = 0;
 
 	bool caught_wstring = false;
 
 	try {
-		wstring path_str;
-
-		path_str.append(path);
-
-		if (path_str[path_str.size() - 1] != '\\') {
-			path_str.push_back('\\');
-		}
-
-		path_str.append(DIR_IV_NAME);
-
 		hfile = ::CreateFile(&path_str[0], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 
 		if (hfile == INVALID_HANDLE_VALUE) {
@@ -172,24 +163,128 @@ read_dir_iv(const TCHAR *path, unsigned char *diriv, FILETIME& LastWriteTime)
 
 		if (!::GetFileTime(hfile, NULL, NULL, &LastWriteTime)) {
 			auto lasterr = ::GetLastError();
-			throw(L"\terror getting filetime of diriv file " + path_str + L" lasterr = " + to_wstring(lasterr));			
+			throw(L"\terror getting filetime of diriv file " + path_str + L" lasterr = " + to_wstring(lasterr));
 		}
 	} catch (const wstring& mes) {
 		DbgPrint(L"\tget_diriv: %s\n", mes.c_str());
 		nRead = 0;
 		caught_wstring = true;
 	} catch (...) {
-		nRead = 0;		
+		nRead = 0;
 	}
 
 	if (hfile != INVALID_HANDLE_VALUE)
 		::CloseHandle(hfile);
 
 	if (!caught_wstring && nRead != DIR_IV_LEN) {
-		DbgPrint(L"\tget_diriv read incorrect number of bytes from %s, read %u bytes instead of %u\n", path, nRead, DIR_IV_LEN);
+		DbgPrint(L"\tget_diriv read incorrect number of bytes from %s, read %u bytes instead of %u\n", path_str.c_str(), nRead, DIR_IV_LEN);
 	}
 
 	return nRead == DIR_IV_LEN;
+}
+
+// the diriv file is normally read-only, so clear that first or CopyFile
+// cannot replace it. CopyFile keeps the last write time of the .bak, so
+// the diriv cache stays consistent with the restored file.
+static void
+restore_dir_iv_from_bak(const wstring& path_str, const wstring& bak_str)
+{
+	DWORD attr = GetFileAttributes(path_str.c_str());
+
+	if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_READONLY)) {
+		SetFileAttributes(path_str.c_str(), attr & ~FILE_ATTRIBUTE_READONLY);
+	}
+
+	if (!CopyFile(bak_str.c_str(), path_str.c_str(), FALSE)) {
+		DbgPrint(L"\tget_diriv: unable to restore %s from %s, lasterr = %u\n", path_str.c_str(), bak_str.c_str(), GetLastError());
+		return;
+	}
+
+	// make it read-only like create_dir_iv() does
+	attr = GetFileAttributes(path_str.c_str());
+
+	if (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_READONLY)) {
+		SetFileAttributes(path_str.c_str(), attr | FILE_ATTRIBUTE_READONLY);
+	}
+
+	DbgPrint(L"\tget_diriv: restored %s from %s\n", path_str.c_str(), bak_str.c_str());
+}
+
+// called after a healthy diriv read. makes sure a .bak copy exists next to
+// the diriv file and matches it, so a future read can recover from it if
+// the original is ever lost or damaged. only runs when the diriv cache
+// misses, i.e. the first time a directory is entered after mounting.
+static void
+check_dir_iv_backup(const wstring& diriv_path, const unsigned char *diriv)
+{
+	wstring bak_str = diriv_path;
+
+	bak_str += L".bak";
+
+	HANDLE hfile = ::CreateFile(&bak_str[0], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+
+	if (hfile != INVALID_HANDLE_VALUE) {
+		unsigned char bak[DIR_IV_LEN];
+		DWORD nRead = 0;
+
+		BOOL ok = ::ReadFile(hfile, bak, DIR_IV_LEN, &nRead, NULL);
+
+		::CloseHandle(hfile);
+
+		// a current backup is already in place, nothing to do
+		if (ok && nRead == DIR_IV_LEN && !memcmp(bak, diriv, DIR_IV_LEN))
+			return;
+	}
+
+	// no backup yet, or it is out of date. the .bak is read-only from the
+	// last time it was made, so clear that first or CopyFile can't replace it
+	DWORD attr = GetFileAttributes(bak_str.c_str());
+
+	if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_READONLY)) {
+		SetFileAttributes(bak_str.c_str(), attr & ~FILE_ATTRIBUTE_READONLY);
+	}
+
+	if (!CopyFile(&diriv_path[0], &bak_str[0], FALSE)) {
+		DbgPrint(L"\tget_diriv: unable to back up %s to %s, lasterr = %u\n", diriv_path.c_str(), bak_str.c_str(), GetLastError());
+	} else {
+		DbgPrint(L"\tget_diriv: backed up %s to %s\n", diriv_path.c_str(), bak_str.c_str());
+	}
+}
+
+static bool
+read_dir_iv(const TCHAR *path, unsigned char *diriv, FILETIME& LastWriteTime)
+{
+	wstring path_str;
+
+	path_str.append(path);
+
+	if (path_str[path_str.size() - 1] != '\\') {
+		path_str.push_back('\\');
+	}
+
+	wstring diriv_path = path_str + DIR_IV_NAME;
+
+	FILETIME LastWritten{};
+
+	if (read_dir_iv_file(diriv_path, diriv, LastWritten)) {
+		check_dir_iv_backup(diriv_path, diriv);
+		LastWriteTime = LastWritten;
+		return true;
+	}
+
+	// the diriv file is missing or damaged, fall back to the .bak copy next
+	// to it and put the original back in place
+	wstring bak_str = path_str;
+
+	bak_str.append(DIR_IV_NAME_BAK);
+
+	if (read_dir_iv_file(bak_str, diriv, LastWritten)) {
+		restore_dir_iv_from_bak(diriv_path, bak_str);
+		LastWriteTime = LastWritten;
+		return true;
+	}
+
+	return false;
 }
 
 #endif // _WIN32
@@ -295,14 +390,20 @@ static bool is_interesting_name(BOOL isRoot, const WIN32_FIND_DATAW& fdata, Cryp
 	bool reverse = con->GetConfig()->m_reverse;
 	bool plaintext = con->GetConfig()->m_PlaintextNames;
 	bool isconfig = !lstrcmpi(fdata.cFileName, CONFIG_NAME);
-	
+	bool isconfigbak = !lstrcmpi(fdata.cFileName, CONFIG_NAME_BAK);
+	bool isdirivbak = !lstrcmpi(fdata.cFileName, DIR_IV_NAME_BAK);
+
 	if (isRoot && (!wcscmp(fdata.cFileName, L".") || !wcscmp(fdata.cFileName, L".."))) {
 		return false;
-	} else if ((!reverse && isRoot && isconfig) || (!reverse && !plaintext && !lstrcmpi(fdata.cFileName, DIR_IV_NAME))) {
+	} else if ((!reverse && isRoot && (isconfig || isconfigbak)) || (!reverse && !plaintext && (!lstrcmpi(fdata.cFileName, DIR_IV_NAME) || isdirivbak))) {
 		return false;
 	} else if (!plaintext && !reverse && is_long_name_file(fdata.cFileName)) {
 		return false;
 	} else if (isRoot && reverse && plaintext && isconfig) {
+		return false;
+	} else if (reverse && isRoot && (isconfigbak || !lstrcmpi(fdata.cFileName, REVERSE_CONFIG_NAME_BAK))) {
+		return false;
+	} else if (reverse && isdirivbak) {
 		return false;
 	} else {
 		return true;
