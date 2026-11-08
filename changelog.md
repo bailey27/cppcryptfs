@@ -2,6 +2,10 @@
 
 Changelog
 ------------
+v1.4.5.3 8 Nov 2026
+* Automatically back up the config file and diriv files, and restore them
+  from the .bak backup if they are lost or damaged.
+
 v1.4.5.2 7 Nov 2026
 * Fixed issue #168 using deterministic file names option in reverse mode.
 * Fixed issue #176 stale diriv cache entries after dir rename.

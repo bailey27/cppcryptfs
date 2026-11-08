@@ -349,6 +349,12 @@ CString CMountPropertyPage::Mount(LPCWSTR argPath, LPCWSTR argMountPoint, LPCWST
 		return CString(&error_mes[0]);
 	}
 
+	// mounting succeeded.  error_mes can still hold a non-fatal notice,
+	// e.g. that the config file was restored from its .bak backup
+	if (error_mes.length() > 0) {
+		MessageBox(CString(&error_mes[0]), L"cppcryptfs", MB_OK | MB_ICONINFORMATION);
+	}
+
 	// otherwise if fs in root dir of the drive, we get "d:" displayed for the path instead of "d:\"
 	if (cpath.GetLength() == 2 && ((LPCWSTR)cpath)[1] == ':')
 		cpath += L"\\";

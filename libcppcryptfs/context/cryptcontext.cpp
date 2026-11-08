@@ -90,6 +90,7 @@ static void get_deletable_files(CryptContext *con, vector<wstring>& files)
 
 	if (con->GetConfig()->DirIV()) {
 		files.push_back(DIR_IV_NAME);
+		files.push_back(DIR_IV_NAME_BAK);
 	}
 
 	if (con->m_delete_spurrious_files && !con->GetConfig()->m_PlaintextNames 

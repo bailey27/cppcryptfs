@@ -2166,10 +2166,18 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
     dokanOptions->MountPoint = tdata->mountpoint.c_str();
 
     if (!config->read(mes, config_path, reverse)) {
-      if (mes.length() < 1) {
-        mes = LocUtils::GetStringFromResources(IDS_UNABLE_LOAD_CONF);
+      // the config file may be missing or damaged.  if there is a .bak
+      // copy, put it back in place and try reading it one more time
+      if (!config->restore_config_from_bak() || !config->read(mes, config_path, reverse)) {
+        if (mes.length() < 1) {
+          mes = LocUtils::GetStringFromResources(IDS_UNABLE_LOAD_CONF);
+        }
+        throw(-1);
       }
-      throw(-1);
+      // let the user know the config was restored (the GUI shows this
+      // after a successful mount)
+      mes = LocUtils::GetStringFromResources(IDS_CONFIG_RESTORED_FROM_BAK);
+      DbgPrint(L"mount: restored config file %s from its .bak\n", config->m_configPath.c_str());
     }
 
     wstring config_error_mes;
@@ -2367,6 +2375,11 @@ int mount_crypt_fs(const WCHAR* mountpoint, const WCHAR *path,
       }
       throw(-1);
     }
+
+    // the volume is mounted -- leave a .bak copy of the config file behind
+    // so future mounts can recover from it if the config file gets damaged.
+    // best-effort, a failed backup doesn't affect the mount
+    config->backup_config_file();
 
   } catch (...) {
     retval = -1;
